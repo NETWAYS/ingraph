@@ -647,7 +647,7 @@ class DataPoint(ModelBase):
         sel = select([datapoint, timeframe],
                      and_(datapoint.c.timeframe_id==timeframe.c.id,
                           datapoint.c.plot_id==plot.id,
-                          between(datapoint.c.timestamp, start_timestamp, end_timestamp)))
+                          between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % timeframe.c.interval, end_timestamp)))
         result = conn.execute(sel)
 
         items = dict()
@@ -803,8 +803,8 @@ class DataPoint(ModelBase):
         left_over_count = 0
     
         for obj in DataPoint.modified_objects:
-            # make sure we don't have any unmodified objects in the set, this would be a bug
-            assert obj.modified() or obj.identity() == None
+            if not obj.modified() and obj.identity() != None:
+                continue
             
             if partial_sync:
                 if not obj.should_save():

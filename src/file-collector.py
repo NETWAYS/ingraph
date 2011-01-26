@@ -97,7 +97,7 @@ while  True:
         updates.append(update)
 
     now = time()
-    if last_flush + 30 < now or len(updates) > 1000:
+    if last_flush + 30 < now or len(updates) > 50000:
         st = time()
         api.insertValueBulk(pickle.dumps(updates))
         et = time()

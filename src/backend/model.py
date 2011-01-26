@@ -6,14 +6,14 @@ Created on 17.01.2011
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Sequence, ForeignKey, create_engine, and_
-from sqlalchemy.sql.expression import literal, select, between
+from sqlalchemy.sql.expression import literal, select, between, func
 from time import time
 from weakref import WeakValueDictionary
 from sqlalchemy.exc import ProgrammingError
+from random import randint
 
-last_update = None
 last_vacuum = 0
-max_update = None
+dbload_max_timestamp = None
 
 class ModelBase(object):
     '''
@@ -74,8 +74,8 @@ class ModelBase(object):
 metadata = MetaData()
 
 host = Table('host', metadata,
-    Column('id', Integer, Sequence('host_id_seq'), primary_key=True),
-    Column('name', String(128), unique=True),
+    Column('id', Integer, Sequence('host_id_seq'), nullable=False, primary_key=True),
+    Column('name', String(128), nullable=False, unique=True),
     
     mysql_engine='InnoDB'
 )
@@ -135,8 +135,8 @@ class Host(ModelBase):
     getByName = staticmethod(getByName)
 
 service = Table('service', metadata,
-    Column('id', Integer, Sequence('service_id_seq'), primary_key=True),
-    Column('name', String(128), unique=True),
+    Column('id', Integer, Sequence('service_id_seq'), nullable=False, primary_key=True),
+    Column('name', String(128), nullable=False, unique=True),
     
     mysql_engine='InnoDB'
 )
@@ -196,9 +196,9 @@ class Service(ModelBase):
     getByName = staticmethod(getByName)
 
 hostservice = Table('hostservice', metadata,
-    Column('id', Integer, Sequence('hostservice_id_seq'), primary_key=True),
-    Column('host_id', Integer, ForeignKey('host.id')),
-    Column('service_id', Integer, ForeignKey('service.id')),
+    Column('id', Integer, Sequence('hostservice_id_seq'), nullable=False, primary_key=True),
+    Column('host_id', Integer, ForeignKey('host.id'), nullable=False),
+    Column('service_id', Integer, ForeignKey('service.id'), nullable=False),
     
     UniqueConstraint('host_id', 'service_id', name='uc_hs_1'),
     
@@ -274,9 +274,9 @@ class HostService(ModelBase):
     getByHostAndService = staticmethod(getByHostAndService)
 
 plot = Table('plot', metadata,
-    Column('id', Integer, Sequence('plot_id_seq'), primary_key=True),
-    Column('hostservice_id', Integer, ForeignKey('hostservice.id')),
-    Column('name', String(128)),
+    Column('id', Integer, Sequence('plot_id_seq'), nullable=False, primary_key=True),
+    Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False),
+    Column('name', String(128), nullable=False),
     
     UniqueConstraint('hostservice_id', 'name', name='uc_plot_1'),
     
@@ -298,6 +298,8 @@ class Plot(ModelBase):
         self.current_interval = None
         self.cache_tfs = None
         self.cache_dps = None
+        
+        self.last_update = None
 
     def fetchDataPoints(self, conn, timestamp):
         if self.current_timestamp != None and self.current_interval != None and \
@@ -308,26 +310,20 @@ class Plot(ModelBase):
         tfs = TimeFrame.getAllActiveSorted(conn)
         dps = dict()
 
-        # if timestamp > current_timestamp
-        #    re-use dps from cache_dps
-        # else
-        #    clear current_timestamp
-        #    query database (ugh, slow)
-        #
-        # create dps for missing intervals
-        
-        # BUG: must re-load datapoints from DB when switching to a later
-        # time interval unless the new timestamp is past "MAX(timestamp) FROM datapoint"
-
-        if self.current_timestamp != None and timestamp > self.current_timestamp:
-            for dp in self.cache_dps.values():
-                if dp.timestamp == timestamp - timestamp % dp.timeframe.interval:
-                    dps[dp.timeframe.interval] = dp
+        if dbload_max_timestamp == None and timestamp > dbload_max_timestamp:
+            if self.current_timestamp != None and timestamp > self.current_timestamp:
+                for dp in self.cache_dps.values():
+                    if dp.timestamp == timestamp - timestamp % dp.timeframe.interval:
+                        dps[dp.timeframe.interval] = dp
         else:
             self.current_timestamp = None
         
-            for dp in DataPoint.getByTimestamp(conn, self, timestamp):
+            for dp in DataPoint.getByTimestamp(conn, self, timestamp, active_tfs_only=True):
                 dps[dp.timeframe.interval] = dp
+                
+            # BUG: we need to make sure that the number of dps returned
+            # by getByTimestamp is equal to the number of active tfs and return
+            # None (and skip the update) when they're not
 
         self.current_timestamp = timestamp
         self.current_interval = None
@@ -346,9 +342,7 @@ class Plot(ModelBase):
         
         return (tfs, dps)
 
-    def insertValue(self, conn, timestamp, value):
-        global last_update
-        
+    def insertValue(self, conn, timestamp, value):        
         (tfs, dps) = self.fetchDataPoints(conn, timestamp)
         
         prev_dp = None
@@ -371,8 +365,8 @@ class Plot(ModelBase):
 
             prev_avg = dp.avg
     
-            last_update = timestamp
-    
+        self.last_update = timestamp
+        
     def getByID(conn, id):
         obj = Plot.get(id)
         
@@ -385,7 +379,7 @@ class Plot(ModelBase):
 
             obj = Plot()
             obj.id = row[plot.c.id]
-            obj.hostservice= HostService.getByID(conn, row[plot.c.hostservice_id])
+            obj.hostservice = HostService.getByID(conn, row[plot.c.hostservice_id])
             obj.activate()
 
         return obj
@@ -426,9 +420,10 @@ class Plot(ModelBase):
             pass # nothing to do here (yet)
 
 timeframe = Table('timeframe', metadata,
-    Column('id', Integer, Sequence('timeframe_id_seq'), primary_key=True),
-    Column('interval', Integer),
-    Column('active', Boolean),
+    Column('id', Integer, Sequence('timeframe_id_seq'), nullable=False, primary_key=True),
+    Column('interval', Integer, nullable=False),
+    Column('retention_period', Integer),
+    Column('active', Boolean, nullable=False),
     
     mysql_engine='InnoDB'
 )
@@ -436,9 +431,10 @@ timeframe = Table('timeframe', metadata,
 class TimeFrame(ModelBase):    
     cache_tfs = None
     
-    def __init__(self, interval, active=True):
+    def __init__(self, interval, retention_period=None, active=True):
         self.id = None
         self.interval = interval
+        self.retention_period = retention_period
         self.active = active
 
     def getAllActiveSorted(conn):
@@ -452,7 +448,7 @@ class TimeFrame(ModelBase):
                 obj = TimeFrame.get(id)
                 
                 if obj == None:
-                    obj = TimeFrame(row[timeframe.c.interval], row[timeframe.c.active])
+                    obj = TimeFrame(row[timeframe.c.interval], row[timeframe.c.retention_period], row[timeframe.c.active])
                     obj.id = id
                     obj.activate()
                 
@@ -476,6 +472,7 @@ class TimeFrame(ModelBase):
             obj = TimeFrame()
             obj.id = row[timeframe.c.id]
             obj.interval = row[timeframe.c.interval]
+            obj.retention_period = row[timeframe.c.retention_period]
             obj.active = row[timeframe.c.active]
             obj.activate()
             
@@ -490,26 +487,30 @@ class TimeFrame(ModelBase):
     
     def save(self, conn):
         if self.id == None:
-            ins = timeframe.insert().values(interval=self.interval, active=self.active)
+            ins = timeframe.insert().values(interval=self.interval,
+                                            retention_period=self.retention_period,
+                                            active=self.active)
             result = conn.execute(ins)
             self.id = result.last_inserted_ids()[0]
             self.activate()
         else:
-            upd = timeframe.update().where(id=self.id).values(interval=self.interval, active=self.active)
+            upd = timeframe.update().where(id=self.id).values(interval=self.interval,
+                                                              retention_period=self.retention_period,
+                                                              active=self.active)
             result = conn.execute(upd)
         
         self.invalidateCache()
 
 datapoint = Table('datapoint', metadata,
-    Column('id', Integer, Sequence('datapoint_id_seq'), primary_key=True),
-    Column('plot_id', Integer, ForeignKey('plot.id')),
-    Column('timeframe_id', Integer, ForeignKey('timeframe.id')),
-    Column('timestamp', Integer),
-    Column('min', Numeric(precision=20, scale=5, asdecimal=False)),
-    Column('max', Numeric(precision=20, scale=5, asdecimal=False)),
-    Column('avg', Numeric(precision=20, scale=5, asdecimal=False)),
-    Column('current', Numeric(precision=20, scale=5, asdecimal=False)),
-    Column('count', Integer),
+    Column('id', Integer, Sequence('datapoint_id_seq'), nullable=False, primary_key=True),
+    Column('plot_id', Integer, ForeignKey('plot.id'), nullable=False),
+    Column('timeframe_id', Integer, ForeignKey('timeframe.id'), nullable=False),
+    Column('timestamp', Integer, nullable=False),
+    Column('min', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
+    Column('max', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
+    Column('avg', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
+    Column('current', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
+    Column('count', Integer, nullable=False),
     
     UniqueConstraint('plot_id', 'timeframe_id', 'timestamp', name='uc_dp_1'),
     
@@ -555,10 +556,6 @@ class DataPoint(ModelBase):
         self.prev_min = 0
         self.prev_max = 0
 
-    def __del__(self):
-        if self.modified():
-            DataPoint.modified_objects.add(self)
-
     def insertValue(self, value):
         value = float(value)
 
@@ -575,8 +572,7 @@ class DataPoint(ModelBase):
         
         self.current = value
         
-        self._last_modification = time()
-        DataPoint.modified_objects.add(self)
+        self.mark_modified()
 
     def removeValue(self, value):
         value = float(value)
@@ -596,13 +592,20 @@ class DataPoint(ModelBase):
             self.prev_min = None
             self.prev_max = None
             
-        self._last_modification = time()
-        DataPoint.modified_objects.add(self)
+        self.mark_modified()
+
+    def mark_modified(self):
+        if self.timeframe.retention_period == None or self.timestamp > time() - self.timeframe.retention_period:
+            self._last_modification = time()
+            DataPoint.modified_objects.add(self)
 
     def save(self, conn):
         if not self.modified():
             return
         
+        self._last_modification = None
+        self._last_saved = time()
+
         if self.id == None:
             if self.plot.id == None:
                 self.plot.save(conn)
@@ -623,9 +626,6 @@ class DataPoint(ModelBase):
             upd = datapoint.update().where(datapoint.c.id==self.id).values(min=self.min, max=self.max,
                                             avg=self.avg, current=self.current, count=self.count)
             conn.execute(upd)
-        
-        self._last_modification = None
-        self._last_saved = time()
 
     def modified(self):
         return self.id == None or self._last_modification != None
@@ -636,7 +636,9 @@ class DataPoint(ModelBase):
         
         now = time()
         
-        return self.timestamp != last_update - last_update % self.timeframe.interval or self._last_saved + 900 < now
+        assert self.plot.last_update != None
+        
+        return self.timestamp != self.plot.last_update - self.plot.last_update % self.timeframe.interval or self._last_saved + randint(300, 900) < now
 
     def getValuesByInterval(conn, plot, start_timestamp, end_timestamp, granularity, with_virtual_values=False):
         assert start_timestamp < end_timestamp
@@ -754,8 +756,10 @@ class DataPoint(ModelBase):
 
     _getCachedValuesByInterval = staticmethod(_getCachedValuesByInterval)
 
-    def getByTimestamp(conn, plot, timestamp):
+    def getByTimestamp(conn, plot, timestamp, active_tfs_only=False):
         timestamp = int(timestamp)
+
+        # TODO: implement active_tfs_only flag (i.e. return dps only for active timeframes)
 
         sel = datapoint.select().where(and_(datapoint.c.timeframe_id==timeframe.c.id, datapoint.c.plot_id==plot.id,
                                                             datapoint.c.timestamp==literal(timestamp) - literal(timestamp) % timeframe.c.interval
@@ -791,7 +795,7 @@ class DataPoint(ModelBase):
     def syncSomeObjects(conn, partial_sync=False):
         count = 0
         
-        save_quota = max(1500, DataPoint.last_sync_remaining_count / 20)
+        save_quota = max(500, DataPoint.last_sync_remaining_count / 20)
     
         trans = conn.begin()
     
@@ -833,6 +837,8 @@ class DataPoint(ModelBase):
 creates a DB connection
 '''
 def create_model_conn(dsn):
+    global dbload_max_timestamp
+
     engine = create_engine(dsn)
     
     conn = engine.connect()
@@ -844,6 +850,9 @@ def create_model_conn(dsn):
         pass
 
     metadata.create_all(engine)
+
+    sel = select([func.max(datapoint.c.timestamp, type_=Integer).label('maxtimestamp')])
+    dbload_max_timestamp = conn.execute(sel).scalar()
 
     return conn
 

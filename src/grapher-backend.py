@@ -184,16 +184,16 @@ conn = model.create_model_conn(config['dsn'])
 tfs = model.TimeFrame.getAllActiveSorted(conn)
 
 if len(tfs) == 0:
-    f1 = model.TimeFrame(5*60)
+    f1 = model.TimeFrame(5*60, 24*60*60)
     f1.save(conn)
     
-    f2 = model.TimeFrame(60*60)
+    f2 = model.TimeFrame(60*60, 7*24*60*60)
     f2.save(conn)
     
-    f3 = model.TimeFrame(24*60*60)
+    f3 = model.TimeFrame(24*60*60, 6*30*24*60*60)
     f3.save(conn)
     
-    f4 = model.TimeFrame(30*24*60*60)
+    f4 = model.TimeFrame(30*24*60*60, 2*365*24*60*60)
     f4.save(conn)
     
     f5 = model.TimeFrame(365*24*60*60)

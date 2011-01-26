@@ -734,8 +734,8 @@ class DataPoint(ModelBase):
                 vt_value['avg'] = str(vt_value['avg'] / granularity)
                 vt_value['current'] = str(vt_value['current'])
             
-            if vt_value['virtual'] == False or with_virtual_values:
-                vt_values[str(vt_start)] = vt_value
+                if vt_value['virtual'] == False or with_virtual_values:
+                    vt_values[str(vt_start)] = vt_value
 
             vt_start += granularity
             

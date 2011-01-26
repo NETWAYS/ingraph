@@ -2,14 +2,14 @@
 from backend import model
 from time import time
 from random import randint
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 import cPickle
-from sqlalchemy.exc import ProgrammingError
+from base64 import b64decode
+import os
+import sys
+from grapherutils import load_config
 
-print("Grapher V3")
-
-conn = model.create_model_conn('mysql://grapher:Pl9PXfKq@127.0.0.1/grapher')
-#conn = model.create_model_conn('sqlite:///grapher.db')
+print("NETWAYS Grapher V3 (backend daemon)")
 
 class BackendRPCMethods:
     def __init__(self):
@@ -126,6 +126,58 @@ class BackendRPCMethods:
         global shutdown_server
         shutdown_server = True
 
+# http://www.acooke.org/cute/BasicHTTPA0.html
+class AuthenticatedXMLRPCServer(SimpleXMLRPCServer):
+    def __init__(self, *args, **kargs):
+        class AuthenticatedRequestHandler(SimpleXMLRPCRequestHandler):
+            def parse_request(myself):
+                if SimpleXMLRPCRequestHandler.parse_request(myself):
+                    header = myself.headers.get('Authorization')
+                    
+                    if header == None:
+                        username = None
+                        password = None
+                    else:                    
+                        (basic, _, encoded) = \
+                            header.partition(' ')
+    
+                        assert basic == 'Basic', 'Only basic authentication supported'
+                        
+                        (username, _, password) = b64decode(encoded).partition(':')
+                    
+                    if self.authenticate(username, password):
+                        return True
+                    else:
+                        myself.send_response(401, 'Authentication failed')
+                        myself.send_header('WWW-Authenticate', 'Basic realm="XML-RPC"')
+                        myself.end_headers()
+                        
+                        myself.wfile.write('Authentication failed.')
+                
+                return False
+        
+        SimpleXMLRPCServer.__init__(self, requestHandler=AuthenticatedRequestHandler, *args, **kargs)
+
+        self.required_username = None
+        self.required_password = None
+
+    def authenticate(self, username, password):
+        if self.required_username == None and self.required_password == None:
+            return True
+        
+        return self.required_username == username and self.required_password == password
+
+config = load_config('grapher-backend.conf')
+config = load_config('grapher-xmlrpc.conf', config)
+
+if config['dsn'] == None:
+    print("Error: You need to set a database connection string ('dsn' setting)" + \
+          " in your configuration file.")
+    sys.exit(1)
+
+print('Connecting to the database...')
+conn = model.create_model_conn(config['dsn'])
+
 # TODO:
 # methods for setting up timeframes
 # rename methods
@@ -147,8 +199,22 @@ if len(tfs) == 0:
     f5 = model.TimeFrame(365*24*60*60)
     f5.save(conn)
 
-server = SimpleXMLRPCServer(("localhost", 5000), allow_none=True)
+if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
+    print("Error: You need to set a bind address/port for the XML-RPC" + \
+          " interface ('xmlrpc_address' and 'xmlrpc_port' settings).")
+    sys.exit(1)
+    
+print('Starting XML-RPC interface on %s:%d...' % (config['xmlrpc_address'], config['xmlrpc_port']))
+server = AuthenticatedXMLRPCServer((config['xmlrpc_address'], config['xmlrpc_port']), allow_none=True)
 server.timeout = 5
+
+if 'xmlrpc_username' not in config or 'xmlrpc_password' not in config:
+    print("Error: You need to set an XML-RPC username and password ('xmlrpc_username'" + \
+          " and 'xmlrpc_password' settings) in your configuration file.")
+    sys.exit(1)
+
+server.required_username = config['xmlrpc_username']
+server.required_password = config['xmlrpc_password']
 
 server.register_introspection_functions()
 server.register_multicall_functions()
@@ -159,6 +225,8 @@ def rprofile():
 
     try:
         shutdown_server = False
+
+        print("Waiting for XML-RPC requests...")
 
         while not shutdown_server:
             server.handle_request()

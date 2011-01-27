@@ -21,44 +21,98 @@ ts_old = 0
 
 updates = []
 
-# TODO: fix
-def sanitizeInteger(value):
-    try:
-        return int(value)
-    except:
-        return 0
-
-class GenericPerfdataParser(object):
+class PerfdataParser(object):
     _perfRegex = re.compile('([^= ][^=]*)=([^ ]+)')
+    _intRegex = re.compile('^([+-]?[0-9,.]+)[ ]*([KMGTPE]?[Bb]|[um]?s|c|%)?$')
     
-    def parse(self, perfdata):
-        matches = GenericPerfdataParser._perfRegex.findall(perfdata)
+    _bytesuffixes = {
+        'B': 1024**0,
+        'KB': 1024**1,
+        'MB': 1024**2,
+        'GB': 1024**3,
+        'TB': 1024**4,
+        'PB': 1024**5,
+        'EB': 1024**6
+    }
+    
+    _timesuffixes = {
+        's': 10**0,
+        'ms': 10**(-3),
+        'us': 10**(-6)
+    }
+    
+    # TODO: fix
+    def _parsePerfdataInteger(raw_value):
+        raw_value = raw_value.strip()
+               
+        if raw_value == '':
+            return None
+                
+        match = PerfdataParser._intRegex.match(raw_value)
         
-        data = {}
+        if not match:
+            print("Failed to parse perfdata integer: %s" % (raw_value))
+            return None
+        
+        try:
+            value = float(match.group(1))
+        except ValueError:
+            print("Failed to parse perfdata integer: %s" % (raw_value))
+            return None
+            
+        unit = match.group(2)
+        
+        if unit == None:
+            uom = 'raw'
+            result_value = value
+        elif unit == '%':
+            uom = 'percent'
+            result_value = value
+        elif unit.upper() in PerfdataParser._bytesuffixes:
+            uom = 'byte'
+            result_value = value * PerfdataParser._bytesuffixes[unit.upper()]
+        elif unit in PerfdataParser._timesuffixes:
+            uom = 'time'
+            result_value = value * PerfdataParser._timesuffixes[unit] 
+        elif unit == 'c':
+            uom = 'counter'
+            result_value = value
+        else:
+            return None
+        
+        return {
+            'value': result_value,
+            'uom': uom
+        }
+    
+    _parsePerfdataInteger = staticmethod(_parsePerfdataInteger)
+    
+    def parse(perfdata):
+        labels = ['value', 'warn', 'crit', 'min', 'max']
+
+        if '.' in perfdata and ',' in perfdata:
+            perfdata = perfdata.replace(',', ';')
+        else:
+            perfdata = perfdata.replace(',', '.')
+ 
+        matches = PerfdataParser._perfRegex.findall(perfdata)
+        
+        plots = {}
         
         for match in matches:
             key = match[0]
             values = match[1].split(';')
             
-            if len(values) >= 1:
-                data[key + '_value'] = sanitizeInteger(values[0])
-                
-            if len(values) >= 2:
-                data[key + '_warn'] = sanitizeInteger(values[1])
-                
-            if len(values) >= 3:
-                data[key + '_crit'] = sanitizeInteger(values[2])
-                
-            if len(values) >= 4:
-                data[key + '_min'] = sanitizeInteger(values[3])
-                
-            if len(values) >= 5:
-                data[key + '_max'] = sanitizeInteger(values[4])
-
-        return data
-
-parsers = []
-parsers.append(GenericPerfdataParser())
+            for i in range(0, len(labels)):
+                if len(values) > i:
+                    result = PerfdataParser._parsePerfdataInteger(values[i])
+                    
+                    if result != None:
+                        plots[key + labels[i]] = result
+        
+        return plots
+        
+    parse = staticmethod(parse)
 
 while  True:
     line = sys.stdin.readline()
@@ -83,17 +137,12 @@ while  True:
         'timestamp': int(data[4])
     }
     
-    for parser in parsers:
-        perfdata = parser.parse(logdata['perf'])
-        
-        if perfdata != None:
-            break
+    perfresults = PerfdataParser.parse(logdata['perf'])
     
-    if perfdata == None:
-        continue
+    for plotname in perfresults:
+        perfresult = perfresults[plotname]
 
-    for plotname in perfdata.keys():
-        update = (logdata['host'], logdata['service'], plotname, logdata['timestamp'], str(perfdata[plotname]))
+        update = (logdata['host'], logdata['service'], plotname, logdata['timestamp'], str(perfresult['value']))
         updates.append(update)
 
     now = time()

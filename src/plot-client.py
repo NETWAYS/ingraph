@@ -10,7 +10,7 @@ url = "http://%s:%s@%s:%s/" % (config['xmlrpc_username'], config['xmlrpc_passwor
 api = ServerProxy(url, allow_none=True)
 
 vals = api.getPlotValues('tradoria-lb', 'lx-ipvs images.tradoria.de:80',
-                  'active connections_value', 1294066800, 1294071600, (1294071600 - 1294066800) / 20, True)
+                  'active connections_value', 1294068949, 1296113597, (1296113597 - 1294068949) / 20, True)
 
 print 'var data = [ null, null,'
 

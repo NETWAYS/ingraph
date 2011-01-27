@@ -15,6 +15,9 @@ from random import randint
 last_vacuum = 0
 dbload_max_timestamp = None
 
+'''
+Base class for all DB model classes.
+'''
 class ModelBase(object):
     '''
     a dictionary containing weak references to all active
@@ -24,6 +27,10 @@ class ModelBase(object):
     '''
     active_objects = dict()
 
+    '''
+    "activates" an object for use in the caching system; this should be
+    called once the identity for an object is known ('id' column)
+    '''
     def activate(self):
         assert self.identity() != None
         
@@ -92,7 +99,7 @@ class Host(ModelBase):
             self.id = result.last_inserted_ids()[0]
             self.activate()
         else:
-            # TODO: should probably just throw an exception instead
+            # TODO: should probably just throw an exception instead -
             # as changing a host's name doesn't make any sense
             upd = host.update().where(host.c.id==self.id).values(name=self.name)
             conn.execute(upd)
@@ -153,7 +160,7 @@ class Service(ModelBase):
             self.id = result.last_inserted_ids()[0]
             self.activate()
         else:
-            # TODO: should probably just throw an exception instead
+            # TODO: should probably just throw an exception instead -
             # as changing a service's name doesn't make any sense
             upd = service.update().where(service.c.id==self.id).values(name=self.name)
             conn.execute(upd)
@@ -228,8 +235,8 @@ class HostService(ModelBase):
             self.id = result.last_inserted_ids()[0]
             self.activate()
         else:
-            # TODO: should probably just throw an exception instead
-            # as changing a service's name doesn't make any sense
+            # TODO: should probably just throw an exception instead -
+            # as changing a service's host/service ids doesn't make any sense
             upd = hostservice.update().where(hostservice.c.id==self.id).values(host_id=self.host.id, service_id=self.service.id)
             conn.execute(upd)
 
@@ -322,8 +329,9 @@ class Plot(ModelBase):
                 dps[dp.timeframe.interval] = dp
                 
             # BUG: we need to make sure that the number of dps returned
-            # by getByTimestamp is equal to the number of active tfs and return
-            # None (and skip the update) when they're not
+            # by getByTimestamp is equal to the number of active tfs and
+            # and skip the update when they're not; make sure not to wipe the
+            # cache in this case as this might degrade performance
 
         self.current_timestamp = timestamp
         self.current_interval = None
@@ -795,6 +803,7 @@ class DataPoint(ModelBase):
     def syncSomeObjects(conn, partial_sync=False):
         count = 0
         
+        # the maximum number of objects we are going to save this time (unless partial_sync == False)
         save_quota = max(500, DataPoint.last_sync_remaining_count / 20)
     
         trans = conn.begin()

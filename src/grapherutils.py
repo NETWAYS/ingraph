@@ -2,10 +2,10 @@ import os, sys
 
 def load_config(path, existing_config={}):
     if not os.path.isfile(path):
-        print("Configuration file '%s' does not exist." % (path))
+        sys.stderr.write("Configuration file '%s' does not exist.\n" % (path))
         sys.exit(1)
     
-    print("Loading configuration settings (from '%s')..." % (path))
+    sys.stderr.write("Loading configuration settings (from '%s')...\n" % (path))
 
     config = existing_config
 

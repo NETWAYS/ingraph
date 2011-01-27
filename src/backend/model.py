@@ -291,12 +291,7 @@ plot = Table('plot', metadata,
 )
 
 class Plot(ModelBase):
-    plots_cache = set()
-
     def __init__(self, hostservice, name):
-        # TODO: cache should automatically expire unused graphs
-        Plot.plots_cache.add(self)
-
         self.id = None
         self.name = name
         self.hostservice = hostservice

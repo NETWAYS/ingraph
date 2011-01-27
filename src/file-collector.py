@@ -23,7 +23,7 @@ updates = []
 
 class PerfdataParser(object):
     _perfRegex = re.compile('([^= ][^=]*)=([^ ]+)')
-    _intRegex = re.compile('^([+-]?[0-9,.]+)[ ]*([KMGTPE]?[Bb]|[um]?s|c|%)?$')
+    _intRegex = re.compile('^([+-]?[0-9,.]+)[ ]*([KMGTPE]?[Bb]|[um]?s|c|%)?:?$')
     
     _bytesuffixes = {
         'B': 1024**0,
@@ -88,13 +88,16 @@ class PerfdataParser(object):
     _parsePerfdataInteger = staticmethod(_parsePerfdataInteger)
     
     def parse(perfdata):
-        labels = ['value', 'warn', 'crit', 'min', 'max']
+        labels = ['', '_warning', '_critical', '_min', '_max']
 
         if '.' in perfdata and ',' in perfdata:
             perfdata = perfdata.replace(',', ';')
         else:
             perfdata = perfdata.replace(',', '.')
  
+        if perfdata.count('.') > 1 and not ';' in perfdata:
+            perfdata = perfdata.replace('.', ';')
+
         matches = PerfdataParser._perfRegex.findall(perfdata)
         
         plots = {}

@@ -302,6 +302,7 @@ class Plot(ModelBase):
         self.hostservice = hostservice
         
         self.current_timestamp = None
+        self.max_timestamp = None
         self.current_interval = None
         self.cache_tfs = None
         self.cache_dps = None
@@ -315,37 +316,55 @@ class Plot(ModelBase):
             return (self.cache_tfs, self.cache_dps)
 
         tfs = TimeFrame.getAllActiveSorted(conn)
+        self.cache_tfs = tfs                
+        self.current_interval = tfs[0].interval
+
         dps = dict()
 
-        if dbload_max_timestamp == None and timestamp > dbload_max_timestamp:
-            if self.current_timestamp != None and timestamp > self.current_timestamp:
-                for dp in self.cache_dps.values():
-                    if dp.timestamp == timestamp - timestamp % dp.timeframe.interval:
-                        dps[dp.timeframe.interval] = dp
-        else:
-            self.current_timestamp = None
+        if self.cache_dps != None:
+            for dp in self.cache_dps.values():
+                if dp.timestamp == timestamp - timestamp % dp.timeframe.interval:
+                    dps[dp.timeframe.interval] = dp
+
+        # if 'timestamp' is older than the newest timestamp when we first accessed the db
+        # or it's older than the newest timestamo for this plot.. we need to query the DB
+        if (dbload_max_timestamp != None and timestamp < dbload_max_timestamp) or \
+                self.max_timestamp == None or timestamp < self.max_timestamp:
+            self.current_timestamp = timestamp
+            self.max_timestamp = timestamp
         
             for dp in DataPoint.getByTimestamp(conn, self, timestamp, active_tfs_only=True):
                 dps[dp.timeframe.interval] = dp
+
+            # having no dps or just the one for the smallest timeframe is OK because in that
+            # case we can safely create new empty dps for all the missing timeframes
+            if not (len(dps) == 0 or (len(dps) == 1 and tfs[0].interval in dps)):
+                print("len(dps) == %d; len(tfs) == %d" % (len(dps), len(tfs)))
+
+                # TODO: this should really be a run-time check and just print a warning + skip the update
+                assert(len(dps) == len(tfs))
+
+                self.cache_dps = dps
+                return (tfs, dps)
+            else:
+                self.cache_dps = {}
                 
-            # BUG: we need to make sure that the number of dps returned
-            # by getByTimestamp is equal to the number of active tfs and
-            # and skip the update when they're not; make sure not to wipe the
-            # cache in this case as this might degrade performance
+        # BUG: we need to make sure that the number of dps returned
+        # by getByTimestamp is equal to the number of active tfs and
+        # and skip the update when they're not; make sure not to wipe the
+        # cache in this case as this might degrade performance
 
         self.current_timestamp = timestamp
-        self.current_interval = None
+        
+        if timestamp > self.max_timestamp:
+            self.max_timestamp = timestamp
         
         for tf in tfs:
-            if self.current_interval == None:
-                self.current_interval = tf.interval
-                
             if not tf.interval in dps:
                 dp = DataPoint(self, tf,
                                timestamp - timestamp % tf.interval)
                 dps[tf.interval] = dp
 
-        self.cache_tfs = tfs
         self.cache_dps = dps
         
         return (tfs, dps)
@@ -517,7 +536,7 @@ datapoint = Table('datapoint', metadata,
     Column('min', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('max', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('avg', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
-    Column('current', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
+    Column('last', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('count', Integer, nullable=False),
     
     UniqueConstraint('plot_id', 'timeframe_id', 'timestamp', name='uc_dp_1'),
@@ -554,7 +573,13 @@ class DataPoint(ModelBase):
         self.max = None
         self.avg = 0.0
         self.count = 0
-        self.current = None
+        self.last = None
+        
+        self.saved_min = None
+        self.saved_max = None
+        self.saved_avg = None
+        self.saved_count = None
+        self.saved_last = None
         
         '''
         Previous min/max values, these are not stored in the DB
@@ -578,7 +603,7 @@ class DataPoint(ModelBase):
         self.avg = (self.avg * self.count + value) / (self.count + 1)
         self.count = self.count + 1
         
-        self.current = value
+        self.last = value
         
         self.mark_modified()
 
@@ -603,9 +628,9 @@ class DataPoint(ModelBase):
         self.mark_modified()
 
     def mark_modified(self):
-        if self.timeframe.retention_period == None or self.timestamp > time() - self.timeframe.retention_period:
-            self._last_modification = time()
-            DataPoint.modified_objects.add(self)
+        if self.timeframe.retention_period == None or self.timestamp > time() - self.timeframe.retention_period:            
+                self._last_modification = time()
+                DataPoint.modified_objects.add(self)
 
     def save(self, conn):
         if not self.modified():
@@ -613,6 +638,12 @@ class DataPoint(ModelBase):
         
         self._last_modification = None
         self._last_saved = time()
+
+        # make sure we're not wasting DB queries for unchanged objects
+        if self.min == self.saved_min and self.max == self.saved_max and \
+                self.avg == self.saved_avg and self.count == self.saved_count and \
+                self.last == self.saved_last:
+            return
 
         if self.id == None:
             if self.plot.id == None:
@@ -625,16 +656,22 @@ class DataPoint(ModelBase):
 
             ins = datapoint.insert().values(plot_id=self.plot.id, timeframe_id=self.timeframe.id,
                                             timestamp=self.timestamp, min=self.min, max=self.max,
-                                            avg=self.avg, current=self.current, count=self.count)
+                                            avg=self.avg, last=self.last, count=self.count)
             result = conn.execute(ins)
             self.id = result.last_inserted_ids()[0]
             
             self.activate()
         else:
             upd = datapoint.update().where(datapoint.c.id==self.id).values(min=self.min, max=self.max,
-                                            avg=self.avg, current=self.current, count=self.count)
+                                            avg=self.avg, last=self.last, count=self.count)
             conn.execute(upd)
 
+        self.saved_min = self.min
+        self.saved_max = self.max
+        self.saved_avg = self.avg
+        self.saved_count = self.count
+        self.saved_last = self.last
+        
     def modified(self):
         return self.id == None or self._last_modification != None
     
@@ -671,7 +708,7 @@ class DataPoint(ModelBase):
                 'min': row[datapoint.c.min],
                 'max': row[datapoint.c.max],
                 'avg': row[datapoint.c.avg],
-                'current': row[datapoint.c.current]
+                'last': row[datapoint.c.last]
             }
             
             items[ts] = item
@@ -687,7 +724,7 @@ class DataPoint(ModelBase):
                 'min': obj.min,
                 'max': obj.max,
                 'avg': obj.avg,
-                'current': obj.current
+                'last': obj.last
             }
             
             items[ts] = item
@@ -721,7 +758,7 @@ class DataPoint(ModelBase):
                         'min': 0,
                         'max': 0,
                         'avg': 0,
-                        'current': None,
+                        'last': None,
                         'virtual': True
                     }
                     
@@ -736,13 +773,13 @@ class DataPoint(ModelBase):
                     
                 vt_value['avg'] += vt_diff * item['avg']
                 
-                vt_value['current'] = item['current']
+                vt_value['last'] = item['last']
             
             if vt_value != None:
                 vt_value['min'] = str(vt_value['min'])
                 vt_value['max'] = str(vt_value['max'])
                 vt_value['avg'] = str(vt_value['avg'] / granularity)
-                vt_value['current'] = str(vt_value['current'])
+                vt_value['last'] = str(vt_value['last'])
             
                 if vt_value['virtual'] == False or with_virtual_values:
                     vt_values[str(vt_start)] = vt_value
@@ -772,7 +809,7 @@ class DataPoint(ModelBase):
         sel = datapoint.select().where(and_(datapoint.c.timeframe_id==timeframe.c.id, datapoint.c.plot_id==plot.id,
                                                             datapoint.c.timestamp==literal(timestamp) - literal(timestamp) % timeframe.c.interval
                                                             ))
-        objs = []
+        objs = set()
         
         for row in conn.execute(sel):
             obj = DataPoint.get(row[datapoint.c.id])
@@ -788,14 +825,18 @@ class DataPoint(ModelBase):
                 obj.min = row[datapoint.c.min]
                 obj.max = row[datapoint.c.max]
                 obj.avg = row[datapoint.c.avg]
-                obj.current = row[datapoint.c.current]
+                obj.last = row[datapoint.c.last]
                 obj.count = max(0, row[datapoint.c.count])
                                 
                 obj.id = row[datapoint.c.id]
                 obj.activate()
 
-            objs.append(obj)
-            
+            objs.add(obj)
+    
+        for obj in DataPoint.modified_objects:
+            if obj.plot == plot and obj.timestamp == timestamp - timestamp % obj.timeframe.interval:
+                objs.add(obj)
+        
         return objs
         
     getByTimestamp = staticmethod(getByTimestamp)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from xmlrpclib import ServerProxy
 from grapherutils import load_config
+from time import time
 
 config = load_config('grapher-xmlrpc.conf')
 
@@ -9,8 +10,12 @@ url = "http://%s:%s@%s:%s/" % (config['xmlrpc_username'], config['xmlrpc_passwor
 
 api = ServerProxy(url, allow_none=True)
 
-vals = api.getPlotValues('tradoria-lb', 'lx-ipvs images.tradoria.de:80',
-                  'active connections_value', 1294068949, 1296113597, (1296113597 - 1294068949) / 20, True)
+et = 1296124500
+st = 1296081300 # et - 12*3600
+dt = 300
+
+vals = api.getPlotValues('f1-db1', 'MySQL',
+                  'time', st, et, dt, False)
 
 print 'var data = [ null, null,'
 

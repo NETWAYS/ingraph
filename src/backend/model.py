@@ -222,13 +222,11 @@ class HostService(ModelBase):
         if self.id == None:
             if self.host.id == None:
                 self.host.save(conn)
-                
-            assert self.host.id != None
+                assert self.host.id != None
             
             if self.service.id == None:
                 self.service.save(conn)
-                
-            assert self.service.id != None
+                assert self.service.id != None
     
             ins = hostservice.insert().values(host_id=self.host.id, service_id=self.service.id)
             result = conn.execute(ins)
@@ -303,12 +301,16 @@ class Plot(ModelBase):
         self.cache_dps = None
         
         self.last_update = None
+        
+        self.has_ignored_missing_tf = False
 
-    def fetchDataPoints(self, conn, timestamp):
-        if self.current_timestamp != None and self.current_interval != None and \
-                timestamp - timestamp % self.current_interval == self.current_timestamp - \
+    def fetchDataPoints(self, conn, timestamp, ignore_missing_tf=False, require_tf=None):
+        if self.has_ignored_missing_tf == ignore_missing_tf and self.current_timestamp != None and \
+                self.current_interval != None and timestamp - timestamp % self.current_interval == self.current_timestamp - \
                 self.current_timestamp % self.current_interval:
             return (self.cache_tfs, self.cache_dps)
+
+        debug_ts = self.current_timestamp
 
         tfs = TimeFrame.getAllActiveSorted(conn)
         self.cache_tfs = tfs                
@@ -333,16 +335,14 @@ class Plot(ModelBase):
 
             # having no dps or just the one for the smallest timeframe is OK because in that
             # case we can safely create new empty dps for all the missing timeframes
-            if not (len(dps) == 0 or (len(dps) == 1 and tfs[0].interval in dps)):
+            if not ignore_missing_tf and not (len(dps) == 0 or (len(dps) == 1 and tfs[0].interval in dps)):
                 print("len(dps) == %d; len(tfs) == %d" % (len(dps), len(tfs)))
-
+                print("old current_timestamp: %d, timestamp: %d" % (debug_ts, timestamp))
                 # TODO: this should really be a run-time check and just print a warning + skip the update
                 assert(len(dps) == len(tfs))
 
                 self.cache_dps = dps
                 return (tfs, dps)
-            else:
-                self.cache_dps = {}
                 
         # BUG: we need to make sure that the number of dps returned
         # by getByTimestamp is equal to the number of active tfs and
@@ -355,7 +355,7 @@ class Plot(ModelBase):
             self.max_timestamp = timestamp
         
         for tf in tfs:
-            if not tf.interval in dps:
+            if not tf.interval in dps and (not ignore_missing_tf or require_tf == tf.interval):
                 dp = DataPoint(self, tf,
                                timestamp - timestamp % tf.interval)
                 dps[tf.interval] = dp
@@ -389,6 +389,15 @@ class Plot(ModelBase):
     
         self.last_update = timestamp
         
+    def insertValueRaw(self, conn, tf_interval, timestamp, value):
+        (_, dps) = self.fetchDataPoints(conn, timestamp, ignore_missing_tf=True, require_tf=tf_interval)
+
+        assert tf_interval in dps
+        assert dbload_max_timestamp == None, 'insertValueRaw may only be used to import data into an empty DB'
+        
+        dps[tf_interval].insertValue(value)
+        self.last_update = timestamp
+
     def getByID(conn, id):
         obj = Plot.get(id)
         

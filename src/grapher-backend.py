@@ -18,8 +18,8 @@ class BackendRPCMethods:
         self.hostservices = {}
         self.plots = {}
         
-    def createTimeFrame(self, interval):
-        tf = model.TimeFrame(interval)
+    def createTimeFrame(self, interval, retention_period=None):
+        tf = model.TimeFrame(interval, retention_period)
         tf.save(conn)
         
         return tf.id
@@ -103,14 +103,21 @@ class BackendRPCMethods:
         updates = cPickle.loads(updates_raw)
         
         for update in updates:
-            (host, service, plot, timestamp, value) = update
+            if len(update) > 5:
+                (host, service, plot, timestamp, value, tf) = update
+            else:
+                (host, service, plot, timestamp, value) = update
+                tf = None
             
             host_obj = self._createHost(host)
             service_obj = self._createService(service)
             hostservice_obj = self._createHostService(host_obj, service_obj)
             plot_obj = self._createPlot(hostservice_obj, plot)
     
-            plot_obj.insertValue(conn, timestamp, value)
+            if tf == None:
+                plot_obj.insertValue(conn, timestamp, value)
+            else:
+                plot_obj.insertValueRaw(conn, tf, timestamp, value)
     
     def getPlotValues(self, host, service, plot, start_timestamp, end_timestamp,
                       granularity, with_virtual_values):
@@ -181,23 +188,23 @@ conn = model.create_model_conn(config['dsn'])
 # TODO:
 # methods for setting up timeframes
 # rename methods
-tfs = model.TimeFrame.getAllActiveSorted(conn)
-
-if len(tfs) == 0:
-    f1 = model.TimeFrame(5*60, 24*60*60)
-    f1.save(conn)
-    
-    f2 = model.TimeFrame(60*60, 7*24*60*60)
-    f2.save(conn)
-    
-    f3 = model.TimeFrame(24*60*60, 6*30*24*60*60)
-    f3.save(conn)
-    
-    f4 = model.TimeFrame(30*24*60*60, 2*365*24*60*60)
-    f4.save(conn)
-    
-    f5 = model.TimeFrame(365*24*60*60)
-    f5.save(conn)
+#tfs = model.TimeFrame.getAllActiveSorted(conn)
+#
+#if len(tfs) == 0:
+#    f1 = model.TimeFrame(5*60, 24*60*60)
+#    f1.save(conn)
+#    
+#    f2 = model.TimeFrame(60*60, 7*24*60*60)
+#    f2.save(conn)
+#    
+#    f3 = model.TimeFrame(24*60*60, 6*30*24*60*60)
+#    f3.save(conn)
+#    
+#    f4 = model.TimeFrame(30*24*60*60, 2*365*24*60*60)
+#    f4.save(conn)
+#    
+#    f5 = model.TimeFrame(365*24*60*60)
+#    f5.save(conn)
 
 if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
     print("Error: You need to set a bind address/port for the XML-RPC" + \

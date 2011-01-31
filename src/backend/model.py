@@ -749,6 +749,7 @@ class DataPoint(ModelBase):
             
             vt_value = None
             vt_min_interval = None
+            vt_covered_time = 0
             
             for ts in vt_keys:
                 item = items[ts]
@@ -764,8 +765,8 @@ class DataPoint(ModelBase):
                 
                 if vt_value == None:
                     vt_value = {
-                        'min': 0,
-                        'max': 0,
+                        'min': None,
+                        'max': None,
                         'avg': 0,
                         'last': None,
                         'virtual': True
@@ -774,20 +775,22 @@ class DataPoint(ModelBase):
                 if vt_start <= ts:
                     vt_value['virtual'] = False
 
-                if item['min'] < vt_value['min']:
+                if vt_value['min'] == None or item['min'] < vt_value['min']:
                     vt_value['min'] = item['min']
                     
-                if item['max'] > vt_value['max']:
+                if vt_value['max'] == None or item['max'] > vt_value['max']:
                     vt_value['max'] = item['max']
                     
                 vt_value['avg'] += vt_diff * item['avg']
                 
                 vt_value['last'] = item['last']
+                
+                vt_covered_time += vt_diff
             
             if vt_value != None:
                 vt_value['min'] = str(vt_value['min'])
                 vt_value['max'] = str(vt_value['max'])
-                vt_value['avg'] = str(vt_value['avg'] / granularity)
+                vt_value['avg'] = str(vt_value['avg'] / vt_covered_time)
                 vt_value['last'] = str(vt_value['last'])
             
                 if vt_value['virtual'] == False or with_virtual_values:

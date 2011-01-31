@@ -243,9 +243,7 @@ def rprofile():
             et = time()
             print("partial sync took %f seconds" % (et - st))
     except KeyboardInterrupt:
-        print('Shutting down. Please wait...')
-    finally:
-        print('Syncing all remaining objects...')
+        print('Syncing all remaining objects - Please wait...')
         model.sync_model_session(conn)
 
 rprofile()

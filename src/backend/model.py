@@ -6,7 +6,7 @@ Created on 17.01.2011
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Sequence, ForeignKey, create_engine, and_
-from sqlalchemy.sql.expression import literal, select, between, func
+from sqlalchemy.sql import literal, select, between, func
 from time import time
 from weakref import WeakValueDictionary
 from sqlalchemy.exc import ProgrammingError

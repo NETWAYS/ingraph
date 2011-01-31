@@ -6,13 +6,13 @@ Created on 17.01.2011
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Sequence, ForeignKey, create_engine, and_
-from sqlalchemy.sql import literal, select, between, func
+from sqlalchemy.sql import literal, select, between, func, delete
 from time import time
 from weakref import WeakValueDictionary
-from sqlalchemy.exc import ProgrammingError
 from random import randint
 
 last_vacuum = 0
+last_cleanup = 0
 dbload_max_timestamp = None
 
 '''
@@ -312,7 +312,7 @@ class Plot(ModelBase):
 
         debug_ts = self.current_timestamp
 
-        tfs = TimeFrame.getAllActiveSorted(conn)
+        tfs = TimeFrame.getAllSorted(conn, active_only=True)
         self.cache_tfs = tfs                
         self.current_interval = tfs[0].interval
 
@@ -468,9 +468,14 @@ class TimeFrame(ModelBase):
         self.retention_period = retention_period
         self.active = active
 
-    def getAllActiveSorted(conn):
+    def getAllSorted(conn, active_only=False):
         if TimeFrame.cache_tfs == None:
-            sel = timeframe.select().where(timeframe.c.active==True).order_by(timeframe.c.interval.asc())
+            sel = timeframe.select()
+            
+            if active_only:
+                sel = sel.where(timeframe.c.active==True)
+                
+            sel = sel.order_by(timeframe.c.interval.asc())
             
             objs = []
             
@@ -489,7 +494,7 @@ class TimeFrame(ModelBase):
             
         return TimeFrame.cache_tfs
     
-    getAllActiveSorted = staticmethod(getAllActiveSorted)
+    getAllSorted = staticmethod(getAllSorted)
 
     def getByID(conn, id):
         obj = TimeFrame.get(id)
@@ -886,6 +891,19 @@ class DataPoint(ModelBase):
         DataPoint.modified_objects = remaining_objects
         
     syncSomeObjects = staticmethod(syncSomeObjects)
+    
+    def cleanupOldData(conn):
+        tfs = TimeFrame.getAllSorted(conn)
+
+        for tf in tfs:
+            if tf.retention_period == None:
+                continue
+        
+            delsql = datapoint.delete(datapoint.c.timeframe_id==tf.id, datapoint.c.timestamp < time() - tf.retention_period)
+            
+            conn.execute(delsql)
+    
+    cleanupOldData = staticmethod(cleanupOldData)
 
 '''
 creates a DB connection
@@ -900,7 +918,7 @@ def create_model_conn(dsn):
     # sqlite3-specific optimization
     try:
         conn.execute('PRAGMA journal_mode=WAL')
-    except ProgrammingError:
+    except:
         pass
 
     metadata.create_all(engine)
@@ -914,14 +932,27 @@ def create_model_conn(dsn):
 Syncs (parts of) the session.
 '''
 def sync_model_session(conn, partial_sync=False):
-    global last_vacuum
-
     DataPoint.syncSomeObjects(conn, partial_sync)
 
-    if last_vacuum + 12 * 3600 < time():
+
+'''
+Runs regular maintenance tasks:
+
+* Running VACUUM on the database
+* Cleaning up old datapoints
+'''
+def run_maintenance_tasks(conn):
+    global last_vacuum, last_cleanup
+
+    if last_vacuum + 12 * 60 * 60 < time():
         try:
             conn.execute('VACUUM')
-        except ProgrammingError:
+        except:
             pass
         
         last_vacuum = time()
+
+    if last_cleanup + 30 * 60 < time():
+        DataPoint.cleanupOldData(conn)
+        
+        last_cleanup = time()

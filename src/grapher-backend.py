@@ -227,26 +227,26 @@ server.register_introspection_functions()
 server.register_multicall_functions()
 server.register_instance(BackendRPCMethods())
 
-def rprofile():
-    global shutdown_server
+last_maintenance = time()
 
-    try:
-        shutdown_server = False
+try:
+    shutdown_server = False
 
-        print("Waiting for XML-RPC requests...")
+    print("Waiting for XML-RPC requests...")
 
-        while not shutdown_server:
-            server.handle_request()
-            
-            st = time()
-            model.sync_model_session(conn, partial_sync=True)
-            et = time()
-            print("partial sync took %f seconds" % (et - st))
-    except KeyboardInterrupt:
-        print('Syncing all remaining objects - Please wait...')
-        model.sync_model_session(conn)
-
-rprofile()
+    while not shutdown_server:
+        server.handle_request()
+        
+        st = time()
+        model.sync_model_session(conn, partial_sync=True)
+        et = time()
+        print("partial sync took %f seconds" % (et - st))
+        
+        model.run_maintenance_tasks(conn)
+        
+except KeyboardInterrupt:
+    print('Syncing all remaining objects - Please wait...')
+    model.sync_model_session(conn)
 
 #import os
 #from cProfile import Profile

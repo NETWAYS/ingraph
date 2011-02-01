@@ -214,7 +214,7 @@ while  True:
         else:
             max_value = None
 
-        update = (logdata['host'], logdata['service'], plotname, logdata['timestamp'], \
+        update = (logdata['host'], None, logdata['service'], plotname, logdata['timestamp'], \
                   uom, raw_value, min_value, max_value)
         updates.append(update)
 

@@ -150,10 +150,9 @@ service = Table('service', metadata,
 )
 
 class Service(ModelBase):
-    def __init__(self, name, parent_service = None):
+    def __init__(self, name):
         self.id = None
         self.name = name
-        self.parent_service = parent_service
 
     def save(self, conn):
         if self.id == None:
@@ -186,13 +185,7 @@ class Service(ModelBase):
     getByID = staticmethod(getByID)
 
     def getByName(conn, name, parent_service=None):
-        cond = service.c.name==name
-        tables = []
-        
-        if parent_service != None:
-            tables = service.join(label('ps', service))
-            
-        sel = service.select(from_obj=tables).where(cond)
+        sel = service.select().where(service.c.name==name)
         result = conn.execute(sel)
         row = result.fetchone()
         
@@ -214,6 +207,7 @@ hostservice = Table('hostservice', metadata,
     Column('id', Integer, Sequence('hostservice_id_seq'), nullable=False, primary_key=True),
     Column('host_id', Integer, ForeignKey('host.id'), nullable=False),
     Column('service_id', Integer, ForeignKey('service.id'), nullable=False),
+    Column('parent_hostservice_id', Integer, ForeignKey('hostservice.id')),
     
     UniqueConstraint('host_id', 'service_id', name='uc_hs_1'),
     
@@ -221,10 +215,11 @@ hostservice = Table('hostservice', metadata,
 )
 
 class HostService(ModelBase):
-    def __init__(self, host, service):
+    def __init__(self, host, service, parent_hostservice):
         self.id = None
         self.host = host
         self.service = service
+        self.parent_hostservice = parent_hostservice
 
     def save(self, conn):
         if self.id == None:
@@ -236,14 +231,17 @@ class HostService(ModelBase):
                 self.service.save(conn)
                 assert self.service.id != None
     
-            ins = hostservice.insert().values(host_id=self.host.id, service_id=self.service.id)
+            ins = hostservice.insert().values(host_id=self.host.id, service_id=self.service.id, \
+                                              parent_hostservice_id=self.parent_hostservice.id)
             result = conn.execute(ins)
             self.id = result.last_inserted_ids()[0]
             self.activate()
         else:
             # TODO: should probably just throw an exception instead -
             # as changing a service's host/service ids doesn't make any sense
-            upd = hostservice.update().where(hostservice.c.id==self.id).values(host_id=self.host.id, service_id=self.service.id)
+            upd = hostservice.update().where(hostservice.c.id==self.id).values(host_id=self.host.id, \
+                                                                               service_id=self.service.id, \
+                                                                               parent_hostservice_id=self.parent_hostservice.id)
             conn.execute(upd)
 
     def getByID(conn, id):
@@ -826,9 +824,6 @@ class DataPoint(ModelBase):
                 if vt_value['virtual'] == False or with_virtual_values:
                     vt_values[str(vt_start)] = vt_value
                     
-                if float(vt_value['avg']) < 0.028:
-                    print("FOO")
-
             vt_start += granularity
             
         return vt_values

@@ -149,7 +149,7 @@ for (name, interval, retention_period) in reversed(agts):
         
         ts = int(time.mktime(row[ng_perf.c.perf_created].timetuple()))
         
-        update = (row[ng_host.c.host_name], row[ng_service.c.service_name], \
+        update = (row[ng_host.c.host_name], None, row[ng_service.c.service_name], \
                   row[ng_data.c.data_key], ts, 'raw', float(row[ng_data.c.data_value]), \
                   float(row[ng_data.c.data_value]), float(row[ng_data.c.data_value]), interval)
         

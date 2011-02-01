@@ -128,14 +128,19 @@ class BackendRPCMethods:
         
         for update in updates:
             if len(update) > 8:
-                (host, service, plot, timestamp, unit, value, min, max, tf) = update
+                (host, parent_service, service, plot, timestamp, unit, value, min, max, tf) = update
             else:
-                (host, service, plot, timestamp, unit, value, min, max) = update
+                (host, parent_service, service, plot, timestamp, unit, value, min, max) = update
                 tf = None
             
             host_obj = self._createHost(host)
+            if parent_service != None:
+                parent_service_obj = self._createService(parent_service)
+                parent_hostservice_obj = self._createHostService(host_obj, parent_service_obj)
+            else:
+                parent_hostservice_obj = None
             service_obj = self._createService(service)
-            hostservice_obj = self._createHostService(host_obj, service_obj)
+            hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
             plot_obj = self._createPlot(hostservice_obj, plot)
     
             # sanity checks

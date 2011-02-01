@@ -30,7 +30,7 @@ for aggregate in config['aggregates']:
     interval = aggregate['interval']
     
     if str(interval) in intervals:
-        intervals.remove(interval)
+        intervals.remove(str(interval))
     
     if 'retention-period' in aggregate:
         retention_period = aggregate['retention-period']
@@ -42,8 +42,6 @@ for aggregate in config['aggregates']:
 for interval in intervals:
     tf = tfs[interval]
     print tf
-
-sys.exit(0)
 
 updates = []
 
@@ -67,7 +65,7 @@ class PerfdataParser(object):
         'us': 10**(-6)
     }
     
-    def _parsePerfdataInteger(raw_value):
+    def _parsePerfdataInteger(raw_value, unit=None):
         raw_value = raw_value.strip()
                
         if raw_value == '':
@@ -84,8 +82,11 @@ class PerfdataParser(object):
         except ValueError:
             print("Failed to parse perfdata integer: %s" % (raw_value))
             return None
-            
-        unit = match.group(2)
+        
+        if unit == None:
+            unit = match.group(2)
+        elif unit != match.group(2):
+            return None
         
         if unit == None:
             uom = 'raw'
@@ -113,7 +114,7 @@ class PerfdataParser(object):
     _parsePerfdataInteger = staticmethod(_parsePerfdataInteger)
     
     def parse(perfdata):
-        labels = ['', '_warning', '_critical', '_min', '_max']
+        labels = ['raw', 'warning', 'critical', 'min', 'max']
 
         if '.' in perfdata and ',' in perfdata:
             perfdata = perfdata.replace(',', ';')
@@ -131,12 +132,42 @@ class PerfdataParser(object):
             key = match[0]
             values = match[1].split(';')
             
-            for i in range(0, len(labels)):
-                if len(values) > i:
-                    result = PerfdataParser._parsePerfdataInteger(values[i])
-                    
-                    if result != None:
-                        plots[key + labels[i]] = result
+            plot = {}
+            
+            raw = PerfdataParser._parsePerfdataInteger(values[0])
+                        
+            if raw == None:
+                continue
+            
+            plot['raw'] = raw
+
+            unit = raw['uom']
+            
+            if len(values) >= 2:
+                warn = PerfdataParser._parsePerfdataInteger(values[1], unit)
+                
+                if warn != None:
+                    plot['warn'] = warn
+            
+            if len(values) >= 3:
+                crit = PerfdataParser._parsePerfdataInteger(values[2], unit)
+                
+                if crit != None:
+                    plot['crit'] = crit
+            
+            if len(values) >= 4:
+                min = PerfdataParser._parsePerfdataInteger(values[3], unit)
+                
+                if min != None:
+                    plot['min'] = min
+
+            if len(values) >= 5:
+                max = PerfdataParser._parsePerfdataInteger(values[4], unit)
+                
+                if max != None:
+                    plot['max'] = max
+
+            plots[key] = plot
         
         return plots
         
@@ -170,7 +201,21 @@ while  True:
     for plotname in perfresults:
         perfresult = perfresults[plotname]
 
-        update = (logdata['host'], logdata['service'], plotname, logdata['timestamp'], str(perfresult['value']))
+        uom = perfresult['raw']['uom']
+        raw_value = str(perfresult['raw']['value'])
+        
+        if 'min' in perfresult:
+            min_value = str(perfresult['min']['value'])
+        else:
+            min_value = None
+        
+        if 'max' in perfresult:
+            max_value = str(perfresult['max']['value'])
+        else:
+            max_value = None
+
+        update = (logdata['host'], logdata['service'], plotname, logdata['timestamp'], \
+                  uom, raw_value, min_value, max_value)
         updates.append(update)
 
     now = time()

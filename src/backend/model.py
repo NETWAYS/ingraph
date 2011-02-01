@@ -4,7 +4,7 @@ Created on 17.01.2011
 @author: gunnar
 '''
 
-from sqlalchemy import MetaData, UniqueConstraint, Table, Column, BigInteger, Integer, \
+from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Sequence, ForeignKey, Index, create_engine, and_
 from sqlalchemy.sql import literal, select, between, func, label
 from time import time
@@ -290,6 +290,7 @@ plot = Table('plot', metadata,
     Column('id', Integer, Sequence('plot_id_seq'), nullable=False, primary_key=True),
     Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False),
     Column('name', String(512), nullable=False),
+    Column('unit', String(16)),
     
     UniqueConstraint('hostservice_id', 'name', name='uc_plot_1'),
     
@@ -301,6 +302,7 @@ class Plot(ModelBase):
         self.id = None
         self.name = name
         self.hostservice = hostservice
+        self.unit = None
         
         self.current_timestamp = None
         self.max_timestamp = None
@@ -372,7 +374,7 @@ class Plot(ModelBase):
         
         return (tfs, dps)
 
-    def insertValue(self, conn, timestamp, value):        
+    def insertValue(self, conn, timestamp, unit, value, min, max):        
         (tfs, dps) = self.fetchDataPoints(conn, timestamp)
         
         prev_dp = None
@@ -387,24 +389,36 @@ class Plot(ModelBase):
             prev_dp = dp
         
         prev_avg = value
+        prev_min = min
+        prev_max = min
         
         for tf in tfs:
             dp = dps[tf.interval]
             
-            dp.insertValue(prev_avg)
+            dp.insertValue(prev_avg, prev_min, prev_max)
 
             prev_avg = dp.avg
+            prev_min = dp.min
+            prev_max = dp.max
     
         self.last_update = timestamp
         
-    def insertValueRaw(self, conn, tf_interval, timestamp, value):
+        if self.unit != unit:
+            self.unit = unit
+            self.save(conn)
+            
+    def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, min, max):
         (_, dps) = self.fetchDataPoints(conn, timestamp, ignore_missing_tf=True, require_tf=tf_interval)
 
         assert tf_interval in dps
         assert dbload_max_timestamp == None, 'insertValueRaw may only be used to import data into an empty DB'
-        
-        dps[tf_interval].insertValue(value)
+                
+        dps[tf_interval].insertValue(value, min, max)
         self.last_update = timestamp
+        
+        if self.unit != unit:
+            self.unit = unit
+            self.save(conn)
 
     def getByID(conn, id):
         obj = Plot.get(id)
@@ -419,6 +433,7 @@ class Plot(ModelBase):
             obj = Plot()
             obj.id = row[plot.c.id]
             obj.hostservice = HostService.getByID(conn, row[plot.c.hostservice_id])
+            obj.unit = row[plot.c.unit]
             obj.activate()
 
         return obj
@@ -438,6 +453,7 @@ class Plot(ModelBase):
         if obj == None:
             obj = Plot(hostservice, name)
             obj.id = row[plot.c.id]
+            obj.unit = row[plot.c.unit]
             obj.activate()
 
         return obj    
@@ -451,12 +467,13 @@ class Plot(ModelBase):
                 
             assert self.hostservice.id != None
 
-            ins = plot.insert().values(hostservice_id=self.hostservice.id, name=self.name)
+            ins = plot.insert().values(hostservice_id=self.hostservice.id, name=self.name, unit=self.unit)
             result = conn.execute(ins)
             self.id = result.last_inserted_ids()[0]
             self.activate()
         else:
-            pass # nothing to do here (yet)
+            upd = plot.update().where(plot.c.id==self.id).values(hostservice_id=self.hostservice.id, unit=self.unit)
+            conn.execute(upd)
 
 timeframe = Table('timeframe', metadata,
     Column('id', Integer, Sequence('timeframe_id_seq'), nullable=False, primary_key=True),
@@ -608,16 +625,16 @@ class DataPoint(ModelBase):
         self.prev_min = 0
         self.prev_max = 0
 
-    def insertValue(self, value):
+    def insertValue(self, value, min, max):
         value = float(value)
 
-        if self.max == None or value > self.max:
+        if self.max == None or max > self.max:
             self.prev_max = self.max
-            self.max = value
+            self.max = max
             
-        if self.min == None or value < self.min:
+        if self.min == None or min < self.min:
             self.prev_min = self.min
-            self.min = value
+            self.min = min
 
         self.avg = (self.avg * self.count + value) / (self.count + 1)
         self.count = self.count + 1
@@ -647,7 +664,9 @@ class DataPoint(ModelBase):
         self.mark_modified()
 
     def mark_modified(self):
-        if self.timeframe.retention_period == None or self.timestamp > time() - self.timeframe.retention_period:            
+        if self.min != None and self.max != None and self.avg != None and \
+                     (self.timeframe.retention_period == None or \
+                     self.timestamp > time() - self.timeframe.retention_period):            
                 self._last_modification = time()
                 DataPoint.modified_objects.add(self)
 
@@ -770,6 +789,7 @@ class DataPoint(ModelBase):
                 if vt_min_interval == None or vt_min_interval > item['interval']:
                     vt_min_interval = item['interval']
                     vt_value = None
+                    vt_covered_time = 0
                 
                 vt_diff = min(ts + item['interval'], vt_end) - max(ts, vt_start)
                 
@@ -805,6 +825,9 @@ class DataPoint(ModelBase):
             
                 if vt_value['virtual'] == False or with_virtual_values:
                     vt_values[str(vt_start)] = vt_value
+                    
+                if float(vt_value['avg']) < 0.028:
+                    print("FOO")
 
             vt_start += granularity
             
@@ -946,7 +969,6 @@ Syncs (parts of) the session.
 '''
 def sync_model_session(conn, partial_sync=False):
     DataPoint.syncSomeObjects(conn, partial_sync)
-
 
 '''
 Runs regular maintenance tasks:

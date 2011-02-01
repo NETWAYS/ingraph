@@ -4,11 +4,13 @@ import re
 from time import time
 from xmlrpclib import ServerProxy, MultiCall
 import pickle
+from datetime import datetime
 from grapherutils import load_config
 
 print("NETWAYS Grapher V3 (file collector)")
 
 config = load_config('grapher-xmlrpc.conf')
+config = load_config('grapher-aggregates.conf', config)
 
 url = "http://%s:%s@%s:%s/" % (config['xmlrpc_username'], config['xmlrpc_password'],
                                config['xmlrpc_address'], config['xmlrpc_port'])
@@ -18,6 +20,30 @@ api = ServerProxy(url, allow_none=True)
 last_flush = time()
 line_count = 0
 ts_old = 0
+
+intervals = []
+
+tfs = api.getTimeFrames()
+intervals = tfs.keys()
+    
+for aggregate in config['aggregates']:
+    interval = aggregate['interval']
+    
+    if str(interval) in intervals:
+        intervals.remove(interval)
+    
+    if 'retention-period' in aggregate:
+        retention_period = aggregate['retention-period']
+    else:
+        retention_period = None
+    
+    api.setupTimeFrame(interval, retention_period)
+
+for interval in intervals:
+    tf = tfs[interval]
+    print tf
+
+sys.exit(0)
 
 updates = []
 
@@ -41,7 +67,6 @@ class PerfdataParser(object):
         'us': 10**(-6)
     }
     
-    # TODO: fix
     def _parsePerfdataInteger(raw_value):
         raw_value = raw_value.strip()
                
@@ -149,11 +174,12 @@ while  True:
         updates.append(update)
 
     now = time()
-    if last_flush + 30 < now or len(updates) > 50000:
+    if last_flush + 30 < now or len(updates) >= 50000:
         st = time()
         api.insertValueBulk(pickle.dumps(updates))
         et = time()
-        print("%d updates (%d lines) took %f seconds (ts-diff: %s seconds)" % (len(updates), line_count, et - st, logdata['timestamp'] - ts_old))
+        print("%d updates (%d lines) took %f seconds (%s -> %s)" % \
+              (len(updates), line_count, et - st, datetime.fromtimestamp(ts_old), datetime.fromtimestamp(logdata['timestamp'])))
         updates = []
         line_count = 0
         last_flush = time()

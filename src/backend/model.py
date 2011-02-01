@@ -4,15 +4,15 @@ Created on 17.01.2011
 @author: gunnar
 '''
 
-from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
-    Boolean, Numeric, String, Sequence, ForeignKey, create_engine, and_
-from sqlalchemy.sql import literal, select, between, func, delete
+from sqlalchemy import MetaData, UniqueConstraint, Table, Column, BigInteger, Integer, \
+    Boolean, Numeric, String, Sequence, ForeignKey, Index, create_engine, and_
+from sqlalchemy.sql import literal, select, between, func, label
 from time import time
 from weakref import WeakValueDictionary
 from random import randint
 
-last_vacuum = 0
-last_cleanup = 0
+last_vacuum = time()
+last_cleanup = time()
 dbload_max_timestamp = None
 
 '''
@@ -82,7 +82,7 @@ metadata = MetaData()
 
 host = Table('host', metadata,
     Column('id', Integer, Sequence('host_id_seq'), nullable=False, primary_key=True),
-    Column('name', String(128), nullable=False, unique=True),
+    Column('name', String(512), nullable=False, unique=True),
     
     mysql_engine='InnoDB'
 )
@@ -143,15 +143,17 @@ class Host(ModelBase):
 
 service = Table('service', metadata,
     Column('id', Integer, Sequence('service_id_seq'), nullable=False, primary_key=True),
-    Column('name', String(128), nullable=False, unique=True),
+    Column('name', String(512), nullable=False, unique=True),
+    Column('parent_service_id', Integer, ForeignKey('service.id')),
     
     mysql_engine='InnoDB'
 )
 
 class Service(ModelBase):
-    def __init__(self, name):
+    def __init__(self, name, parent_service = None):
         self.id = None
         self.name = name
+        self.parent_service = parent_service
 
     def save(self, conn):
         if self.id == None:
@@ -183,8 +185,14 @@ class Service(ModelBase):
 
     getByID = staticmethod(getByID)
 
-    def getByName(conn, name):
-        sel = service.select().where(service.c.name==name)
+    def getByName(conn, name, parent_service=None):
+        cond = service.c.name==name
+        tables = []
+        
+        if parent_service != None:
+            tables = service.join(label('ps', service))
+            
+        sel = service.select(from_obj=tables).where(cond)
         result = conn.execute(sel)
         row = result.fetchone()
         
@@ -281,7 +289,7 @@ class HostService(ModelBase):
 plot = Table('plot', metadata,
     Column('id', Integer, Sequence('plot_id_seq'), nullable=False, primary_key=True),
     Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False),
-    Column('name', String(128), nullable=False),
+    Column('name', String(512), nullable=False),
     
     UniqueConstraint('hostservice_id', 'name', name='uc_plot_1'),
     
@@ -530,7 +538,7 @@ class TimeFrame(ModelBase):
             self.id = result.last_inserted_ids()[0]
             self.activate()
         else:
-            upd = timeframe.update().where(id=self.id).values(interval=self.interval,
+            upd = timeframe.update().where(timeframe.c.id==self.id).values(interval=self.interval,
                                                               retention_period=self.retention_period,
                                                               active=self.active)
             result = conn.execute(upd)
@@ -552,6 +560,8 @@ datapoint = Table('datapoint', metadata,
     
     mysql_engine='InnoDB'
 )
+
+Index('idx_dp_1', datapoint.c.timeframe_id, datapoint.c.timestamp)
 
 class DataPoint(ModelBase):
     '''
@@ -902,7 +912,7 @@ class DataPoint(ModelBase):
             if tf.retention_period == None:
                 continue
         
-            delsql = datapoint.delete(datapoint.c.timeframe_id==tf.id, datapoint.c.timestamp < time() - tf.retention_period)
+            delsql = datapoint.delete(and_(datapoint.c.timeframe_id==tf.id, datapoint.c.timestamp < time() - tf.retention_period))
             
             conn.execute(delsql)
     
@@ -947,7 +957,7 @@ Runs regular maintenance tasks:
 def run_maintenance_tasks(conn):
     global last_vacuum, last_cleanup
 
-    if last_vacuum + 12 * 60 * 60 < time():
+    if last_vacuum + 48 * 60 * 60 < time():
         try:
             conn.execute('VACUUM')
         except:

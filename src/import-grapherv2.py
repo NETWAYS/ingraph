@@ -14,8 +14,9 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import select, join, func, and_
 import time
 import MySQLdb.cursors
-import datetime
+from datetime import datetime
 import math
+import sys
 
 print("NETWAYS Grapher V3 (V2 import)")
 
@@ -26,10 +27,16 @@ url = "http://%s:%s@%s:%s/" % (config['xmlrpc_username'], config['xmlrpc_passwor
 
 api = ServerProxy(url, allow_none=True)
 
+if len(api.getTimeFrames()) > 0:
+    print("The grapher backend you have selected already contains data. " + \
+          "You can only import into an empty backend.")
+    sys.exit(1)
+
 default_hostname = '127.0.0.1'
 default_port = '3306'
 default_database = 'grapherv2'
 default_username = 'root'
+default_password = ''
 
 hostname = raw_input('MySQL hostname [%s]: ' % (default_hostname))
 
@@ -61,7 +68,10 @@ username = raw_input('MySQL username [%s]: ' % (default_username))
 if username.strip() == '':
     username = default_username
 
-password = getpass.getpass('MySQL password [<empty>]: ')
+password = getpass.getpass('MySQL password [%s]: ' % (default_password))
+
+if password.strip() == '':
+    password = default_password
 
 dsn = 'mysql://%s:%s@%s:%d/%s' % (username, password, hostname, port, database)
 
@@ -71,13 +81,15 @@ metadata = MetaData()
 metadata.bind = engine
 metadata.reflect()
 
+engine.execute('SET @@NET_READ_TIMEOUT=259200;')
+
 agts = [
-    ('none', 300),
-    ('hour', 60*60),
-    ('day', 60*60*24),
-    ('week', 60*60*24*7),
-    ('month', 60*60*24*31),
-    ('year', 60*60*24*365)
+    ('none', 300, 2*7*24*60*60),
+    ('hour', 60*60, 28*7*24*60*60),
+    ('day', 60*60*24, 52*7*24*60*60),
+    ('week', 60*60*24*7, 2*52*7*24*60*60),
+    ('month', 60*60*24*31, 4*52*7*24*60*60),
+    ('year', 60*60*24*365, None)
 ]
 
 ng_data = metadata.tables['ng_data']
@@ -98,10 +110,12 @@ for row in sel.execute():
 
 processed = []
 
-for (name, interval) in reversed(agts):
+print("Importing data...")
+
+for (name, interval, retention_period) in reversed(agts):
     processed.append(name)
 
-    api.createTimeFrame(interval, None)
+    tf = api.setupTimeFrame(interval, retention_period)
     
     data_join = ng_data.join(ng_perf).join(ng_host_service).join(ng_host).join(ng_service) \
                 .join(ng_aggregate_type).join(ng_perf_type)
@@ -140,13 +154,18 @@ for (name, interval) in reversed(agts):
         
         updates.append(update)
         
-        if len(updates) >= 25000:
+        if len(updates) >= 5000:
             st = time.time()
             api.insertValueBulk(pickle.dumps(updates))
             et = time.time()
-            print("%d updates took %f seconds; %d rows (ts-diff: %s seconds)" % (len(updates), et - st, row_num, ts - ts_old))
+            print("%d updates took %f seconds; %d rows (%s -> %s)" % \
+                  (len(updates), et - st, row_num, datetime.fromtimestamp(ts_old), datetime.fromtimestamp(ts)))
             updates = []
             ts_old = ts
             row_num = 0
 
     api.insertValueBulk(pickle.dumps(updates))
+    
+    api.disableTimeFrame(tf)
+
+# TODO: disable ("seal") timeframes

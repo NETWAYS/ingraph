@@ -416,14 +416,16 @@ class Plot(ModelBase):
 
             value_raw = value
             value = (value - self.last_value) / (timestamp - self.last_update)
-
-            # min/max don't make any sense for counters
-            min = value
-            max = value
         else:
             value_raw = value
 
         self.last_value = value_raw
+        
+        if max != 0 and value > max:
+            value = max
+            
+        if min != 0 and value < min:
+            value = min
 
         prev_dp = None
         
@@ -436,8 +438,8 @@ class Plot(ModelBase):
             
             prev_dp = dp
 
-        prev_min = min
-        prev_max = max
+        prev_min = value
+        prev_max = value
         prev_avg = value
 
         for tf in tfs:

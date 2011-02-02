@@ -78,16 +78,16 @@ class BackendRPCMethods:
         
         return obj
 
-    def _createHostService(self, host, service):
+    def _createHostService(self, host, service, parent_hostservice):
         hostservice_key = (host, service)
         
         if hostservice_key in self.hostservices:
             return self.hostservices[hostservice_key]
         
-        obj = model.HostService.getByHostAndService(conn, host, service)
-                
+        obj = model.HostService.getByHostAndService(conn, host, service, parent_hostservice)
+        
         if obj == None:
-            obj = model.HostService(host, service)
+            obj = model.HostService(host, service, parent_hostservice)
             obj.save(conn)
         
         self.hostservices[hostservice_key] = obj
@@ -127,7 +127,7 @@ class BackendRPCMethods:
         updates = cPickle.loads(updates_raw)
         
         for update in updates:
-            if len(update) > 8:
+            if len(update) > 9:
                 (host, parent_service, service, plot, timestamp, unit, value, min, max, tf) = update
             else:
                 (host, parent_service, service, plot, timestamp, unit, value, min, max) = update
@@ -161,11 +161,16 @@ class BackendRPCMethods:
     def getHostServices(self, host):
         pass
     
-    def getPlotValues(self, host, service, plot, start_timestamp, end_timestamp,
+    def getPlotValues(self, host, parent_service, service, plot, start_timestamp, end_timestamp,
                       granularity, with_virtual_values):
         host_obj = self._createHost(host)
         service_obj = self._createService(service)
-        hostservice_obj = self._createHostService(host_obj, service_obj)
+        if parent_service != None and parent_service != '':
+            parent_service_obj = self._createService(parent_service)
+            parent_hostservice_obj = self._createHostService(host_obj, parent_service_obj, None)
+        else:
+            parent_hostservice_obj = None
+        hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
         plot_obj = self._createPlot(hostservice_obj, plot)
 
         return model.DataPoint.getValuesByInterval(conn, plot_obj, start_timestamp,

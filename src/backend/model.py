@@ -6,7 +6,7 @@ Created on 17.01.2011
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Sequence, ForeignKey, Index, create_engine, and_
-from sqlalchemy.sql import literal, select, between, func, label
+from sqlalchemy.sql import literal, select, between, func
 from time import time
 from weakref import WeakValueDictionary
 from random import randint
@@ -231,8 +231,13 @@ class HostService(ModelBase):
                 self.service.save(conn)
                 assert self.service.id != None
     
+            if self.parent_hostservice != None:
+                parent_hostservice_id = self.parent_hostservice.id
+            else:
+                parent_hostservice_id = None
+    
             ins = hostservice.insert().values(host_id=self.host.id, service_id=self.service.id, \
-                                              parent_hostservice_id=self.parent_hostservice.id)
+                                              parent_hostservice_id=parent_hostservice_id)
             result = conn.execute(ins)
             self.id = result.last_inserted_ids()[0]
             self.activate()
@@ -265,8 +270,13 @@ class HostService(ModelBase):
     
     getByID = staticmethod(getByID)
     
-    def getByHostAndService(conn, host, service):
-        sel = hostservice.select().where(and_(hostservice.c.host_id==host.id, hostservice.c.service_id==service.id))
+    def getByHostAndService(conn, host, service, parent_hostservice):
+        cond = and_(hostservice.c.host_id==host.id, hostservice.c.service_id==service.id)
+        
+        if parent_hostservice != None:
+            cond = and_(cond, hostservice.c.parent_hostservice_id==parent_hostservice.id)
+        
+        sel = hostservice.select().where(cond)
         result = conn.execute(sel)
         row = result.fetchone()
         
@@ -276,7 +286,7 @@ class HostService(ModelBase):
         obj = HostService.get(row[hostservice.c.id])
         
         if obj == None:
-            obj = HostService(host, service)
+            obj = HostService(host, service, parent_hostservice)
             obj.id = row[hostservice.c.id]
             obj.activate()
 
@@ -307,6 +317,8 @@ class Plot(ModelBase):
         self.current_interval = None
         self.cache_tfs = None
         self.cache_dps = None
+        
+        self.last_value = 0
         
         self.last_update = None
         
@@ -375,6 +387,44 @@ class Plot(ModelBase):
     def insertValue(self, conn, timestamp, unit, value, min, max):        
         (tfs, dps) = self.fetchDataPoints(conn, timestamp)
         
+        # no timeframes -> nothing to do here
+        if len(tfs) == 0:
+            return
+        
+        if unit == 'counter':
+            value = float(value)
+            
+            # min/max don't make any sense for counters
+            min = value
+            max = value
+
+            if self.last_update == None or self.last_update > timestamp:
+                self.last_value = value                
+                self.last_update = timestamp
+                return
+
+            if self.last_value > value:
+                # check for an overflow
+                if (self.last_value > 0.8 * 2**32 and value < 0.2 * 2**32):
+                    # 32bit counter overflow
+                    print("32-bit Counter overflow detected: last_value: %d, value: %d" % (self.last_value, value))
+                    self.last_value = -(2**32 - self.last_value)
+                elif (self.last_value > 0.8 * 2**64 and value < 0.2 * 2**64):
+                    # 64bit counter overflow
+                    print("64-bit Counter overflow detected: last_value: %d, value: %d" % (self.last_value, value))
+                    self.last_value = -(2**64 - self.last_value)
+                else:
+                    # ordinary counter reset
+                    print("Counter reset detected: last_value: %d, value: %d" % (self.last_value, value))
+                    self.last_value = 0
+
+            value_raw = value
+            value = (value - self.last_value) / (timestamp - self.last_update)
+        else:
+            value_raw = value
+
+        self.last_value = value_raw
+
         prev_dp = None
         
         for tf in reversed(tfs):
@@ -385,11 +435,11 @@ class Plot(ModelBase):
                     prev_dp.removeValue(dp.avg)
             
             prev_dp = dp
-        
-        prev_avg = value
+
         prev_min = min
-        prev_max = min
-        
+        prev_max = max
+        prev_avg = value
+
         for tf in tfs:
             dp = dps[tf.interval]
             
@@ -568,7 +618,6 @@ datapoint = Table('datapoint', metadata,
     Column('min', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('max', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('avg', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
-    Column('last', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('count', Integer, nullable=False),
     
     UniqueConstraint('plot_id', 'timeframe_id', 'timestamp', name='uc_dp_1'),
@@ -607,13 +656,11 @@ class DataPoint(ModelBase):
         self.max = None
         self.avg = 0.0
         self.count = 0
-        self.last = None
         
         self.saved_min = None
         self.saved_max = None
         self.saved_avg = None
         self.saved_count = None
-        self.saved_last = None
         
         '''
         Previous min/max values, these are not stored in the DB
@@ -636,8 +683,6 @@ class DataPoint(ModelBase):
 
         self.avg = (self.avg * self.count + value) / (self.count + 1)
         self.count = self.count + 1
-        
-        self.last = value
         
         self.mark_modified()
 
@@ -677,8 +722,7 @@ class DataPoint(ModelBase):
 
         # make sure we're not wasting DB queries for unchanged objects
         if self.min == self.saved_min and self.max == self.saved_max and \
-                self.avg == self.saved_avg and self.count == self.saved_count and \
-                self.last == self.saved_last:
+                self.avg == self.saved_avg and self.count == self.saved_count:
             return
 
         if self.id == None:
@@ -692,21 +736,20 @@ class DataPoint(ModelBase):
 
             ins = datapoint.insert().values(plot_id=self.plot.id, timeframe_id=self.timeframe.id,
                                             timestamp=self.timestamp, min=self.min, max=self.max,
-                                            avg=self.avg, last=self.last, count=self.count)
+                                            avg=self.avg, count=self.count)
             result = conn.execute(ins)
             self.id = result.last_inserted_ids()[0]
             
             self.activate()
         else:
             upd = datapoint.update().where(datapoint.c.id==self.id).values(min=self.min, max=self.max,
-                                            avg=self.avg, last=self.last, count=self.count)
+                                            avg=self.avg, count=self.count)
             conn.execute(upd)
 
         self.saved_min = self.min
         self.saved_max = self.max
         self.saved_avg = self.avg
         self.saved_count = self.count
-        self.saved_last = self.last
         
     def modified(self):
         return self.id == None or self._last_modification != None
@@ -744,7 +787,6 @@ class DataPoint(ModelBase):
                 'min': row[datapoint.c.min],
                 'max': row[datapoint.c.max],
                 'avg': row[datapoint.c.avg],
-                'last': row[datapoint.c.last]
             }
             
             items[ts] = item
@@ -760,7 +802,6 @@ class DataPoint(ModelBase):
                 'min': obj.min,
                 'max': obj.max,
                 'avg': obj.avg,
-                'last': obj.last
             }
             
             items[ts] = item
@@ -796,7 +837,6 @@ class DataPoint(ModelBase):
                         'min': None,
                         'max': None,
                         'avg': 0,
-                        'last': None,
                         'virtual': True
                     }
                     
@@ -811,15 +851,12 @@ class DataPoint(ModelBase):
                     
                 vt_value['avg'] += vt_diff * item['avg']
                 
-                vt_value['last'] = item['last']
-                
                 vt_covered_time += vt_diff
             
             if vt_value != None:
                 vt_value['min'] = str(vt_value['min'])
                 vt_value['max'] = str(vt_value['max'])
                 vt_value['avg'] = str(vt_value['avg'] / vt_covered_time)
-                vt_value['last'] = str(vt_value['last'])
             
                 if vt_value['virtual'] == False or with_virtual_values:
                     vt_values[str(vt_start)] = vt_value
@@ -865,7 +902,6 @@ class DataPoint(ModelBase):
                 obj.min = row[datapoint.c.min]
                 obj.max = row[datapoint.c.max]
                 obj.avg = row[datapoint.c.avg]
-                obj.last = row[datapoint.c.last]
                 obj.count = max(0, row[datapoint.c.count])
                                 
                 obj.id = row[datapoint.c.id]
@@ -943,7 +979,7 @@ def create_model_conn(dsn):
     global dbload_max_timestamp
 
     engine = create_engine(dsn)
-    
+
     conn = engine.connect()
 
     # sqlite3-specific optimization

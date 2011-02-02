@@ -390,10 +390,18 @@ class Plot(ModelBase):
         # no timeframes -> nothing to do here
         if len(tfs) == 0:
             return
+
+        value = float(value)
+        min = float(min)
+        max = float(max)
         
-        if unit == 'counter':
-            value = float(value)
+        if max != 0 and value > max:
+            value = max
             
+        if min != 0 and value < min:
+            value = min
+
+        if unit == 'counter':
             if self.last_update == None or self.last_update > timestamp:
                 self.last_value = value                
                 self.last_update = timestamp
@@ -420,12 +428,6 @@ class Plot(ModelBase):
             value_raw = value
 
         self.last_value = value_raw
-        
-        if max != 0 and value > max:
-            value = max
-            
-        if min != 0 and value < min:
-            value = min
 
         prev_dp = None
         
@@ -613,16 +615,13 @@ class TimeFrame(ModelBase):
         self.invalidateCache()
 
 datapoint = Table('datapoint', metadata,
-    Column('id', Integer, Sequence('datapoint_id_seq'), nullable=False, primary_key=True),
-    Column('plot_id', Integer, ForeignKey('plot.id'), nullable=False),
-    Column('timeframe_id', Integer, ForeignKey('timeframe.id'), nullable=False),
-    Column('timestamp', Integer, nullable=False),
+    Column('plot_id', Integer, ForeignKey('plot.id'), nullable=False, primary_key=True),
+    Column('timeframe_id', Integer, ForeignKey('timeframe.id'), nullable=False, primary_key=True),
+    Column('timestamp', Integer, nullable=False, primary_key=True),
     Column('min', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('max', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('avg', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('count', Integer, nullable=False),
-    
-    UniqueConstraint('plot_id', 'timeframe_id', 'timestamp', name='uc_dp_1'),
     
     mysql_engine='InnoDB'
 )
@@ -664,6 +663,8 @@ class DataPoint(ModelBase):
         self.saved_avg = None
         self.saved_count = None
         
+        self._inserted = False
+        
         '''
         Previous min/max values, these are not stored in the DB
         and are only kept so we can "remove" the last value from the
@@ -671,6 +672,12 @@ class DataPoint(ModelBase):
         ''' 
         self.prev_min = 0
         self.prev_max = 0
+
+    def identity(self):
+        if self.plot.id == None or self.timeframe.id == None or not self._inserted:
+            return None
+        else:
+            return (self.plot.id, self.timeframe.id, self.timestamp)
 
     def insertValue(self, value, min, max):
         value = float(value)
@@ -715,7 +722,7 @@ class DataPoint(ModelBase):
                 self._last_modification = time()
                 DataPoint.modified_objects.add(self)
 
-    def save(self, conn):
+    def _get_db_values(self, conn):
         if not self.modified():
             return
         
@@ -727,7 +734,7 @@ class DataPoint(ModelBase):
                 self.avg == self.saved_avg and self.count == self.saved_count:
             return
 
-        if self.id == None:
+        if self.identity() == None:
             if self.plot.id == None:
                 self.plot.save(conn)
                 assert self.plot.id != None
@@ -736,25 +743,71 @@ class DataPoint(ModelBase):
                 self.timeframe.save(conn)
                 assert self.timeframe.id != None
 
-            ins = datapoint.insert().values(plot_id=self.plot.id, timeframe_id=self.timeframe.id,
-                                            timestamp=self.timestamp, min=self.min, max=self.max,
-                                            avg=self.avg, count=self.count)
-            result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            type = 'insert'
+            values = {
+                'plot_id': self.plot.id,
+                'timeframe_id': self.timeframe.id,
+                'timestamp': self.timestamp,
+                'min': self.min,
+                'max': self.max,
+                'avg': self.avg,
+                'count': self.count
+            }
             
+            self._inserted = True
             self.activate()
         else:
-            upd = datapoint.update().where(datapoint.c.id==self.id).values(min=self.min, max=self.max,
-                                            avg=self.avg, count=self.count)
-            conn.execute(upd)
-
+            type = 'update'
+            values = {
+                'min': self.min,
+                'max': self.max,
+                'avg': self.avg,
+                'count': self.count
+            }
+        
         self.saved_min = self.min
         self.saved_max = self.max
         self.saved_avg = self.avg
         self.saved_count = self.count
         
+        return {
+            'type': type,
+            'values': values
+        }
+
+    def save(self, conn):
+        DataPoint.save_many(conn, [self])
+
+    def save_many(conn, objs):
+        insert_items = []
+
+        for obj in objs:
+            update = obj._get_db_values(conn)
+            
+            if update == None:
+                continue
+
+            type = update['type']
+            values = update['values']
+
+            if type == 'update':
+                upd = datapoint.update().where(and_(datapoint.c.plot_id==obj.plot.id, \
+                                           datapoint.c.timeframe_id==obj.timeframe.id,
+                                           datapoint.c.timestamp==obj.timestamp)) \
+                                           .values(values)
+                conn.execute(upd)
+                
+                continue
+            
+            insert_items.append(values)
+            
+        if len(insert_items) > 0:
+            conn.execute(datapoint.insert(), insert_items)
+    
+    save_many = staticmethod(save_many)
+
     def modified(self):
-        return self.id == None or self._last_modification != None
+        return not self._inserted or self._last_modification != None
     
     def should_save(self):
         if not self.modified():
@@ -891,7 +944,8 @@ class DataPoint(ModelBase):
         objs = set()
         
         for row in conn.execute(sel):
-            obj = DataPoint.get(row[datapoint.c.id])
+            id = (row[datapoint.c.plot_id], row[datapoint.c.timeframe_id], row[datapoint.c.timestamp])
+            obj = DataPoint.get(id)
             
             if obj == None:
                 '''
@@ -905,8 +959,8 @@ class DataPoint(ModelBase):
                 obj.max = row[datapoint.c.max]
                 obj.avg = row[datapoint.c.avg]
                 obj.count = max(0, row[datapoint.c.count])
-                                
-                obj.id = row[datapoint.c.id]
+
+                obj._inserted = True                                
                 obj.activate()
 
             objs.add(obj)
@@ -929,6 +983,8 @@ class DataPoint(ModelBase):
     
         remaining_objects = set()
         left_over_count = 0
+        
+        objs_to_save = []
     
         for obj in DataPoint.modified_objects:
             if not obj.modified() and obj.identity() != None:
@@ -944,8 +1000,10 @@ class DataPoint(ModelBase):
                     left_over_count += 1
                     continue
     
-            obj.save(conn)
+            objs_to_save.append(obj)
             count += 1            
+
+        DataPoint.save_many(conn, objs_to_save)
         
         trans.commit()
         

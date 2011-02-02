@@ -176,6 +176,9 @@ class BackendRPCMethods:
         return model.DataPoint.getValuesByInterval(conn, plot_obj, start_timestamp,
                                                    end_timestamp, granularity, with_virtual_values)
     
+    def sync(self):
+        model.sync_model_session(conn)
+    
     def shutdown(self):
         global shutdown_server
         shutdown_server = True

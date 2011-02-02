@@ -394,10 +394,6 @@ class Plot(ModelBase):
         if unit == 'counter':
             value = float(value)
             
-            # min/max don't make any sense for counters
-            min = value
-            max = value
-
             if self.last_update == None or self.last_update > timestamp:
                 self.last_value = value                
                 self.last_update = timestamp
@@ -420,6 +416,10 @@ class Plot(ModelBase):
 
             value_raw = value
             value = (value - self.last_value) / (timestamp - self.last_update)
+
+            # min/max don't make any sense for counters
+            min = value
+            max = value
         else:
             value_raw = value
 
@@ -985,6 +985,7 @@ def create_model_conn(dsn):
     # sqlite3-specific optimization
     try:
         conn.execute('PRAGMA journal_mode=WAL')
+        conn.execute('PRAGMA cache_size=20000')
     except:
         pass
 

@@ -6,8 +6,7 @@ import cPickle
 from base64 import b64decode
 import os
 import sys
-import backendmodel
-from grapherutils import load_config
+from netways_grapher import model, utils
 
 print("NETWAYS Grapher V3 (backend daemon)")
 
@@ -19,7 +18,7 @@ class BackendRPCMethods:
         self.plots = {}
         
     def setupTimeFrame(self, interval, retention_period=None):
-        tfs = backendmodel.TimeFrame.getAllSorted(conn, active_only=True)
+        tfs = model.TimeFrame.getAllSorted(conn, active_only=True)
         
         for tf in tfs:
             if tf.interval == interval:
@@ -28,13 +27,13 @@ class BackendRPCMethods:
                 
                 return tf.id
         
-        tf = backendmodel.TimeFrame(interval, retention_period)
+        tf = model.TimeFrame(interval, retention_period)
         tf.save(conn)
         
         return tf.id
     
     def getTimeFrames(self):
-        tfs = backendmodel.TimeFrame.getAllSorted(conn, active_only=True)
+        tfs = model.TimeFrame.getAllSorted(conn, active_only=True)
         
         items = {}
         
@@ -44,7 +43,7 @@ class BackendRPCMethods:
         return items
     
     def disableTimeFrame(self, tf_id):
-        tf = backendmodel.TimeFrame.getByID(conn, tf_id)
+        tf = model.TimeFrame.getByID(conn, tf_id)
         tf.active = False;
         tf.save(conn)
 
@@ -54,10 +53,10 @@ class BackendRPCMethods:
         if name in self.hosts:
             return self.hosts[name]
         
-        obj = backendmodel.Host.getByName(conn, name)
+        obj = model.Host.getByName(conn, name)
         
         if obj == None:
-            obj = backendmodel.Host(name)
+            obj = model.Host(name)
             obj.save(conn)
             
         self.hosts[name] = obj
@@ -68,10 +67,10 @@ class BackendRPCMethods:
         if name in self.services:
             return self.services[name]
 
-        obj = backendmodel.Service.getByName(conn, name)
+        obj = model.Service.getByName(conn, name)
         
         if obj == None:
-            obj = backendmodel.Service(name)
+            obj = model.Service(name)
             obj.save(conn)
         
         self.services[name] = obj
@@ -84,10 +83,10 @@ class BackendRPCMethods:
         if hostservice_key in self.hostservices:
             return self.hostservices[hostservice_key]
         
-        obj = backendmodel.HostService.getByHostAndService(conn, host, service, parent_hostservice)
+        obj = model.HostService.getByHostAndService(conn, host, service, parent_hostservice)
         
         if obj == None:
-            obj = backendmodel.HostService(host, service, parent_hostservice)
+            obj = model.HostService(host, service, parent_hostservice)
             obj.save(conn)
         
         self.hostservices[hostservice_key] = obj
@@ -100,10 +99,10 @@ class BackendRPCMethods:
         if plot_key in self.plots:
             return self.plots[plot_key]
         
-        obj = backendmodel.Plot.getByHostServiceAndName(conn, hostservice, name)
+        obj = model.Plot.getByHostServiceAndName(conn, hostservice, name)
         
         if obj == None:        
-            obj = backendmodel.Plot(hostservice, name)
+            obj = model.Plot(hostservice, name)
             obj.save(conn)
 
         self.plots[plot_key] = obj
@@ -113,12 +112,12 @@ class BackendRPCMethods:
 #    def insertValue(self, plot_id, timestamp, value):
 #        global update_count
 #
-#        plot = backendmodel.Plot.getByID(conn, plot_id)
+#        plot = model.Plot.getByID(conn, plot_id)
 #        plot.insertValue(conn, timestamp, value)
 #        
 #        update_count += 1
 #        if update_count % 10000 == 0:
-#            backendmodel.flush_some_objects(conn)
+#            model.flush_some_objects(conn)
 #            update_count = 0
 
     def insertValueBulk(self, updates_raw):
@@ -173,11 +172,11 @@ class BackendRPCMethods:
         hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
         plot_obj = self._createPlot(hostservice_obj, plot)
 
-        return backendmodel.DataPoint.getValuesByInterval(conn, plot_obj, start_timestamp,
+        return model.DataPoint.getValuesByInterval(conn, plot_obj, start_timestamp,
                                                    end_timestamp, granularity, with_virtual_values)
     
     def sync(self):
-        backendmodel.sync_model_session(conn)
+        model.sync_model_session(conn)
     
     def shutdown(self):
         global shutdown_server
@@ -224,8 +223,8 @@ class AuthenticatedXMLRPCServer(SimpleXMLRPCServer):
         
         return self.required_username == username and self.required_password == password
 
-config = load_config('grapher-backend.conf')
-config = load_config('grapher-xmlrpc.conf', config)
+config = utils.load_config('grapher-backend.conf')
+config = utils.load_config('grapher-xmlrpc.conf', config)
 
 if config['dsn'] == None:
     print("Error: You need to set a database connection string ('dsn' setting)" + \
@@ -233,7 +232,7 @@ if config['dsn'] == None:
     sys.exit(1)
 
 print('Connecting to the database...')
-conn = backendmodel.create_model_conn(config['dsn'])
+conn = model.create_model_conn(config['dsn'])
 
 if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
     print("Error: You need to set a bind address/port for the XML-RPC" + \
@@ -267,12 +266,12 @@ try:
         server.handle_request()
         
         st = time()
-        backendmodel.sync_model_session(conn, partial_sync=True)
+        model.sync_model_session(conn, partial_sync=True)
         et = time()
         print("partial sync took %f seconds" % (et - st))
         
-        backendmodel.run_maintenance_tasks(conn)
+        model.run_maintenance_tasks(conn)
         
 except KeyboardInterrupt:
     print('Syncing all remaining objects - Please wait...')
-    backendmodel.sync_model_session(conn)
+    model.sync_model_session(conn)

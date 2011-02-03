@@ -16,4 +16,4 @@ setup(name="netways_grapher",
       url="N/A",
       packages = ["netways_grapher"],
       package_dir = {"netways_grapher": "src"},
-      scripts = ["grapher-daemon", "file-collector", "import-grapherv2"])
+      scripts = ["grapher-daemon", "grapher-file-collector", "grapher-importv2"])

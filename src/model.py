@@ -316,7 +316,7 @@ class HostService(ModelBase):
                 obj.id = row[hostservice.c.id]
                 obj.activate()
                 
-                objs.append(obj)
+            objs.append(obj)
 
         return objs
     
@@ -1077,7 +1077,7 @@ def create_model_conn(dsn):
 
     engine = create_engine(dsn)
 
-    #engine.echo = True
+    engine.echo = True
 
     conn = engine.connect()
 

@@ -165,7 +165,7 @@ class BackendRPCMethods:
         items = []
 
         host = model.Host.getByName(conn, host)
-
+        
         for hostservice in model.HostService.getByHost(conn, host):
             item = {}
             

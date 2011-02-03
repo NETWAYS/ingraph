@@ -19,5 +19,5 @@ setup(name="netways_grapher",
       url="N/A",
       packages = ["netways_grapher"],
       package_dir = {"netways_grapher": "src"},
-      scripts = ["grapher-daemon", "grapher-file-collector", "grapher-importv2"],
+      scripts = ["grapher-daemon", "grapher-file-collector", "grapher-importv2", "grapher-stop"],
       install_requires = ["sqlalchemy>=0.6.3", "pysqlite"])

@@ -12,3 +12,8 @@ def load_config(path, existing_config={}):
     execfile(path, config)        
 
     return config
+
+def get_xmlrpc_url(config):
+    return "http://%s:%s@%s:%s/" % \
+        (config['xmlrpc_username'], config['xmlrpc_password'],
+        config['xmlrpc_address'], config['xmlrpc_port'])

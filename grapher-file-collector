@@ -11,10 +11,7 @@ print("NETWAYS Grapher V3 (file collector)")
 
 config = utils.load_config('grapher-xmlrpc.conf')
 config = utils.load_config('grapher-aggregates.conf', config)
-
-url = "http://%s:%s@%s:%s/" % (config['xmlrpc_username'], config['xmlrpc_password'],
-                               config['xmlrpc_address'], config['xmlrpc_port'])
-
+url = utils.get_xmlrpc_url(config)
 api = ServerProxy(url, allow_none=True)
 
 last_flush = time()

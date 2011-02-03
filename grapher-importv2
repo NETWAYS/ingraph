@@ -21,10 +21,7 @@ from netways_grapher import utils
 print("NETWAYS Grapher V3 (V2 import)")
 
 config = utils.load_config('grapher-xmlrpc.conf')
-
-url = "http://%s:%s@%s:%s/" % (config['xmlrpc_username'], config['xmlrpc_password'],
-                               config['xmlrpc_address'], config['xmlrpc_port'])
-
+url = utils.get_xmlrpc_url(config)
 api = ServerProxy(url, allow_none=True)
 
 if len(api.getTimeFrames()) > 0:

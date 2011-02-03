@@ -186,6 +186,11 @@ class BackendRPCMethods:
     
     def shutdown(self):
         global shutdown_server
+        
+        # make sure everything's synced before returning from
+        # the xmlrpc call
+        self.sync()
+        
         shutdown_server = True
         
         return True

@@ -408,12 +408,16 @@ class Plot(ModelBase):
                 return
 
             if self.last_value > value:
-                # check for an overflow
-                if (self.last_value > 0.8 * 2**32 and value < 0.2 * 2**32):
+                # We're checking for possible overflows by comparing the last raw value with the current
+                # raw value. If the last value is greater than 80% of the 32 or 64 bit boundary and the
+                # current value is below 20% of the matching boundary chances are it was an overflow
+                # rather than a counter reset. However, if the new value is 0 we assume it's a counter
+                # reset anyway.
+                if (value != 0 and self.last_value > 0.8 * 2**32 and value < 0.2 * 2**32):
                     # 32bit counter overflow
                     print("32-bit Counter overflow detected: last_value: %d, value: %d" % (self.last_value, value))
                     self.last_value = -(2**32 - self.last_value)
-                elif (self.last_value > 0.8 * 2**64 and value < 0.2 * 2**64):
+                elif (value != 0 and self.last_value > 0.8 * 2**64 and value < 0.2 * 2**64):
                     # 64bit counter overflow
                     print("64-bit Counter overflow detected: last_value: %d, value: %d" % (self.last_value, value))
                     self.last_value = -(2**64 - self.last_value)
@@ -627,6 +631,7 @@ datapoint = Table('datapoint', metadata,
 )
 
 Index('idx_dp_1', datapoint.c.timeframe_id, datapoint.c.timestamp)
+Index('idx_dp_2', datapoint.c.timestamp)
 
 class DataPoint(ModelBase):
     '''
@@ -820,7 +825,11 @@ class DataPoint(ModelBase):
         return self.timestamp != self.plot.last_update - self.plot.last_update % self.timeframe.interval or self._last_saved + randint(300, 900) < now
 
     def getValuesByInterval(conn, plot, start_timestamp, end_timestamp, granularity, with_virtual_values=False):
-        assert start_timestamp < end_timestamp
+        if end_timestamp < start_timestamp:
+            tmp = end_timestamp
+            end_timestamp = start_timestamp
+            start_timestamp = tmp
+
         assert granularity > 0
 
         sel = select([datapoint, timeframe],
@@ -1039,6 +1048,8 @@ def create_model_conn(dsn):
     global dbload_max_timestamp
 
     engine = create_engine(dsn)
+
+    engine.echo = True
 
     conn = engine.connect()
 

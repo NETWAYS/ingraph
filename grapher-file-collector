@@ -43,8 +43,6 @@ for interval in intervals:
     tf = tfs[interval]
     print tf
 
-updates = []
-
 class PerfdataParser(object):
     _perfRegex = re.compile('([^= ][^=]*)=([^ ]+)')
     _intRegex = re.compile('^([+-]?[0-9,.]+)[ ]*([KMGTPE]?[Bb]|[um]?s|c|%)?:?$')
@@ -172,6 +170,8 @@ class PerfdataParser(object):
         return plots
         
     parse = staticmethod(parse)
+
+updates = []
 
 while  True:
     line = sys.stdin.readline()

@@ -47,6 +47,8 @@ class BackendRPCMethods:
         tf.active = False;
         tf.save(conn)
 
+        return True
+
     # TODO: methods for enabling/disabling/listing timeframes
 
     def _createHost(self, name):
@@ -153,6 +155,8 @@ class BackendRPCMethods:
                 plot_obj.insertValue(conn, timestamp, unit, value, min, max)
             else:
                 plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, min, max)
+
+        return True
     
     def getHosts(self):
         pass
@@ -177,10 +181,14 @@ class BackendRPCMethods:
     
     def sync(self):
         model.sync_model_session(conn)
+
+        return True
     
     def shutdown(self):
         global shutdown_server
         shutdown_server = True
+        
+        return True
 
 # http://www.acooke.org/cute/BasicHTTPA0.html
 class AuthenticatedXMLRPCServer(SimpleXMLRPCServer):
@@ -194,8 +202,8 @@ class AuthenticatedXMLRPCServer(SimpleXMLRPCServer):
                         username = None
                         password = None
                     else:                    
-                        (basic, _, encoded) = \
-                            header.partition(' ')
+                        (basic, encoded) = \
+                            header.split(' ', 2)
     
                         assert basic == 'Basic', 'Only basic authentication supported'
                         

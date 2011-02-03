@@ -256,6 +256,9 @@ print('Starting XML-RPC interface on %s:%d...' % (config['xmlrpc_address'], conf
 server = AuthenticatedXMLRPCServer((config['xmlrpc_address'], config['xmlrpc_port']))
 server.timeout = 5
 
+if sys.version_info[:2] < (2,6):
+    server.socket.settimeout(server.timeout)
+
 if 'xmlrpc_username' not in config or 'xmlrpc_password' not in config:
     print("Error: You need to set an XML-RPC username and password ('xmlrpc_username'" + \
           " and 'xmlrpc_password' settings) in your configuration file.")

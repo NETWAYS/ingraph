@@ -199,7 +199,7 @@ class AuthenticatedXMLRPCServer(SimpleXMLRPCServer):
     
                         assert basic == 'Basic', 'Only basic authentication supported'
                         
-                        (username, _, password) = b64decode(encoded).partition(':')
+                        (username, password) = b64decode(encoded).split(':', 2)
                     
                     if self.authenticate(username, password):
                         return True
@@ -240,7 +240,7 @@ if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
     sys.exit(1)
     
 print('Starting XML-RPC interface on %s:%d...' % (config['xmlrpc_address'], config['xmlrpc_port']))
-server = AuthenticatedXMLRPCServer((config['xmlrpc_address'], config['xmlrpc_port']), allow_none=True)
+server = AuthenticatedXMLRPCServer((config['xmlrpc_address'], config['xmlrpc_port']))
 server.timeout = 5
 
 if 'xmlrpc_username' not in config or 'xmlrpc_password' not in config:

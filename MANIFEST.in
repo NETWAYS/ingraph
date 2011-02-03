@@ -1,2 +1,2 @@
-include README
+include README distribute_setup.py
 recursive-include docs *

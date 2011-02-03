@@ -7,7 +7,6 @@ Created on 28.01.2011
 
 from xmlrpclib import ServerProxy, MultiCall
 import pickle
-from grapherutils import load_config
 import getpass
 from sqlalchemy.schema import MetaData, Table
 from sqlalchemy.engine import create_engine
@@ -17,10 +16,11 @@ import MySQLdb.cursors
 from datetime import datetime
 import math
 import sys
+from netways_grapher import utils
 
 print("NETWAYS Grapher V3 (V2 import)")
 
-config = load_config('grapher-xmlrpc.conf')
+config = utils.load_config('grapher-xmlrpc.conf')
 
 url = "http://%s:%s@%s:%s/" % (config['xmlrpc_username'], config['xmlrpc_password'],
                                config['xmlrpc_address'], config['xmlrpc_port'])

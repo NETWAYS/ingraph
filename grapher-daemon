@@ -137,7 +137,7 @@ class BackendRPCMethods:
             host_obj = self._createHost(host)
             if parent_service != None:
                 parent_service_obj = self._createService(parent_service)
-                parent_hostservice_obj = self._createHostService(host_obj, parent_service_obj)
+                parent_hostservice_obj = self._createHostService(host_obj, parent_service_obj, None)
             else:
                 parent_hostservice_obj = None
             service_obj = self._createService(service)
@@ -162,7 +162,21 @@ class BackendRPCMethods:
         pass
     
     def getHostServices(self, host):
-        pass
+        items = []
+
+        host = model.Host.getByName(conn, host)
+
+        for hostservice in model.HostService.getByHost(conn, host):
+            item = {}
+            
+            item['service'] = hostservice.service.name
+            
+            if hostservice.parent_hostservice != None:
+                item['parent'] = hostservice.parent_hostservice.service.name
+            
+            items.append(item)
+        
+        return items
     
     def getPlotValues(self, host, parent_service, service, plot, start_timestamp, end_timestamp,
                       granularity, with_virtual_values):

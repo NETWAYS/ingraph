@@ -170,6 +170,9 @@ class PerfdataParser(object):
 
 updates = []
 
+
+check_multi_regex = re.compile('^([^:]+::[^:]+)::([^:]+)$')
+
 while  True:
     line = sys.stdin.readline()
         
@@ -195,7 +198,11 @@ while  True:
     
     perfresults = PerfdataParser.parse(logdata['perf'])
     
+    is_multidata = False
+    
     for plotname in perfresults:
+        match = check_multi_regex.match(plotname)
+                
         perfresult = perfresults[plotname]
 
         uom = perfresult['raw']['uom']
@@ -211,7 +218,21 @@ while  True:
         else:
             max_value = None
 
-        update = (logdata['host'], None, logdata['service'], plotname, logdata['timestamp'], \
+        upd_parentservice = None
+        upd_service = logdata['service']
+        upd_plotname = plotname
+
+        if match:
+            is_multidata = True
+            
+            multi_service = match.group(1)
+            upd_plotname = match.group(2)
+
+        if is_multidata:
+            upd_parentservice = logdata['service']
+            upd_service = multi_service
+
+        update = (logdata['host'], upd_parentservice, upd_service, upd_plotname, logdata['timestamp'], \
                   uom, raw_value, min_value, max_value)
         updates.append(update)
 

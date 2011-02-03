@@ -144,7 +144,6 @@ class Host(ModelBase):
 service = Table('service', metadata,
     Column('id', Integer, Sequence('service_id_seq'), nullable=False, primary_key=True),
     Column('name', String(512), nullable=False, unique=True),
-    Column('parent_service_id', Integer, ForeignKey('service.id')),
     
     mysql_engine='InnoDB'
 )
@@ -293,6 +292,35 @@ class HostService(ModelBase):
         return obj
 
     getByHostAndService = staticmethod(getByHostAndService)
+
+    def getByHost(conn, host):
+        sel = hostservice.select().where(hostservice.c.host_id==host.id)
+        result = conn.execute(sel)
+        
+        objs = []
+        
+        for row in result:
+            obj = HostService.get(row[hostservice.c.id])
+            
+            if obj == None:
+                service_obj = Service.getByID(conn, row[hostservice.c.service_id])
+                
+                parent_hostservice_id = row[hostservice.c.parent_hostservice_id]
+                
+                if parent_hostservice_id != None:
+                    parent_hostservice = HostService.getByID(conn, parent_hostservice_id)
+                else:
+                    parent_hostservice = None
+                
+                obj = HostService(host, service_obj, parent_hostservice)
+                obj.id = row[hostservice.c.id]
+                obj.activate()
+                
+                objs.append(obj)
+
+        return objs
+    
+    getByHost = staticmethod(getByHost)
 
 plot = Table('plot', metadata,
     Column('id', Integer, Sequence('plot_id_seq'), nullable=False, primary_key=True),

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
-import sys, os
-from distutils.core import setup
+import distribute_setup
+distribute_setup.use_setuptools()
+
+import sys
+from setuptools import setup, find_packages
 
 version = '3.0'
 
@@ -16,4 +19,5 @@ setup(name="netways_grapher",
       url="N/A",
       packages = ["netways_grapher"],
       package_dir = {"netways_grapher": "src"},
-      scripts = ["grapher-daemon", "grapher-file-collector", "grapher-importv2"])
+      scripts = ["grapher-daemon", "grapher-file-collector", "grapher-importv2"],
+      install_requires = ["sqlalchemy>=0.6.3"])

@@ -130,7 +130,7 @@ class Host(ModelBase):
         if row == None:
             return None
 
-        obj = Host.get(name)
+        obj = Host.get(row[host.c.id])
         
         if obj == None:
             obj = Host(name)
@@ -191,7 +191,7 @@ class Service(ModelBase):
         if row == None:
             return None
 
-        obj = Service.get(name)
+        obj = Service.get(row[service.c.id])
         
         if obj == None:
             obj = Service(name)
@@ -304,7 +304,7 @@ class HostService(ModelBase):
             
             if obj == None:
                 service_obj = Service.getByID(conn, row[hostservice.c.service_id])
-                
+            
                 parent_hostservice_id = row[hostservice.c.parent_hostservice_id]
                 
                 if parent_hostservice_id != None:
@@ -1077,7 +1077,7 @@ def create_model_conn(dsn):
 
     engine = create_engine(dsn)
 
-    engine.echo = True
+    #engine.echo = True
 
     conn = engine.connect()
 

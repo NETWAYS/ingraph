@@ -414,8 +414,10 @@ class Plot(ModelBase):
             if not ignore_missing_tf and not (len(dps) == 0 or (len(dps) == 1 and tfs[0].interval in dps)):
                 print("len(dps) == %d; len(tfs) == %d" % (len(dps), len(tfs)))
                 print("old current_timestamp: %d, timestamp: %d" % (debug_ts, timestamp))
-                # TODO: this should really be a run-time check and just print a warning + skip the update
-                assert(len(dps) == len(tfs))
+                if len(dps) != len(tfs):
+                    print("Can't process update due to missing intermediary DPs which were already" \
+                          "cleaned up.")
+                    return None
 
                 self.cache_dps = dps
                 return (tfs, dps)
@@ -441,7 +443,12 @@ class Plot(ModelBase):
         return (tfs, dps)
 
     def insertValue(self, conn, timestamp, unit, value, lower_limit, upper_limit):        
-        (tfs, dps) = self.fetchDataPoints(conn, timestamp)
+        result = self.fetchDataPoints(conn, timestamp)
+        
+        if result == None:
+            return
+        
+        (tfs, dps) = result
         
         # no timeframes -> nothing to do here
         if len(tfs) == 0:
@@ -526,7 +533,12 @@ class Plot(ModelBase):
             self.save(conn)
             
     def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, lower_limit, upper_limit):
-        (_, dps) = self.fetchDataPoints(conn, timestamp, ignore_missing_tf=True, require_tf=tf_interval)
+        result = self.fetchDataPoints(conn, timestamp, ignore_missing_tf=True, require_tf=tf_interval)
+        
+        if result == None:
+            return
+        
+        (_, dps) = result
 
         assert tf_interval in dps
         assert dbload_max_timestamp == None, 'insertValueRaw may only be used to import data into an empty DB'

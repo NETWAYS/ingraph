@@ -1,0 +1,42 @@
+Requirements
+============
+
+* Python version 2.4 or later
+* SQLAlchemy version 0.6 or later (older versions might work but have not been tested)
+* DB-API drivers for whatever DBMS you are going to use (e.g. sqlite)
+
+CentOS packages: python-sqlite sqlite-devel gcc
+Debian/Ubuntu packages: python-sqlalchemy python-pysqlite2
+SLES 10: python-devel sqlite-devel
+
+Installation
+============
+
+1. Unpack the tarball somewhere
+2. Install all the required software packages
+3. Run the install script:
+
+	# python setup.py install
+
+Configuration
+=============
+
+1. Create a new directory that is going to hold both the configuration files
+   as well as the database (assuming you're using sqlite).
+
+	$ mkdir /var/lib/netways_grapher
+
+2. Copy the example config files:
+
+	$ cp docs/conf/* /var/lib/netways_grapher
+
+3. Start the grapher daemon (working dir _must_ be the directory you just created):
+
+	$ cd /var/lib/netways_grapher
+	$ grapher-daemon
+
+(You might want to do this in a screen session - or using nohup).
+
+4. You can now either import an existing Grapher V2 database using 'grapher-importv2'
+   or import raw Nagios/Icinga perfdata logs using the 'grapher-file-collector' script. The
+   file collector script expects its input on stdin.

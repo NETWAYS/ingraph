@@ -135,6 +135,19 @@ class PerfdataParser(object):
                 if max != None:
                     plot['max'] = max
 
+            if raw['uom'] == 'percent':
+                plot['min'] = {
+                    'value': 0,
+                    'uom': 'percent',
+                    'input_uom': 'percent'
+                }
+
+                plot['max'] = {
+                    'value': 100,
+                    'uom': 'percent',
+                    'input_uom': 'percent'
+                }
+                
             plots[key] = plot
         
         return plots

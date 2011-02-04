@@ -13,7 +13,10 @@ from random import randint
 
 last_vacuum = time()
 last_cleanup = time()
+last_autocheckpoint = time()
+last_commit = time()
 dbload_max_timestamp = None
+transactions = {}
 
 '''
 Base class for all DB model classes.
@@ -1014,9 +1017,7 @@ class DataPoint(ModelBase):
         count = 0
         
         # the maximum number of objects we are going to save this time (unless partial_sync == False)
-        save_quota = max(500, DataPoint.last_sync_remaining_count / 20)
-    
-        trans = conn.begin()
+        save_quota = max(500, DataPoint.last_sync_remaining_count / 10)
     
         remaining_objects = set()
         left_over_count = 0
@@ -1038,11 +1039,14 @@ class DataPoint(ModelBase):
                     continue
     
             objs_to_save.append(obj)
-            count += 1            
+            count += 1
+            
+            if len(objs_to_save) > 20000:
+                DataPoint.save_many(conn, objs_to_save)
+                objs_to_save = []
 
-        DataPoint.save_many(conn, objs_to_save)
-        
-        trans.commit()
+        if len(objs_to_save) > 0:
+            DataPoint.save_many(conn, objs_to_save)
         
         DataPoint.last_sync_remaining_count = left_over_count
         
@@ -1077,13 +1081,15 @@ def create_model_conn(dsn):
 
     engine = create_engine(dsn)
 
-    engine.echo = True
+    #engine.echo = True
 
     conn = engine.connect()
 
     # sqlite3-specific optimization
     try:
+        conn.execute('PRAGMA locking_mode=exclusive')
         conn.execute('PRAGMA journal_mode=WAL')
+        conn.execute('PRAGMA wal_autocheckpoint=0')
         conn.execute('PRAGMA cache_size=20000')
     except:
         pass
@@ -1093,6 +1099,8 @@ def create_model_conn(dsn):
     sel = select([func.max(datapoint.c.timestamp, type_=Integer).label('maxtimestamp')])
     dbload_max_timestamp = conn.execute(sel).scalar()
 
+    transactions[conn] = conn.begin()
+
     return conn
 
 '''
@@ -1100,6 +1108,10 @@ Syncs (parts of) the session.
 '''
 def sync_model_session(conn, partial_sync=False):
     DataPoint.syncSomeObjects(conn, partial_sync)
+    
+    if not partial_sync:
+        transactions[conn].commit()
+        transactions[conn] = conn.begin()
 
 '''
 Runs regular maintenance tasks:
@@ -1108,9 +1120,9 @@ Runs regular maintenance tasks:
 * Cleaning up old datapoints
 '''
 def run_maintenance_tasks(conn):
-    global last_vacuum, last_cleanup
+    global last_vacuum, last_cleanup, last_autocheckpoint, last_commit
 
-    if last_vacuum + 48 * 60 * 60 < time():
+    if last_vacuum + 7 * 24 * 60 * 60 < time():
         try:
             conn.execute('VACUUM')
         except:
@@ -1122,3 +1134,17 @@ def run_maintenance_tasks(conn):
         DataPoint.cleanupOldData(conn)
         
         last_cleanup = time()
+
+    if last_autocheckpoint + 5 * 60 < time():
+        try:
+            conn.execute('PRAGMA wal_checkpoint')
+        except:
+            pass
+        
+        last_autocheckpoint = time()
+        
+    if last_commit + 60 < time():
+        transactions[conn].commit()
+        transactions[conn] = conn.begin()
+        
+        last_commit = time()

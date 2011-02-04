@@ -30,12 +30,15 @@ Configuration
 
 	$ cp docs/conf/* /var/lib/netways_grapher
 
+Feel free to customize the config files. In particular you will probably want
+to change the XML-RPC username/password.
+
 3. Start the grapher daemon (working dir _must_ be the directory you just created):
 
 	$ cd /var/lib/netways_grapher
 	$ grapher-daemon
 
-(You might want to do this in a screen session - or using nohup).
+You might want to do this in a screen session - or using nohup.
 
 4. You can now either import an existing Grapher V2 database using 'grapher-importv2'
    or import raw Nagios/Icinga perfdata logs using the 'grapher-file-collector' script. The

@@ -77,7 +77,8 @@ class PerfdataParser(object):
         
         return {
             'value': result_value,
-            'uom': uom
+            'uom': uom,
+            'input_uom': unit 
         }
     
     parsePerfdataNumber = staticmethod(parsePerfdataNumber)
@@ -108,28 +109,28 @@ class PerfdataParser(object):
             
             plot['raw'] = raw
 
-            unit = raw['uom']
+            unit = raw['input_uom']
             
             if len(values) >= 2:
-                warn = PerfdataParser._parsePerfdataInteger(values[1], unit)
+                warn = PerfdataParser.parsePerfdataNumber(values[1], unit)
                 
                 if warn != None:
                     plot['warn'] = warn
             
             if len(values) >= 3:
-                crit = PerfdataParser._parsePerfdataInteger(values[2], unit)
+                crit = PerfdataParser.parsePerfdataNumber(values[2], unit)
                 
                 if crit != None:
                     plot['crit'] = crit
             
             if len(values) >= 4:
-                min = PerfdataParser._parsePerfdataInteger(values[3], unit)
+                min = PerfdataParser.parsePerfdataNumber(values[3], unit)
                 
                 if min != None:
                     plot['min'] = min
 
             if len(values) >= 5:
-                max = PerfdataParser._parsePerfdataInteger(values[4], unit)
+                max = PerfdataParser.parsePerfdataNumber(values[4], unit)
                 
                 if max != None:
                     plot['max'] = max

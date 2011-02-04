@@ -144,6 +144,26 @@ class Host(ModelBase):
 
     getByName = staticmethod(getByName)
 
+    def getAll(conn):
+        sel = host.select()
+        result = conn.execute(sel)
+        
+        objs = []
+        
+        for row in result:
+            obj = Host.get(row[host.c.id])
+            
+            if obj == None:
+                obj = Host(row[host.c.name])
+                obj.id = row[host.c.id]
+                obj.activate()
+                
+            objs.append(obj)
+            
+        return objs
+
+    getAll = staticmethod(getAll)
+
 service = Table('service', metadata,
     Column('id', Integer, Sequence('service_id_seq'), nullable=False, primary_key=True),
     Column('name', String(512), nullable=False, unique=True),
@@ -264,7 +284,12 @@ class HostService(ModelBase):
             host = Host.getByID(conn, row[hostservice.c.host_id])
             service = Service.getByID(conn, row[hostservice.c.service_id])
 
-            obj = HostService(host, service)
+            if row[hostservice.c.parent_hostservice_id] != None:
+                parent_hostservice = HostService.getByID(conn, row[hostservice.c.parent_hostservice_id])
+            else:
+                parent_hostservice = None
+
+            obj = HostService(host, service, parent_hostservice)
             obj.id = row[hostservice.c.id]            
             obj.activate()
         
@@ -415,7 +440,7 @@ class Plot(ModelBase):
         
         return (tfs, dps)
 
-    def insertValue(self, conn, timestamp, unit, value, min, max):        
+    def insertValue(self, conn, timestamp, unit, value, lower_limit, upper_limit):        
         (tfs, dps) = self.fetchDataPoints(conn, timestamp)
         
         # no timeframes -> nothing to do here
@@ -423,15 +448,21 @@ class Plot(ModelBase):
             return
 
         value = float(value)
-        min = float(min)
-        max = float(max)
         
-        if max != 0 and value > max:
-            value = max
-            
-        if min != 0 and value < min:
-            value = min
+        if lower_limit != None:
+            lower_limit = float(lower_limit)
 
+            if value < lower_limit:
+                value = lower_limit
+
+        if upper_limit != None:
+            upper_limit = float(upper_limit)
+            
+            # some plugins return lower_limit==upper_limit,
+            # lets just ignore that non-sense...
+            if value > upper_limit and lower_limit != upper_limit:
+                value = upper_limit
+        
         if unit == 'counter':
             if self.last_update == None or self.last_update > timestamp:
                 self.last_value = value                
@@ -482,11 +513,11 @@ class Plot(ModelBase):
         for tf in tfs:
             dp = dps[tf.interval]
             
-            dp.insertValue(prev_avg, prev_min, prev_max)
+            dp.insertValue(prev_avg, prev_min, prev_max, lower_limit, upper_limit)
 
-            prev_avg = dp.avg
             prev_min = dp.min
             prev_max = dp.max
+            prev_avg = dp.avg
     
         self.last_update = timestamp
         
@@ -494,13 +525,13 @@ class Plot(ModelBase):
             self.unit = unit
             self.save(conn)
             
-    def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, min, max):
+    def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, lower_limit, upper_limit):
         (_, dps) = self.fetchDataPoints(conn, timestamp, ignore_missing_tf=True, require_tf=tf_interval)
 
         assert tf_interval in dps
         assert dbload_max_timestamp == None, 'insertValueRaw may only be used to import data into an empty DB'
                 
-        dps[tf_interval].insertValue(value, min, max)
+        dps[tf_interval].insertValue(value, value, value, lower_limit, upper_limit)
         self.last_update = timestamp
         
         if self.unit != unit:
@@ -546,6 +577,30 @@ class Plot(ModelBase):
         return obj    
 
     getByHostServiceAndName = staticmethod(getByHostServiceAndName)
+
+    def getByHost(conn, hostname):
+        sel = select([plot.c.id, plot.c.name, plot.c.unit, plot.c.hostservice_id], from_obj=[plot.join(hostservice).join(host)]) \
+        .where(host.c.name==hostname)
+
+        result = conn.execute(sel)
+        
+        objs = []
+        
+        for row in result:
+            obj = Plot.get(row[plot.c.id])
+        
+            if obj == None:
+                hs = HostService.getByID(conn, row[plot.c.hostservice_id])
+                obj = Plot(hs, row[plot.c.name])
+                obj.id = row[plot.c.id]
+                obj.unit = row[plot.c.unit]
+                obj.activate()
+
+            objs.append(obj)
+
+        return objs
+
+    getByHost = staticmethod(getByHost)
     
     def save(self, conn):
         if self.id == None:
@@ -656,6 +711,8 @@ datapoint = Table('datapoint', metadata,
     Column('min', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('max', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('avg', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
+    Column('lower_limit', Numeric(precision=20, scale=5, asdecimal=False)),
+    Column('upper_limit', Numeric(precision=20, scale=5, asdecimal=False)),
     Column('count', Integer, nullable=False),
     
     mysql_engine='InnoDB'
@@ -693,12 +750,16 @@ class DataPoint(ModelBase):
         self.max = None
         self.avg = 0.0
         self.count = 0
+        self.lower_limit = None
+        self.upper_limit = None
         
         self.saved_min = None
         self.saved_max = None
         self.saved_avg = None
         self.saved_count = None
-        
+        self.saved_lower_limit = None
+        self.saved_upper_limit = None
+                
         self._inserted = False
         
         '''
@@ -715,7 +776,14 @@ class DataPoint(ModelBase):
         else:
             return (self.plot.id, self.timeframe.id, self.timestamp)
 
-    def insertValue(self, value, min, max):
+    '''
+    value = current value (or avg from a smaller tf)
+    min = minimum value we encountered in smaller tfs)
+    max = maximum value we encountered in smaller tfs)
+    lower_limit = lower limit for the value, as specified in the perfdata
+    upper_limit = upper limit for the value, as specified in the perfdata
+    '''
+    def insertValue(self, value, min, max, lower_limit=None, upper_limit=None):
         value = float(value)
 
         if self.max == None or max > self.max:
@@ -725,6 +793,12 @@ class DataPoint(ModelBase):
         if self.min == None or min < self.min:
             self.prev_min = self.min
             self.min = min
+            
+        if self.lower_limit == None:
+            self.lower_limit = lower_limit
+            
+        if self.upper_limit == None:
+            self.upper_limit = upper_limit
 
         self.avg = (self.avg * self.count + value) / (self.count + 1)
         self.count = self.count + 1
@@ -767,7 +841,8 @@ class DataPoint(ModelBase):
 
         # make sure we're not wasting DB queries for unchanged objects
         if self.min == self.saved_min and self.max == self.saved_max and \
-                self.avg == self.saved_avg and self.count == self.saved_count:
+                self.avg == self.saved_avg and self.count == self.saved_count and \
+                self.lower_limit == self.saved_lower_limit and self.upper_limit == self.saved_upper_limit:
             return
 
         if self.identity() == None:
@@ -787,7 +862,9 @@ class DataPoint(ModelBase):
                 'min': self.min,
                 'max': self.max,
                 'avg': self.avg,
-                'count': self.count
+                'count': self.count,
+                'lower_limit': self.lower_limit,
+                'upper_limit': self.upper_limit
             }
             
             self._inserted = True
@@ -798,13 +875,17 @@ class DataPoint(ModelBase):
                 'min': self.min,
                 'max': self.max,
                 'avg': self.avg,
-                'count': self.count
+                'count': self.count,
+                'lower_limit': self.lower_limit,
+                'upper_limit': self.upper_limit
             }
         
         self.saved_min = self.min
         self.saved_max = self.max
         self.saved_avg = self.avg
         self.saved_count = self.count
+        self.saved_lower_limit = self.lower_limit
+        self.saved_upper_limit = self.upper_limit
         
         return {
             'type': type,
@@ -862,11 +943,12 @@ class DataPoint(ModelBase):
             start_timestamp = tmp
 
         assert granularity > 0
-
+        
         sel = select([datapoint, timeframe],
                      and_(datapoint.c.timeframe_id==timeframe.c.id,
                           datapoint.c.plot_id==plot.id,
-                          between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % timeframe.c.interval, end_timestamp)))
+                          between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % timeframe.c.interval, end_timestamp),
+                          timeframe.c.interval > granularity / 25))
         result = conn.execute(sel)
 
         items = dict()
@@ -882,6 +964,8 @@ class DataPoint(ModelBase):
                 'min': row[datapoint.c.min],
                 'max': row[datapoint.c.max],
                 'avg': row[datapoint.c.avg],
+                'lower_limit': row[datapoint.c.lower_limit],
+                'upper_limit': row[datapoint.c.upper_limit],
             }
             
             items[ts] = item
@@ -897,6 +981,8 @@ class DataPoint(ModelBase):
                 'min': obj.min,
                 'max': obj.max,
                 'avg': obj.avg,
+                'lower_limit': obj.lower_limit,
+                'upper_limit': obj.upper_limit
             }
             
             items[ts] = item
@@ -943,6 +1029,12 @@ class DataPoint(ModelBase):
                     
                 if vt_value['max'] == None or item['max'] > vt_value['max']:
                     vt_value['max'] = item['max']
+                
+                if item['lower_limit'] != None:
+                    vt_value['lower_limit'] = item['lower_limit']
+                    
+                if item['upper_limit'] != None:
+                    vt_value['upper_limit'] = item['upper_limit']
                     
                 vt_value['avg'] += vt_diff * item['avg']
                 
@@ -952,6 +1044,12 @@ class DataPoint(ModelBase):
                 vt_value['min'] = str(vt_value['min'])
                 vt_value['max'] = str(vt_value['max'])
                 vt_value['avg'] = str(vt_value['avg'] / vt_covered_time)
+                
+                if 'lower_limit' in vt_value:
+                    vt_value['lower_limit'] = str(vt_value['lower_limit'])
+                    
+                if 'upper_limit' in vt_value:
+                    vt_value['upper_limit'] = str(vt_value['upper_limit'])
             
                 if vt_value['virtual'] == False or with_virtual_values:
                     vt_values[str(vt_start)] = vt_value
@@ -976,11 +1074,13 @@ class DataPoint(ModelBase):
     def getByTimestamp(conn, plot, timestamp, active_tfs_only=False):
         timestamp = int(timestamp)
 
-        # TODO: implement active_tfs_only flag (i.e. return dps only for active timeframes)
+        cond = and_(datapoint.c.timeframe_id==timeframe.c.id, datapoint.c.plot_id==plot.id,
+                    datapoint.c.timestamp==literal(timestamp) - literal(timestamp) % timeframe.c.interval)
 
-        sel = datapoint.select().where(and_(datapoint.c.timeframe_id==timeframe.c.id, datapoint.c.plot_id==plot.id,
-                                                            datapoint.c.timestamp==literal(timestamp) - literal(timestamp) % timeframe.c.interval
-                                                            ))
+        if active_tfs_only:
+            cond = and_(cond, timeframe.c.active==True)
+
+        sel = datapoint.select().where(cond)
         objs = set()
         
         for row in conn.execute(sel):
@@ -999,6 +1099,8 @@ class DataPoint(ModelBase):
                 obj.max = row[datapoint.c.max]
                 obj.avg = row[datapoint.c.avg]
                 obj.count = max(0, row[datapoint.c.count])
+                obj.lower_limit = row[datapoint.c.lower_limit]
+                obj.upper_limit = row[datapoint.c.upper_limit]
 
                 obj._inserted = True                                
                 obj.activate()
@@ -1006,7 +1108,8 @@ class DataPoint(ModelBase):
             objs.add(obj)
     
         for obj in DataPoint.modified_objects:
-            if obj.plot == plot and obj.timestamp == timestamp - timestamp % obj.timeframe.interval:
+            if obj.plot == plot and obj.timestamp == timestamp - timestamp % obj.timeframe.interval \
+                    and (not active_tfs_only or obj.timeframe.active):
                 objs.add(obj)
         
         return objs
@@ -1090,7 +1193,7 @@ def create_model_conn(dsn):
         conn.execute('PRAGMA locking_mode=exclusive')
         conn.execute('PRAGMA journal_mode=WAL')
         conn.execute('PRAGMA wal_autocheckpoint=0')
-        conn.execute('PRAGMA cache_size=20000')
+        conn.execute('PRAGMA cache_size=1000000')
     except:
         pass
 

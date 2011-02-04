@@ -129,9 +129,9 @@ class BackendRPCMethods:
         
         for update in updates:
             if len(update) > 9:
-                (host, parent_service, service, plot, timestamp, unit, value, min, max, tf) = update
+                (host, parent_service, service, plot, timestamp, unit, value, lower_limit, upper_limit, tf) = update
             else:
-                (host, parent_service, service, plot, timestamp, unit, value, min, max) = update
+                (host, parent_service, service, plot, timestamp, unit, value, lower_limit, upper_limit) = update
                 tf = None
             
             host_obj = self._createHost(host)
@@ -144,51 +144,72 @@ class BackendRPCMethods:
             hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
             plot_obj = self._createPlot(hostservice_obj, plot)
     
-            # sanity checks
-            if min == None or value < min:
-                min = value
-                
-            if max == None or value > max:
-                max = value
-
             if tf == None:
-                plot_obj.insertValue(conn, timestamp, unit, value, min, max)
+                plot_obj.insertValue(conn, timestamp, unit, value, lower_limit, upper_limit)
             else:
-                plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, min, max)
+                plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, lower_limit, upper_limit)
 
         return True
     
     def getHosts(self):
-        pass
+        hosts = model.Host.getAll(conn)
+        
+        items = []
+        
+        for host in hosts:
+            items.append(host.name)
+            
+        return items
     
-    def getHostServices(self, host):
+    def getPlots(self, host):
         items = []
 
-        host = model.Host.getByName(conn, host)
-        
-        for hostservice in model.HostService.getByHost(conn, host):
-            item = {}
+        plots = model.Plot.getByHost(conn, host)
+
+        for plot in plots:
+            item = {
+                'name': plot.name,
+                'service': plot.hostservice.service.name
+            }
             
-            item['service'] = hostservice.service.name
-            
-            if hostservice.parent_hostservice != None:
-                item['parent'] = hostservice.parent_hostservice.service.name
-            
+            if plot.hostservice.parent_hostservice != None:
+                item['parent_service'] = plot.hostservice.parent_hostservice.service.name
+                
             items.append(item)
         
         return items
     
     def getPlotValues(self, host, parent_service, service, plot, start_timestamp, end_timestamp,
                       granularity, with_virtual_values):
-        host_obj = self._createHost(host)
-        service_obj = self._createService(service)
+        host_obj = model.Host.getByName(conn, host)
+        
+        if host == None:
+            return []
+
+        service_obj = model.Service.getByName(conn, service)
+        
+        if service_obj == None:
+            return []
+        
         if parent_service != None and parent_service != '':
-            parent_service_obj = self._createService(parent_service)
-            parent_hostservice_obj = self._createHostService(host_obj, parent_service_obj, None)
+            parent_service_obj = model.Service.getByName(conn, parent_service)
+            
+            if parent_service_obj == None:
+                return []
+            
+            parent_hostservice_obj = model.HostService.getByHostAndService(conn, host_obj, parent_service_obj, None)
         else:
             parent_hostservice_obj = None
-        hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
-        plot_obj = self._createPlot(hostservice_obj, plot)
+            
+        hostservice_obj = model.HostService.getByHostAndService(conn, host_obj, service_obj, parent_hostservice_obj)
+        
+        if hostservice_obj == None:
+            return []
+        
+        plot_obj = model.Plot.getByHostServiceAndName(conn, hostservice_obj, plot)
+        
+        if plot_obj == None:
+            return []
 
         return model.DataPoint.getValuesByInterval(conn, plot_obj, start_timestamp,
                                                    end_timestamp, granularity, with_virtual_values)
@@ -283,7 +304,8 @@ server.required_password = config['xmlrpc_password']
 
 server.register_introspection_functions()
 server.register_multicall_functions()
-server.register_instance(BackendRPCMethods())
+backend_obj = BackendRPCMethods()
+server.register_instance(backend_obj)
 
 last_maintenance = time()
 
@@ -301,7 +323,6 @@ try:
         print("partial sync took %f seconds" % (et - st))
         
         model.run_maintenance_tasks(conn)
-        
 except KeyboardInterrupt:
     print('Syncing all remaining objects - Please wait...')
     model.sync_model_session(conn)

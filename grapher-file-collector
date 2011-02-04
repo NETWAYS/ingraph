@@ -106,7 +106,7 @@ while  True:
         update = (logdata['host'], upd_parentservice, upd_service, upd_plotname, logdata['timestamp'], \
                   uom, raw_value, min_value, max_value)
         updates.append(update)
-
+        
     now = time()
     if last_flush + 30 < now or len(updates) >= 25000:
         updates_pickled = pickle.dumps(updates)

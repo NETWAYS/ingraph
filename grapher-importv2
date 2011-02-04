@@ -147,7 +147,6 @@ for (name, interval, retention_period) in reversed(agts):
     if ts_limit != None:
         cond = and_(cond, ng_perf.c.perf_created < ts_limit)
 
-    
     sel = sel.where(cond).order_by(ng_perf.c.perf_created.asc())
     
     result = sel.execution_options(stream_results=True).execute()
@@ -156,6 +155,13 @@ for (name, interval, retention_period) in reversed(agts):
     ts_old = 0
     
     row_num = 0
+    
+    '''
+    NOTE: There is no special code for handling check_multi results
+    in the import script. This is due to the fact that it's unfortunatelly
+    not possible to properly import these values due to how Grapher V2
+    is handling perfdata for check_multi. 
+    ''' 
     
     for row in result:
         row_num += 1

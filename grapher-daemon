@@ -271,7 +271,7 @@ class AuthenticatedXMLRPCServer(SimpleXMLRPCServer):
         
         return self.required_username == username and self.required_password == password
 
-config = utils.load_config('grapher-backend.conf')
+config = utils.load_config('grapher-database.conf')
 config = utils.load_config('grapher-xmlrpc.conf', config)
 
 if config['dsn'] == None:

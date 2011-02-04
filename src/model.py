@@ -1041,6 +1041,11 @@ class DataPoint(ModelBase):
                 vt_covered_time += vt_diff
             
             if vt_value != None:
+                # need to compensate for missing data at tf boundaries
+                if vt_covered_time < granularity:
+                    vt_value['avg'] = granularity * (vt_value['max'] + vt_value['min']) / 2
+                    vt_covered_time = granularity
+
                 vt_value['min'] = str(vt_value['min'])
                 vt_value['max'] = str(vt_value['max'])
                 vt_value['avg'] = str(vt_value['avg'] / vt_covered_time)

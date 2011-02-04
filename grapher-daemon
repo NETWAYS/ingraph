@@ -2,6 +2,7 @@
 from time import time
 from random import randint
 from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
+from xmlrpclib import Fault
 import cPickle
 from base64 import b64decode
 import os
@@ -23,7 +24,7 @@ class BackendRPCMethods:
         for tf in tfs:
             if (tf.interval < interval and interval % tf.interval != 0) or \
                     (tf.interval > interval and tf.interval % interval != 0):
-                raise ValueError('Timeframe interval is invalid. Must ' + \
+                raise Fault(1, 'Timeframe interval is invalid. Must ' + \
                                  'be multiple of existing timeframe or ' + \
                                  'evenly divisible by existing larger intervals.')
                 

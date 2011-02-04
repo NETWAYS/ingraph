@@ -19,8 +19,14 @@ class BackendRPCMethods:
         
     def setupTimeFrame(self, interval, retention_period=None):
         tfs = model.TimeFrame.getAllSorted(conn, active_only=True)
-        
+         
         for tf in tfs:
+            if (tf.interval < interval and interval % tf.interval != 0) or \
+                    (tf.interval > interval and tf.interval % interval != 0):
+                raise ValueError('Timeframe interval is invalid. Must ' + \
+                                 'be multiple of existing timeframe or ' + \
+                                 'evenly divisible by existing larger intervals.')
+                
             if tf.interval == interval:
                 tf.retention_period = retention_period
                 tf.save(conn)

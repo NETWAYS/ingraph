@@ -449,7 +449,7 @@ class Plot(ModelBase):
     def _calculateRateHelper(last_timestamp, timestamp, last_value, value):
         if last_timestamp == None or last_timestamp > timestamp:
             last_timestamp = value                
-            return
+            return None
     
         if last_value > value:
             # We're checking for possible overflows by comparing the last raw value with the current
@@ -470,7 +470,7 @@ class Plot(ModelBase):
                 print("Counter reset detected: last_value: %d, value: %d" % (last_value, value))
                 last_value = 0
     
-        value = (value - last_value) / (timestamp - last_timestamp)
+        return (value - last_value) / (timestamp - last_timestamp)
 
     _calculateRateHelper = staticmethod(_calculateRateHelper)
 
@@ -505,7 +505,7 @@ class Plot(ModelBase):
         value_raw = value
 
         if unit == 'counter':
-            value = Plot._calculateRateHelper(self.last_update, self.last_value, value)
+            value = Plot._calculateRateHelper(self.last_update, timestamp, self.last_value, value)
 
         self.last_value = value_raw
         self.last_update = timestamp
@@ -541,7 +541,7 @@ class Plot(ModelBase):
         if self.unit != unit:
             self.unit = unit
             self.save(conn)
-            
+
     def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, lower_limit, upper_limit):
         result = self.fetchDataPoints(conn, timestamp, ignore_missing_tf=True, require_tf=tf_interval)
         
@@ -556,11 +556,15 @@ class Plot(ModelBase):
         value_raw = value
 
         if unit == 'counter':
-            value = Plot._calculateRateHelper(self.last_update, self.last_value, value)
+            value = Plot._calculateRateHelper(self.last_update, timestamp, self.last_value, value)
 
         self.last_value = value_raw
         self.last_update = timestamp
-                
+        
+        # _calculateRateHelper returns None if it can't figure out the rate (yet)
+        if value == None:
+            return
+        
         dps[tf_interval].insertValue(value, value, value, lower_limit, upper_limit)
         self.last_update = timestamp
         
@@ -1092,7 +1096,7 @@ class DataPoint(ModelBase):
             else:
                 if vt_start_nan == None:
                     vt_start_nan = vt_start
-                elif vt_start_nan + vt_min_interval >= vt_start:
+                elif vt_min_interval != None and vt_start_nan + vt_min_interval >= vt_start:
                     # NaN value
                     vt_values[str(vt_start)] = {}
                     

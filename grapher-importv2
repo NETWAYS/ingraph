@@ -182,7 +182,7 @@ for (name, interval, retention_period) in reversed(agts):
         
         update = (row[ng_host.c.host_name], None, row[ng_service.c.service_name], \
                   row[ng_data.c.data_key], ts, number['uom'], number['value'], \
-                  number['value'], number['value'], interval)
+                  None, None, interval)
         
         updates.append(update)
         

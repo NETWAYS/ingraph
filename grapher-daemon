@@ -186,8 +186,7 @@ class BackendRPCMethods:
         
         return items
     
-    def getPlotValues(self, host, parent_service, service, plot, start_timestamp, end_timestamp,
-                      granularity, with_virtual_values):
+    def getPlotValues(self, host, parent_service, service, plot, start_timestamp, end_timestamp, granularity):
         host_obj = model.Host.getByName(conn, host)
         
         if host == None:
@@ -219,7 +218,7 @@ class BackendRPCMethods:
             return []
 
         return model.DataPoint.getValuesByInterval(conn, plot_obj, start_timestamp,
-                                                   end_timestamp, granularity, with_virtual_values)
+                                                   end_timestamp, granularity)
     
     def sync(self):
         model.sync_model_session(conn)

@@ -1,0 +1,61 @@
+XML-RPC API
+===========
+
+setupTimeFrame(interval, retention_period=None)
+-----------------------------------------------
+
+Creates a new aggregate for the specified interval. If an active aggregate with the same
+interval already exists its retention_period is updated instead.
+
+getTimeFrames()
+---------------
+
+Returns a list of active aggregates. Each list item is a dictionary containing the following keys:
+
+	* id: the (internal) id of the timeframe
+	* interval: the aggregate interval in seconds
+	* retention_period: the retention period in seconds, or None if no retention period is specified
+
+disableTimeFrame(timeframe_id)
+------------------------------
+
+Disables an aggregate. Data from the aggregate can still be retrieved and old datapoints are cleaned up
+by the maintenance tasks, however no new data will be added to the aggregate.
+
+insertValueBulk(updates):
+-------------------------
+
+Inserts new values into the database. 'updates' is a pickled list of updates. Each update is a list containing
+the following list indices:
+
+	* 0: the host
+	* 1: parent service name
+	* 2: service name
+	* 3: plot name
+	* 4: timestamp
+	* 5: unit (one of counter, byte, time, percent or raw)
+	* 6: value
+	* 7: lower limit ('min' perfdata) for the value
+	* 8: upper limit ('max' perfdata) for the value
+	* 9: timeframe (optional, only when importing data)
+
+getHosts()
+----------
+
+Returns a list of hosts for which plots are available.
+
+getPlots(host):
+---------------
+
+Returns a list of plots for the specified host. Each list item is a dictionary containing the follow keys:
+
+	* name: the name of the plot
+	* service: the service name
+	* parent_service: the parent service's name (optional, only set when there actually is a parent service)
+
+getPlotValues(host, parent_service, service, plot, start_timestamp, end_timestamp, granularity)
+--------------------------------------------------------------------------------------------------------------------
+
+Retrieves values for the specified plot. 'host', 'parent_service', 'service' and 'plot' specify which plot to retrieve
+data for. 'start_timestamp' and 'end_timestamp' specify the interval - both are UNIX timestamps. 'granularity' specifies
+how fine-grained the data should be (up to one datapoint per 'granularity' seconds will be returned).

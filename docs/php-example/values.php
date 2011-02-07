@@ -1,7 +1,7 @@
 <?php
 
-$et = time() - 24*3600 * 0;// * 10.8;
-$st = time() - 24*3600 * 32;
+$et = time() - 24*3600 * 7;// * 10.8;
+$st = time() - 24*3600 * 10;
 $dt = ($et - $st) / 300;
 
 $host = $_GET['host'];
@@ -9,7 +9,7 @@ $parent_service = $_GET['parent_service'];
 $service = $_GET['service'];
 $plot = $_GET['plot'];
 
-$request = xmlrpc_encode_request("getPlotValues", array($host, $parent_service, $service, $plot, $st, $et, $dt, false));
+$request = xmlrpc_encode_request("getPlotValues", array($host, $parent_service, $service, $plot, $st, $et, $dt));
 $context = stream_context_create(array('http' => array(
 	'method' => "POST",
 	'header' => "Content-Type: text/xml",

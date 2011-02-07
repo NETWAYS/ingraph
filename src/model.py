@@ -948,7 +948,7 @@ class DataPoint(ModelBase):
         
         return self.timestamp != self.plot.last_update - self.plot.last_update % self.timeframe.interval or self._last_saved + randint(300, 900) < now
 
-    def getValuesByInterval(conn, plot, start_timestamp, end_timestamp, granularity, with_virtual_values=False):
+    def getValuesByInterval(conn, plot, start_timestamp, end_timestamp, granularity):
         if end_timestamp < start_timestamp:
             tmp = end_timestamp
             end_timestamp = start_timestamp
@@ -960,7 +960,7 @@ class DataPoint(ModelBase):
                      and_(datapoint.c.timeframe_id==timeframe.c.id,
                           datapoint.c.plot_id==plot.id,
                           between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % timeframe.c.interval, end_timestamp),
-                          timeframe.c.interval > granularity / 25))
+                          timeframe.c.interval > granularity))
         result = conn.execute(sel)
 
         items = dict()
@@ -1025,6 +1025,9 @@ class DataPoint(ModelBase):
                 
                 vt_diff = min(ts + item['interval'], vt_end) - max(ts, vt_start)
                 
+                if vt_start > ts:
+                    continue
+                
                 if vt_value == None:
                     vt_value = {
                         'min': None,
@@ -1033,9 +1036,6 @@ class DataPoint(ModelBase):
                         'virtual': True
                     }
                     
-                if vt_start <= ts:
-                    vt_value['virtual'] = False
-
                 if vt_value['min'] == None or item['min'] < vt_value['min']:
                     vt_value['min'] = item['min']
                     
@@ -1068,8 +1068,7 @@ class DataPoint(ModelBase):
                 if 'upper_limit' in vt_value:
                     vt_value['upper_limit'] = str(vt_value['upper_limit'])
             
-                if vt_value['virtual'] == False or with_virtual_values:
-                    vt_values[str(vt_start)] = vt_value
+                vt_values[str(vt_start)] = vt_value
                     
             vt_start += granularity
             

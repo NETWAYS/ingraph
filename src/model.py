@@ -960,7 +960,7 @@ class DataPoint(ModelBase):
                      and_(datapoint.c.timeframe_id==timeframe.c.id,
                           datapoint.c.plot_id==plot.id,
                           between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % timeframe.c.interval, end_timestamp),
-                          timeframe.c.interval > granularity))
+                          timeframe.c.interval >= granularity))
         result = conn.execute(sel)
 
         items = dict()
@@ -1002,6 +1002,8 @@ class DataPoint(ModelBase):
         vt_start = start_timestamp        
         vt_values = {}
         vt_keys = sorted(items.keys())
+        vt_min_interval = None
+        vt_start_nan = vt_start
         
         # missing values are considered to be 0 when consolidating
         # datapoints, this might not be entirely accurate. 
@@ -1009,7 +1011,6 @@ class DataPoint(ModelBase):
             vt_end = vt_start + granularity
             
             vt_value = None
-            vt_min_interval = None
             vt_covered_time = 0
             
             for ts in vt_keys:
@@ -1033,7 +1034,6 @@ class DataPoint(ModelBase):
                         'min': None,
                         'max': None,
                         'avg': 0,
-                        'virtual': True
                     }
                     
                 if vt_value['min'] == None or item['min'] < vt_value['min']:
@@ -1069,6 +1069,14 @@ class DataPoint(ModelBase):
                     vt_value['upper_limit'] = str(vt_value['upper_limit'])
             
                 vt_values[str(vt_start)] = vt_value
+                
+                vt_start_nan = None
+            else:
+                if vt_start_nan == None:
+                    vt_start_nan = vt_start
+                elif vt_start_nan + vt_min_interval >= vt_start:
+                    # NaN value
+                    vt_values[str(vt_start)] = {}
                     
             vt_start += granularity
             
@@ -1200,7 +1208,7 @@ def create_model_conn(dsn):
 
     engine = create_engine(dsn)
 
-    #engine.echo = True
+    engine.echo = True
 
     conn = engine.connect()
 

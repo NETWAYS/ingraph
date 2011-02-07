@@ -442,6 +442,38 @@ class Plot(ModelBase):
         
         return (tfs, dps)
 
+    '''
+    Calculates the per-second rate for a counter. Rather than storing the raw
+    values Grapher V3 stores rates for counter values.
+    '''
+    def _calculateRateHelper(last_timestamp, timestamp, last_value, value):
+        if last_timestamp == None or last_timestamp > timestamp:
+            last_timestamp = value                
+            return
+    
+        if last_value > value:
+            # We're checking for possible overflows by comparing the last raw value with the current
+            # raw value. If the last value is greater than 80% of the 32 or 64 bit boundary and the
+            # current value is below 20% of the matching boundary chances are it was an overflow
+            # rather than a counter reset. However, if the new value is 0 we assume it's a counter
+            # reset anyway.
+            if (value != 0 and last_value > 0.8 * 2**32 and value < 0.2 * 2**32):
+                # 32bit counter overflow
+                print("32-bit Counter overflow detected: last_value: %d, value: %d" % (last_value, value))
+                last_value = -(2**32 - last_value)
+            elif (value != 0 and last_value > 0.8 * 2**64 and value < 0.2 * 2**64):
+                # 64bit counter overflow
+                print("64-bit Counter overflow detected: last_value: %d, value: %d" % (last_value, value))
+                last_value = -(2**64 - last_value)
+            else:
+                # ordinary counter reset
+                print("Counter reset detected: last_value: %d, value: %d" % (last_value, value))
+                last_value = 0
+    
+        value = (value - last_value) / (timestamp - last_timestamp)
+
+    _calculateRateHelper = staticmethod(_calculateRateHelper)
+
     def insertValue(self, conn, timestamp, unit, value, lower_limit, upper_limit):        
         result = self.fetchDataPoints(conn, timestamp)
         
@@ -469,38 +501,18 @@ class Plot(ModelBase):
             # lets just ignore that non-sense...
             if value > upper_limit and lower_limit != upper_limit:
                 value = upper_limit
-        
+    
+        value_raw = value
+
         if unit == 'counter':
-            if self.last_update == None or self.last_update > timestamp:
-                self.last_value = value                
-                self.last_update = timestamp
-                return
-
-            if self.last_value > value:
-                # We're checking for possible overflows by comparing the last raw value with the current
-                # raw value. If the last value is greater than 80% of the 32 or 64 bit boundary and the
-                # current value is below 20% of the matching boundary chances are it was an overflow
-                # rather than a counter reset. However, if the new value is 0 we assume it's a counter
-                # reset anyway.
-                if (value != 0 and self.last_value > 0.8 * 2**32 and value < 0.2 * 2**32):
-                    # 32bit counter overflow
-                    print("32-bit Counter overflow detected: last_value: %d, value: %d" % (self.last_value, value))
-                    self.last_value = -(2**32 - self.last_value)
-                elif (value != 0 and self.last_value > 0.8 * 2**64 and value < 0.2 * 2**64):
-                    # 64bit counter overflow
-                    print("64-bit Counter overflow detected: last_value: %d, value: %d" % (self.last_value, value))
-                    self.last_value = -(2**64 - self.last_value)
-                else:
-                    # ordinary counter reset
-                    print("Counter reset detected: last_value: %d, value: %d" % (self.last_value, value))
-                    self.last_value = 0
-
-            value_raw = value
-            value = (value - self.last_value) / (timestamp - self.last_update)
-        else:
-            value_raw = value
+            value = Plot._calculateRateHelper(self.last_update, self.last_value, value)
 
         self.last_value = value_raw
+        self.last_update = timestamp
+        
+        # _calculateRateHelper returns None if it can't figure out the rate (yet)
+        if value == None:
+            return
 
         prev_dp = None
         
@@ -525,9 +537,7 @@ class Plot(ModelBase):
             prev_min = dp.min
             prev_max = dp.max
             prev_avg = dp.avg
-    
-        self.last_update = timestamp
-        
+            
         if self.unit != unit:
             self.unit = unit
             self.save(conn)
@@ -542,6 +552,14 @@ class Plot(ModelBase):
 
         assert tf_interval in dps
         assert dbload_max_timestamp == None, 'insertValueRaw may only be used to import data into an empty DB'
+                
+        value_raw = value
+
+        if unit == 'counter':
+            value = Plot._calculateRateHelper(self.last_update, self.last_value, value)
+
+        self.last_value = value_raw
+        self.last_update = timestamp
                 
         dps[tf_interval].insertValue(value, value, value, lower_limit, upper_limit)
         self.last_update = timestamp
@@ -1208,7 +1226,7 @@ def create_model_conn(dsn):
 
     engine = create_engine(dsn)
 
-    engine.echo = True
+    #engine.echo = True
 
     conn = engine.connect()
 

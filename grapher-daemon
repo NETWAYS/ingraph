@@ -117,21 +117,8 @@ class BackendRPCMethods:
         self.plots[plot_key] = obj
 
         return obj
-    
-#    def insertValue(self, plot_id, timestamp, value):
-#        global update_count
-#
-#        plot = model.Plot.getByID(conn, plot_id)
-#        plot.insertValue(conn, timestamp, value)
-#        
-#        update_count += 1
-#        if update_count % 10000 == 0:
-#            model.flush_some_objects(conn)
-#            update_count = 0
 
     def insertValueBulk(self, updates_raw):
-#        global update_count
-        
         updates = cPickle.loads(updates_raw)
         
         for update in updates:

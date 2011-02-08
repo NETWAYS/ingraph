@@ -1093,7 +1093,7 @@ class DataPoint(ModelBase):
                 
                 vt_covered_time += vt_diff
                 
-            if vt_value != None:
+            if vt_value != None and vt_covered_time > 0:
                 vt_value['min'] = str(vt_value['min'])
                 vt_value['max'] = str(vt_value['max'])
                 vt_value['avg'] = str(vt_value['avg'] / vt_covered_time)

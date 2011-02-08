@@ -1041,10 +1041,14 @@ class DataPoint(ModelBase):
                 if ts + item['interval'] < vt_start or ts > vt_end:
                     continue
             
-                if vt_min_interval == None or vt_min_interval > item['interval']:
-                    vt_min_interval = item['interval']
-                    vt_value = None
-                    vt_covered_time = 0
+                # Ignore larger timeframes when we've already seen a dp with a
+                # smaller timeframe
+                if vt_min_interval != None and vt_min_interval < item['interval']:
+                    continue
+                
+                vt_min_interval = item['interval']
+                vt_value = None
+                vt_covered_time = 0
                 
                 vt_diff = min(ts + item['interval'], vt_end) - max(ts, vt_start)
                 
@@ -1097,7 +1101,7 @@ class DataPoint(ModelBase):
                 if vt_start_nan == None:
                     vt_start_nan = vt_start
                 elif vt_min_interval != None and vt_start - vt_start_nan > vt_min_interval:
-                    # NaN value
+                    # NaN value if there's a gap larger than vt_min_interval seconds
                     vt_values[str(vt_start)] = {}
                     
             vt_start += granularity

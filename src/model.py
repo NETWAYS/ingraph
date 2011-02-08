@@ -570,7 +570,7 @@ class Plot(ModelBase):
             max = None
 
             value = Plot._calculateRateHelper(self.last_update, timestamp, self.last_value, value)
-
+            
         if value_raw != None:
             self.last_value = value_raw
             self.last_update = timestamp
@@ -828,6 +828,12 @@ class DataPoint(ModelBase):
     upper_limit = upper limit for the value, as specified in the perfdata
     '''
     def insertValue(self, value, min, max, lower_limit=None, upper_limit=None):
+        if min == None:
+            min = value
+
+        if max == None:
+            max = value
+        
         if max != None and (self.max == None or max > self.max):
             self.prev_max = self.max
             self.max = max

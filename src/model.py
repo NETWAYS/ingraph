@@ -474,7 +474,7 @@ class Plot(ModelBase):
 
     _calculateRateHelper = staticmethod(_calculateRateHelper)
 
-    def insertValue(self, conn, timestamp, unit, value, lower_limit, upper_limit):        
+    def insertValue(self, conn, timestamp, unit, value, min, max, lower_limit, upper_limit):        
         result = self.fetchDataPoints(conn, timestamp)
         
         if result == None:
@@ -525,8 +525,14 @@ class Plot(ModelBase):
             
             prev_dp = dp
 
-        prev_min = value
-        prev_max = value
+        if min == None:
+            min = value
+            
+        if max == None:
+            max = value
+
+        prev_min = min
+        prev_max = max
         prev_avg = value
 
         for tf in tfs:
@@ -542,7 +548,7 @@ class Plot(ModelBase):
             self.unit = unit
             self.save(conn)
 
-    def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, lower_limit, upper_limit):
+    def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, min, max, lower_limit, upper_limit):
         result = self.fetchDataPoints(conn, timestamp, ignore_missing_tf=True, require_tf=tf_interval)
         
         if result == None:
@@ -556,16 +562,24 @@ class Plot(ModelBase):
         value_raw = value
 
         if unit == 'counter':
+            # TODO: We don't support calculating min/max values for counters yet. Not while importing
+            # data anyway.
+            if value == None:
+                return
+
+            min = None
+            max = None
+
             value = Plot._calculateRateHelper(self.last_update, timestamp, self.last_value, value)
+
+            # _calculateRateHelper returns None if it can't figure out the rate (yet)
+            if value == None:
+                return
 
         self.last_value = value_raw
         self.last_update = timestamp
         
-        # _calculateRateHelper returns None if it can't figure out the rate (yet)
-        if value == None:
-            return
-        
-        dps[tf_interval].insertValue(value, value, value, lower_limit, upper_limit)
+        dps[tf_interval].insertValue(value, min, max, lower_limit, upper_limit)
         self.last_update = timestamp
         
         if self.unit != unit:
@@ -818,13 +832,11 @@ class DataPoint(ModelBase):
     upper_limit = upper limit for the value, as specified in the perfdata
     '''
     def insertValue(self, value, min, max, lower_limit=None, upper_limit=None):
-        value = float(value)
-
-        if self.max == None or max > self.max:
+        if max != None and (self.max == None or max > self.max):
             self.prev_max = self.max
             self.max = max
             
-        if self.min == None or min < self.min:
+        if min != None and (self.min == None or min < self.min):
             self.prev_min = self.min
             self.min = min
             
@@ -834,14 +846,13 @@ class DataPoint(ModelBase):
         if self.upper_limit == None:
             self.upper_limit = upper_limit
 
-        self.avg = (self.avg * self.count + value) / (self.count + 1)
-        self.count = self.count + 1
+        if value != None:
+            self.avg = (self.avg * self.count + float(value)) / (self.count + 1)
+            self.count = self.count + 1
         
         self.mark_modified()
 
     def removeValue(self, value):
-        value = float(value)
-
         if self.count <= 0:
             return
         
@@ -851,7 +862,7 @@ class DataPoint(ModelBase):
         self.min = self.prev_min
         
         if self.count > 0:
-            self.avg = (self.avg * (self.count + 1) - value) / self.count
+            self.avg = (self.avg * (self.count + 1) - float(value)) / self.count
         else:
             self.avg = 0.0
             self.prev_min = None

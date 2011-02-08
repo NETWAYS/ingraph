@@ -133,9 +133,10 @@ for (name, interval, retention_period) in reversed(agts):
     data_join = ng_data.join(ng_perf).join(ng_host_service).join(ng_host).join(ng_service) \
                 .join(ng_aggregate_type).join(ng_perf_type)
     sel = select([ng_host.c.host_name, ng_service.c.service_name, ng_data.c.data_key, \
-            ng_data.c.data_value, ng_data.c.data_unit, ng_perf.c.perf_created], from_obj=[data_join]) \
-            .where(and_(ng_aggregate_type.c.aggretype_name==name, ng_perf_type.c.perftype_name=='RAW')) \
-            .order_by(ng_perf.c.perf_created.asc())
+            ng_data.c.data_value, ng_data.c.data_unit, ng_perf.c.perf_created, ng_perf_type.c.perftype_name], \
+            from_obj=[data_join]) \
+            .where(ng_aggregate_type.c.aggretype_name==name) \
+            .order_by(ng_perf.c.perf_created.asc(), ng_perf.c.perf_id.asc())
 
     result = sel.execution_options(stream_results=True).execute()
     
@@ -168,8 +169,23 @@ for (name, interval, retention_period) in reversed(agts):
         if number == None:
             continue
         
+        type = row[ng_perf_type.c.perftype_name] 
+        
+        value = None
+        min = None
+        max = None
+
+        if type == 'RAW':
+            value = number['value']
+        elif type == 'MIN':
+            min = number['value']
+        elif type == 'MAX':
+            max = number['value']
+        else:
+            continue
+                
         update = (row[ng_host.c.host_name], None, row[ng_service.c.service_name], \
-                  row[ng_data.c.data_key], ts, number['uom'], number['value'], \
+                  row[ng_data.c.data_key], ts, number['uom'], value, min, max, \
                   None, None, interval)
         
         updates.append(update)

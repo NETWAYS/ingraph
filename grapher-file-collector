@@ -104,7 +104,7 @@ while  True:
             upd_service = multi_service
 
         update = (logdata['host'], upd_parentservice, upd_service, upd_plotname, logdata['timestamp'], \
-                  uom, raw_value, min_value, max_value)
+                  uom, raw_value, raw_value, raw_value, min_value, max_value)
         updates.append(update)
         
     now = time()

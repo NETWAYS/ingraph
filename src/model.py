@@ -1068,7 +1068,8 @@ class DataPoint(ModelBase):
                 
                 vt_diff = min(ts + item['interval'], vt_end) - max(ts, vt_start)
                 
-                assert vt_diff >= 0
+                if vt_diff == 0:
+                    continue
                 
                 if vt_value == None:
                     vt_value = {
@@ -1093,7 +1094,7 @@ class DataPoint(ModelBase):
                 
                 vt_covered_time += vt_diff
                 
-            if vt_value != None and vt_covered_time > 0:
+            if vt_value != None:
                 vt_value['min'] = str(vt_value['min'])
                 vt_value['max'] = str(vt_value['max'])
                 vt_value['avg'] = str(vt_value['avg'] / vt_covered_time)

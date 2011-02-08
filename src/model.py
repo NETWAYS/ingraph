@@ -1096,7 +1096,7 @@ class DataPoint(ModelBase):
             else:
                 if vt_start_nan == None:
                     vt_start_nan = vt_start
-                elif vt_min_interval != None and vt_start_nan + vt_min_interval >= vt_start:
+                elif vt_min_interval != None and vt_start - vt_start_nan > vt_min_interval:
                     # NaN value
                     vt_values[str(vt_start)] = {}
                     

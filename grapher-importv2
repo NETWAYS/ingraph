@@ -183,10 +183,28 @@ for (name, interval, retention_period) in reversed(agts):
             max = number['value']
         else:
             continue
+        
+        lower_limit= None
+        upper_limit = None
+        
+        plotname = row[ng_data.c.data_key]
+        
+        if plotname[-4:] == '_min' or plotname[-4:] == '_max':
+            if type != 'RAW':
+                continue
+            
+            if plotname[-4:] == '_min':
+                lower_limit = value
+            else:
+                upper_limit = value
                 
+            value = None
+            
+            plotname = plotname[:-4]
+
         update = (row[ng_host.c.host_name], None, row[ng_service.c.service_name], \
-                  row[ng_data.c.data_key], ts, number['uom'], value, min, max, \
-                  None, None, interval)
+                  plotname, ts, number['uom'], value, min, max, \
+                  lower_limit, upper_limit, interval)
         
         updates.append(update)
         

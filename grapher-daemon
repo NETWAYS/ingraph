@@ -122,10 +122,10 @@ class BackendRPCMethods:
         updates = cPickle.loads(updates_raw)
         
         for update in updates:
-            if len(update) > 9:
-                (host, parent_service, service, plot, timestamp, unit, value, lower_limit, upper_limit, tf) = update
+            if len(update) > 11:
+                (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit, tf) = update
             else:
-                (host, parent_service, service, plot, timestamp, unit, value, lower_limit, upper_limit) = update
+                (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit) = update
                 tf = None
             
             host_obj = self._createHost(host)
@@ -137,11 +137,11 @@ class BackendRPCMethods:
             service_obj = self._createService(service)
             hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
             plot_obj = self._createPlot(hostservice_obj, plot)
-    
+
             if tf == None:
-                plot_obj.insertValue(conn, timestamp, unit, value, lower_limit, upper_limit)
+                plot_obj.insertValue(conn, timestamp, unit, value, min, max, lower_limit, upper_limit)
             else:
-                plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, lower_limit, upper_limit)
+                plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, min, max, lower_limit, upper_limit)
 
         return True
     

@@ -447,8 +447,7 @@ class Plot(ModelBase):
     values Grapher V3 stores rates for counter values.
     '''
     def _calculateRateHelper(last_timestamp, timestamp, last_value, value):
-        if last_timestamp == None or last_timestamp > timestamp:
-            last_timestamp = value                
+        if last_timestamp == None or last_timestamp >= timestamp:
             return None
     
         if last_value > value:
@@ -550,7 +549,7 @@ class Plot(ModelBase):
 
     def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, min, max, lower_limit, upper_limit):
         result = self.fetchDataPoints(conn, timestamp, ignore_missing_tf=True, require_tf=tf_interval)
-        
+                
         if result == None:
             return
         
@@ -572,13 +571,10 @@ class Plot(ModelBase):
 
             value = Plot._calculateRateHelper(self.last_update, timestamp, self.last_value, value)
 
-            # _calculateRateHelper returns None if it can't figure out the rate (yet)
-            if value == None:
-                return
-
-        self.last_value = value_raw
-        self.last_update = timestamp
-        
+        if value_raw != None:
+            self.last_value = value_raw
+            self.last_update = timestamp
+            
         dps[tf_interval].insertValue(value, min, max, lower_limit, upper_limit)
         self.last_update = timestamp
         
@@ -1038,18 +1034,21 @@ class DataPoint(ModelBase):
         vt_min_interval = None
         vt_start_nan = vt_start
         
-        # missing values are considered to be 0 when consolidating
-        # datapoints, this might not be entirely accurate. 
         while vt_start < end_timestamp:
-            vt_end = vt_start + granularity
+            vt_end = min(vt_start + granularity, end_timestamp)
             
             vt_value = None
             vt_covered_time = 0
             
             for ts in vt_keys:
                 item = items[ts]
-                
-                if ts + item['interval'] < vt_start or ts > vt_end:
+
+                # Ignore dps whose timestamp doesn't fall within
+                # the current vt interval unless this is the first or
+                # last interval
+                if (ts < vt_start and vt_start != start_timestamp) \
+                        or (ts + item['interval'] < vt_start and vt_start != start_timestamp) \
+                        or (ts > vt_end and vt_end <= end_timestamp):
                     continue
             
                 # Ignore larger timeframes when we've already seen a dp with a
@@ -1063,8 +1062,7 @@ class DataPoint(ModelBase):
                 
                 vt_diff = min(ts + item['interval'], vt_end) - max(ts, vt_start)
                 
-                if vt_start > ts:
-                    continue
+                assert vt_diff >= 0
                 
                 if vt_value == None:
                     vt_value = {
@@ -1106,16 +1104,20 @@ class DataPoint(ModelBase):
                     vt_value['upper_limit'] = str(vt_value['upper_limit'])
             
                 vt_values[str(vt_start)] = vt_value
+                vt_values[str(vt_end)] = vt_value
                 
                 vt_start_nan = None
             else:
                 if vt_start_nan == None:
                     vt_start_nan = vt_start
                 elif vt_min_interval != None and vt_start - vt_start_nan > vt_min_interval:
-                    # NaN value if there's a gap larger than vt_min_interval seconds
+                    # NaN value if there's a gap larger than vt_min_interval seconds,
+                    # which would indicate that we're missing datapoints (possibly due
+                    # to service downtime).
                     vt_values[str(vt_start)] = {}
+                    vt_values[str(vt_end)] = {}
                     
-            vt_start += granularity
+            vt_start = vt_end
             
         return vt_values
 

@@ -1036,6 +1036,27 @@ class DataPoint(ModelBase):
 
         assert granularity > 0
         
+        max_tf_interval = 0
+        min_tf_interval = None
+        for tf in TimeFrame.getAllSorted(conn, active_only=True):
+            if tf.interval > max_tf_interval:
+                max_tf_interval = tf.interval
+            
+            if min_tf_interval == None or min_tf_interval > tf.interval:
+                min_tf_interval = tf.interval
+        
+        # properly align interval with the smallest timeframe
+        start_timestamp = start_timestamp - start_timestamp % max(granularity, min_tf_interval)
+        
+        # constrain granularity to the largest tf interval, so we
+        # can at least display one datapoint
+        if granularity > max_tf_interval:
+            granularity = max_tf_interval
+            
+        # also constrain granularity to the time interval
+        if granularity > end_timestamp - start_timestamp:
+            granularity = end_timestamp - start_timestamp
+        
         sel = select([datapoint, timeframe],
                      and_(datapoint.c.timeframe_id==timeframe.c.id,
                           datapoint.c.plot_id==plot.id,
@@ -1179,8 +1200,6 @@ class DataPoint(ModelBase):
             if obj.plot == plot and obj.timestamp >= start_timestamp - start_timestamp % obj.timeframe.interval and \
                     obj.timestamp <= end_timestamp:
                 objs.append(obj)
-        
-        print "_getCachedValuesByInterval: ", len(objs)
         
         return objs
 

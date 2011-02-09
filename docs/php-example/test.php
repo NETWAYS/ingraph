@@ -11,7 +11,7 @@ echo <<<HTML
     <script language="javascript" type="text/javascript" src="values.php?host={$_GET['host']}&parent_service={$_GET['parent_service']}&service={$_GET['service']}&plot={$_GET['plot']}"></script> 
  </head> 
  <body> 
-    <div id="placeholder" style="width:1200px;height:800px;"></div> 
+    <div id="placeholder" style="width:1024px;height:768px;"></div> 
  
 <script id="source" language="javascript" type="text/javascript"> 
 $(function () {

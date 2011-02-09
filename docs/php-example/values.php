@@ -1,8 +1,8 @@
 <?php
 
-$et = time() - 24*3600 * 7;// * 10.8;
-$st = time() - 24*3600 * 10;
-$dt = ($et - $st) / 300;
+$et = time() - 24*3600 * 10;// * 10.8;
+$st = time() - 24*3600 * 40;
+$dt = ($et - $st) / 1000;
 
 $host = $_GET['host'];
 $parent_service = $_GET['parent_service'];
@@ -30,14 +30,23 @@ if ($response && xmlrpc_is_fault($response)) {
 PREP;
 
 		ksort($response);
+		$last_v = null;
 		foreach ($response as $key => $val) {
-			$ts = (int)$key * 1000;
+			$ts = (int)$key;
+			$ts += 3600; // adjust for GMT+1, hooray for flot's timezone support...
+			$ts *= 1000; // javascript wants milliseconds
 			if (isset($val[$type])) {
 				$v = $val[$type];
 			} else {
 				$v = 'null';
 			}
-
+			
+			if ($last_v == 'null' && $v == 'null') {
+				continue;
+			}
+			
+			$last_v = $v;
+			
 			echo "[ {$ts}, {$v} ],\n";
 		}
 		

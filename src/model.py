@@ -30,6 +30,10 @@ class ModelBase(object):
     '''
     active_objects = dict()
 
+    def __del__(self):
+        # not saving a modified object is a bug :)
+        assert not self.modified()
+
     '''
     "activates" an object for use in the caching system; this should be
     called once the identity for an object is known ('id' column)
@@ -404,6 +408,8 @@ class Plot(ModelBase):
         if (dbload_max_timestamp != None and timestamp < dbload_max_timestamp) or \
                 self.max_timestamp == None or timestamp < self.max_timestamp:
             self.current_timestamp = timestamp
+            
+            old_max_timestamp = self.max_timestamp
             self.max_timestamp = timestamp
         
             for dp in DataPoint.getByTimestamp(conn, self, timestamp, active_tfs_only=True):
@@ -413,10 +419,16 @@ class Plot(ModelBase):
             # case we can safely create new empty dps for all the missing timeframes
             if not ignore_missing_tf and not (len(dps) == 0 or (len(dps) == 1 and tfs[0].interval in dps)):
                 print("len(dps) == %d; len(tfs) == %d" % (len(dps), len(tfs)))
-                print("old current_timestamp: %d, timestamp: %d" % (debug_ts, timestamp))
+                print("old current_timestamp:", debug_ts, "timestamp:", timestamp)
+
                 if len(dps) != len(tfs):
-                    print("Can't process update due to missing intermediary DPs which were already" \
+                    print("Can't process update due to missing intermediary DPs which were already " \
                           "cleaned up.")
+                    
+                    # revert change to max_timestamp as we weren't able to load all datapoints
+                    # for the specified timeframe
+                    self.max_timestamp = old_max_timestamp
+                    
                     return None
 
                 self.cache_dps = dps
@@ -505,6 +517,8 @@ class Plot(ModelBase):
 
         if unit == 'counter':
             value = Plot._calculateRateHelper(self.last_update, timestamp, self.last_value, value)
+            min = None
+            max = None
 
         self.last_value = value_raw
         self.last_update = timestamp
@@ -524,10 +538,10 @@ class Plot(ModelBase):
             
             prev_dp = dp
 
-        if min == None:
+        if min == None or min > value:
             min = value
             
-        if max == None:
+        if max == None or max < value:
             max = value
 
         prev_min = min
@@ -807,12 +821,13 @@ class DataPoint(ModelBase):
         self._inserted = False
         
         '''
-        Previous min/max values, these are not stored in the DB
+        Previous min/max/avg values, these are not stored in the DB
         and are only kept so we can "remove" the last value from the
         min/max columns.
         ''' 
         self.prev_min = 0
         self.prev_max = 0
+        self.prev_avg = None
 
     def identity(self):
         if self.plot.id == None or self.timeframe.id == None or not self._inserted:
@@ -828,18 +843,28 @@ class DataPoint(ModelBase):
     upper_limit = upper limit for the value, as specified in the perfdata
     '''
     def insertValue(self, value, min, max, lower_limit=None, upper_limit=None):
+        value = float(value)
+        
         if min == None:
             min = value
+        else:
+            min = float(min)
 
         if max == None:
             max = value
+        else:
+            max = float(max)
+            
+        if lower_limit != None:
+            lower_limit = float(lower_limit)
+            
+        if upper_limit != None:
+            upper_limit = float(upper_limit)
         
-        if max != None and (self.max == None or max > self.max):
-            self.prev_max = self.max
+        if self.max == None or max > self.max:
             self.max = max
             
-        if min != None and (self.min == None or min < self.min):
-            self.prev_min = self.min
+        if self.min == None or min < self.min:
             self.min = min
             
         if self.lower_limit == None:
@@ -849,34 +874,44 @@ class DataPoint(ModelBase):
             self.upper_limit = upper_limit
 
         if value != None:
-            self.avg = (self.avg * self.count + float(value)) / (self.count + 1)
+            self.prev_min = self.min
+            self.prev_max = self.max
+            self.prev_avg = self.avg
+
+            self.avg = (self.avg * self.count + value) / (self.count + 1)
             self.count = self.count + 1
         
         self.mark_modified()
 
     def removeValue(self, value):
+        value = float(value)
+        
         if self.count <= 0:
             return
         
         self.count = self.count - 1
-                
-        self.max = self.prev_max
-        self.min = self.prev_min
-        
-        if self.count > 0:
-            self.avg = (self.avg * (self.count + 1) - float(value)) / self.count
-        else:
-            self.avg = 0.0
-            self.prev_min = None
+
+        if self.prev_max != None:        
+            self.max = self.prev_max
             self.prev_max = None
-            
+
+        if self.prev_min != None:
+            self.min = self.prev_min
+            self.prev_min = None
+        
+        if self.prev_avg != None:
+            self.avg = self.prev_avg
+            self.prev_avg = None
+        else:        
+            if self.count > 0:
+                self.avg = (self.avg * (self.count + 1) - value) / self.count
+            else:
+                self.avg = 0.0
+
         self.mark_modified()
 
     def mark_modified(self):
-        if self.min != None and self.max != None and self.avg != None and \
-                     (self.timeframe.retention_period == None or \
-                     self.timestamp > time() - self.timeframe.retention_period):            
-                self._last_modification = time()
+        if self.modified():
                 DataPoint.modified_objects.add(self)
 
     def _get_db_values(self, conn):
@@ -887,9 +922,7 @@ class DataPoint(ModelBase):
         self._last_saved = time()
 
         # make sure we're not wasting DB queries for unchanged objects
-        if self.min == self.saved_min and self.max == self.saved_max and \
-                self.avg == self.saved_avg and self.count == self.saved_count and \
-                self.lower_limit == self.saved_lower_limit and self.upper_limit == self.saved_upper_limit:
+        if not self.modified():
             return
 
         if self.identity() == None:
@@ -971,7 +1004,19 @@ class DataPoint(ModelBase):
     save_many = staticmethod(save_many)
 
     def modified(self):
-        return not self._inserted or self._last_modification != None
+        # past retention period, don't save
+        if self.timeframe.retention_period != None and \
+                     self.timestamp < time() - self.timeframe.retention_period:
+            return False
+        
+        # not (yet) a fully populated datapoint
+        if self.min == None or self.max == None or self.avg == None:
+            return False
+        
+        # new object or changed data
+        return not self._inserted or not (self.min == self.saved_min and self.max == self.saved_max and \
+                self.avg == self.saved_avg and self.count == self.saved_count and \
+                self.lower_limit == self.saved_lower_limit and self.upper_limit == self.saved_upper_limit)
     
     def should_save(self):
         if not self.modified():
@@ -1019,6 +1064,9 @@ class DataPoint(ModelBase):
             
         for obj in DataPoint._getCachedValuesByInterval(plot, start_timestamp, end_timestamp):
             ts = obj.timestamp
+            
+            if obj.timeframe.interval < granularity:
+                continue
             
             if ts in items and obj.timeframe.interval > items[ts]['interval']:
                 continue
@@ -1105,8 +1153,7 @@ class DataPoint(ModelBase):
                 if 'upper_limit' in vt_value:
                     vt_value['upper_limit'] = str(vt_value['upper_limit'])
             
-                vt_values[str(vt_start)] = vt_value
-                vt_values[str(vt_end - 1)] = vt_value
+                vt_values[str((vt_end + vt_start) / 2)] = vt_value
                 
                 vt_start_nan = None
             else:
@@ -1118,7 +1165,7 @@ class DataPoint(ModelBase):
                     # to service downtime).
                     vt_values[str(vt_start)] = {}
                     vt_values[str(vt_end - 1)] = {}
-                    
+                                        
             vt_start = vt_end
 
         return vt_values
@@ -1129,9 +1176,12 @@ class DataPoint(ModelBase):
         objs = []
         
         for obj in DataPoint.modified_objects:
-            if obj.plot == plot and obj.timestamp > start_timestamp and obj.timestamp < end_timestamp:
+            if obj.plot == plot and obj.timestamp >= start_timestamp - start_timestamp % obj.timeframe.interval and \
+                    obj.timestamp <= end_timestamp:
                 objs.append(obj)
-                
+        
+        print "_getCachedValuesByInterval: ", len(objs)
+        
         return objs
 
     _getCachedValuesByInterval = staticmethod(_getCachedValuesByInterval)
@@ -1160,12 +1210,12 @@ class DataPoint(ModelBase):
                 tf = TimeFrame.getByID(conn, row[datapoint.c.timeframe_id])
 
                 obj = DataPoint(plot, tf, row[datapoint.c.timestamp])
-                obj.min = row[datapoint.c.min]
-                obj.max = row[datapoint.c.max]
-                obj.avg = row[datapoint.c.avg]
-                obj.count = max(0, row[datapoint.c.count])
-                obj.lower_limit = row[datapoint.c.lower_limit]
-                obj.upper_limit = row[datapoint.c.upper_limit]
+                obj.saved_min = obj.min = row[datapoint.c.min]
+                obj.saved_max = obj.max = row[datapoint.c.max]
+                obj.saved_avg = obj.avg = row[datapoint.c.avg]
+                obj.saved_count = obj.count = max(0, row[datapoint.c.count])
+                obj.saved_lower_limit = obj.lower_limit = row[datapoint.c.lower_limit]
+                obj.saved_upper_limit = obj.upper_limit = row[datapoint.c.upper_limit]
 
                 obj._inserted = True                                
                 obj.activate()
@@ -1186,7 +1236,7 @@ class DataPoint(ModelBase):
         
         # the maximum number of objects we are going to save this time (unless partial_sync == False)
         save_quota = max(500, DataPoint.last_sync_remaining_count / 10)
-    
+
         remaining_objects = set()
         left_over_count = 0
         

@@ -147,6 +147,26 @@ class Host(ModelBase):
         return obj
 
     getByName = staticmethod(getByName)
+    
+    def getByPattern(conn, sql_filter, limit, offset):
+        sel = host.select(limit=limit, offset=offset).where(host.c.name.like(sql_filter)).order_by(host.c.name)
+        result = conn.execute(sel)
+        
+        objs = []
+        
+        for row in result:
+            obj = Host.get(row[host.c.id])
+            
+            if obj == None:
+                obj = Host(row[host.c.name])
+                obj.id = row[host.c.id]
+                obj.activate()
+                
+            objs.append(obj)
+            
+        return objs
+
+    getByPattern = staticmethod(getByPattern)
 
     def getAll(conn):
         sel = host.select()

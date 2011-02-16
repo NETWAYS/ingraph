@@ -173,6 +173,7 @@ class BackendRPCMethods:
         for plot in plots:
             item = {
                 'name': plot.name,
+                'unit': plot.unit,
                 'service': plot.hostservice.service.name
             }
             

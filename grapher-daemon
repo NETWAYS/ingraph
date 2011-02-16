@@ -146,7 +146,7 @@ class BackendRPCMethods:
         return True
     
     def getHosts(self):
-        hosts = model.Host.getAll()
+        hosts = model.Host.getAll(conn)
         
         items = []
         
@@ -156,14 +156,14 @@ class BackendRPCMethods:
         return items
     
     def getHostsFiltered(self, pattern, limit, offset):
-        hosts = model.Host.getByPattern(conn, pattern, limit, offset)
+        result = model.Host.getByPattern(conn, pattern, limit, offset)
         
         items = []
         
-        for host in hosts:
+        for host in result['hosts']:
             items.append(host.name)
             
-        return items
+        return {'total': result['total'], 'hosts': items}
 
     def getPlots(self, host):
         items = []

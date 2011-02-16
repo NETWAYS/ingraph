@@ -149,6 +149,9 @@ class Host(ModelBase):
     getByName = staticmethod(getByName)
     
     def getByPattern(conn, sql_filter, limit, offset):
+        sel = select([func.count()]).select_from(host).where(host.c.name.like(sql_filter))
+        total = conn.execute(sel).scalar()
+        
         sel = host.select(limit=limit, offset=offset).where(host.c.name.like(sql_filter)).order_by(host.c.name)
         result = conn.execute(sel)
         
@@ -164,7 +167,7 @@ class Host(ModelBase):
                 
             objs.append(obj)
             
-        return objs
+        return {'hosts': objs, 'total': total}
 
     getByPattern = staticmethod(getByPattern)
 

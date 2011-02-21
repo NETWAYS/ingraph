@@ -479,7 +479,7 @@ class Plot(ModelBase):
 
     '''
     Calculates the per-second rate for a counter. Rather than storing the raw
-    values Grapher V3 stores rates for counter values.
+    values inGraph stores rates for counter values.
     '''
     def _calculateRateHelper(last_timestamp, timestamp, last_value, value):
         if last_timestamp == None or last_timestamp >= timestamp:

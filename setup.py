@@ -11,13 +11,13 @@ if sys.version_info[:2] < (2,4):
     print("NETWAYS Grapher requires Python version 2.4 or later.")
     sys.exit(1)
 
-setup(name="netways_grapher",
+setup(name="netways_ingraph",
       version=version,
       description="Data collection and graphing utility for monitoring systems",
       author="Gunnar Beutner <gunnar.beutner@netways.de>",
       author_email="gunnar.beutner@netways.de",
       url="N/A",
-      packages = ["netways_grapher"],
-      package_dir = {"netways_grapher": "src"},
-      scripts = ["grapher-daemon", "grapher-file-collector", "grapher-importv2", "grapher-stop"],
+      packages = ["netways_ingraph"],
+      package_dir = {"netways_ingraph": "src"},
+      scripts = ["ingraph-daemon", "ingraph-file-collector", "ingraph-import-grapherv2", "ingraph-stop"],
       install_requires = ["sqlalchemy>=0.6.3", "pysqlite"])

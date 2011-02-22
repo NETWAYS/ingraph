@@ -325,26 +325,40 @@ class HostService(ModelBase):
     getByID = staticmethod(getByID)
     
     def getByHostAndService(conn, host, service, parent_hostservice):
-        cond = and_(hostservice.c.host_id==host.id, hostservice.c.service_id==service.id)
+        cond = hostservice.c.host_id==host.id
+        
+        if service != None:
+            cond = and_(cond, hostservice.c.service_id==service.id)
         
         if parent_hostservice != None:
             cond = and_(cond, hostservice.c.parent_hostservice_id==parent_hostservice.id)
         
         sel = hostservice.select().where(cond)
         result = conn.execute(sel)
-        row = result.fetchone()
         
-        if row == None:
-            return None
-
-        obj = HostService.get(row[hostservice.c.id])
+        objs = []
         
-        if obj == None:
-            obj = HostService(host, service, parent_hostservice)
-            obj.id = row[hostservice.c.id]
-            obj.activate()
+        for row in result:
+            obj = HostService.get(row[hostservice.c.id])
+            
+            if obj == None:
+                if service == None:
+                    svc = Service.getByID(conn, row[hostservice.c.service_id])
+                else:
+                    svc = service
+                    
+                if parent_hostservice == None and row[hostservice.c.parent_hostservice_id] != None:
+                    phs = HostService.getByID(conn, row[hostservice.c.parent_hostservice_id])
+                else:
+                    phs = parent_hostservice
+                
+                obj = HostService(host, svc, phs)
+                obj.id = row[hostservice.c.id]
+                obj.activate()
+                
+            objs.append(obj)
 
-        return obj
+        return objs
 
     getByHostAndService = staticmethod(getByHostAndService)
 
@@ -640,22 +654,28 @@ class Plot(ModelBase):
     getByID = staticmethod(getByID)
     
     def getByHostServiceAndName(conn, hostservice, name):
-        sel = plot.select().where(and_(plot.c.hostservice_id==hostservice.id, plot.c.name==name))
+        cond = plot.c.hostservice_id==hostservice.id
+        
+        if name != None and name != '':
+            cond = and_(cond, plot.c.name==name)
+            
+        sel = plot.select().where(cond)
         result = conn.execute(sel)
-        row = result.fetchone()
         
-        if row == None:
-            return None
-
-        obj = Plot.get(row[plot.c.id])
+        objs = []
         
-        if obj == None:
-            obj = Plot(hostservice, name)
-            obj.id = row[plot.c.id]
-            obj.unit = row[plot.c.unit]
-            obj.activate()
+        for row in result:
+            obj = Plot.get(row[plot.c.id])
+            
+            if obj == None:
+                obj = Plot(hostservice, row[plot.c.name])
+                obj.id = row[plot.c.id]
+                obj.unit = row[plot.c.unit]
+                obj.activate()
+        
+            objs.append(obj)
 
-        return obj    
+        return objs
 
     getByHostServiceAndName = staticmethod(getByHostServiceAndName)
 
@@ -1341,7 +1361,7 @@ def createModelConnection(dsn):
 
     engine = create_engine(dsn)
 
-    #engine.echo = True
+    engine.echo = True
 
     conn = engine.connect()
 

@@ -186,40 +186,56 @@ class BackendRPCMethods:
     
     def getPlotValues(self, host, parent_service, service, plot, start_timestamp, end_timestamp, granularity):
         host_obj = model.Host.getByName(conn, host)
+
+        charts = {}
+        result = { 'charts': charts }
         
         if host == None:
-            return []
-
-        service_obj = model.Service.getByName(conn, service)
-        
-        if service_obj == None:
-            return []
+            return result
         
         if parent_service != None and parent_service != '':
             parent_service_obj = model.Service.getByName(conn, parent_service)
             
             if parent_service_obj == None:
-                return []
+                return result
             
             parent_hostservice_obj = model.HostService.getByHostAndService(conn, host_obj, parent_service_obj, None)
         else:
             parent_hostservice_obj = None
             
-        hostservice_obj = model.HostService.getByHostAndService(conn, host_obj, service_obj, parent_hostservice_obj)
+        if service != None and service != '':
+            service_obj = model.Service.getByName(conn, service)
+        else:
+            service_obj = None
         
-        if hostservice_obj == None:
-            return []
-        
-        plot_obj = model.Plot.getByHostServiceAndName(conn, hostservice_obj, plot)
-        
-        if plot_obj == None:
-            return []
+        hostservice_objs = model.HostService.getByHostAndService(conn, host_obj, service_obj, parent_hostservice_obj)
 
-        return model.DataPoint.getValuesByInterval(conn, plot_obj, start_timestamp,
-                                                   end_timestamp, granularity)
+        for hostservice_obj in hostservice_objs:        
+            plot_objs = model.Plot.getByHostServiceAndName(conn, hostservice_obj, plot)
+                  
+            for plot_obj in plot_objs:
+                values = model.DataPoint.getValuesByInterval(conn, plot_obj, start_timestamp,
+                                                             end_timestamp, granularity)
+                current_charts = {}
+
+                for ts, value in values.items():
+                    for type in ['upper_limit', 'max', 'avg', 'min', 'lower_limit']:
+                        if not type in current_charts:
+                            current_charts[type] = {}
+                        
+                        if not type in value:
+                            current_charts[type][ts] = False
+                        else:
+                            current_charts[type][ts] = value[type]
+                
+                for type, chart in current_charts.items():
+                    charts[hostservice_obj.service.name + '-' + plot_obj.name + '-' + type] = chart
+                    
+            
+        return result
     
     def sync(self):
-        model.sync_model_session(conn)
+        model.syncModelSession(conn)
 
         return True
     

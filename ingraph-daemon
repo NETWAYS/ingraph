@@ -187,7 +187,7 @@ class BackendRPCMethods:
     def getPlotValues(self, host, parent_service, service, plot, start_timestamp, end_timestamp, granularity):
         host_obj = model.Host.getByName(conn, host)
 
-        charts = {}
+        charts = []
         result = { 'charts': charts }
         
         if host == None:
@@ -229,7 +229,8 @@ class BackendRPCMethods:
                             current_charts[type][ts] = value[type]
                 
                 for type, chart in current_charts.items():
-                    charts[hostservice_obj.service.name + '-' + plot_obj.name + '-' + type] = chart
+                    charts.append({'label': hostservice_obj.service.name + '-' + plot_obj.name + '-' + type,
+                                   'unit': plot_obj.unit, 'values': chart})
                     
             
         return result

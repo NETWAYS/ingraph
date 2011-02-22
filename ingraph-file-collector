@@ -7,10 +7,10 @@ import pickle
 from datetime import datetime
 from netways_ingraph import utils
 
-print("NETWAYS Grapher V3 (file collector)")
+print("NETWAYS inGraph (file collector)")
 
-config = utils.load_config('grapher-xmlrpc.conf')
-config = utils.load_config('grapher-aggregates.conf', config)
+config = utils.load_config('ingraph-xmlrpc.conf')
+config = utils.load_config('ingraph-aggregates.conf', config)
 url = utils.get_xmlrpc_url(config)
 api = ServerProxy(url, allow_none=True)
 

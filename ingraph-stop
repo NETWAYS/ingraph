@@ -2,10 +2,10 @@
 from xmlrpclib import ServerProxy
 from netways_ingraph import utils
 
-config = utils.load_config('grapher-xmlrpc.conf')
+config = utils.load_config('ingraph-xmlrpc.conf')
 url = utils.get_xmlrpc_url(config)
 api = ServerProxy(url)
 
-print("Sending shutdown() call to the Grapher daemon...")
+print("Sending shutdown() call to the inGraph daemon...")
 api.shutdown()
 print("Done.")

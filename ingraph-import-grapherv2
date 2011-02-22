@@ -1,10 +1,4 @@
 #!/usr/bin/env python
-'''
-Created on 28.01.2011
-
-@author: gunnar
-'''
-
 from xmlrpclib import ServerProxy, MultiCall
 import pickle
 import getpass
@@ -18,14 +12,14 @@ import math
 import sys
 from netways_ingraph import utils
 
-print("NETWAYS Grapher V3 (V2 import)")
+print("NETWAYS inGraph (Grapher V2 import)")
 
-config = utils.load_config('grapher-xmlrpc.conf')
+config = utils.load_config('ingraph-xmlrpc.conf')
 url = utils.get_xmlrpc_url(config)
 api = ServerProxy(url, allow_none=True)
 
 if len(api.getTimeFrames()) > 0:
-    print("The grapher backend you have selected already contains data. " + \
+    print("The inGraph backend you have selected already contains data. " + \
           "You can only import into an empty backend.")
     sys.exit(1)
 

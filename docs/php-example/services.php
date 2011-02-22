@@ -1,21 +1,21 @@
 <?php
 
 if (!isset($_GET['host'])) {
-$request = xmlrpc_encode_request("getHosts", array());
+$request = xmlrpc_encode_request("getHostsFiltered", array('%', 10, 10));
 	$context = stream_context_create(array('http' => array(
 		'method' => "POST",
 		'header' => "Content-Type: text/xml",
 		'content' => $request
 	)));
 	
-	$file = file_get_contents("http://grapher:changeme@127.0.0.1:5000/", false, $context);
+	$file = file_get_contents("http://ingraph:changeme@127.0.0.1:5000/", false, $context);
 	$response = xmlrpc_decode($file);
 	if ($response && xmlrpc_is_fault($response)) {
 		trigger_error("xmlrpc: $response[faultString] ($response[faultCode])");
 	} else {
-		sort($response);
+		ksort($response['hosts']);
 		
-		foreach ($response as $host) {
+		foreach ($response['hosts'] as $host) {
 			echo <<<HTML
 <p><a href="services.php?host={$host}">
 	{$host}

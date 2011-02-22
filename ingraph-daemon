@@ -9,7 +9,7 @@ import os
 import sys
 from netways_ingraph import model, utils
 
-print("NETWAYS Grapher V3 (backend daemon)")
+print("NETWAYS inGraph (backend daemon)")
 
 class BackendRPCMethods:
     def __init__(self):
@@ -297,8 +297,8 @@ class AuthenticatedXMLRPCServer(SimpleXMLRPCServer):
         
         return self.required_username == username and self.required_password == password
 
-config = utils.load_config('grapher-database.conf')
-config = utils.load_config('grapher-xmlrpc.conf', config)
+config = utils.load_config('ingraph-database.conf')
+config = utils.load_config('ingraph-xmlrpc.conf', config)
 
 if config['dsn'] == None:
     print("Error: You need to set a database connection string ('dsn' setting)" + \

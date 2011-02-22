@@ -223,10 +223,13 @@ class BackendRPCMethods:
                         if not type in current_charts:
                             current_charts[type] = {}
                         
+                        current_charts[type] = {}
+                        current_charts[type]['x'] = ts
+                        
                         if not type in value:
-                            current_charts[type][ts] = False
+                            current_charts[type]['y'] = False
                         else:
-                            current_charts[type][ts] = value[type]
+                            current_charts[type]['y'] = value[type]
                 
                 for type, chart in current_charts.items():
                     label = plot_obj.name + '-' + type

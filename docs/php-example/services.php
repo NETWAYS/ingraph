@@ -33,7 +33,7 @@ HTML;
 		'content' => $request
 	)));
 	
-	$file = file_get_contents("http://grapher:changeme@127.0.0.1:5000/", false, $context);
+	$file = file_get_contents("http://ingraph:changeme@127.0.0.1:5000/", false, $context);
 	$response = xmlrpc_decode($file);
 	if ($response && xmlrpc_is_fault($response)) {
 		trigger_error("xmlrpc: $response[faultString] ($response[faultCode])");

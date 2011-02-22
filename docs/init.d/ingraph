@@ -22,7 +22,6 @@ NAME=ingraph-daemon
 DAEMON=$NAME
 STOPSCRIPT=ingraph-stop
 PIDFILE=/var/run/$NAME.pid
-SCRIPTNAME=/etc/init.d/$NAME
 DATADIR="/var/lib/ingraph"
 USER="ingraph"
 GROUP="ingraph"
@@ -130,7 +129,7 @@ case "$1" in
 	esac
 	;;
   *)
-	echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+	echo "Usage: $0 {start|stop|status|restart|force-reload}" >&2
 	exit 3
 	;;
 esac

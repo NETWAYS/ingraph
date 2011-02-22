@@ -7,7 +7,7 @@ import cPickle
 from base64 import b64decode
 import os
 import sys
-from netways_grapher import model, utils
+from netways_ingraph import model, utils
 
 print("NETWAYS Grapher V3 (backend daemon)")
 
@@ -284,7 +284,7 @@ if config['dsn'] == None:
     sys.exit(1)
 
 print('Connecting to the database...')
-conn = model.create_model_conn(config['dsn'])
+conn = model.createModelConnection(config['dsn'])
 
 if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
     print("Error: You need to set a bind address/port for the XML-RPC" + \
@@ -322,11 +322,11 @@ try:
         server.handle_request()
         
         st = time()
-        model.sync_model_session(conn, partial_sync=True)
+        model.syncModelSession(conn, partial_sync=True)
         et = time()
         print("partial sync took %f seconds" % (et - st))
         
-        model.run_maintenance_tasks(conn)
+        model.runMaintenanceTasks(conn)
 except KeyboardInterrupt:
     print('Syncing all remaining objects - Please wait...')
-    model.sync_model_session(conn)
+    model.syncModelSession(conn)

@@ -76,7 +76,7 @@ class ModelBase(object):
     returns whether the object was saved; this may return False even when modified()
     is True due to delayed saving
     '''
-    def should_save(self):
+    def shouldSave(self):
         return True
     
     '''
@@ -904,7 +904,7 @@ class DataPoint(ModelBase):
             self.avg = (self.avg * self.count + value) / (self.count + 1)
             self.count = self.count + 1
         
-        self.mark_modified()
+        self.markAsModified()
 
     def removeValue(self, value):
         value = float(value)
@@ -931,13 +931,13 @@ class DataPoint(ModelBase):
             else:
                 self.avg = 0.0
 
-        self.mark_modified()
+        self.markAsModified()
 
-    def mark_modified(self):
+    def markAsModified(self):
         if self.modified():
                 DataPoint.modified_objects.add(self)
 
-    def _get_db_values(self, conn):
+    def _getDbValues(self, conn):
         if not self.modified():
             return
         
@@ -996,13 +996,13 @@ class DataPoint(ModelBase):
         }
 
     def save(self, conn):
-        DataPoint.save_many(conn, [self])
+        DataPoint.saveMany(conn, [self])
 
-    def save_many(conn, objs):
+    def saveMany(conn, objs):
         insert_items = []
 
         for obj in objs:
-            update = obj._get_db_values(conn)
+            update = obj._getDbValues(conn)
             
             if update == None:
                 continue
@@ -1024,7 +1024,7 @@ class DataPoint(ModelBase):
         if len(insert_items) > 0:
             conn.execute(datapoint.insert(), insert_items)
     
-    save_many = staticmethod(save_many)
+    saveMany = staticmethod(saveMany)
 
     def modified(self):
         # past retention period, don't save
@@ -1041,7 +1041,7 @@ class DataPoint(ModelBase):
                 self.avg == self.saved_avg and self.count == self.saved_count and \
                 self.lower_limit == self.saved_lower_limit and self.upper_limit == self.saved_upper_limit)
     
-    def should_save(self):
+    def shouldSave(self):
         if not self.modified():
             return False
         
@@ -1289,7 +1289,7 @@ class DataPoint(ModelBase):
                 continue
             
             if partial_sync:
-                if not obj.should_save():
+                if not obj.shouldSave():
                     remaining_objects.add(obj)  
                     continue
     
@@ -1302,11 +1302,11 @@ class DataPoint(ModelBase):
             count += 1
             
             if len(objs_to_save) > 20000:
-                DataPoint.save_many(conn, objs_to_save)
+                DataPoint.saveMany(conn, objs_to_save)
                 objs_to_save = []
 
         if len(objs_to_save) > 0:
-            DataPoint.save_many(conn, objs_to_save)
+            DataPoint.saveMany(conn, objs_to_save)
         
         DataPoint.last_sync_remaining_count = left_over_count
         
@@ -1336,7 +1336,7 @@ class DataPoint(ModelBase):
 '''
 creates a DB connection
 '''
-def create_model_conn(dsn):
+def createModelConnection(dsn):
     global dbload_max_timestamp
 
     engine = create_engine(dsn)
@@ -1366,7 +1366,7 @@ def create_model_conn(dsn):
 '''
 Syncs (parts of) the session.
 '''
-def sync_model_session(conn, partial_sync=False):
+def syncModelSession(conn, partial_sync=False):
     DataPoint.syncSomeObjects(conn, partial_sync)
     
     if not partial_sync:
@@ -1379,7 +1379,7 @@ Runs regular maintenance tasks:
 * Running VACUUM on the database
 * Cleaning up old datapoints
 '''
-def run_maintenance_tasks(conn):
+def runMaintenanceTasks(conn):
     global last_vacuum, last_cleanup, last_autocheckpoint, last_commit
 
     if last_vacuum + 7 * 24 * 60 * 60 < time():

@@ -16,7 +16,7 @@ import MySQLdb.cursors
 from datetime import datetime
 import math
 import sys
-from netways_grapher import utils
+from netways_ingraph import utils
 
 print("NETWAYS Grapher V3 (V2 import)")
 

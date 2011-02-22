@@ -5,7 +5,7 @@ from time import time
 from xmlrpclib import ServerProxy, MultiCall
 import pickle
 from datetime import datetime
-from netways_grapher import utils
+from netways_ingraph import utils
 
 print("NETWAYS Grapher V3 (file collector)")
 

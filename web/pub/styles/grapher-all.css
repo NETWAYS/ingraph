@@ -1,0 +1,28 @@
+@CHARSET "UTF-8";
+
+.grapher-search-container {
+	width: 500px;
+}
+
+.grapher-search-container input {
+	width: 150px;
+}
+
+.grapher-search-container h {
+	padding-bottom: 4px;
+}
+
+.grapher-search-container .info {
+	padding-top: 4px;
+}
+
+.grapher-search-container .error {
+    padding-top: 4px;
+    font-weight: bold;
+    color: red;
+}
+
+.grapher-search-container label {
+	padding-right: 4px;
+	font-weight: bold;
+}

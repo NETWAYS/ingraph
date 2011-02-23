@@ -1,0 +1,45 @@
+@CHARSET "UTF-8";
+
+div.round_box2 div.c21,div.round_box2 div.c22,div.round_box2 div.c23,div.round_box2 div.c24 {
+	font-size: 1px;
+	overflow: hidden;
+	display: block;
+}
+
+div.round_box2 div.c21 {
+	height: 1px;
+	background-color: #e0e0e0;
+}
+
+div.round_box2 div.c22 {
+	height: 1px;
+	background: none;
+	border-right: 4px solid #e0e0e0;
+	border-left: 4px solid #e0e0e0;
+}
+
+div.round_box2 div.c23 {
+	height: 1px;
+	background: none;
+	border-right: 2px solid #e0e0e0;
+	border-left: 2px solid #e0e0e0;
+}
+
+div.round_box2 div.c24 {
+	height: 2px;
+	background: none;
+	border-right: 1px solid #e0e0e0;
+	border-left: 1px solid #e0e0e0;
+}
+
+.clearfix:after {
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
+}
+
+.floatbox {
+	overflow: hidden;
+}

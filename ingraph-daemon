@@ -221,15 +221,16 @@ class BackendRPCMethods:
                 for ts, value in values.items():
                     for type in ['upper_limit', 'max', 'avg', 'min', 'lower_limit']:
                         if not type in current_charts:
-                            current_charts[type] = {}
+                            current_charts[type] = []
                         
-                        current_charts[type] = {}
-                        current_charts[type]['x'] = ts
+                        item = {'x': ts}
                         
                         if not type in value:
-                            current_charts[type]['y'] = False
+                            item['y'] = False
                         else:
-                            current_charts[type]['y'] = value[type]
+                            item['y'] = value[type]
+                            
+                            current_charts[type].append(item)
                 
                 for type, chart in current_charts.items():
                     label = plot_obj.name + '-' + type

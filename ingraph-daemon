@@ -92,27 +92,30 @@ class BackendRPCMethods:
         if hostservice_key in self.hostservices:
             return self.hostservices[hostservice_key]
         
-        obj = model.HostService.getByHostAndService(conn, host, service, parent_hostservice)
+        objs = model.HostService.getByHostAndService(conn, host, service, parent_hostservice)
         
-        if obj == None:
+        if len(objs) == 0:
             obj = model.HostService(host, service, parent_hostservice)
             obj.save(conn)
-        
+        else:
+            obj = objs[0]
+            
         self.hostservices[hostservice_key] = obj
         
         return obj
 
     def _createPlot(self, hostservice, name):
         plot_key = (hostservice, name)
-        
         if plot_key in self.plots:
             return self.plots[plot_key]
         
-        obj = model.Plot.getByHostServiceAndName(conn, hostservice, name)
+        objs = model.Plot.getByHostServiceAndName(conn, hostservice, name)
         
-        if obj == None:        
+        if len(objs) == 0:    
             obj = model.Plot(hostservice, name)
             obj.save(conn)
+        else:
+            obj = objs[0]
 
         self.plots[plot_key] = obj
 
@@ -121,28 +124,33 @@ class BackendRPCMethods:
     def insertValueBulk(self, updates_raw):
         updates = cPickle.loads(updates_raw)
         
-        for update in updates:
-            if len(update) > 11:
-                (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit, tf) = update
-            else:
-                (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit) = update
-                tf = None
-            
-            host_obj = self._createHost(host)
-            if parent_service != None:
-                parent_service_obj = self._createService(parent_service)
-                parent_hostservice_obj = self._createHostService(host_obj, parent_service_obj, None)
-            else:
-                parent_hostservice_obj = None
-            service_obj = self._createService(service)
-            hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
-            plot_obj = self._createPlot(hostservice_obj, plot)
+        try:
+            for update in updates:
+                if len(update) > 11:
+                    (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit, tf) = update
+                else:
+                    (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit) = update
+                    tf = None
+                
+                host_obj = self._createHost(host)
+                if parent_service != None:
+                    parent_service_obj = self._createService(parent_service)
+                    parent_hostservice_obj = self._createHostService(host_obj, parent_service_obj, None)
+                else:
+                    parent_hostservice_obj = None
+                service_obj = self._createService(service)
 
-            if tf == None:
-                plot_obj.insertValue(conn, timestamp, unit, value, min, max, lower_limit, upper_limit)
-            else:
-                plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, min, max, lower_limit, upper_limit)
-
+                hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
+                plot_obj = self._createPlot(hostservice_obj, plot)
+    
+                if tf == None:
+                    plot_obj.insertValue(conn, timestamp, unit, value, min, max, lower_limit, upper_limit)
+                else:
+                    plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, min, max, lower_limit, upper_limit)
+        except Exception, exc:
+            import traceback
+            traceback.print_exc()
+             
         return True
     
     def getHosts(self):

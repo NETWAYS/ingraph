@@ -124,32 +124,28 @@ class BackendRPCMethods:
     def insertValueBulk(self, updates_raw):
         updates = cPickle.loads(updates_raw)
         
-        try:
-            for update in updates:
-                if len(update) > 11:
-                    (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit, tf) = update
-                else:
-                    (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit) = update
-                    tf = None
-                
-                host_obj = self._createHost(host)
-                if parent_service != None:
-                    parent_service_obj = self._createService(parent_service)
-                    parent_hostservice_obj = self._createHostService(host_obj, parent_service_obj, None)
-                else:
-                    parent_hostservice_obj = None
-                service_obj = self._createService(service)
+        for update in updates:
+            if len(update) > 11:
+                (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit, tf) = update
+            else:
+                (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit) = update
+                tf = None
+            
+            host_obj = self._createHost(host)
+            if parent_service != None:
+                parent_service_obj = self._createService(parent_service)
+                parent_hostservice_obj = self._createHostService(host_obj, parent_service_obj, None)
+            else:
+                parent_hostservice_obj = None
+            service_obj = self._createService(service)
 
-                hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
-                plot_obj = self._createPlot(hostservice_obj, plot)
-    
-                if tf == None:
-                    plot_obj.insertValue(conn, timestamp, unit, value, min, max, lower_limit, upper_limit)
-                else:
-                    plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, min, max, lower_limit, upper_limit)
-        except Exception, exc:
-            import traceback
-            traceback.print_exc()
+            hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
+            plot_obj = self._createPlot(hostservice_obj, plot)
+
+            if tf == None:
+                plot_obj.insertValue(conn, timestamp, unit, value, min, max, lower_limit, upper_limit)
+            else:
+                plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, min, max, lower_limit, upper_limit)
              
         return True
     

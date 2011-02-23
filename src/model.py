@@ -1175,14 +1175,12 @@ class DataPoint(ModelBase):
                     continue
                 
                 vt_min_interval = item['interval']
-                vt_value = None
-                vt_covered_time = 0
                 
                 vt_diff = min(ts + item['interval'], vt_end) - max(ts, vt_start)
                 
                 if vt_diff == 0:
                     continue
-                
+
                 if vt_value == None:
                     vt_value = {
                         'min': None,
@@ -1205,7 +1203,7 @@ class DataPoint(ModelBase):
                 vt_value['avg'] += vt_diff * item['avg']
                 
                 vt_covered_time += vt_diff
-                
+
             if vt_value != None:
                 vt_value['min'] = str(vt_value['min'])
                 vt_value['max'] = str(vt_value['max'])

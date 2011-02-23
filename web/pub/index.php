@@ -25,7 +25,7 @@ $t = array(
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     
-    <title>grapher-protovis</title>
+    <title>inGraph</title>
     
     <script type="text/javascript" src="lib/protovis/protovis-d3.2.js"></script>
 

@@ -6,6 +6,8 @@
 Ext.onReady(function(){
 var data = <?php echo $t['values']; ?>;
 
+console.log(data);
+
 var w = <?php echo $t['width']; ?>,
     h = <?php echo $t['height']; ?>,
     fy = function(d) d.y,
@@ -50,7 +52,7 @@ vis.add(pv.Rule)
 	echo 
 <<<LAYOUT_LINE
 vis.add(pv.Panel)
-	.data(function() data)
+	.data(function() data.filter(function(d) d.values.length > 0))
    .add(pv.Line)
     .data(function(d) d.values)
     .left(x.by(fx))
@@ -82,8 +84,9 @@ var legend = new pv.Panel()
     .top(50);
 
 legend.add(pv.Panel)
-    .data(function() data)
+    .data(function() data.filter(function(d) d.values.length > 0))
    .add(pv.Dot)
+    .visible(function(d) d.values.length > 0)
     .top(function() this.parent.index * 12 + 10)
     .strokeStyle(null)
     .fillStyle(function() pv.Colors.category20().range()[this.parent.index < 20 ? this.parent.index : this.parent.index - (Math.floor(this.parent.index/20)*20)].alpha(0.8))

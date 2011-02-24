@@ -9,7 +9,7 @@ if ( ! $host ) {
 	throw new Exception('source.php: Host missing.');
 }
 
-$service		= get_post_parameter( 'service', false, true );
+$service		= get_post_parameter( 'service', '', true );
 $parent_service	= get_post_parameter( 'parent_service', false, true );
 $start			= get_post_parameter( 'offset', 0, true );
 $limit			= get_post_parameter( 'limit', 10, true );
@@ -70,7 +70,7 @@ foreach ( $plots as $plot ) {
 	if ( ( ! $service || $service == $plot['service'] ) && ! in_array_array( $plot['service'], $data, 'service' ) ) {
 		foreach ( $tf as $f ) {
 
-			$values = $xcli->call( 'getPlotValues', array( $host, '', $service, '', $f['start'], $f['end'], intval( $f['interval'] ) ) );
+			$values = $xcli->call( 'getPlotValues', array( $host, '', $plot['service'], '', $f['start'], $f['end'], intval( $f['interval'] ) ) );
 			
 			foreach ( $values['charts'] as &$chart ) {
 				sort_values( $chart['values'] );

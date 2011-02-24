@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ae:configurations xmlns="http://agavi.org/agavi/config/parts/autoload/1.0" xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0">
+	<ae:configuration>
+		
+		<autoload name="InGraphBaseAction">%core.module_dir%/InGraph/lib/action/InGraphBaseAction.class.php</autoload>
+		<autoload name="InGraphBaseModel">%core.module_dir%/InGraph/lib/model/InGraphBaseModel.class.php</autoload>
+		<autoload name="InGraphBaseView">%core.module_dir%/InGraph/lib/view/InGraphBaseView.class.php</autoload>
+		
+	</ae:configuration>
+</ae:configurations>

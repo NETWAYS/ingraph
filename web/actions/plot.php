@@ -56,7 +56,7 @@ vis.add(pv.Panel)
     .left(x.by(fx))
     .bottom(y.by(fy))
     .lineWidth(2)
-    .strokeStyle(function() pv.Colors.category20().range()[this.parent.index].alpha(0.4))
+    .strokeStyle(function() pv.Colors.category20().range()[this.parent.index < 20 ? this.parent.index : this.parent.index - (Math.floor(this.parent.index/20)*20)].alpha(0.6))
     .fillStyle(null);
     
 LAYOUT_LINE;
@@ -86,7 +86,7 @@ legend.add(pv.Panel)
    .add(pv.Dot)
     .top(function() this.parent.index * 12 + 10)
     .strokeStyle(null)
-    .fillStyle(function() pv.Colors.category20().range()[this.parent.index].alpha(0.8))
+    .fillStyle(function() pv.Colors.category20().range()[this.parent.index < 20 ? this.parent.index : this.parent.index - (Math.floor(this.parent.index/20)*20)].alpha(0.8))
     .anchor("right").add(pv.Label)
     .text(function(d) d.label);
 

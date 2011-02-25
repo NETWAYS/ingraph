@@ -1,12 +1,21 @@
-<h3><?php echo $t['title']; ?></h3>
-<div id="<?php echo "{$t['id']}"; ?>"></div>
-<div id="<?php echo "{$t['id']}-legend"; ?>"></div>
+<div class="grapher-plot-container">
+    <div class="x-box-tl"><div class="x-box-tr"><div class="x-box-tc"></div></div></div>
+    <div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">
+		<h3><?php echo $t['title']; ?></h3>
+		<div class="grapher-plot" id="<?php echo "{$t['id']}"; ?>"></div>
+		<div class="grapher-legend" id="<?php echo "{$t['id']}-legend"; ?>"></div>
+    </div></div></div>
+    <div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>
+</div>
+
 
 <script type="text/javascript+protovis">
 Ext.onReady(function(){
 var data = <?php echo $t['values']; ?>;
 
-var w = <?php echo $t['width']; ?>,
+data = data.filter(function(d) d.values.length > 0);
+
+var w = iG.plotWidth(),
     h = <?php echo $t['height']; ?>,
     fy = function(d) d.y,
     fx = function(d) d.x * 1000,
@@ -18,9 +27,9 @@ var w = <?php echo $t['width']; ?>,
     x = pv.Scale.linear(new Date(xmin), new Date(xmax)).range(0, w),
     y = pv.Scale.linear(ymin, ymax).range(0, h);
 
-
 try {
-	
+
+/* Root panel. */
 var vis = new pv.Panel()
     .width(w)
     .height(h)
@@ -33,7 +42,7 @@ var vis = new pv.Panel()
 vis.add(pv.Rule)
     .data(y.ticks())
     .bottom(y)
-    .strokeStyle(function(d) true ? '#eee' : '#000')
+    .strokeStyle(function(yv) yv ? '#eee' : '#000')
   .anchor('left').add(pv.Label)
     .text(y.tickFormat);
 
@@ -43,26 +52,31 @@ vis.add(pv.Rule)
     .left(x)
     .bottom(-5)
     .height(5)
+    .strokeStyle(function(xt) xt ? '#eee' : '#000')
   .anchor('bottom').add(pv.Label)
-    .text(x.tickFormat);
+   .visible(function(xt) xt >= x.domain()[0])  
+   .text(x.tickFormat);
 
 <?php if ( ! isset( $t['type'] ) || ! $t['type'] || $t['type'] == 'line' ) {
 	echo 
 <<<LAYOUT_LINE
+/* Charts - line layout. */
 vis.add(pv.Panel)
-	.data(function() data.filter(function(d) d.values.length > 0))
+    .overflow("hidden")
+	.data(function() data)
    .add(pv.Line)
     .data(function(d) d.values)
     .left(x.by(fx))
     .bottom(y.by(fy))
     .lineWidth(2)
-    .strokeStyle(function() pv.Colors.category20().range()[this.parent.index < 20 ? this.parent.index : this.parent.index - (Math.floor(this.parent.index/20)*20)].alpha(0.6))
+    .strokeStyle(function() pv.Colors.category20().range()[this.parent.index < 20 ? this.parent.index : this.parent.index - (Math.floor(this.parent.index/20)*20)].alpha(1.2))
     .fillStyle(null);
     
 LAYOUT_LINE;
 	} elseif ( $t['type'] == 'stack' ) {
 		echo
 <<<LAYOUT_STACK
+/* Charts - stack layout. */
 vis.add(pv.Layout.Stack)
     .layers(function() data)
     .values(function(d) d.values)
@@ -73,8 +87,18 @@ LAYOUT_STACK;
 	}
 ?>
 
+function zoom() {
+}
+
+/* Zoom. */
+vis.add(pv.Panel)
+    .events("all")
+    .event("mousewheel", pv.Behavior.zoom())
+    .event("zoom", zoom);
+
+/* Legend. */
 var legend = new pv.Panel()
-    .width(200)
+    .width(iG.legendWidth())
     .height(h)
     .bottom(30)
     .left(10)
@@ -82,7 +106,7 @@ var legend = new pv.Panel()
     .top(50);
 
 legend.add(pv.Panel)
-    .data(function() data.filter(function(d) d.values.length > 0))
+    .data(function() data)
    .add(pv.Dot)
     .top(function() this.parent.index * 12 + 10)
     .strokeStyle(null)
@@ -90,8 +114,16 @@ legend.add(pv.Panel)
     .anchor("right").add(pv.Label)
     .text(function(d) d.label);
 
-vis.canvas('<?php echo "{$t['id']}"; ?>').render();
-legend.canvas('<?php echo "{$t['id']}-legend"; ?>').render();
+function render() {
+    var w_ = iG.plotWidth();
+    x.range(0, w_);
+    vis.width(w_);
+    legend.width(iG.legendWidth());
+    vis.canvas('<?php echo "{$t['id']}"; ?>').render();
+    legend.canvas('<?php echo "{$t['id']}-legend"; ?>').render();
+}
+
+iG.RenderControl.on('updated', render);
 
 } catch (e) {
 	pv.error(e);

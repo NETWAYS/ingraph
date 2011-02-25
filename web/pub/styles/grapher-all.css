@@ -1,9 +1,5 @@
 @CHARSET "UTF-8";
 
-.grapher-search-container {
-	width: 500px;
-}
-
 .grapher-search-container input {
 	width: 150px;
 }

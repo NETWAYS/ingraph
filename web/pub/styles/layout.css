@@ -1,5 +1,25 @@
 @CHARSET "UTF-8";
 
+html, body {
+    height  : 100%;
+    margin  : 0;
+    padding : 0;
+}
+
+#border-top {
+   height   : 50%;
+   width    : 1px;
+   float    : left;
+}
+
+#content {
+   margin:      0 auto;
+   text-align:  left;
+   position:    relative;
+   clear:       left;
+   overflow:    hidden;
+}
+
 div.round_box2 div.c21,div.round_box2 div.c22,div.round_box2 div.c23,div.round_box2 div.c24 {
 	font-size: 1px;
 	overflow: hidden;

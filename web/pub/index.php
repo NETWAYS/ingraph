@@ -12,7 +12,6 @@ $interval	= get_post_parameter( 'interval', false );
 $t = array(
 	'host'		=> $host,
 	'service'	=> $service,
-	'width'		=> 450,
 	'height'	=> 280,
 	'minChars'	=> 3,
 	'limit'		=> 15,
@@ -20,8 +19,8 @@ $t = array(
 );
 ?>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     
@@ -40,15 +39,23 @@ $t = array(
     <link rel="stylesheet" type="text/css" href="styles/grapher-all.css" />
 </head>
 <body>
-
+	<div id="border-top"></div>
+	<div id="content">
+	<div>
 	<form id="grapher-host-service-combination" method="post" action="index.php">
 		<div class="grapher-search-container">
 		    <div class="x-box-tl"><div class="x-box-tr"><div class="x-box-tc"></div></div></div>
 		    <div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">
 		        <h3>Choose Host, Service Combination!</h3>
+		        <div class="floatbox clearfix" style="padding-top:5px;">
+		        <div style="float:left;">
 		        <label for="grapher-host">Host:</label><input type="text" name="host" id="grapher-host" value="<?php echo $host ? $host : ''; ?>" />
+		        </div>
+		        <div style="float:left; padding-left:10px;">
 		        <label for="grapher-service">Service:</label><input type="text" name="service" id="grapher-service" value="<?php echo $service ? $service : ''; ?>" />        
-		        <?php
+		        </div>
+		        </div>
+				<?php
 		        if ( $submit && ( ! $host ) ) {
 		        echo
 <<<HTML
@@ -56,16 +63,143 @@ $t = array(
 HTML;
 		        }
 		        ?>
+		        <div class="floatbox clearfix" style="padding-top:5px;">
+		        <div style="float:left;">
 		        <label for="grapher-start">Start:</label><input type="text" name="start" id="grapher-start" value="<?php echo $start ? $start : ''; ?>" /> 
+		        </div>
+		        <div style="float:left; padding-left:10px;">		        
 		        <label for="grapher-end">End:</label><input type="text" name="end" id="grapher-end" value="<?php echo $end ? $end : ''; ?>" />
+		        </div>
+		        </div>
+		        <div  style="padding-top:5px;">
 		        <label for="graper-interval">Interval:</label><input type="text" name="interval" id="grapher-interval" value="<?php echo $interval ? $interval : ''; ?>" /> 
-		        <div class="info"><p>Search requires a minimum of <?php echo $t['minChars']; ?> characters.</p></div>
+		        </div>
+		        <div  style="padding-top:5px;" class="info"><p>Search requires a minimum of <?php echo $t['minChars']; ?> characters.</p></div>
 		        
+		        <div  style="padding-top:5px;">
 		        <input id="grapher-host-service-combination-submit" type="submit" value="Plot it!" name="submit" />
+		        </div>
 		    </div></div></div>
 		    <div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>
 		</div>
 	</form>
+	<?php if ( $submit && $host ) {
+		
+		require '../actions/source.php';
+		
+		$t['data'] = $data;
+		
+		foreach ( $data as $key => $hose ) {
+			
+			if ( ! $hose['data']['charts'] ) {
+				continue;
+			}
+			
+			$title	= "Graph for {$hose['host']}:{$hose['service']} of last ";
+			$time	= array();
+			
+			if ( $hose['frame']['tm_year'] ) {
+				$timep = '';
+				if ( $hose['frame']['tm_year'] == 1 ) {
+					$timep .= 'year';
+				} else {
+					$timep .= "{$hose['frame']['tm_year']} years";
+				}
+				$time[] = $timep;
+			}
+			
+			if ( $hose['frame']['tm_mon'] ) {
+				$timep = '';
+				if ( $hose['frame']['tm_mon'] == 1 ) {
+					if ( $time ) {
+						$timep .= '1 ';
+					}
+					$timep .= 'month';
+				} else {
+					$timep .= "{$hose['frame']['tm_mon']} months";
+				}
+				$time[] = $timep;
+			}
+			
+			if ( $hose['frame']['tm_mday'] && $hose['frame']['tm_mday'] % 7 == 0 ) {
+				$timep = '';
+				if ( $hose['frame']['tm_mday'] / 7 == 1 ) {
+					if ( $time ) {
+						$timep .= '1 ';
+					}
+					$timep .= 'week';
+				} else {
+					$timep .= $hose['frame']['tm_mday'] / 7 . ' weeks';
+				}
+				$time[] = $timep;
+			} elseif ( $hose['frame']['tm_mday'] ) {
+				$timep = '';
+				if ( $hose['frame']['tm_mday'] == 1 ) {
+					if ( $time ) {
+						$timep .= '1 ';
+					}
+					$timep .= 'day';
+				} else {
+					$timep .= "{$hose['frame']['tm_mday']} days";
+				}
+				$time[] = $timep;
+			}
+			
+			if ( $hose['frame']['tm_hour'] ) {
+				$timep = '';
+				if ( $hose['frame']['tm_hour'] == 1 ) {
+					if ( $time ) {
+						$timep .= '1 ';
+					}
+					$timep .= 'hour';
+				} else {
+					$timep .= "{$hose['frame']['tm_hour']} hours";
+				}
+				$time[] = $timep;
+			}
+			
+			if ( $hose['frame']['tm_min'] ) {
+				$timep = '';
+				if ( $hose['frame']['tm_min'] == 1 ) {
+					if ( $time ) {
+						$timep .= '1 ';
+					}
+					$timep .= 'minute';
+				} else {
+					$timep .= "{$hose['frame']['tm_min']} minutes";
+				}
+				$time[] = $timep;
+			}
+			
+			if ( $hose['frame']['tm_sec'] ) {
+				$timep = '';
+				if ( $hose['frame']['tm_sec'] == 1 ) {
+					if ( $time ) {
+						$timep .= '1 ';
+					}
+					$timep .= 'seconds';
+				} else {
+					$timep .= "{$hose['frame']['tm_sec']} seconds";
+				}
+				$time[] = $timep;
+			}
+			
+			$last = array_pop( $time );
+			$time = ( $time ? implode( ', ', $time ) . ' and ' . $last : $last ) . ' from ' . date( "Y-m-d H:i:s", $hose['start'] );
+			
+			$t['title']		= $title . $time;
+			
+			$t['values']	= json_encode( $hose['data']['charts'] );
+			
+			$t['id']		= "{$hose['host']}-{$hose['service']}-$key";
+			
+			$t['start']		= $hose['start'];
+			$t['end']		= $hose['end'];
+			
+			require '../actions/plot.php';
+		}
+	} ?>
+	
 	<script type="text/javascript">
 	Ext.onReady(function(){
 		var limit		= <?php echo $t['limit']; ?>;
@@ -200,124 +334,21 @@ HTML;
 		        }
 	        }
 	    });
+
+	    function updateResolution() {
+	    	height = iG.height();
+
+	    	Ext.get('content').setWidth(iG.width(), true);
+	    	Ext.get('border-top').setStyle('margin-bottom', ((height/-2).toFixed(0).toString()) + "px");
+
+	    	iG.RenderControl.fireEvent('updated');	
+	    }
+
+		Ext.EventManager.addListener(window, 'resize', updateResolution);
+	    
+	    updateResolution();
 	});	
 	</script>
-	
-	<?php if ( $submit && $host ) {
-		
-		require '../actions/source.php';
-		
-		$t['data'] = $data;
-		
-		foreach ( $data as $key => $hose ) {
-			
-			if ( ! $hose['data']['charts'] ) {
-				continue;
-			}
-			
-			$title	= "Graph for {$hose['host']}:{$hose['service']} of last ";
-			$time	= array();
-			
-			if ( $hose['frame']['tm_year'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_year'] == 1 ) {
-					$timep .= 'year';
-				} else {
-					$timep .= "{$hose['frame']['tm_year']} years";
-				}
-				$time[] = $timep;
-			}
-			
-			if ( $hose['frame']['tm_mon'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_mon'] == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'month';
-				} else {
-					$timep .= "{$hose['frame']['tm_mon']} months";
-				}
-				$time[] = $timep;
-			}
-			
-			if ( $hose['frame']['tm_mday'] && $hose['frame']['tm_mday'] % 7 == 0 ) {
-				$timep = '';
-				if ( $hose['frame']['tm_mday'] / 7 == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'week';
-				} else {
-					$timep .= $hose['frame']['tm_mday'] / 7 . ' weeks';
-				}
-				$time[] = $timep;
-			} elseif ( $hose['frame']['tm_mday'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_mday'] == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'day';
-				} else {
-					$timep .= "{$hose['frame']['tm_mday']} days";
-				}
-				$time[] = $timep;
-			}
-			
-			if ( $hose['frame']['tm_hour'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_hour'] == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'hour';
-				} else {
-					$timep .= "{$hose['frame']['tm_hour']} hours";
-				}
-				$time[] = $timep;
-			}
-			
-			if ( $hose['frame']['tm_min'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_min'] == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'minute';
-				} else {
-					$timep .= "{$hose['frame']['tm_min']} minutes";
-				}
-				$time[] = $timep;
-			}
-			
-			if ( $hose['frame']['tm_sec'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_sec'] == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'seconds';
-				} else {
-					$timep .= "{$hose['frame']['tm_sec']} seconds";
-				}
-				$time[] = $timep;
-			}
-			
-			$last = array_pop($time);
-			$time = $time ? implode(', ', $time) . ' and ' . $last : $last . ' from ' . date("Y-m-d H:i:s", $hose['start']);
-			
-			$t['title']		= $title . $time;
-			
-			$t['values']	= json_encode($hose['data']['charts']);
-			
-			$t['id']		= "{$hose['host']}-{$hose['service']}-$key";
-			
-			$t['start']		= $hose['start'];
-			$t['end']		= $hose['end'];
-			
-			require '../actions/plot.php';
-		}
-	} ?>
+	</div></div>
 </body>
 </html>

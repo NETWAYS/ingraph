@@ -7,8 +7,22 @@
 				<setting name="title">InGraph Module</setting>
 				<setting name="version">1.0</setting>
 				
+				<setting name="authors">
+					<ae:parameter name="infro@netways.de">NETWAYS GmbH</ae:parameter>
+				</setting>
+				<setting name="homepage">http://www.netways.de</setting>
+				<setting name="update_url">https://www.netways.org/projects/ingraph</setting>
+				
+				<setting name="description">inGraph Cronk - Integrate the inGraph frontent into icinga-web</setting>
+				
+				<!-- Application scripts -->
 				<setting name="appkit_module.app.javascript_files">
 					<ae:parameter>%core.module_dir%/InGraph/lib/js/InGraphApplication.js</ae:parameter>
+				</setting>
+				
+				<!-- Custom routes include -->
+				<setting name="appkit_module.agavi.include_xml.routing">
+					<ae:parameter>%core.module_dir%/InGraph/config/routing.xml</ae:parameter>
 				</setting>
 				
 			</settings>

@@ -1071,17 +1071,33 @@ class DataPoint(ModelBase):
         
         return self.timestamp != self.plot.last_update - self.plot.last_update % self.timeframe.interval or self._last_saved + randint(300, 900) < now
 
-    def getValuesByInterval(conn, plot, start_timestamp, end_timestamp, granularity):
+    def getValuesByInterval(conn, plot, start_timestamp, end_timestamp, granularity=None):
         if end_timestamp < start_timestamp:
             tmp = end_timestamp
             end_timestamp = start_timestamp
             start_timestamp = tmp
 
+        tfs = TimeFrame.getAllSorted(conn, active_only=True)
+
+        if granularity == None:
+            now = time()
+            
+            for tf in tfs:
+                if tf.retention_period != None and now - tf.retention_period > start_timestamp:
+                    continue
+                
+                granularity = tf.interval - 1
+                
+            if granularity == None:
+                # fallback, this should only happen when there are no timeframes which
+                # don't have a retention_period
+                granularity = (end_timestamp - start_timestamp) / 250 
+
         assert granularity > 0
         
         max_tf_interval = 0
         min_tf_interval = None
-        for tf in TimeFrame.getAllSorted(conn, active_only=True):
+        for tf in tfs:
             if tf.interval > max_tf_interval:
                 max_tf_interval = tf.interval
             

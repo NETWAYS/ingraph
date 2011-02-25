@@ -1086,7 +1086,8 @@ class DataPoint(ModelBase):
                 if tf.retention_period != None and now - tf.retention_period > start_timestamp:
                     continue
                 
-                granularity = tf.interval - 1
+                if granularity == None or tf.interval < granularity:
+                    granularity = tf.interval
                 
             if granularity == None:
                 # fallback, this should only happen when there are no timeframes which

@@ -69,14 +69,6 @@ iG.width = function() {
 	return f_clientWidth() - iG.config.borderWidth * 2;
 };
 
-iG.plotWidth = function() {
-	return iG.width() * iG.config.plot;
-};
-
-iG.legendWidth = function() {
-	return iG.width() * iG.config.legend;
-};
-
 iG.RenderControl = (function() {
 	var RenderControl_ = function() {
 		this.events = {
@@ -88,3 +80,11 @@ iG.RenderControl = (function() {
 	
 	return new RenderControl_;
 })();
+
+iG.getTextWidth = function(string) {
+	var string_ = new Ext.Element(document.createElement('div'));
+	var length = string_.getTextWidth(string);
+	Ext.destroy(string_);
+	
+	return length;
+}

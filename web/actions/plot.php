@@ -15,8 +15,7 @@ var data = <?php echo $t['values']; ?>;
 
 data = data.filter(function(d) d.values.length > 0);
 
-var w = iG.plotWidth(),
-    h = <?php echo $t['height']; ?>,
+var h = <?php echo $t['height']; ?>,
     fy = function(d) d.y,
     fx = function(d) d.x * 1000,
     fl = function() data[this.parent.index].label,
@@ -24,6 +23,9 @@ var w = iG.plotWidth(),
     xmax = pv.max(data.map(function(d) d.values.length ? pv.max(d.values, fx) : <?php echo $t['end'] ?> * 1000)),
     ymin = pv.min(data.map(function(d) d.values.length ? pv.min(d.values, fy) : 0)),
     ymax = pv.max(data.map(function(d) d.values.length ? pv.max(d.values, fy) : 0)),
+	//yWidth = iG.getTextWidth(ymax),
+    legendWidth = pv.max(data.map(function(d) iG.getTextWidth(d.label))),
+    w = iG.width() - legendWidth - 200,
     x = pv.Scale.linear(new Date(xmin), new Date(xmax)).range(0, w),
     y = pv.Scale.linear(ymin, ymax).range(0, h);
 
@@ -34,28 +36,29 @@ var vis = new pv.Panel()
     .width(w)
     .height(h)
     .bottom(20)
-    .left(100)
+    .left(80)
     .right(10)
-    .top(50);
+    .top(10);
 
 /* Y-axis and ticks. */
 vis.add(pv.Rule)
     .data(y.ticks())
     .bottom(y)
-    .strokeStyle(function(yv) yv ? '#eee' : '#000')
-  .anchor('left').add(pv.Label)
+    .strokeStyle(function(d) d ? "#c7c7c7" : "#000")
+  .anchor("left").add(pv.Label)
     .text(y.tickFormat);
 
-/* X-axis and ticks. */
+/* X-axis ticks. */
 vis.add(pv.Rule)
     .data(x.ticks())
     .left(x)
-    .bottom(-5)
+    .strokeStyle(function(d) d ? "#c7c7c7" : "#000")
+  .add(pv.Rule)
+    .bottom(-6)
     .height(5)
-    .strokeStyle(function(xt) xt ? '#eee' : '#000')
-  .anchor('bottom').add(pv.Label)
-   .visible(function(xt) xt >= x.domain()[0])  
-   .text(x.tickFormat);
+    .strokeStyle("#c7c7c7")
+  .anchor("bottom").add(pv.Label)
+    .text(x.tickFormat);
 
 <?php if ( ! isset( $t['type'] ) || ! $t['type'] || $t['type'] == 'line' ) {
 	echo 
@@ -98,7 +101,7 @@ vis.add(pv.Panel)
 
 /* Legend. */
 var legend = new pv.Panel()
-    .width(iG.legendWidth())
+    .width(legendWidth)
     .height(h)
     .bottom(30)
     .left(10)
@@ -115,15 +118,16 @@ legend.add(pv.Panel)
     .text(function(d) d.label);
 
 function render() {
-    var w_ = iG.plotWidth();
+    var w_ = iG.width() - legendWidth - 200;
     x.range(0, w_);
     vis.width(w_);
-    legend.width(iG.legendWidth());
     vis.canvas('<?php echo "{$t['id']}"; ?>').render();
     legend.canvas('<?php echo "{$t['id']}-legend"; ?>').render();
 }
 
 iG.RenderControl.on('updated', render);
+
+render();
 
 } catch (e) {
 	pv.error(e);

@@ -23,30 +23,12 @@ Ext.extend(InGraph.Application, Ext.Panel, {
 			title: 'CENTER'
 		}, {
 			xtype: 'ingraph-filterpanel',
-			
 			region: 'north',
+			providerHosts: this.providerHosts,
+			providerServices: this.providerServices
 			
-			title: 'NORTH',
-			html: 'NORTH'
 		}]);
 	}
 });
 
 Ext.reg('ingraph-application', InGraph.Application);
-
-// -- FORM PANEL
-
-InGraph.FilterPanel = function() {
-	InGraph.FilterPanel.superclass.constructor.apply(this, arguments);	
-}
-
-Ext.extend(InGraph.FilterPanel, Ext.form.FormPanel, {
-	height: 200,
-	border: false,
-	
-	constructor: function() {
-		InGraph.FilterPanel.superclass.constructor.apply(this, arguments);
-	}
-});
-
-Ext.reg('ingraph-filterpanel', InGraph.FilterPanel);

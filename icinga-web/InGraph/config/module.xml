@@ -18,14 +18,16 @@
 				<!-- Application scripts -->
 				<setting name="appkit_module.app.javascript_files">
 					<ae:parameter>%core.module_dir%/InGraph/lib/js/InGraphApplication.js</ae:parameter>
+					<ae:parameter>%core.module_dir%/InGraph/lib/js/InGraphFilterPanel.js</ae:parameter>
 				</setting>
 				
 				<!-- Custom routes include -->
 				<setting name="appkit_module.agavi.include_xml.routing">
 					<ae:parameter>%core.module_dir%/InGraph/config/routing.xml</ae:parameter>
 				</setting>
-				
 			</settings>
+			
+			<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="InGraph.xml" />
 		</module>
 		
 	</ae:configuration>

@@ -5,8 +5,10 @@
 		
 			<!-- inGraph specific routes (include on the fly) -->
 			<route name=".ingraph" pattern="^/ingraph" stop="false" module="InGraph">
-				<route name=".provider" pattern="^/provider" stop="false">
+				<route name=".provider" pattern="^/provider" stop="false" output_type="json">
 					<route name=".test" pattern="^/test" action="Provider.Test" />
+					<route name=".hosts" pattern="^/hosts" action="Provider.Hosts" />
+					<route name=".services" pattern="^/services" action="Provider.Services" />
 				</route>
 			</route>
 		

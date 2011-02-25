@@ -1,6 +1,6 @@
 <?php
 
-class InGraph_Provider_TestAction extends InGraphBaseAction
+class InGraph_Provider_ServicesAction extends InGraphBaseAction
 {
 	/**
 	 * Returns the default view if the action does not serve the request

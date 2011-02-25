@@ -188,7 +188,7 @@ class BackendRPCMethods:
         
         return items
     
-    def getPlotValues(self, host, parent_service, service, plot, start_timestamp, end_timestamp, granularity):
+    def getPlotValues(self, host, parent_service, service, plot, start_timestamp, end_timestamp, granularity=None):
         host_obj = model.Host.getByName(conn, host)
 
         charts = []

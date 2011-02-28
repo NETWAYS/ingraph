@@ -23,11 +23,13 @@ var h = <?php echo $t['height']; ?>,
     xmax = pv.max(data.map(function(d) d.values.length ? pv.max(d.values, fx) : <?php echo $t['end'] ?> * 1000)),
     ymin = pv.min(data.map(function(d) d.values.length ? pv.min(d.values, fy) : 0)),
     ymax = pv.max(data.map(function(d) d.values.length ? pv.max(d.values, fy) : 0)),
-	//yWidth = iG.getTextWidth(ymax),
+    s = pv.max(data.map(function(d) d.values.length)),
+    ts = (xmax - xmin) / s,
     legendWidth = pv.max(data.map(function(d) iG.getTextWidth(d.label))),
     w = iG.width() - legendWidth - 200,
     x = pv.Scale.linear(new Date(xmin), new Date(xmax)).range(0, w),
     y = pv.Scale.linear(ymin, ymax).range(0, h);
+
 
 try {
 
@@ -38,14 +40,17 @@ var vis = new pv.Panel()
     .bottom(20)
     .left(80)
     .right(10)
-    .top(10);
+    .top(10)
+    .events('all')
+    .event('mousemove', pv.Behavior.point());
+
 
 /* Y-axis and ticks. */
 vis.add(pv.Rule)
     .data(y.ticks())
     .bottom(y)
-    .strokeStyle(function(d) d ? "#c7c7c7" : "#000")
-  .anchor("left").add(pv.Label)
+    .strokeStyle(function(d) d ? '#c7c7c7' : '#000')
+  .anchor('left').add(pv.Label)
     .text(y.tickFormat);
 
 /* X-axis ticks. */
@@ -56,25 +61,38 @@ vis.add(pv.Rule)
   .add(pv.Rule)
     .bottom(-6)
     .height(5)
-    .strokeStyle("#c7c7c7")
-  .anchor("bottom").add(pv.Label)
+    .strokeStyle('#c7c7c7')
+  .anchor('bottom').add(pv.Label)
     .text(x.tickFormat);
 
 <?php if ( ! isset( $t['type'] ) || ! $t['type'] || $t['type'] == 'line' ) {
 	echo 
 <<<LAYOUT_LINE
+var i = -1;
+
 /* Charts - line layout. */
 vis.add(pv.Panel)
-    .overflow("hidden")
+    .overflow('hidden')
 	.data(function() data)
    .add(pv.Line)
+    .overflow('hidden')
     .data(function(d) d.values)
     .left(x.by(fx))
     .bottom(y.by(fy))
     .lineWidth(2)
     .strokeStyle(function() pv.Colors.category20().range()[this.parent.index < 20 ? this.parent.index : this.parent.index - (Math.floor(this.parent.index/20)*20)].alpha(1.2))
-    .fillStyle(null);
-    
+    .fillStyle(null)
+   .add(pv.Dot)
+    .def('active', -1)
+    .lineWidth(0)
+    .size(0)
+    .event('point', function() this.active(this.index).parent)
+    .event('unpoint', function() this.active(-1).parent)
+  .anchor('right').add(pv.Label)
+    .visible(function() this.anchorTarget().active() == this.index)
+    .textAlign('left')
+    .textBaseline('middle')
+    .text(function(d) '{0}: {1}'.format(data[this.parent.index].label, d.y));
 LAYOUT_LINE;
 	} elseif ( $t['type'] == 'stack' ) {
 		echo
@@ -89,15 +107,6 @@ vis.add(pv.Layout.Stack)
 LAYOUT_STACK;
 	}
 ?>
-
-function zoom() {
-}
-
-/* Zoom. */
-vis.add(pv.Panel)
-    .events("all")
-    .event("mousewheel", pv.Behavior.zoom())
-    .event("zoom", zoom);
 
 /* Legend. */
 var legend = new pv.Panel()

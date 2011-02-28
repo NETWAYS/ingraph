@@ -170,23 +170,26 @@ class BackendRPCMethods:
         return {'total': result['total'], 'hosts': items}
 
     def getPlots(self, host):
-        items = []
+        items = set()
 
-        plots = model.Plot.getByHost(conn, host)
+        hosts = self.getHostsFiltered(host, None, None)
 
-        for plot in plots:
-            item = {
-                'name': plot.name,
-                'unit': plot.unit,
-                'service': plot.hostservice.service.name
-            }
-            
-            if plot.hostservice.parent_hostservice != None:
-                item['parent_service'] = plot.hostservice.parent_hostservice.service.name
+        for host in hosts:
+            plots = model.Plot.getByHost(conn, host)
+    
+            for plot in plots:
+                item = {
+                    'name': plot.name,
+                    'unit': plot.unit,
+                    'service': plot.hostservice.service.name
+                }
                 
-            items.append(item)
-        
-        return items
+                if plot.hostservice.parent_hostservice != None:
+                    item['parent_service'] = plot.hostservice.parent_hostservice.service.name
+                    
+                items.add(item)
+            
+            return list(items)
     
     def getPlotValues(self, host, parent_service, service, plot, start_timestamp=None, end_timestamp=None, granularity=None):
         host_obj = model.Host.getByName(conn, host)

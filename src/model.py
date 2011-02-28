@@ -1071,13 +1071,20 @@ class DataPoint(ModelBase):
         
         return self.timestamp != self.plot.last_update - self.plot.last_update % self.timeframe.interval or self._last_saved + randint(300, 900) < now
 
-    def getValuesByInterval(conn, plot, start_timestamp, end_timestamp, granularity=None):
+    def getValuesByInterval(conn, plot, start_timestamp=None, end_timestamp=None, granularity=None):
         if end_timestamp < start_timestamp:
             tmp = end_timestamp
             end_timestamp = start_timestamp
             start_timestamp = tmp
 
         tfs = TimeFrame.getAllSorted(conn, active_only=True)
+
+        if start_timestamp == None:
+            sel = select([func.min(datapoint.c.timestamp, type_=Integer).label('mintimestamp')]).where(datapoint.c.plot_id==plot.id)
+            start_timestamp = conn.execute(sel).scalar()
+            
+        if end_timestamp == None:
+            end_timestamp = time()
 
         if granularity == None:
             now = time()

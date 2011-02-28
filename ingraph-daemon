@@ -160,7 +160,7 @@ class BackendRPCMethods:
         return items
     
     def getHostsFiltered(self, pattern, limit, offset):
-        result = model.Host.getByPattern(conn, pattern, limit, offset)
+        result = model.Host.getByPattern(conn, pattern.replace('*', '%'), limit, offset)
         
         items = []
         
@@ -172,9 +172,9 @@ class BackendRPCMethods:
     def getPlots(self, host):
         items = set()
 
-        hosts = self.getHostsFiltered(host, None, None)
+        result = self.getHostsFiltered(host, None, None)
 
-        for host in hosts:
+        for host in result['hosts']:
             plots = model.Plot.getByHost(conn, host)
     
             for plot in plots:
@@ -189,7 +189,7 @@ class BackendRPCMethods:
                     
                 items.add(item)
             
-            return list(items)
+        return list(items)
     
     def getPlotValues(self, host, parent_service, service, plot, start_timestamp=None, end_timestamp=None, granularity=None):
         host_obj = model.Host.getByName(conn, host)

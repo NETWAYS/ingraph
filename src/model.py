@@ -409,7 +409,7 @@ class HostService(ModelBase):
             
         # TODO: find matching sub-services with matching parent_service
                     
-        sel = hostservice.select(from_obj=[from_obj]).where(cond)
+        sel = sel.select_from(from_obj).where(cond)
         result = conn.execute(sel)
         
         objs = []

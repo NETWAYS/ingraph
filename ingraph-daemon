@@ -185,6 +185,12 @@ class BackendRPCMethods:
         charts = []
         result = { 'charts': charts }
         
+        if host_pattern != None:
+            host_pattern = host_pattern.replace('*', '%')
+        
+        if service_pattern != None:
+            service_pattern = service_pattern.replace('*', '%')
+        
         if start_timestamp == '':
             start_timestamp = None
             

@@ -170,62 +170,21 @@ class BackendRPCMethods:
             
         return {'total': result['total'], 'hosts': items}
 
-    def getPlots(self, host_pattern, service_pattern=None):
-        items = {}
+    def getServices(self, host_pattern, service_pattern=None, limit=None, offset=None):
+        result = model.HostService.getByHostAndServicePattern(conn, host_pattern, \
+                                                                        service_pattern, limit, offset)
 
-        result = self.getHostsFiltered(host_pattern)
+        items = []
 
-        for host in result['hosts']:
-            plots = model.Plot.getByHost(conn, host)
-    
-            items_host = []
-    
-            for plot in plots:
-                if service_pattern != None and service_pattern != '' and \
-                        not fnmatch(plot.hostservice.service.name.upper(), service_pattern.upper()):
-                    continue
-                
-                item = {
-                    'name': plot.name,
-                    'unit': plot.unit,
-                    'service': plot.hostservice.service.name
-                }
-                
-                if plot.hostservice.parent_hostservice != None:
-                    item['parent_service'] = plot.hostservice.parent_hostservice.service.name
-                    
-                items_host.append(item)
-                
-            items[host] = items_host
+        for hostservice_obj in result['services']:
+            items.append(hostservice_obj.service.name)
         
-        return items
+        return {'total': result['total'], 'services': items}
     
-    def getPlotValues(self, host, parent_service, service, plot, start_timestamp=None, end_timestamp=None, granularity=None):
-        host_obj = model.Host.getByName(conn, host)
-
+    def getPlotValues(self, host_pattern, service_pattern, start_timestamp=None, end_timestamp=None, granularity=None):
         charts = []
         result = { 'charts': charts }
         
-        if host == None:
-            return result
-        
-        if parent_service != None and parent_service != '':
-            parent_service_obj = model.Service.getByName(conn, parent_service)
-            
-            if parent_service_obj == None:
-                return result
-            
-            parent_hostservice_obj = model.HostService.getByHostAndService(conn, host_obj, parent_service_obj, None)
-        else:
-            parent_hostservice_obj = None
-            
-        if service != None and service != '':
-            service_obj = model.Service.getByName(conn, service)
-        else:
-            service_obj = None
-        
-        hostservice_objs = model.HostService.getByHostAndService(conn, host_obj, service_obj, parent_hostservice_obj)
-
         if start_timestamp == '':
             start_timestamp = None
             
@@ -235,8 +194,10 @@ class BackendRPCMethods:
         if granularity == '':
             granularity = None
 
-        for hostservice_obj in hostservice_objs:        
-            plot_objs = model.Plot.getByHostServiceAndName(conn, hostservice_obj, plot)
+        result_services = model.HostService.getByHostAndServicePattern(conn, host_pattern, service_pattern)
+
+        for hostservice_obj in result_services['services']:        
+            plot_objs = model.Plot.getByHostServiceAndName(conn, hostservice_obj, None)
                   
             for plot_obj in plot_objs:
                 values = model.DataPoint.getValuesByInterval(conn, plot_obj, start_timestamp,
@@ -263,10 +224,9 @@ class BackendRPCMethods:
                     if hostservice_obj.parent_hostservice != None:
                         label = hostservice_obj.service.name + '-' + label
                     
-                    charts.append({'host': hostservice_obj.host.name, 'label': label,
-                                   'unit': plot_obj.unit, 'values': chart})
-                    
-            
+                    charts.append({'host': hostservice_obj.host.name, 'service': hostservice_obj.service.name, 
+                                   'label': label, 'unit': plot_obj.unit, 'values': chart})
+                
         return result
     
     def sync(self):

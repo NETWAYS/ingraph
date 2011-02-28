@@ -87,116 +87,27 @@ HTML;
 		
 		require '../actions/source.php';
 		
-		$t['data'] = $data;
-		
-		foreach ( $data as $key => $hose ) {
-			
-			if ( ! $hose['data']['charts'] ) {
-				continue;
-			}
-			
-			$title	= "Graph for {$hose['host']}:{$hose['service']} of last ";
-			$time	= array();
-			
-			if ( $hose['frame']['tm_year'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_year'] == 1 ) {
-					$timep .= 'year';
-				} else {
-					$timep .= "{$hose['frame']['tm_year']} years";
-				}
-				$time[] = $timep;
-			}
-			
-			if ( $hose['frame']['tm_mon'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_mon'] == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
+		foreach ( $data as $host => $services ) {
+			foreach ( $services as $service => $charts ) {
+				foreach ( $charts as $key => $chart ) {			
+					$t['title']		= "Graph for {$host}:{$service} from " . strftime('%Y-%m-%d %H:%M:%S', $chart['start']) . " to " . strftime('%Y-%m-%d %H:%M:%S', $chart['end']);
+					
+					$t['values']	= json_encode( $chart['data'] );
+					
+					$t['id']		= "{$host}-{$service}-{$key}";
+					
+					$t['start']		= intval( $chart['start'] );
+					$t['end']		= intval( $chart['end'] );
+					$t['host']		= $host;
+					$t['service']	= $service;
+					
+					if ( $chart['context'] ) {
+						require '../actions/context.php';
+					} else {
+						require '../actions/plot.php';
 					}
-					$timep .= 'month';
-				} else {
-					$timep .= "{$hose['frame']['tm_mon']} months";
 				}
-				$time[] = $timep;
 			}
-			
-			if ( $hose['frame']['tm_mday'] && $hose['frame']['tm_mday'] % 7 == 0 ) {
-				$timep = '';
-				if ( $hose['frame']['tm_mday'] / 7 == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'week';
-				} else {
-					$timep .= $hose['frame']['tm_mday'] / 7 . ' weeks';
-				}
-				$time[] = $timep;
-			} elseif ( $hose['frame']['tm_mday'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_mday'] == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'day';
-				} else {
-					$timep .= "{$hose['frame']['tm_mday']} days";
-				}
-				$time[] = $timep;
-			}
-			
-			if ( $hose['frame']['tm_hour'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_hour'] == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'hour';
-				} else {
-					$timep .= "{$hose['frame']['tm_hour']} hours";
-				}
-				$time[] = $timep;
-			}
-			
-			if ( $hose['frame']['tm_min'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_min'] == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'minute';
-				} else {
-					$timep .= "{$hose['frame']['tm_min']} minutes";
-				}
-				$time[] = $timep;
-			}
-			
-			if ( $hose['frame']['tm_sec'] ) {
-				$timep = '';
-				if ( $hose['frame']['tm_sec'] == 1 ) {
-					if ( $time ) {
-						$timep .= '1 ';
-					}
-					$timep .= 'seconds';
-				} else {
-					$timep .= "{$hose['frame']['tm_sec']} seconds";
-				}
-				$time[] = $timep;
-			}
-			
-			$last = array_pop( $time );
-			$time = ( $time ? implode( ', ', $time ) . ' and ' . $last : $last ) . ' from ' . date( "Y-m-d H:i:s", $hose['start'] );
-			
-			$t['title']		= $title . $time;
-			
-			$t['values']	= json_encode( $hose['data']['charts'] );
-			
-			$t['id']		= "{$hose['host']}-{$hose['service']}-$key";
-			
-			$t['start']		= $hose['start'];
-			$t['end']		= $hose['end'];
-			
-			require '../actions/plot.php';
 		}
 	} ?>
 	
@@ -247,7 +158,7 @@ HTML;
 
 	    var serviceSearch = new Ext.form.ComboBox({
 	    	id:				'GrapherService',
-	        store:			new Ext.data.JsonStore({
+	        store:			new Ext.data.ArrayStore({
 		        autoDestroy:	true,
 		        url:			'actions/services.php',
 		        root:			'results',

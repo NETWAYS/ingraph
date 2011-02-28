@@ -25,30 +25,36 @@ $xcli			= new XMLRPCClient();
 if ( ! $st ) {
 	// default
 	$tf[] = array(
+		'start' => '',
+		'end' => '',
+		'interval' => '',
+		'context' => true
+	);
+	$tf[] = array(
 		'start' => time() - ( 60 * 60 ),
 		'end' => $et,
-		'interval' => 60
+		'interval' => ''
 	);
 	$tf[] = array(
 		'start' => time() - ( 1 * 24 * 60 * 60 ),
 		'end' => $et,
-		'interval' => 60 * 60
+		'interval' => ''
 	);
 	$tf[] = array(
 		'start' => time() - ( 7 * 24 * 60 * 60 ),
 		'end' => $et,
-		'interval' => 24 * 60 * 60
+		'interval' => ''
 	);
 	$tf[] = array(
 		'start' => time() - ( 31 * 24 * 60 * 60 ),
 		'end' => $et,
-		'interval' => 7 * 24 * 60 * 60
+		'interval' => ''
 	
 	);
 	$tf[] = array(
 		'start' => time() - ( 365 * 24 * 60 * 60 ),
 		'end' => $et,
-		'interval' => 31 * 24 * 60 * 60
+		'interval' => ''
 	);
 } else {
 	if ( ! $i ) {
@@ -64,32 +70,43 @@ if ( ! $st ) {
 	);
 }
 
-$plots = $xcli->call( 'getPlots', array( $host ) );
-
-foreach ( $plots as $plot ) {
-	if ( ( ! $service || $service == $plot['service'] ) && ! in_array_array( $plot['service'], $data, 'service' ) ) {
-		foreach ( $tf as $f ) {
-
-			$values = $xcli->call( 'getPlotValues', array( $host, '', $plot['service'], '', $f['start'], $f['end'], intval( $f['interval'] ) ) );
-			
-			foreach ( $values['charts'] as &$chart ) {
-				sort_values( $chart['values'] );
+foreach ( $tf as $tkey => $f ) {
+	
+	$plots = $xcli->call( 'getPlotValues', array( $host, $service, $f['start'] ? intval( $f['start'] ) : '', $f['end'] ? intval( $f['end'] ) : '', $f['interval'] ? intval( $f['interval'] ) : $f['interval'] ) );
+	
+	foreach ( $plots as $plot ) {
+		if ( ! $plot ) {
+			continue;
+		}
+		
+		foreach ( $plot as &$chart ) {
+			if ( ! $chart['values'] ) {
+				continue;
 			}
 			
-			$e = aftime($f['end']);
-			$s = aftime($f['start']);
-			$r = array();
-			foreach ($e as $k => $v) {
-				$r[$k] = $v - $s[$k];
+			sort_values( $chart['values'] );
+			
+			if ( ! array_key_exists( $chart['host'], $data ) ) {
+				$data[$chart['host']] = array();
 			}
 			
-			$data[] = array(
-				'host'		=> $host,
-				'service'	=> $plot['service'],
-				'frame'		=> $r,
-				'data'		=> $values,
-				'start'		=> $f['start'],
-				'end'		=> $f['end']
+			if ( ! array_key_exists( $chart['service'], $data[$chart['host']] ) ) {
+				$data[$chart['host']][$chart['service']] = array();
+			}
+			
+			if ( ! array_key_exists( $tkey, $data[$chart['host']][$chart['service']] ) ) {
+				$data[$chart['host']][$chart['service']][$tkey] = array(
+					'data' => array(),
+					'start' => $chart['values'][0]['x'],
+					'end' => $chart['values'][count( $chart['values'] ) - 1]['x'],
+					'context' => isset( $f['context'] ) ? $f['context'] : false			
+				);
+			}
+			
+			$data[$chart['host']][$chart['service']][$tkey]['data'][] = array(
+				'label' => $chart['label'],
+				'unit' => $chart['unit'],
+				'values' => $chart['values']
 			);
 		}
 	}

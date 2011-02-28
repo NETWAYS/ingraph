@@ -37,7 +37,9 @@ function filter_array ( $input, $field, $pattern ) {
 function get_post_parameter ( $name, $default='', $force=false, $callback=null ) {
 	$parameter = isset( $_POST[$name] ) ? $_POST[$name] : $default;
 	if ( $parameter && $callback) {
-		$parameter = call_user_func($callback, $parameter);
+		if ( ( $callback == 'strtotime' ) && ( 1 !== preg_match( '/^[1-9][0-9]*$/', $parameter ) ) ) {
+			$parameter = call_user_func($callback, $parameter);
+		}
 	} elseif ( ! $parameter && $force ) {
 		$parameter = $default;
 	}	

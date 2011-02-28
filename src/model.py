@@ -403,13 +403,13 @@ class HostService(ModelBase):
         total = conn.execute(sel).scalar()
         
         if limit == None and offset == None:
-            sel = host.select()
+            sel = hostservice.select(from_obj=[from_obj])
         else:
-            sel = host.select(limit=limit, offset=offset)
+            sel = hostservice.select(from_obj=[from_obj], limit=limit, offset=offset)
             
         # TODO: find matching sub-services with matching parent_service
                     
-        sel = sel.select_from(from_obj).where(cond)
+        sel = sel.where(cond)
         result = conn.execute(sel)
         
         objs = []

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from time import time
+from fnmatch import fnmatch
 from random import randint
 from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 from xmlrpclib import Fault
@@ -159,7 +160,7 @@ class BackendRPCMethods:
             
         return items
     
-    def getHostsFiltered(self, pattern, limit, offset):
+    def getHostsFiltered(self, pattern, limit=None, offset=None):
         result = model.Host.getByPattern(conn, pattern.replace('*', '%'), limit, offset)
         
         items = []
@@ -169,15 +170,21 @@ class BackendRPCMethods:
             
         return {'total': result['total'], 'hosts': items}
 
-    def getPlots(self, host):
-        items = set()
+    def getPlots(self, host_pattern, service_pattern=None):
+        items = {}
 
-        result = self.getHostsFiltered(host, None, None)
+        result = self.getHostsFiltered(host_pattern)
 
         for host in result['hosts']:
             plots = model.Plot.getByHost(conn, host)
     
+            items_host = []
+    
             for plot in plots:
+                if service_pattern != None and service_pattern != '' and \
+                        not fnmatch(plot.hostservice.service.name.upper(), service_pattern.upper()):
+                    continue
+                
                 item = {
                     'name': plot.name,
                     'unit': plot.unit,
@@ -187,9 +194,11 @@ class BackendRPCMethods:
                 if plot.hostservice.parent_hostservice != None:
                     item['parent_service'] = plot.hostservice.parent_hostservice.service.name
                     
-                items.add(item)
-            
-        return list(items)
+                items_host.append(item)
+                
+            items[host] = items_host
+        
+        return items
     
     def getPlotValues(self, host, parent_service, service, plot, start_timestamp=None, end_timestamp=None, granularity=None):
         host_obj = model.Host.getByName(conn, host)
@@ -254,7 +263,7 @@ class BackendRPCMethods:
                     if hostservice_obj.parent_hostservice != None:
                         label = hostservice_obj.service.name + '-' + label
                     
-                    charts.append({'label': label,
+                    charts.append({'host': hostservice_obj.host.name, 'label': label,
                                    'unit': plot_obj.unit, 'values': chart})
                     
             

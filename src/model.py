@@ -257,6 +257,26 @@ class Service(ModelBase):
 
     getByName = staticmethod(getByName)
 
+    def getByPattern(conn, pattern):
+        sel = service.select().where(service.c.name.like(pattern))
+        result = conn.execute(sel)
+        
+        objs = []
+        
+        for row in result:
+            obj = Service.get(row[service.c.id])
+            
+            if obj == None:
+                obj = Service(row[service.c.name])
+                obj.id = row[service.c.id]
+                obj.activate()
+            
+            objs.append(obj)
+                
+        return objs
+
+    getByPattern = staticmethod(getByPattern)
+
 hostservice = Table('hostservice', metadata,
     Column('id', Integer, Sequence('hostservice_id_seq'), nullable=False, primary_key=True),
     Column('host_id', Integer, ForeignKey('host.id'), nullable=False),
@@ -334,10 +354,10 @@ class HostService(ModelBase):
         
         if service != None:
             cond = and_(cond, hostservice.c.service_id==service.id)
-        
+            
         if parent_hostservice != None:
             cond = and_(cond, hostservice.c.parent_hostservice_id==parent_hostservice.id)
-        
+                    
         sel = hostservice.select().where(cond)
         result = conn.execute(sel)
         
@@ -356,7 +376,7 @@ class HostService(ModelBase):
                     phs = HostService.getByID(conn, row[hostservice.c.parent_hostservice_id])
                 else:
                     phs = parent_hostservice
-                
+
                 obj = HostService(host, svc, phs)
                 obj.id = row[hostservice.c.id]
                 obj.activate()
@@ -366,6 +386,58 @@ class HostService(ModelBase):
         return objs
 
     getByHostAndService = staticmethod(getByHostAndService)
+
+    def getByHostAndServicePattern(conn, host_pattern, service_pattern, limit=None, offset=None):
+        if host_pattern == None or host_pattern == '':
+            host_pattern = '%'
+
+        if service_pattern == None or service_pattern == '':
+            service_pattern = '%'
+            
+        cond = and_(host.c.name.like(host_pattern), \
+                    service.c.name.like(service_pattern))
+
+        from_obj = hostservice.join(service).join(host)
+
+        sel = select([func.count()], from_obj=[from_obj]).where(cond)
+        total = conn.execute(sel).scalar()
+        
+        if limit == None and offset == None:
+            sel = host.select()
+        else:
+            sel = host.select(limit=limit, offset=offset)
+            
+        # TODO: find matching sub-services with matching parent_service
+                    
+        sel = hostservice.select(from_obj=[from_obj]).where(cond)
+        result = conn.execute(sel)
+        
+        objs = []
+        
+        for row in result:
+            obj = HostService.get(row[hostservice.c.id])
+            
+            if obj == None:
+                hst = Host.getByID(conn, row[hostservice.c.host_id])
+                svc = Service.getByID(conn, row[hostservice.c.service_id])
+                    
+                if row[hostservice.c.parent_hostservice_id] != None:
+                    phs = HostService.getByID(conn, row[hostservice.c.parent_hostservice_id])
+                else:
+                    phs = None
+
+                obj = HostService(hst, svc, phs)
+                obj.id = row[hostservice.c.id]
+                obj.activate()
+                
+            objs.append(obj)
+
+        return {
+                'services': objs,
+                'total': total
+        }
+
+    getByHostAndServicePattern = staticmethod(getByHostAndServicePattern)
 
     def getByHost(conn, host):
         sel = hostservice.select().where(hostservice.c.host_id==host.id)

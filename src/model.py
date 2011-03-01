@@ -1173,10 +1173,7 @@ class DataPoint(ModelBase):
                 if granularity == None or tf.interval < granularity:
                     granularity = tf.interval
                 
-            if granularity == None:
-                # fallback, this should only happen when there are no timeframes which
-                # don't have a retention_period
-                granularity = (end_timestamp - start_timestamp) / 250 
+            granularity = max(granularity, (end_timestamp - start_timestamp) / 500) 
 
         assert granularity > 0
         

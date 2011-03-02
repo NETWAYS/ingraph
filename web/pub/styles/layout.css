@@ -73,12 +73,14 @@ div.round_box2 div.c24 {
      background: #000000;
      z-index: 1000;
 }
+
 #loading {
      position: absolute;
      top: 40%;
      left: 45%;
      z-index: 1001;
 }
+
 #loading span {
      color: #FFFFFF;
      background: url('../images/icons/loader.gif') no-repeat left center;

@@ -137,5 +137,3 @@ source.render();
 iG.RenderControl.on('updated', source.render);
 });
 </script>
-
-

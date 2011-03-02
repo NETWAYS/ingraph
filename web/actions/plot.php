@@ -3,7 +3,6 @@
     <div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">
 		<h3><?php echo $t['title']; ?></h3>
 		<div class="grapher-plot" id="<?php echo "{$t['id']}"; ?>"></div>
-		<div class="grapher-legend" id="<?php echo "{$t['id']}-legend"; ?>"></div>
     </div></div></div>
     <div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>
 </div>
@@ -22,30 +21,47 @@ var h = <?php echo $t['height']; ?>,
     xmax = pv.max(data.map(function(d) d.values.length ? pv.max(d.values, fx) : <?php echo $t['end'] ?> * 1000)),
     ymin = pv.min(data.map(function(d) d.values.length ? pv.min(d.values, fy) : 0)),
     ymax = pv.max(data.map(function(d) d.values.length ? pv.max(d.values, fy) : 0)),
-    s = pv.max(data.map(function(d) d.values.length)),
-    ts = (xmax - xmin) / s,
     legendWidth = pv.max(data.map(function(d) iG.getTextWidth(d.label))),
-    w = iG.width() - legendWidth - 200,
-    x = pv.Scale.linear(new Date(xmin), new Date(xmax)).range(0, w),
+    yWidth = 80, /* TODO: Autocalc. */
+    w = iG.width() - 20,
+    x = pv.Scale.linear(new Date(xmin), new Date(xmax)).range(0, w - legendWidth - yWidth - 10),
     y = pv.Scale.linear(ymin, ymax).range(0, h);
-
-
-try {
 
 /* Root panel. */
 var vis = new pv.Panel()
     .width(w)
-    .height(h)
-    .bottom(20)
-    .left(80)
+    .height(h + 20)
+    .bottom(10)
+    .left(10)
     .right(10)
-    .top(10)
-    .events('all')
+    .top(10);
+
+var source = (function() {
+    function render() {
+        w = iG.width() - 20;
+        x.range(0, w - legendWidth - yWidth - 10);
+        vis.width(w);
+        vis.canvas('<?php echo "{$t['id']}"; ?>').render();
+    }
+
+    return {
+        render : function() {
+            render();
+
+            return this;
+        }
+    };
+})();
+
+var plot = vis.add(pv.Panel)
+    .width(function() w - legendWidth - yWidth - 10)
+    .left(yWidth)
+    .top(0)
+    .height(h)
     .event('mousemove', pv.Behavior.point());
 
-
 /* Y-axis and ticks. */
-vis.add(pv.Rule)
+plot.add(pv.Rule)
     .data(y.ticks())
     .bottom(y)
     .strokeStyle(function(d) d ? '#c7c7c7' : '#000')
@@ -53,8 +69,8 @@ vis.add(pv.Rule)
     .text(y.tickFormat);
 
 /* X-axis ticks. */
-vis.add(pv.Rule)
-    .data(x.ticks())
+plot.add(pv.Rule)
+    .data(function() x.ticks())
     .left(x)
     .strokeStyle(function(d) d ? "#c7c7c7" : "#000")
   .add(pv.Rule)
@@ -67,14 +83,11 @@ vis.add(pv.Rule)
 <?php if ( ! isset( $t['type'] ) || ! $t['type'] || $t['type'] == 'line' ) {
 	echo 
 <<<LAYOUT_LINE
-var i = -1;
 
 /* Charts - line layout. */
-vis.add(pv.Panel)
-    .overflow('hidden')
+plot.add(pv.Panel)
 	.data(function() data)
    .add(pv.Line)
-    .overflow('hidden')
     .data(function(d) d.values)
     .left(x.by(fx))
     .bottom(y.by(fy))
@@ -82,16 +95,12 @@ vis.add(pv.Panel)
     .strokeStyle(function() pv.Colors.category20().range()[this.parent.index < 20 ? this.parent.index : this.parent.index - (Math.floor(this.parent.index/20)*20)].alpha(1.2))
     .fillStyle(null)
    .add(pv.Dot)
-    .def('active', -1)
+    .def('label', fl)
+    .def('tooltip', function() iG.tooltip({label : this.label()}))
     .lineWidth(0)
     .size(0)
-    .event('point', function() this.active(this.index).parent)
-    .event('unpoint', function() this.active(-1).parent)
-  .anchor('right').add(pv.Label)
-    .visible(function() this.anchorTarget().active() == this.index)
-    .textAlign('left')
-    .textBaseline('middle')
-    .text(function(d) '{0}: {1}'.format(data[this.parent.index].label, d.y));
+    .event('point', function(d) this.tooltip().show(d, this))
+    .event('unpoint', function() this.tooltip().hide());
 LAYOUT_LINE;
 	} elseif ( $t['type'] == 'stack' ) {
 		echo
@@ -108,13 +117,11 @@ LAYOUT_STACK;
 ?>
 
 /* Legend. */
-var legend = new pv.Panel()
+var legend = vis.add(pv.Panel)
     .width(legendWidth)
     .height(h)
-    .bottom(30)
-    .left(10)
-    .right(10)
-    .top(50);
+    .left(function() w - legendWidth + 10)
+    .top(0);
 
 legend.add(pv.Panel)
     .data(function() data)
@@ -122,24 +129,12 @@ legend.add(pv.Panel)
     .top(function() this.parent.index * 12 + 10)
     .strokeStyle(null)
     .fillStyle(function() pv.Colors.category20().range()[this.parent.index < 20 ? this.parent.index : this.parent.index - (Math.floor(this.parent.index/20)*20)].alpha(0.8))
-    .anchor("right").add(pv.Label)
+    .anchor('right').add(pv.Label)
     .text(function(d) d.label);
 
-function render() {
-    var w_ = iG.width() - legendWidth - 200;
-    x.range(0, w_);
-    vis.width(w_);
-    vis.canvas('<?php echo "{$t['id']}"; ?>').render();
-    legend.canvas('<?php echo "{$t['id']}-legend"; ?>').render();
-}
+source.render();
 
-iG.RenderControl.on('updated', render);
-
-render();
-
-} catch (e) {
-	pv.error(e);
-}
+iG.RenderControl.on('updated', source.render);
 });
 </script>
 

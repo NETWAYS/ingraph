@@ -39,6 +39,10 @@ $t = array(
     <link rel="stylesheet" type="text/css" href="styles/grapher-all.css" />
 </head>
 <body>
+     <div id="loading-mask"></div>
+     <div id="loading">
+          <span id="loading-message">Loading. Please wait...</span>
+     </div>
 	<div id="border-top"></div>
 	<div id="content">
 	<div>
@@ -258,6 +262,20 @@ HTML;
 		Ext.EventManager.addListener(window, 'resize', updateResolution);
 	    
 	    updateResolution();
+
+         var loadingMask = Ext.get('loading-mask');
+         var loading = Ext.get('loading');
+         loading.fadeOut({ duration: 1, remove: true });
+         loadingMask.setOpacity(0.9);
+         loadingMask.shift({
+              xy: loading.getXY(),
+              width: loading.getWidth(),
+              height: loading.getHeight(),
+              remove: true,
+              duration: 0.3,
+              opacity: 0.1,
+              easing: 'easeOut'
+         });
 	});	
 	</script>
 	</div></div>

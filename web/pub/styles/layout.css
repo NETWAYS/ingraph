@@ -63,3 +63,25 @@ div.round_box2 div.c24 {
 .floatbox {
 	overflow: hidden;
 }
+
+#loading-mask {
+     position: absolute;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: #000000;
+     z-index: 1000;
+}
+#loading {
+     position: absolute;
+     top: 40%;
+     left: 45%;
+     z-index: 1001;
+}
+#loading span {
+     color: #FFFFFF;
+     background: url('../images/icons/loader.gif') no-repeat left center;
+     padding: 5px 30px;
+     display: block;
+}

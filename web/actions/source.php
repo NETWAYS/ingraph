@@ -57,12 +57,6 @@ if ( ! $st ) {
 		'interval' => ''
 	);
 } else {
-	if ( ! $i ) {
-		$i = $xcli->call( 'getTimeFrames' );
-		$i = array_values($i);
-		$i = $i[$di]['interval'];
-	}
-	
 	$tf[] = array(
 		'start' => $st,
 		'end' => $et,
@@ -72,7 +66,7 @@ if ( ! $st ) {
 
 foreach ( $tf as $tkey => $f ) {
 	
-	$plots = $xcli->call( 'getPlotValues', array( $host, $service, $f['start'] ? intval( $f['start'] ) : '', $f['end'] ? intval( $f['end'] ) : '', $f['interval'] ? intval( $f['interval'] ) : $f['interval'] ) );
+	$plots = $xcli->call( 'getPlotValues', array( $host, $service, $f['start'] ? intval( $f['start'] ) : '', $f['end'] ? intval( $f['end'] ) : '', $f['interval'] ? intval( $f['interval'] ) : '' ) );
 	
 	foreach ( $plots as $plot ) {
 		if ( ! $plot ) {

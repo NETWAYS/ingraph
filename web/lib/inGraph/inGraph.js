@@ -87,4 +87,79 @@ iG.getTextWidth = function(string) {
 	Ext.destroy(string_);
 	
 	return length;
-}
+};
+
+iG.tooltip = function(config) {
+	var tip, layer,
+		width=170,
+		height=70;
+
+	function hide() {
+		if (layer) {
+			layer.hide();
+		}
+	}
+
+	function destroy() {
+		if (layer) {
+			//Ext.destroy(layer);
+		}
+	}
+
+	return {
+		show : function(d, scope) {
+			var t = pv.Transform.identity, p = scope.parent;
+			do {
+				t = t.translate(p.left(), p.top()).times(p.transform());
+			} while (p = p.parent);
+
+			if (!tip) {
+				var c = Ext.get(scope.root.canvas());
+				c.setStyle('position', 'relative');
+				
+				c.addListener('mouseleave', destroy)
+
+				tip = c.appendChild(document.createElement('div'));
+				tip.setStyle('position', 'absolute');
+				
+				layer = new Ext.Layer({
+					constrain : false,
+					shadow : 'frame',
+					shadowOffset : 8
+				}, tip);
+			}
+			
+			tip.setSize(width, height);
+			tip.setLeftTop(Math.floor(scope.left() * t.k + t.x) - width, Math.floor(scope.top() * t.k + t.y) - height);
+			
+			layer.update('<h3>{0}</h3><div><p><i>{1}</i></p><p><center><b>{2}</b></center></p></div>'.format(
+			    config.label,
+			    (new Date(d.x*1000)).toLocaleString(),
+			    parseFloat(d.y).toFixed(2)
+			));
+			layer.alignTo(tip);
+			layer.show();
+		},
+		
+		hide : function() {
+			hide();
+		},
+		
+		destroy : function() {
+		    destroy();	
+		}
+	};
+};
+
+iG.cursor = function() {
+	var defaultStyle = document.body.style.cursor;
+	
+	return {
+		wait : function() {
+			document.body.style.cursor = 'wait';
+		},
+		restore : function() {
+			document.body.style.cursor = defaultStyle;
+		}
+	};
+};

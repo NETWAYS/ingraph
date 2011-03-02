@@ -3,7 +3,7 @@
 require_once '../lib/inGraph/functions.php';
 require_once '../lib/inGraph/XMLRPCClient.class.php';
 
-$xcli	= new XMLRPCClient();
+$xcli		= new XMLRPCClient();
 
 $query		= get_post_parameter( 'query', '.*', true );
 $offset		= get_post_parameter( 'offset', 0 );

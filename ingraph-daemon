@@ -174,16 +174,22 @@ class BackendRPCMethods:
         result = model.HostService.getByHostAndServicePattern(conn, host_pattern, \
                                                                         service_pattern, limit, offset)
 
-        items = []
+        items = set()
 
         for hostservice_obj in result['services']:
-            items.append(hostservice_obj.service.name)
+            items.add(hostservice_obj.service.name)
         
-        return {'total': result['total'], 'services': items}
+        return {'total': result['total'], 'services': list(items)}
     
     def getPlotValues(self, host_pattern, service_pattern, start_timestamp=None, end_timestamp=None, granularity=None):
         charts = []
         result = { 'charts': charts }
+        
+        if host_pattern != None:
+            host_pattern = host_pattern.replace('*', '%')
+        
+        if service_pattern != None:
+            service_pattern = service_pattern.replace('*', '%')
         
         if start_timestamp == '':
             start_timestamp = None

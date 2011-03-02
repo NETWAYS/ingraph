@@ -58,7 +58,7 @@ var plot = vis.add(pv.Panel)
     .left(yWidth)
     .top(0)
     .height(h)
-    .event('mousemove', pv.Behavior.point());
+    .event('mousemove', pv.Behavior.point(10));
 
 /* Y-axis and ticks. */
 plot.add(pv.Rule)

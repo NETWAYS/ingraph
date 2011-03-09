@@ -173,14 +173,18 @@ iG.cursorStyle = function() {
 };
 
 iG.cursor = function() {
-	var defaultStyle = document.body.style.cursor;
+	var defaultStyle = null;
 	
 	return {
 		wait : function() {
+			defaultStyle = document.body.style.cursor;
 			document.body.style.cursor = 'wait';
 		},
 		restore : function() {
-			document.body.style.cursor = defaultStyle;
+			if (defaultStyle !== null) {
+				document.body.style.cursor = defaultStyle;
+				defaultStyle = null;
+			}
 		}
 	};
 };

@@ -90,6 +90,7 @@ var source = (function() {
                     xf.domain(new Date(request.params.start*1000), new Date(request.params.end*1000));
                     
                     render();
+
                     cursor.restore();
 
 					loading = false;
@@ -205,14 +206,14 @@ context.add(pv.Panel)
 var region = context.add(pv.Panel)
     .data([i])
     .events('all')
-    .cursor(source.isLoading() ? iG.cursorStyle() : 'crosshair')
+    .cursor('crosshair')
     .event('mousedown', pv.Behavior.select())
     .event('selectend', function() source.update());
 region.add(pv.Bar)
     .left(function(d) d.x)
     .width(function(d) d.dx)
     .fillStyle('rgba(255, 128, 128, .4)')
-    .cursor(source.isLoading() ? iG.cursorStyle() : 'move')
+    .cursor('move')
     .event('mousedown', pv.Behavior.drag())
     .event('mouseup', source.update);
 

@@ -25,3 +25,8 @@
 
 .iG-tooltip {
 }
+
+#iG-no-data {
+    font-weight: bold;
+    font-size: 2em;
+}

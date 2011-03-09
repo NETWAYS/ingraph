@@ -53,10 +53,10 @@ $t = array(
 		        <h3>Choose Host, Service Combination!</h3>
 		        <div class="floatbox clearfix" style="padding-top:5px;">
 		        <div style="float:left;">
-		        <label for="iG-host">Host:</label><input type="text" name="host" id="iG-host" value="<?php echo $host ? $host : ''; ?>" />
+		        <label for="iG-host">Host:</label><input type="text" name="host" id="iG-host" />
 		        </div>
 		        <div style="float:left; padding-left:10px;">
-		        <label for="iG-service">Service:</label><input type="text" name="service" id="iG-service" value="<?php echo $service ? $service : ''; ?>" />        
+		        <label for="iG-service">Service:</label><input type="text" name="service" id="iG-service" />        
 		        </div>
 		        </div>
 				<?php
@@ -69,14 +69,14 @@ HTML;
 		        ?>
 		        <div class="floatbox clearfix" style="padding-top:5px;">
 		        <div style="float:left;">
-		        <label for="iG-start">Start:</label><input type="text" name="start" id="iG-start" value="<?php echo $start ? $start : ''; ?>" /> 
+		        <label for="iG-start">Start:</label><input type="text" name="start" id="iG-start" /> 
 		        </div>
 		        <div style="float:left; padding-left:10px;">		        
-		        <label for="iG-end">End:</label><input type="text" name="end" id="iG-end" value="<?php echo $end ? $end : ''; ?>" />
+		        <label for="iG-end">End:</label><input type="text" name="end" id="iG-end" />
 		        </div>
 		        </div>
 		        <div  style="padding-top:5px;">
-		        <label for="graper-interval">Interval:</label><input type="text" name="interval" id="iG-interval" value="<?php echo $interval ? $interval : ''; ?>" /> 
+		        <label for="graper-interval">Interval:</label><input type="text" name="interval" id="iG-interval" /> 
 		        </div>
 		        <div  style="padding-top:5px;" class="info"><p>Search requires a minimum of <?php echo $t['minChars']; ?> characters.</p></div>
 		        
@@ -90,6 +90,13 @@ HTML;
 	<?php if ( $submit && $host ) {
 		
 		require '../actions/source.php';
+		
+		if ( ! $data ) {
+			echo
+<<<HTML
+<div id="iG-no-data">Sorry, no data to display.</div>
+HTML;
+		}
 		
 		foreach ( $data as $host => $services ) {
 			foreach ( $services as $service => $charts ) {
@@ -121,7 +128,7 @@ HTML;
 		var minChars	= <?php echo $t['minChars']; ?>;
 	    
 	    var hostSearch = new Ext.form.ComboBox({
-		    id:				'GrapherHost',
+		    id:				'iGHost',
 	        store:			new Ext.data.ArrayStore({
 		        autoDestroy:	true,
 		        url:			'actions/hosts.php',
@@ -136,6 +143,7 @@ HTML;
 			        limit: limit
 		        }
 		    }),
+		    value:          '<?php if ( $host ) echo $host; ?>',
 	        queryParam:		'query',
 	        listEmptyText:	'No results.',
 	        lazyInit:		false,
@@ -153,15 +161,24 @@ HTML;
 			        this.hasFocus = true;
 			        this.doQuery( '', true );
 		        },
-		        select: function( self, record, index ) {
-			        Ext.getCmp( 'GrapherService' ).enable();
-			        Ext.getCmp( 'GrapherService' ).clearValue();
-		        }
-	        }
+		        select: function(self, record, index) {
+			        Ext.getCmp('iGService').enable();
+			        Ext.getCmp('iGService').clearValue();
+		        },
+                change: function(self, value) {
+                    if (value) {
+                        Ext.getCmp('iGService').enable();
+                    } else {
+                        Ext.getCmp('iGService').disable();
+                    }
+                    Ext.getCmp('iGService').clearValue();
+                }
+	        },
+            editable:       true
 	    });
 
 	    var serviceSearch = new Ext.form.ComboBox({
-	    	id:				'GrapherService',
+	    	id:				'iGService',
 	        store:			new Ext.data.ArrayStore({
 		        autoDestroy:	true,
 		        url:			'actions/services.php',
@@ -177,15 +194,17 @@ HTML;
 		        },
 		        listeners:		{
 			        beforeload: function( self, options ) {
-				        options.params['host'] = Ext.getCmp( 'GrapherHost' ).getValue();
+				        options.params['host'] = Ext.getCmp( 'iGHost' ).getValue();
 				        return true;
 				    }
 		        }
 		    }),
+		    value:          '<?php if ( $service ) echo $service; ?>',
 	        queryParam:		'query',
 	        lazyInit:		false,
 	        typeAhead:		false,
 	        loadingText:	'Searching...',
+	        listEmptyText:	'No results.',
 	        pageSize:		limit,
 	        triggerAction:	'all',
 	        minChars:		minChars,
@@ -199,20 +218,29 @@ HTML;
 			        this.hasFocus = true;
 			        this.getStore().load();
 		        }
-	        }
+	        },
+            editable:       true
 	    });
 
 	    var start = new Ext.form.DateField({
 		    id:			'GrapherStart',
 		    applyTo:	'iG-start',
-		    format:		'Y-m-d H:i:s'
+		    format:		'Y-m-d H:i:s',
+		    validationEvent: false,
+            validateOnBlur: false
 	    });
+
+        start.setRawValue('<?php if ( $start ) echo $start; ?>');
 
 	    var end = new Ext.form.DateField({
 		    id:			'GrapherEnd',
 		    applyTo:	'iG-end',
-		    format:		'Y-m-d H:i:s'
+		    format:		'Y-m-d H:i:s',
+		    validationEvent: false,
+		    validateOnBlur: false     
 	    });
+
+	    end.setRawValue('<?php if ( $end ) echo $end; ?>');
 
 	    var interval = new Ext.form.ComboBox({
 		    id:				'GrapherInterval',
@@ -230,6 +258,7 @@ HTML;
 			        limit: limit
 		        }
 		    }),
+            value:          '<?php if ( $interval ) echo $interval; ?>',
 	        queryParam:		'query',
 	        listEmptyText:	'No results.',
 	        lazyInit:		false,
@@ -263,20 +292,20 @@ HTML;
 	    
 	    updateResolution();
 
-         var loadingMask = Ext.get('loading-mask');
-         var loading = Ext.get('loading');
-         loading.fadeOut({ duration: 1, remove: true });
-         loadingMask.setOpacity(0.9);
-         loadingMask.shift({
-              xy: loading.getXY(),
-              width: loading.getWidth(),
-              height: loading.getHeight(),
-              remove: true,
-              duration: 0.3,
-              opacity: 0.1,
-              easing: 'easeOut'
-         });
-	});	
+        var loadingMask = Ext.get('loading-mask');
+        var loading = Ext.get('loading');
+        loading.fadeOut({ duration: 1, remove: true });
+        loadingMask.setOpacity(0.9);
+        loadingMask.shift({
+            xy: loading.getXY(),
+            width: loading.getWidth(),
+            height: loading.getHeight(),
+            remove: true,
+            duration: 0.3,
+            opacity: 0.1,
+            easing: 'easeOut'
+        });
+	});
 	</script>
 	</div></div>
 </body>

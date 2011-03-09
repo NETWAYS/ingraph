@@ -6,21 +6,30 @@ require_once '../lib/inGraph/XMLRPCClient.class.php';
 $host			= get_post_parameter( 'host', false );
 
 if ( ! $host ) {
-	throw new Exception('source.php: Host missing.');
+	throw new Exception( 'source.php: Host missing.' );
 }
 
 $service		= get_post_parameter( 'service', '', true );
-$parent_service	= get_post_parameter( 'parent_service', false, true );
-$start			= get_post_parameter( 'offset', 0, true );
-$limit			= get_post_parameter( 'limit', 10, true );
 $st				= get_post_parameter( 'start', false, true, 'strtotime' );
 $et				= get_post_parameter( 'end', time(), true, 'strtotime');
-$i				= get_post_parameter( 'interval', false, true );
+$i				= get_post_parameter( 'interval', '', true );
 $di				= 0;
 $tf				= array();
 $data			= array();
 
 $xcli			= new XMLRPCClient();
+
+$hosts			= $xcli->call( 'getHostsFiltered' , array( $host, 2, 0 ) );
+
+if ( $hosts['total'] > 1 && ! $st ) {
+	$st = strtotime( '-1 day' );
+}
+
+$services		= $xcli->call( 'getServices' , array( $host, $service, 2, 0 ) ) ;
+
+if ( $services['total'] > 1 && ! $st ) {
+	$st = strtotime( '-1 day' );
+}
 
 if ( ! $st ) {
 	// default

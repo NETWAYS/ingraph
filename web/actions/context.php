@@ -1,8 +1,8 @@
-<div class="grapher-plot-container">
+<div class="iG-plot-container">
     <div class="x-box-tl"><div class="x-box-tr"><div class="x-box-tc"></div></div></div>
     <div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">
 		<h3><?php echo $t['title']; ?></h3>
-		<div class="grapher-plot" id="<?php echo "{$t['id']}"; ?>"></div>
+		<div class="iG-plot" id="<?php echo "{$t['id']}"; ?>"></div>
     </div></div></div>
     <div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>
 </div>
@@ -40,11 +40,14 @@ var vis = new pv.Panel()
     .bottom(10)
     .left(10)
     .right(10)
-    .top(10);
+    .top(10)
+	.events('all')
+	.event('mousemove', pv.Behavior.point(20));
 
 var source = (function() {
     var start,
         end,
+		loading = false,
         cursor = iG.cursor();
 
     function render() {
@@ -55,19 +58,29 @@ var source = (function() {
     }
 
     return {
+		isLoading : function() {
+			return loading;
+		},
         update : function() {
+			loading = true;
+
             cursor.wait();
 
-            start = x.invert(i.x);
-            end = x.invert(i.x + i.dx);
+            start = Math.ceil((x.invert(i.x)).getTime()/1000);
+            end = Math.ceil((x.invert(i.x + i.dx)).getTime()/1000);
+
+			while (start == end) {
+				i.dx += 10;
+				end = Math.ceil((x.invert(i.x + i.dx)).getTime()/1000);
+			}
             
             Ext.Ajax.request({
                 url: 'actions/source_json.php',
                 params: {
                     host: '<?php echo $t['host']; ?>',
                     service: '<?php echo $t['service']; ?>',
-                    start: Math.ceil(start.getTime()/1000),
-                    end: Math.ceil(end.getTime()/1000)
+                    start: start,
+                    end: end
                 },
                 success: function(response, request) {
                     data_ = Ext.decode(response.responseText);
@@ -78,6 +91,8 @@ var source = (function() {
                     
                     render();
                     cursor.restore();
+
+					loading = false;
                 },
                 failure: function(response) {
                 },
@@ -98,8 +113,7 @@ var focus = vis.add(pv.Panel)
     .width(function() w - legendWidth - yWidth - 10)
     .left(yWidth)
     .top(0)
-    .height(h)
-    .event('mousemove', pv.Behavior.point(10));
+    .height(h);
 
 /* Y-axis and ticks. */
 focus.add(pv.Rule)
@@ -188,17 +202,17 @@ context.add(pv.Panel)
     .fillStyle(null)
 
 /* The selectable, draggable focus region. */
-context.add(pv.Panel)
+var region = context.add(pv.Panel)
     .data([i])
     .events('all')
-    .cursor('crosshair')
+    .cursor(source.isLoading() ? iG.cursorStyle() : 'crosshair')
     .event('mousedown', pv.Behavior.select())
-    .event('mouseup', source.update)
-  .add(pv.Bar)
+    .event('selectend', function() source.update());
+region.add(pv.Bar)
     .left(function(d) d.x)
     .width(function(d) d.dx)
     .fillStyle('rgba(255, 128, 128, .4)')
-    .cursor('move')
+    .cursor(source.isLoading() ? iG.cursorStyle() : 'move')
     .event('mousedown', pv.Behavior.drag())
     .event('mouseup', source.update);
 

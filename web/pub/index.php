@@ -35,8 +35,8 @@ $t = array(
     
     <link rel="stylesheet" type="text/css" href="lib/ext/resources/css/ext-all.css" />
     
-    <link rel="stylesheet" type="text/css" href="styles/layout.css" />
-    <link rel="stylesheet" type="text/css" href="styles/grapher-all.css" />
+    <link rel="stylesheet" type="text/css" href="styles/inGraph-layout.css" />
+    <link rel="stylesheet" type="text/css" href="styles/inGraph-all.css" />
 </head>
 <body>
      <div id="loading-mask"></div>
@@ -46,17 +46,17 @@ $t = array(
 	<div id="border-top"></div>
 	<div id="content">
 	<div>
-	<form id="grapher-host-service-combination" method="post" action="index.php">
-		<div class="grapher-search-container">
+	<form id="iG-host-service-combination" method="post" action="index.php">
+		<div class="iG-search-container">
 		    <div class="x-box-tl"><div class="x-box-tr"><div class="x-box-tc"></div></div></div>
 		    <div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">
 		        <h3>Choose Host, Service Combination!</h3>
 		        <div class="floatbox clearfix" style="padding-top:5px;">
 		        <div style="float:left;">
-		        <label for="grapher-host">Host:</label><input type="text" name="host" id="grapher-host" value="<?php echo $host ? $host : ''; ?>" />
+		        <label for="iG-host">Host:</label><input type="text" name="host" id="iG-host" value="<?php echo $host ? $host : ''; ?>" />
 		        </div>
 		        <div style="float:left; padding-left:10px;">
-		        <label for="grapher-service">Service:</label><input type="text" name="service" id="grapher-service" value="<?php echo $service ? $service : ''; ?>" />        
+		        <label for="iG-service">Service:</label><input type="text" name="service" id="iG-service" value="<?php echo $service ? $service : ''; ?>" />        
 		        </div>
 		        </div>
 				<?php
@@ -69,19 +69,19 @@ HTML;
 		        ?>
 		        <div class="floatbox clearfix" style="padding-top:5px;">
 		        <div style="float:left;">
-		        <label for="grapher-start">Start:</label><input type="text" name="start" id="grapher-start" value="<?php echo $start ? $start : ''; ?>" /> 
+		        <label for="iG-start">Start:</label><input type="text" name="start" id="iG-start" value="<?php echo $start ? $start : ''; ?>" /> 
 		        </div>
 		        <div style="float:left; padding-left:10px;">		        
-		        <label for="grapher-end">End:</label><input type="text" name="end" id="grapher-end" value="<?php echo $end ? $end : ''; ?>" />
+		        <label for="iG-end">End:</label><input type="text" name="end" id="iG-end" value="<?php echo $end ? $end : ''; ?>" />
 		        </div>
 		        </div>
 		        <div  style="padding-top:5px;">
-		        <label for="graper-interval">Interval:</label><input type="text" name="interval" id="grapher-interval" value="<?php echo $interval ? $interval : ''; ?>" /> 
+		        <label for="graper-interval">Interval:</label><input type="text" name="interval" id="iG-interval" value="<?php echo $interval ? $interval : ''; ?>" /> 
 		        </div>
 		        <div  style="padding-top:5px;" class="info"><p>Search requires a minimum of <?php echo $t['minChars']; ?> characters.</p></div>
 		        
 		        <div  style="padding-top:5px;">
-		        <input id="grapher-host-service-combination-submit" type="submit" value="Plot it!" name="submit" />
+		        <input id="iG-host-service-combination-submit" type="submit" value="Plot it!" name="submit" />
 		        </div>
 		    </div></div></div>
 		    <div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>
@@ -144,7 +144,7 @@ HTML;
 	        loadingText:	'Searching...',
 	        pageSize:		limit,
 	        hideTrigger:	true,
-	        applyTo:		'grapher-host',
+	        applyTo:		'iG-host',
 	        minChars:		minChars,
 	        valueField:		'name',
 	        displayField:	'name',
@@ -190,7 +190,7 @@ HTML;
 	        triggerAction:	'all',
 	        minChars:		minChars,
 	        hideTrigger:	true,
-	        applyTo:		'grapher-service',
+	        applyTo:		'iG-service',
 	        valueField:		'name',
 	        displayField:	'name',
 	        disabled:		'<?php echo $host; ?>' ? false : true,
@@ -204,13 +204,13 @@ HTML;
 
 	    var start = new Ext.form.DateField({
 		    id:			'GrapherStart',
-		    applyTo:	'grapher-start',
+		    applyTo:	'iG-start',
 		    format:		'Y-m-d H:i:s'
 	    });
 
 	    var end = new Ext.form.DateField({
 		    id:			'GrapherEnd',
-		    applyTo:	'grapher-end',
+		    applyTo:	'iG-end',
 		    format:		'Y-m-d H:i:s'
 	    });
 
@@ -238,7 +238,7 @@ HTML;
 	        loadingText:	'Searching...',
 	        pageSize:		limit,
 	        hideTrigger:	true,
-	        applyTo:		'grapher-interval',
+	        applyTo:		'iG-interval',
 	        minChars:		minChars,
 	        valueField:		'interval',
 	        displayField:	'interval',

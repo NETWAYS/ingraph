@@ -1,8 +1,8 @@
-<div class="grapher-plot-container">
+<div class="iG-plot-container">
     <div class="x-box-tl"><div class="x-box-tr"><div class="x-box-tc"></div></div></div>
     <div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">
 		<h3><?php echo $t['title']; ?></h3>
-		<div class="grapher-plot" id="<?php echo "{$t['id']}"; ?>"></div>
+		<div class="iG-plot" id="<?php echo "{$t['id']}"; ?>"></div>
     </div></div></div>
     <div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>
 </div>
@@ -34,7 +34,9 @@ var vis = new pv.Panel()
     .bottom(10)
     .left(10)
     .right(10)
-    .top(10);
+    .top(10)
+	.events('all')
+	.event('mousemove', pv.Behavior.point(20));
 
 var source = (function() {
     function render() {
@@ -57,8 +59,7 @@ var plot = vis.add(pv.Panel)
     .width(function() w - legendWidth - yWidth - 10)
     .left(yWidth)
     .top(0)
-    .height(h)
-    .event('mousemove', pv.Behavior.point(10));
+    .height(h);
 
 /* Y-axis and ticks. */
 plot.add(pv.Rule)

@@ -90,19 +90,32 @@ iG.getTextWidth = function(string) {
 };
 
 iG.tooltip = function(config) {
-	var tip, layer,
+	var tip=null,
+		layer=null,
+		timeout=null,
 		width=170,
 		height=70;
 
 	function hide() {
+		if (timeout !== null) {
+			clearTimeout(timeout);
+		}
+		
 		if (layer) {
 			layer.hide();
 		}
 	}
 
 	function destroy() {
+		if (timeout !== null) {
+			clearTimeout(timeout);
+		}
+		
 		if (layer) {
-			//Ext.destroy(layer);
+			layer = layer.destroy();
+			Ext.destroy(tip);
+			
+			tip = layer = null;
 		}
 	}
 
@@ -123,7 +136,7 @@ iG.tooltip = function(config) {
 				tip.setStyle('position', 'absolute');
 				
 				layer = new Ext.Layer({
-					constrain : false,
+					constrain : true,
 					shadow : 'frame',
 					shadowOffset : 8
 				}, tip);
@@ -132,13 +145,17 @@ iG.tooltip = function(config) {
 			tip.setSize(width, height);
 			tip.setLeftTop(Math.floor(scope.left() * t.k + t.x) - width, Math.floor(scope.top() * t.k + t.y) - height);
 			
-			layer.update('<h3>{0}</h3><div><p><i>{1}</i></p><p><center><b>{2}</b></center></p></div>'.format(
+			layer.update('<div class="{0}"><h3>{1}</h3><div><p><i>{2}</i></p><p><center><b>{3}</b></center></p></div></div>'.format(
+				'iG-tooltip',
 			    config.label,
 			    (new Date(d.x*1000)).toLocaleString(),
 			    parseFloat(d.y).toFixed(2)
 			));
 			layer.alignTo(tip);
-			layer.show();
+			
+			timeout = setTimeout(function() {
+				layer.show();
+			}, 400);
 		},
 		
 		hide : function() {
@@ -149,6 +166,10 @@ iG.tooltip = function(config) {
 		    destroy();	
 		}
 	};
+};
+
+iG.cursorStyle = function() {
+	return document.body.style.cursor;
 };
 
 iG.cursor = function() {

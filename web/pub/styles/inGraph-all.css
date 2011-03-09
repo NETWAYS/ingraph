@@ -1,24 +1,27 @@
 @CHARSET "UTF-8";
 
-.grapher-search-container input {
+.iG-search-container input {
 	width: 150px;
 }
 
-.grapher-search-container h {
+.iG-search-container h {
 	padding-bottom: 4px;
 }
 
-.grapher-search-container .info {
+.iG-search-container .info {
 	padding-top: 4px;
 }
 
-.grapher-search-container .error {
+.iG-search-container .error {
     padding-top: 4px;
     font-weight: bold;
     color: red;
 }
 
-.grapher-search-container label {
+.iG-search-container label {
 	padding-right: 4px;
 	font-weight: bold;
+}
+
+.iG-tooltip {
 }

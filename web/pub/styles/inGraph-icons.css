@@ -1,0 +1,5 @@
+@CHARSET "UTF-8";
+
+.icon-print {
+    background-image:url(../images/icons/printer.png) !important;
+}

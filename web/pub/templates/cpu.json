@@ -1,0 +1,19 @@
+{
+"re": "/^.*-cpu$/",
+
+"flot": {
+    "yaxes": [{
+        "position": "left"
+    }],
+    "series": {
+        "stack": true,
+        "lines": {
+            "fill": false
+        }
+    }
+},
+
+"series": [{
+    "re": "/.*-avg/"
+}]
+}

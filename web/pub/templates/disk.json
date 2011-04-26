@@ -1,0 +1,21 @@
+{
+"re": "/^.*-disk.*$/",
+
+"flot": {
+    "colors": ["#00CC00", "#FF6600"],
+    "yaxes": [{
+        "position": "left",
+        "tickFormatter": "1073741824",
+        "unit": "GB"
+    }],
+    "series": {
+        "lines": {
+            "fill": true
+        }
+    }
+},
+
+"series": [{
+    "re": "/.*-avg/"
+}]
+}

@@ -1,0 +1,13 @@
+{
+"re": "/^.*$/",
+
+"flot": {
+    "yaxes": [{
+        "position": "left"
+    }]
+},
+
+"series": [{
+    "re": "/.*-avg/"
+}]
+}

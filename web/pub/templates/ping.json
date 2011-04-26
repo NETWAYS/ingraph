@@ -1,0 +1,24 @@
+{
+"re": "/^.*ping$/",
+
+"flot": {
+    "yaxes": [{
+        "position": "left"
+    }, {
+        "position": "right"
+    }]
+},
+
+"series": [{
+    "re": "/pl-avg/",
+    "unit": "%",
+    "label": "Packet Loss",
+    "color": "#FF0000"
+}, {
+    "re": "/rta-avg/",
+    "unit": "ms",
+    "label": "Round Trip Time",
+    "yaxis": 2,
+    "color": "#00FF00"
+}]
+}

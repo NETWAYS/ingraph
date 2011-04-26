@@ -171,8 +171,8 @@ class BackendRPCMethods:
         return {'total': result['total'], 'hosts': items}
 
     def getServices(self, host_pattern, service_pattern=None, limit=None, offset=None):
-        result = model.HostService.getByHostAndServicePattern(conn, host_pattern, \
-                                                                        service_pattern, limit, offset)
+	result = model.HostService.getByHostAndServicePattern(conn, host_pattern.replace('*', '%'),
+								service_pattern.replace('*', '%'), limit, offset)
 
         items = set()
 

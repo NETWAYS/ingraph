@@ -3,7 +3,7 @@
         series: {
             lines: {
                 spline: false,
-                splinen: 200
+                splineNumber: 1000
             }
         }
     };
@@ -14,9 +14,8 @@
         	if(!series.lines.spline) {
         		return;
         	}
-        	console.log(series);
-            //if(typeof num == 'undefined') num = 250;
-        	var num = series.lines.splinen;
+
+        	var num = series.lines.splineNumber;
             
             var xdata = new Array;
             var ydata = new Array;
@@ -60,8 +59,8 @@
             var ynew = new Array;
             var result = new Array;
             
-            xnew[0] = 0;
-            ynew[0] = 0;
+            xnew[0] = xdata[0];
+            ynew[0] = ydata[0];
             
             for(j = 1; j < num; ++j) {
             	xnew[j] = xnew[0] + j * step;
@@ -88,19 +87,11 @@
             	var b = (xnew[j] - xdata[min]) / h;
             	
             	ynew[j] = a * ydata[min] + b * ydata[max] + ((a * a * a - a) * y2[min] + (b * b * b - b) * y2[max]) * (h * h) / 6;
-            	result.push(new Array(xnew[j], ynew[j]));
+            	result.push(new Array(series.xaxis.options.mode == 'time' ? Math.ceil(xnew[j]) : xnew[j], ynew[j]));
             }
             
-            //var nseries = $.extend(true, {}, series);
-            //nseries.data = result;
             series.data = result;
-            console.log(data);
-            //data = result;
-            console.log(result);
-            series = $.extend([], []);
-            
-            //series = new Array(nseries, series);
-            //console.log(series);
+            data = result;
         }
         
         plot.hooks.processRawData.push(spline);

@@ -13,7 +13,7 @@ $limit	= get_post_parameter( 'limit', 10 );
 $services = $xcli->call( 'getServices' , array( $host, $query, $limit, $offset ) ) ;
 
 echo json_encode( array(
-	'results' => array_map( arrayfy, $services['services'], array_fill( 0, count( $services['services'] ), 'service' ) ),
+	'results' => array_map( "arrayfy", $services['services'], array_fill( 0, count( $services['services'] ), 'service' ) ),
 	'total' => $services['total'] 
 ) );
 

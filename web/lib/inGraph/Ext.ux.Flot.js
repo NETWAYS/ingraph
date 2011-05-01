@@ -1,12 +1,14 @@
 Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
 	
-	refreshBuffer: 200,
+	refreshBuffer  : 200,
 	
-//	containerClass: 'iG-plot-container',
+	tooltipEvent   : 'plothover',
 	
-	tooltipEvent: 'plothover',
+	loadMask       : false,
 	
-	defaultflotOptions: {
+	absolute       : true,
+	
+	defaultFlotOptions: {
 		legend: {
 			show: true,
 			backgroundOpacity: 0.4
@@ -43,7 +45,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
 		cfg = cfg || {};
 		
 		Ext.applyIf(cfg, {
-			flotOptions	: Ext.apply({}, this.defaultflotOptions),
+			flotOptions	: Ext.apply({}, Ext.ux.util.clone(this.defaultFlotOptions)),
 			id			: Ext.id(null, 'flot-container')
 		});
 		
@@ -61,31 +63,14 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     	    'beforerefresh',
     	    'refresh',
     	    'plothover',
+    	    'plotselecting',
     	    'plotselected',
     	    'contextmenu',
     	    'selectionchange'
     	);
     },
     
-    getStore: function() {
-    	return this.store;
-    },
-    
-    getFlot: function() {
-    	return this.flot;
-    },
-    
-    onRender: function(ct, position) {
-    	/*
-		this.el = Ext.ux.Flot.template.append(ct, {
-			id: this.id,
-			class: this.containerClass
-		}, true);
-		this.el.id = this.id;
-    	
-    	Ext.fly(this.id).setSize(this.width || ct.getWidth() - 30, this.height || ct.getHeight());
-    	*/
-    	
+    onRender: function(ct, position) {	
     	Ext.ux.Flot.superclass.onRender.call(this, ct, position);
     	
     	this.width = (this.width || ct.getWidth()) - 10;
@@ -109,6 +94,12 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     		flot = Ext.getCmp(event.target.id);
     		flot.onPlotHover(event, pos, item);
     	});
+        $('#' + this.id).bind('plotselecting', function(event, ranges, pos) {
+            flot = Ext.getCmp(event.target.id);
+            flot.onPlotSelecting(event, pos, ranges);        	
+        });
+        $('#' + this.id).bind('plotunselected', function() {
+        });
         $('#' + this.id).bind('plotselected', function(event, range) {
         	flot = Ext.getCmp(event.target.id);
         	flot.onPlotSelected(event, range);
@@ -126,23 +117,39 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             }, this);
         }
         
-        this.on('plotselected', function(flot, event, ranges) {
-        	flot.select(event, ranges);
-        }, this);
         
-        this.on('contextmenu', function(flot, event) {
-        	flot.unselect(event);
-        }, this);
+        this.on({
+        	'plotselected' : {
+        		fn: function(flot, event, ranges) {
+        			flot.select(event, ranges);
+        		}
+        	},
+        	'contextmenu'  : {
+        		fn: function(flot, event) {
+        			flot.unselect(event);
+        		}
+        	},
+        	'beforerefresh': {
+        		fn: function() {
+        		
+        		}
+        	},
+        	'refresh'      : {
+        		fn: function() {
+        			
+        		}
+        	},
+        	scope          : this
+        });
         
-        this.on('refresh', function(flot) {
-        }, this);
-        
-        this.loadMask = new Ext.LoadMask(this.el,
-        		Ext.apply({
-        			store: this.store,
-        			removeMask: true
-        		}, this.loadMask)
-        );
+        if(this.loadMask) {
+	        this.loadMask = new Ext.LoadMask(this.el,
+	        		Ext.apply({
+	        			store: this.store,
+	        			removeMask: true
+	        		}, this.loadMask)
+	        );
+        }
     },
     
     bindStore: function(store, initial) {
@@ -160,6 +167,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         
         if(store) {
             store = Ext.StoreMgr.lookup(store);
+            
             store.on({
                 scope: this,
                 datachanged: this.refresh,
@@ -178,28 +186,23 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     refresh: function() {
-    	if(this.fireEvent('beforerefresh', this) !== false) {	
-    		try {
-    			this.flotOptions = Ext.apply(this.flotOptions, this.store.reader.jsonData.options);
-        		if(this.flotOptions.yaxes[0].tickFormatter) {
-        			var factor = this.flotOptions.yaxes[0].tickFormatter;
-        			var unit = this.flotOptions.yaxes[0].unit;
-        			this.flotOptions.yaxes[0].tickFormatter = function(v, axis) {
-        				var r = (v/factor).toFixed(2);
-        				r += " " + unit;
-        				return r;
-        			}
-        		}
-    		} catch(e) {
+    	if(this.fireEvent('beforerefresh', this) !== false) {
+    		if(typeof this.store.reader.jsonData === 'undefined') {
     			return;
+    		}
+    		if(typeof this.store.reader.jsonData.options !== 'undefined') {
+    			this.flotOptions = iG.merge(this.store.reader.jsonData.options, this.flotOptions);
     		}
     		
     		var series	= new Array(),
     			ranges	= this.selection.last();
-    		
-    		if(this.flotOptions.xaxis.show) {
-	    		this.flotOptions.xaxis.min = this.store.reader.jsonData.start || null;
-	    		this.flotOptions.xaxis.max = this.store.reader.jsonData.end || null;
+    			
+    			
+    		if(this.absolute) {
+    			Ext.apply(this.flotOptions.xaxis, {
+    				min : this.store.reader.jsonData.start ? this.store.reader.jsonData.start*1000 : null,
+    				max : this.store.reader.jsonData.end*1000
+    			});
     		}
 
     		this.store.each(function(record) {
@@ -219,6 +222,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
 	    			}
 	    			*/
 	    			if(data.data.length) {
+	    				data.lines = iG.merge(this.flotOptions.lines, data.lines);
 	    				series.push(data);
 	    			}
     			}
@@ -243,6 +247,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     		}*/
     		
     		this.plot(series);
+
     		this.fireEvent('refresh', this);
     	}
     },
@@ -256,7 +261,9 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     
     plot: function(series) {
     	this.flot = $.plot($('#' + this.id), series, this.flotOptions);
-    	this.el.setStyle('position', 'relative');
+    	if(this.loadMask) {
+    	   this.el.setStyle('position', 'relative');
+    	}
     },
     
     draw: function() {
@@ -275,7 +282,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     	
     	this.tooltip.update(Ext.ux.Flot.tooltipTemplate.apply({
     		label: item.series.label,
-    		x: item.series.xaxis.tickFormatter.call(this, item.datapoint[0], item.series.xaxis),
+    		x: item.series.xaxis.tickFormatter.call(item.series.xaxis, item.datapoint[0], item.series.xaxis),
     		y: item.datapoint[1].toFixed(2),
     		unit: item.series.unit
     	}));
@@ -298,7 +305,26 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
 		this.tooltip.setPagePosition([x,y]);
     },
     
+    showSelectionHint: function(event, pos, ranges) {
+    	if(!this.shint) {
+            this.shint = new Ext.ToolTip({
+                renderTo    : Ext.getBody()
+            });
+        }
+        
+        this.shint.update(Ext.ux.Flot.sHintTpl.apply({
+            from    : this.flot.getAxes().xaxis.tickFormatter.call(this.flot.getAxes().xaxis, ranges.xaxis.from, this.flot.getAxes().xaxis),
+            to      : this.flot.getAxes().xaxis.tickFormatter.call(this.flot.getAxes().xaxis, ranges.xaxis.to, this.flot.getAxes().xaxis)
+        }));
+        
+        this.shint.showAt([pos.pageX + 10, pos.pageY + 10]);
+    },
+    
     select: function(event, ranges) {
+    	if(!ranges.xaxis) {
+    		return;
+    	}
+    	
     	this.selection.push(ranges);
     	
     	this.store.load({
@@ -326,12 +352,24 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     	}
     },
     
+    getStore: function() {
+        return this.store;
+    },
+    
+    getFlot: function() {
+        return this.flot;
+    },
+    
     onContextMenu: function(event) {
     	this.fireEvent('contextmenu', this, event);
     },
     
     onPlotHover: function(event, pos, item)  {
     	this.fireEvent('plothover', this, event, pos, item);
+    },
+    
+    onPlotSelecting: function(event, pos, ranges)  {
+        this.fireEvent('plotselecting', this, event, pos, ranges);
     },
     
     onPlotSelected: function(event, ranges) {
@@ -352,7 +390,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         	this.refreshTask.cancel();
         }
         
-        Ext.chart.Chart.superclass.onDestroy.call(this);
+        Ext.ux.Flot.superclass.onDestroy.call(this);
         
         this.bindStore(null);
         
@@ -365,26 +403,6 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
 
 Ext.reg('flot', Ext.ux.Flot);
 
-/*
-Ext.ux.Flot.template = new Ext.Template(
-	'<div class="{class}">',
-	'<div class="x-box-tl"><div class="x-box-tr"><div class="x-box-tc"></div></div></div>',
-    '<div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">',
-	'<div class="iG-plot" id="{id}"></div>',
-	'</div></div></div>',
-    '<div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>',
-	'</div>', {
-	compiled: true,
-	disableFormats: true
-});
-*/
-
-Ext.ux.Flot.template = new Ext.Template(
-		'<div class="iG-plot" id="{id}"></div>', {
-		compiled: true,
-		disableFormats: true
-});
-
 Ext.ux.Flot.tooltipTemplate = new Ext.Template(
 		'<div class="iG-tooltip">',
 		'<h3>{label}</h3>',
@@ -392,4 +410,13 @@ Ext.ux.Flot.tooltipTemplate = new Ext.Template(
 		'</div>', {
 		compiled: true,
 		disableFormats: true
+});
+
+Ext.ux.Flot.sHintTpl = new Ext.Template(
+        '<div class="iG-tooltip">',
+        '<div>{0} : {from}</div>'.format(_('Start')),
+        '<div>{0} : {to}</div>'.format(_('End')),
+        '</div>', {
+        compiled: true,
+        disableFormats: true
 });

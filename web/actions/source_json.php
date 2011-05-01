@@ -6,10 +6,10 @@ $flot = array(
 	'series' => array(),
 	'success' => true,
 	'update' => false,
-	'time'	=> time()*1000,
-	'options' => array(),
-	'start' => $st*1000,
-	'end' => $et*1000
+	'time'	=> time(),
+	'options' => new stdClass(),
+	'start' => $st,
+	'end' => $et
 );
 
 $dir = '../pub/templates/';
@@ -39,7 +39,11 @@ foreach($data as $host => $services) {
 				$fseries = array();
 				
 				foreach($series as $seriesi) {
+					
+					$match = false;
+					
 					foreach($template['series'] as $tseries) {
+						
 						if(preg_match($tseries['re'], $seriesi['label'])) {
 							$fseries[] = array(
 								'data' => $seriesi['data'],
@@ -48,19 +52,28 @@ foreach($data as $host => $services) {
 								'xaxis' => $tseries['xaxis'] ? $tseries['xaxis'] : 1,
 								'yaxis' => $tseries['yaxis'] ? $tseries['yaxis'] : 1,
 								'color' => $tseries['color'] ? $tseries['color'] : null,
+								'series' => $tseries['series'] ? $tseries['series'] : new stdClass(),
+								'lines' => $tseries['lines'] ? $tseries['lines'] : new stdClass(),
+								'id' => $tseries['id'] ? $tseries['id'] : null,
+								'fillBetween' => $tseries['fillBetween'] ? $tseries['fillBetween'] : null,
 								'disabled' =>  false
 							);
-						} else {
-							$fseries[] = array(
-								'data' => $seriesi['data'],
-								'label' => $seriesi['label'],
-								'unit' => $seriesi['unit'],
-								'xaxis' => 1,
-								'yaxis' => 1,
-								'color' => null,
-								'disabled' =>  true
-							);						
+							
+							$match = true;
+							
+							break;
 						}
+					}
+					if(!$match) {
+						$fseries[] = array(
+							'data' => $seriesi['data'],
+							'label' => $seriesi['label'],
+							'unit' => $seriesi['unit'],
+							'xaxis' => 1,
+							'yaxis' => 1,
+							'color' => null,
+							'disabled' =>  true
+						);						
 					}
 				}
 				

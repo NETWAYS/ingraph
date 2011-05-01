@@ -10,7 +10,8 @@
     }],
     "series": {
         "lines": {
-            "fill": true
+            "fill": true,
+            "show": true
         }
     }
 },

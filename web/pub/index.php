@@ -21,6 +21,9 @@
     <script type="text/javascript" src="lib/ext/adapter/jquery/ext-jquery-adapter-debug.js"></script>
     <script type="text/javascript" src="lib/ext/ext-all-debug.js"></script>
     
+    <script type="text/javascript" src="lib/inGraph/Ext.ux.util.js"></script>
+    <script type="text/javascript" src="lib/inGraph/Ext.ux.ColorField.js"></script>
+    
     <script type="text/javascript" src="lib/inGraph/inGraph.js"></script>
     
     <script type="text/javascript" src="lib/inGraph/Ext.ux.Flot.js"></script>
@@ -31,6 +34,8 @@
     
     <link rel="stylesheet" type="text/css" href="lib/ext/resources/css/ext-all-notheme.css" />
     <link rel="stylesheet" type="text/css" href="lib/ext/resources/css/xtheme-gray.css" />
+    
+    <link rel="stylesheet" type="text/css" href="lib/inGraph/Ext.ux.ColorField.css" />
     
     <link rel="stylesheet" type="text/css" href="styles/inGraph-layout.css" />
     <link rel="stylesheet" type="text/css" href="styles/inGraph-all.css" />
@@ -73,13 +78,14 @@ Ext.onReady(function() {
 
     /*
     Ext.fly('flot').setSize(800,300);
-    $.plot($('#flot'), [{data: [[1,1],[2,4],[3,1],[4,2]], color: 'red'}, {data: [[1,3],[2,3],[3,3],[4,3]], color: 'red', points: {radius: 0, lineWidth: 0}}], {
+    $.plot($('#flot'), [{data: [[1,1],[2,1],[3,1],[4,1]], color: 'red', id: 'red', lines: {fill:false}}, {data: [[1,10],[2,10],[3,10],[4,10]], color: 'yellow', id: 'yellow', fillBetween: 'red'}, {data: [[1,5],[2,5],[3,5],[4,5]], color: 'green', id: 'green', lines: {fill:false}}], {
         series: {
             lines: {
                 show: true,
                 lineWidth: 1,
-                spline: true,
-                splinen: 20
+                spline: false,
+                splinen: 20,
+                fill: true
             },
             points: {
                 show: true
@@ -89,12 +95,8 @@ Ext.onReady(function() {
             hoverable: true
         }
     });
-
-    $('#flot').bind('plothover', function(event, pos, item) {
-        console.log(item);
-    });
     */
-
+    
     var viewport = new Ext.Viewport({
         layout  : 'border',
         items   : [{
@@ -254,14 +256,16 @@ Ext.onReady(function() {
                             	panels.push({
                                     xtype       : 'flotpanel',
                                     title       : frame.title,
+                                    host        : h,
+                                    service     : s,
                                     bodyStyle   : 'padding: 5px',
                                     store       : new Ext.ux.FlotJsonStore({
                                         url         : 'actions/source_json.php',
                                         baseParams  : {
                                             host    : h,
                                             service : s,
-                                            start   : frame.start,
-                                            end     : frame.end || ''
+                                            start   : frame.start(),
+                                            end     : frame.end()
                                         }
                                     }),
                                     frame       : frame,

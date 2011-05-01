@@ -87,7 +87,12 @@ The plugin allso adds the following methods to the plot object:
             if (selection.active) {
                 updateSelection(e);
                 
-                plot.getPlaceholder().trigger("plotselecting", [ getSelection() ]);
+                var pos = {
+                    pageX: e.pageX,
+                    pageY: e.pageY
+                };
+                
+                plot.getPlaceholder().trigger("plotselecting", [ getSelection(), pos ]);
             }
         }
 

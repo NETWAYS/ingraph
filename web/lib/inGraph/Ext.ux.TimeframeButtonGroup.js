@@ -64,6 +64,10 @@ Ext.ux.TimeframeButtonGroup = Ext.extend(Ext.ButtonGroup, {
 		if(this.active) {
 			this.getComponent(this.active).toggle(false);
 		}
+    },
+    
+    setActive		: function(key) {
+    	this.get(key).toggle(true);
     }
 	
 });

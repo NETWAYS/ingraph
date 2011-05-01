@@ -58,14 +58,26 @@ if(!Array.prototype.last) Array.prototype.last = function() {
 };
 
 if(!String.prototype.format) String.prototype.format = function() {
-    var formatted = this;
-    for (var i = 0; i < arguments.length; ++i) {
-        var regexp = new RegExp('\\{'+i+'\\}', 'gi');
-        formatted = formatted.replace(regexp, arguments[i]);
+	var str = this,
+		t = 0;
+	
+    for(var i = 0; i < arguments.length; ++i) {
+    	var arg = arguments[i];
+    	
+    	if(typeof arg == 'object') {
+    		for(var key in arg) {
+    			var re = new RegExp('\\{' + key + '\\}', 'gi');
+    			str = str.replace(re, arg[key]);
+    		}
+    	} else {
+			var re = new RegExp('\\{' + t + '\\}', 'gi'); 
+			str = str.replace(re, arg);
+			++t;
+    	}
     }
-    return formatted;
+    
+    return str;
 };
-
 
 var iG = {};
 
@@ -75,28 +87,45 @@ iG.version = {
 };
 
 iG.timeFrames = (function() {
-	var frames = new Ext.util.MixedCollection();
+	var frames = new Ext.util.MixedCollection({
+		allowFunctions: true
+	});
 	frames.addAll([{
 	        title   : 'Hourly',
-	        start   : '-1 hour',
+	        start   : (function() {
+	        	var d = new Date();
+	        	return (Math.ceil(d/1000) - (3600));
+	        }),
 	        show	: false,
 	    }, {
 	        title   : 'Daily',
-	        start   : '-1 day',
+	        start   : (function() {
+	        	var d = new Date();
+	        	return (Math.ceil(d/1000) - (86400));
+	        }),
 	        overview: true
 	    }, {
 	        title   : 'Weekly',
-	        start   : '-1 week'
+	        start   : (function() {
+	        	var d = new Date();
+	        	return (Math.ceil(d/1000) - (604800));
+	        })
 	    }, {
 	        title   : 'Monthly',
-	        start   : '-1 month'
+	        start   : (function() {
+	        	var d = new Date();
+	        	return (Math.ceil(d/1000) - (2678400));
+	        })
 	    }, {
 	        title   : 'Yearly',
-	        start   : '-1 year'
+	        start   : (function() {
+	        	var d = new Date();
+	        	return (Math.ceil(d/1000) - (31536000));
+	        })
 	}].map(function(frame, index) {
 		return Ext.applyIf(frame, {
 			show	: true,
-			end		: '',
+			end		: (function() { return ''; }),
 			overview: false,
 			id		: frame.title.toUpperCase(),
 			index	: index
@@ -113,3 +142,7 @@ iG.timeFrames = (function() {
 		}
 	}
 })();
+
+iG.merge = function(target, obj) {
+	return jQuery.extend(true, target, obj);
+}

@@ -1,3 +1,91 @@
+Ext.ux.MyColorField = Ext.extend(Ext.form.TriggerField, {
+	
+	triggerClass	: 'x-form-arrow-trigger',
+	
+	lazyInit		: true,
+	
+    initComponent	: function() {
+        Ext.ux.MyColorField.superclass.initComponent.call(this);
+        this.addEvents(
+            'select'
+        );
+    },
+    
+    initMenu		: function() {
+    	if(!this.menu) {
+    		this.menu = new Ext.menu.ColorMenu({
+    			hideOnClick	: false
+    		});
+    		
+    		this.mon(this.menu, {
+    			scope	: this,
+    			select	: this.onSelect,
+    			hide	: this.onMenuHide
+    		});
+    	}
+    },
+    
+    isExpanded		: function() {
+    	return this.menu && this.menu.isVisible();
+    },
+	
+    onRender 		: function(ct, position){
+    	Ext.ux.MyColorField.superclass.onRender.call(this, ct, position);
+
+        if(!this.lazyInit) {
+            this.initMenu();
+        } else{
+            this.on('focus', this.initMenu, this, {single: true});
+        }
+    },
+    
+    onTriggerClick	: function() {
+        if(this.readOnly || this.disabled){
+            return;
+        }
+        
+        this.menu.show(this.el, "tl-bl?");
+
+        //this.el.focus();
+        //this.onFocus();
+    },
+    
+    onSelect		: function(palette, color) {
+    	this.setValue('#'+color);
+    	this.fireEvent('select', this, color)
+    	this.menu.hide();
+    },
+    
+    onMenuHide		: function() {
+    },
+    
+    validateBlur 	: function(){
+        return !this.menu || !this.menu.isVisible();
+    },
+
+    beforeBlur 		: function() {
+        var v = this.getRawValue();
+        if(v) {
+            this.setValue(v);
+        }
+    },
+    
+    setValue		: function(v) {
+    	return Ext.ux.MyColorField.superclass.setValue.call(this, v);
+    },
+    
+    onDestroy 		: function() {
+    	if(this.menu) {
+    		this.menu.destroy();
+    	}
+    	
+        Ext.ux.MyColorField.superclass.onDestroy.call(this);
+    }
+    
+});
+
+Ext.reg('mycolorfield', Ext.ux.MyColorField);
+
 Ext.namespace('Ext.ux');
 
 Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField,  {
@@ -61,6 +149,7 @@ Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField,  {
     },
     
     onSelect: function(m, d){
+    	console.log(d);
         this.setValue(d);
         this.fireEvent('select', this, d);
         this.el.setStyle('background', d);
@@ -91,7 +180,13 @@ Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField,  {
     onMenuHide: function(){
         this.focus(false, 60);
         this.menuEvents('un');
-    }
+    },
+    
+    setValue : function(v){
+    	Ext.ux.ColorField.superclass.setValue.call(this, v);
+        this.value = v;
+        return this;
+    },
     
 });    
 

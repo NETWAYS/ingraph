@@ -21,6 +21,13 @@
     <script type="text/javascript" src="lib/ext/adapter/jquery/ext-jquery-adapter-debug.js"></script>
     <script type="text/javascript" src="lib/ext/ext-all-debug.js"></script>
     
+    <script type="text/javascript" src="lib/ext/examples/ux/TabScrollerMenu.js"></script>
+    <script type="text/javascript" src="lib/ext/examples/ux/CheckColumn.js"></script>
+    
+	<script type="text/javascript" src="lib/inGraph/Ext.ux.Printer/Printer.js"></script>
+	<script type="text/javascript" src="lib/inGraph/Ext.ux.Printer/renderers/Base.js"></script>
+    <script type="text/javascript" src="lib/inGraph/Ext.ux.Printer/renderers/Flot.js"></script>
+    
     <script type="text/javascript" src="lib/inGraph/Ext.ux.util.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.ColorField.js"></script>
     
@@ -67,6 +74,7 @@ $t = array(
 <script type="text/javascript">
 Ext.onReady(function() {
 	Ext.ux.TimeframeButtonGroup.prototype.frames = iG.timeFrames.getAll();
+    var frames = iG.timeFrames.getDefault();
 
     /*
     var d = new Date();
@@ -238,11 +246,12 @@ Ext.onReady(function() {
 
                     if(h && s) {
                         if(st || et) {
-                            frames = [{
-                                    title   : 'Custom Timerange',
-                                    start   : st || '',
-                                    end     : et || ''
-                            }];
+                            frames.clear();
+                            frames.add({
+                                title : 'Custom Timerange',
+                                start : iG.functor(st || ''),
+                                end : iG.functor(et || '')
+                            });
                         }
                         
                         var tab = viewport.hostServiceTabs.items.find(function(t) {
@@ -252,7 +261,7 @@ Ext.onReady(function() {
                         if(!tab) {
                             var panels = new Array();
                             
-                            iG.timeFrames.getDefault().each(function(frame) {                       
+                            frames.each(function(frame) {         
                             	panels.push({
                                     xtype       : 'flotpanel',
                                     title       : frame.title,
@@ -289,11 +298,13 @@ Ext.onReady(function() {
                 }
             }]
         }, {
-            region      : 'center',
-            xtype       : 'tabpanel',
-            ref         : 'hostServiceTabs',
-            defaults    : {
-                closable: true
+            region          : 'center',
+            xtype           : 'tabpanel',
+            plugins         : [new Ext.ux.TabScrollerMenu()],
+            enableTabScroll : true,
+            ref             : 'hostServiceTabs',
+            defaults        : {
+                closable : true
             }
         }]
     });

@@ -10,6 +10,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 		cfg = cfg || {};
 		
 		Ext.apply(cfg, {
+			layout      : typeof cfg.overview !== 'undefined' ? (cfg.overview ? 'anchor' : 'fit') : (this.overview ? 'anchor' : 'fit'),
 			animCollapse: true,
             tbar        : {
             	defaults: {
@@ -29,9 +30,9 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                     		this.frame = frame;
                     	
 	                        this.setTitle(this.titleFormat.format({
-	                            host: this.host,
-	                            service: this.service,
-	                            frame: this.frame.title
+	                            host       : this.host,
+	                            service    : this.service,
+	                            frame      : this.frame.title
 	                        }));
 	                        
 	                        Ext.iterate({
@@ -133,15 +134,17 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 	                                    	title         : _('Series'),
 	                                    	xtype         : 'editorgrid',
 	                                    	clicksToEdit  : 1,
+	                                    	plugins       : ['checkcolumn'],
 	                                    	store         : this.flot.getStore(),
 											cm            : new Ext.grid.ColumnModel({
 												defaults: {
-											        width: 120,
-											        sortable: true
+											        width    : 120,
+											        sortable : true
 											    },
 											    columns: [
+											        {xtype: 'checkcolumn', header: 'Disabled', dataIndex: 'disabled', width: 55},
 												    {header: 'Label', dataIndex: 'label'},
-												    {header: 'Color', dataIndex: 'color', editor: new Ext.ux.ColorField()}
+												    {header: 'Color', dataIndex: 'color', editor: new Ext.ux.MyColorField()}
 											    ]
 											})
 	                                    }, {
@@ -170,9 +173,9 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 		Ext.ux.FlotPanel.superclass.initComponent.call(this);
 		
 		this.title = this.titleFormat.format({
-            host: this.host,
-            service: this.service,
-            frame: this.frame.title
+            host    : this.host,
+            service : this.service,
+            frame   : this.frame.title
         });
 		
         this.store = Ext.StoreMgr.lookup(this.store);
@@ -192,18 +195,18 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                 fn     : function(store, records) {
                     if(records.length) {
                         this.setTitle(this.titleFormat.format({
-                            host: this.host,
-                            service: this.service,
-                            frame: this.frame.title
+                            host    : this.host,
+                            service : this.service,
+                            frame   : this.frame.title
                         }));
                             
                         this.datapoints.enable();
                         this.smooth.enable();
                     } else {
                     	this.setTitle((this.titleFormat + ' ({0})').format({
-                    		host: this.host,
-                    		service: this.service,
-                    		frame: this.frame.title
+                    		host      : this.host,
+                    		service   : this.service,
+                    		frame     : this.frame.title
                     	}, _('No data')));
                     	
                         this.datapoints.disable();
@@ -230,9 +233,23 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
         	    flotOptions : {
         	        xaxis       : {
         	            show       : true,
-        	            ticks      : 2,
         	            mode       : 'time',
-        	            timeformat : '%b %y %H:%M:%S'
+        	            timeformat : '%d %b, %y',
+        	            ticks      : function(axis) {
+        	            	var ticks = new Array(),
+        	            	    c     = 4;
+        	            	
+        	            	if(c) {
+        	            		var range = axis.max - axis.min,
+        	            		    delta = range / (c-1);
+        	            		    
+        	            		for(var i=0; i <= c; ++i) {
+        	            			ticks.push(axis.min + delta*i);
+        	            		}
+        	            	}
+        	            	
+        	            	return ticks;
+        	            }
         	        },
         	        yaxis       : {
         	            show: false
@@ -353,6 +370,13 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 			            this.store.add(series);
                 	}
                 },
+                refresh: {
+                	fn     : function(flot) {
+                		Ext.select('.tickLabel', false, flot.el.id).each(function(el) {
+                			el.setLeft(el.getLeft() > 0 ? el.getLeft()-20 : el.getLeft()+20);
+                		}, this);
+                	}
+                },
         		scope	: this
         	});
         }
@@ -364,8 +388,8 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 		if(this.loadMask) {
             this.loadMask = new Ext.LoadMask(this.bwrap,
                     Ext.apply({
-                        store: this.store,
-                        removeMask: true
+                        store       : this.store,
+                        removeMask  : true
                     }, this.loadMask)
             );			
 		}

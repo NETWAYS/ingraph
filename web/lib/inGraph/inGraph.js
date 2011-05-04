@@ -86,51 +86,60 @@ iG.version = {
     minor: 1
 };
 
+iG.functor = function(v) {
+  return typeof v === 'function' ? v : function() { return v; };
+};
+
 iG.timeFrames = (function() {
-	var frames = new Ext.util.MixedCollection({
-		allowFunctions: true
+	var frames = new Ext.util.MixedCollection(false, function(o) {
+		return o.title.toUpperCase();
 	});
+	
+	frames.on({
+		add : function(i, o) {
+			Ext.applyIf(o, {
+					show	: true,
+					end		: iG.functor(''),
+					overview: false,
+					id		: o.title.toUpperCase(),
+					index	: i
+			});
+		}
+	});
+
 	frames.addAll([{
-	        title   : 'Hourly',
-	        start   : (function() {
-	        	var d = new Date();
-	        	return (Math.ceil(d/1000) - (3600));
-	        }),
-	        show	: false,
-	    }, {
-	        title   : 'Daily',
-	        start   : (function() {
-	        	var d = new Date();
-	        	return (Math.ceil(d/1000) - (86400));
-	        }),
-	        overview: true
-	    }, {
-	        title   : 'Weekly',
-	        start   : (function() {
-	        	var d = new Date();
-	        	return (Math.ceil(d/1000) - (604800));
-	        })
-	    }, {
-	        title   : 'Monthly',
-	        start   : (function() {
-	        	var d = new Date();
-	        	return (Math.ceil(d/1000) - (2678400));
-	        })
-	    }, {
-	        title   : 'Yearly',
-	        start   : (function() {
-	        	var d = new Date();
-	        	return (Math.ceil(d/1000) - (31536000));
-	        })
-	}].map(function(frame, index) {
-		return Ext.applyIf(frame, {
-			show	: true,
-			end		: (function() { return ''; }),
-			overview: false,
-			id		: frame.title.toUpperCase(),
-			index	: index
-		});
-	}));
+        title   : 'Hourly',
+        start   : (function() {
+        	var d = new Date();
+        	return (Math.ceil(d/1000) - (3600));
+        }),
+        show	: false,
+    }, {
+        title   : 'Daily',
+        start   : (function() {
+        	var d = new Date();
+        	return (Math.ceil(d/1000) - (86400));
+        }),
+        overview: true
+    }, {
+        title   : 'Weekly',
+        start   : (function() {
+        	var d = new Date();
+        	return (Math.ceil(d/1000) - (604800));
+        })
+    }, {
+        title   : 'Monthly',
+        start   : (function() {
+        	var d = new Date();
+        	return (Math.ceil(d/1000) - (2678400));
+        })
+    }, {
+        title   : 'Yearly',
+        start   : (function() {
+        	var d = new Date();
+        	return (Math.ceil(d/1000) - (31536000));
+        })
+	}]);
 	
 	return {
 		getAll		: function() {

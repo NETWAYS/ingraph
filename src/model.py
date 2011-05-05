@@ -1555,13 +1555,17 @@ class DataPoint(ModelBase):
     
     cleanupOldData = staticmethod(cleanupOldData)
 
+class SetTextFactory(PoolListener):
+    def connect(self, dbapi_con, con_record):
+        dbapi_con.text_factory = str
+
 '''
 creates a DB connection
 '''
 def createModelConnection(dsn):
     global dbload_max_timestamp
 
-    engine = create_engine(dsn)
+    engine = create_engine(dsn, listeners=[SetTextFactory()])
 
     engine.echo = True
 

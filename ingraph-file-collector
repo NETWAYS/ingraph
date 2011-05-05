@@ -103,8 +103,9 @@ while  True:
             upd_parentservice = logdata['service']
             upd_service = multi_service
 
+        # TODO: warn/crit
         update = (logdata['host'], upd_parentservice, upd_service, upd_plotname, logdata['timestamp'], \
-                  uom, raw_value, raw_value, raw_value, min_value, max_value)
+                  uom, raw_value, raw_value, raw_value, min_value, max_value, None, None, None, None, None, None)
         updates.append(update)
         
     now = time()

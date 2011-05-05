@@ -198,7 +198,7 @@ for (name, interval, retention_period) in reversed(agts):
 
         update = (row[ng_host.c.host_name], None, row[ng_service.c.service_name], \
                   plotname, ts, number['uom'], value, min, max, \
-                  lower_limit, upper_limit, interval)
+                  lower_limit, upper_limit, None, None, None, None, None, None, interval)
         
         updates.append(update)
         

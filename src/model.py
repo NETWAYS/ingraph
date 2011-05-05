@@ -5,8 +5,9 @@ Created on 17.01.2011
 '''
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
-    Boolean, Numeric, String, Sequence, ForeignKey, Index, create_engine, and_
+    Boolean, Numeric, String, Enum, Sequence, ForeignKey, Index, create_engine, and_
 from sqlalchemy.sql import literal, select, between, func
+from sqlalchemy.interfaces import PoolListener
 from time import time
 from weakref import WeakValueDictionary
 from random import randint
@@ -599,7 +600,8 @@ class Plot(ModelBase):
 
     _calculateRateHelper = staticmethod(_calculateRateHelper)
 
-    def insertValue(self, conn, timestamp, unit, value, min, max, lower_limit, upper_limit):        
+    def insertValue(self, conn, timestamp, unit, value, min, max, lower_limit, upper_limit,
+                    warn_lower, warn_upper, warn_type, crit_lower, crit_upper, crit_type):        
         result = self.fetchDataPoints(conn, timestamp)
         
         if result == None:
@@ -665,7 +667,8 @@ class Plot(ModelBase):
         for tf in tfs:
             dp = dps[tf.interval]
             
-            dp.insertValue(prev_avg, prev_min, prev_max, lower_limit, upper_limit)
+            dp.insertValue(prev_avg, prev_min, prev_max, lower_limit, upper_limit,
+                           warn_lower, warn_upper, warn_type, crit_lower, crit_upper, crit_type)
 
             prev_min = dp.min
             prev_max = dp.max
@@ -675,7 +678,8 @@ class Plot(ModelBase):
             self.unit = unit
             self.save(conn)
 
-    def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, min, max, lower_limit, upper_limit):
+    def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, min, max, lower_limit, upper_limit,
+                       warn_lower, warn_upper, warn_type, crit_lower, crit_upper, crit_type):
         result = self.fetchDataPoints(conn, timestamp, ignore_missing_tf=True, require_tf=tf_interval)
                 
         if result == None:
@@ -703,7 +707,8 @@ class Plot(ModelBase):
             self.last_value = value_raw
             self.last_update = timestamp
             
-        dps[tf_interval].insertValue(value, min, max, lower_limit, upper_limit)
+        dps[tf_interval].insertValue(value, min, max, lower_limit, upper_limit,
+                                     warn_lower, warn_upper, warn_type, crit_lower, crit_upper, crit_type)
         self.last_update = timestamp
         
         if self.unit != unit:
@@ -891,6 +896,12 @@ datapoint = Table('datapoint', metadata,
     Column('avg', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('lower_limit', Numeric(precision=20, scale=5, asdecimal=False)),
     Column('upper_limit', Numeric(precision=20, scale=5, asdecimal=False)),
+    Column('warn_lower', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
+    Column('warn_upper', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
+    Column('warn_type', Enum('inside', 'outside'), nullable=True),
+    Column('crit_lower', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
+    Column('crit_upper', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
+    Column('crit_type', Enum('inside', 'outside'), nullable=True),
     Column('count', Integer, nullable=False),
     
     mysql_engine='InnoDB'
@@ -930,6 +941,12 @@ class DataPoint(ModelBase):
         self.count = 0
         self.lower_limit = None
         self.upper_limit = None
+        self.warn_lower = None
+        self.warn_upper = None
+        self.warn_type = None
+        self.crit_lower = None
+        self.crit_upper = None
+        self.crit_type = None
         
         self.saved_min = None
         self.saved_max = None
@@ -937,7 +954,13 @@ class DataPoint(ModelBase):
         self.saved_count = None
         self.saved_lower_limit = None
         self.saved_upper_limit = None
-                
+        self.saved_warn_lower = None
+        self.saved_warn_upper = None
+        self.saved_warn_type = None
+        self.saved_crit_lower = None
+        self.saved_crit_upper = None
+        self.saved_crit_type = None
+
         self._inserted = False
         
         '''
@@ -961,8 +984,16 @@ class DataPoint(ModelBase):
     max = maximum value we encountered in smaller tfs)
     lower_limit = lower limit for the value, as specified in the perfdata
     upper_limit = upper limit for the value, as specified in the perfdata
+    warn_lower = warning lower limit
+    warn_upper = warning upper limit
+    warn_type = warning range type
+    crit_lower = critical lower limit
+    crit_upper = critical upper limit
+    crit_type = critical range type
     '''
-    def insertValue(self, value, min, max, lower_limit=None, upper_limit=None):
+    def insertValue(self, value, min, max, lower_limit=None, upper_limit=None,
+                    warn_lower = None, warn_upper = None, warn_type = None,
+                    crit_lower = None, crit_upper = None, crit_type = None):
         value = float(value)
         
         if min == None:
@@ -992,6 +1023,24 @@ class DataPoint(ModelBase):
             
         if self.upper_limit == None:
             self.upper_limit = upper_limit
+
+        if self.warn_lower == None:
+            self.warn_lower = warn_lower
+            
+        if self.warn_upper == None:
+            self.warn_upper = warn_upper
+
+        if self.warn_type == None:
+            self.warn_type = warn_type
+            
+        if self.crit_lower == None:
+            self.crit_lower = crit_lower
+
+        if self.crit_upper == None:
+            self.crit_upper = crit_upper
+            
+        if self.crit_type == None:
+            self.crit_type = crit_type
 
         if value != None:
             self.prev_min = self.min
@@ -1064,7 +1113,13 @@ class DataPoint(ModelBase):
                 'avg': self.avg,
                 'count': self.count,
                 'lower_limit': self.lower_limit,
-                'upper_limit': self.upper_limit
+                'upper_limit': self.upper_limit,
+                'warn_lower': self.warn_lower,
+                'warn_upper': self.warn_upper,
+                'warn_type': self.warn_type,
+                'crit_lower': self.crit_lower,
+                'crit_upper': self.crit_upper,
+                'crit_type': self.crit_type
             }
             
             self._inserted = True
@@ -1077,7 +1132,13 @@ class DataPoint(ModelBase):
                 'avg': self.avg,
                 'count': self.count,
                 'lower_limit': self.lower_limit,
-                'upper_limit': self.upper_limit
+                'upper_limit': self.upper_limit,
+                'warn_lower': self.warn_lower,
+                'warn_upper': self.warn_upper,
+                'warn_type': self.warn_type,
+                'crit_lower': self.crit_lower,
+                'crit_upper': self.crit_upper,
+                'crit_type': self.crit_type
             }
         
         self.saved_min = self.min
@@ -1086,6 +1147,12 @@ class DataPoint(ModelBase):
         self.saved_count = self.count
         self.saved_lower_limit = self.lower_limit
         self.saved_upper_limit = self.upper_limit
+        self.saved_warn_lower = self.warn_lower
+        self.saved_warn_upper = self.warn_upper
+        self.saved_warn_type = self.warn_type
+        self.saved_crit_lower = self.crit_lower
+        self.saved_crit_upper = self.crit_upper
+        self.saved_crit_type = self.crit_type
         
         return {
             'type': type,
@@ -1136,7 +1203,10 @@ class DataPoint(ModelBase):
         # new object or changed data
         return not self._inserted or not (self.min == self.saved_min and self.max == self.saved_max and \
                 self.avg == self.saved_avg and self.count == self.saved_count and \
-                self.lower_limit == self.saved_lower_limit and self.upper_limit == self.saved_upper_limit)
+                self.lower_limit == self.saved_lower_limit and self.upper_limit == self.saved_upper_limit and \
+                self.warn_lower == self.saved_warn_lower and self.warn_upper == self.saved_warn_upper and \
+                self.warn_type == self.saved_warn_type and self.crit_lower == self.saved_crit_lower and
+                self.crit_upper == self.saved_crit_upper and self.crit_type == self.saved_crit_type)
     
     def shouldSave(self):
         if not self.modified():
@@ -1220,6 +1290,12 @@ class DataPoint(ModelBase):
                 'avg': row[datapoint.c.avg],
                 'lower_limit': row[datapoint.c.lower_limit],
                 'upper_limit': row[datapoint.c.upper_limit],
+                'warn_lower': row[datapoint.c.warn_lower],
+                'warn_upper': row[datapoint.c.warn_upper],
+                'warn_type': row[datapoint.c.warn_type],
+                'crit_lower': row[datapoint.c.crit_lower],
+                'crit_upper': row[datapoint.c.crit_upper],
+                'crit_type': row[datapoint.c.crit_type],
             }
             
             items[ts] = item
@@ -1239,7 +1315,13 @@ class DataPoint(ModelBase):
                 'max': obj.max,
                 'avg': obj.avg,
                 'lower_limit': obj.lower_limit,
-                'upper_limit': obj.upper_limit
+                'upper_limit': obj.upper_limit,
+                'warn_lower': obj.warn_lower,
+                'warn_upper': obj.warn_upper,
+                'warn_type': obj.warn_type,
+                'crit_lower': obj.crit_lower,
+                'crit_upper': obj.crit_upper,
+                'crit_type': obj.crit_type,
             }
             
             items[ts] = item
@@ -1298,6 +1380,16 @@ class DataPoint(ModelBase):
                 if item['upper_limit'] != None:
                     vt_value['upper_limit'] = item['upper_limit']
                     
+                if item['warn_lower'] != None and item['warn_upper'] != None and item['warn_type'] != None:
+                    vt_value['warn_lower'] = item['warn_lower']
+                    vt_value['warn_upper'] = item['warn_upper']
+                    vt_value['warn_type'] = item['warn_type']
+                    
+                if item['crit_lower'] != None and item['warn_upper'] != None and item['warn_type'] != None:
+                    vt_value['crit_lower'] = item['crit_lower']
+                    vt_value['crit_upper'] = item['crit_upper']
+                    vt_value['crit_type'] = item['crit_type']
+
                 vt_value['avg'] += vt_diff * item['avg']
                 
                 vt_covered_time += vt_diff
@@ -1313,6 +1405,14 @@ class DataPoint(ModelBase):
                 if 'upper_limit' in vt_value:
                     vt_value['upper_limit'] = str(vt_value['upper_limit'])
             
+                if 'warn_type' in vt_value:
+                    vt_value['warn_lower'] = str(vt_value['warn_lower'])
+                    vt_value['warn_upper'] = str(vt_value['warn_upper'])
+
+                if 'crit_type' in vt_value:
+                    vt_value['crit_lower'] = str(vt_value['crit_lower'])
+                    vt_value['crit_upper'] = str(vt_value['crit_upper'])
+
                 vt_values[str((vt_end + vt_start) / 2)] = vt_value
                 
                 vt_start_nan = None
@@ -1374,6 +1474,12 @@ class DataPoint(ModelBase):
                 obj.saved_count = obj.count = max(0, row[datapoint.c.count])
                 obj.saved_lower_limit = obj.lower_limit = row[datapoint.c.lower_limit]
                 obj.saved_upper_limit = obj.upper_limit = row[datapoint.c.upper_limit]
+                obj.saved_warn_lower = obj.lower_limit = row[datapoint.c.warn_lower]
+                obj.saved_warn_upper = obj.upper_limit = row[datapoint.c.warn_upper]
+                obj.saved_warn_type = obj.lower_limit = row[datapoint.c.warn_type]
+                obj.saved_crit_lower = obj.upper_limit = row[datapoint.c.crit_lower]
+                obj.saved_crit_upper = obj.lower_limit = row[datapoint.c.crit_upper]
+                obj.saved_crit_type = obj.upper_limit = row[datapoint.c.crit_type]
 
                 obj._inserted = True                                
                 obj.activate()

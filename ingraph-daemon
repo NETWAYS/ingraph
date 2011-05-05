@@ -126,10 +126,14 @@ class BackendRPCMethods:
         updates = cPickle.loads(updates_raw)
         
         for update in updates:
-            if len(update) > 11:
-                (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit, tf) = update
+            if len(update) > 17:
+                (host, parent_service, service, plot, timestamp, unit, value, \
+                 min, max, lower_limit, upper_limit, warn_lower, warn_upper, warn_type, \
+                 crit_lower, crit_upper, crit_type, tf) = update
             else:
-                (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit) = update
+                (host, parent_service, service, plot, timestamp, unit, value, \
+                 min, max, lower_limit, upper_limit, warn_lower, warn_upper, warn_type, \
+                 crit_lower, crit_upper, crit_type) = update
                 tf = None
             
             host_obj = self._createHost(host)
@@ -144,9 +148,15 @@ class BackendRPCMethods:
             plot_obj = self._createPlot(hostservice_obj, plot)
 
             if tf == None:
-                plot_obj.insertValue(conn, timestamp, unit, value, min, max, lower_limit, upper_limit)
+                plot_obj.insertValue(conn, timestamp, unit, value,
+                                     min, max, lower_limit, upper_limit,
+                                     warn_lower, warn_upper, warn_type,
+                                     crit_lower, crit_upper, crit_type)
             else:
-                plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, min, max, lower_limit, upper_limit)
+                plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, 
+                                        min, max, lower_limit, upper_limit,
+                                        warn_lower, warn_upper, warn_type,
+                                        crit_lower, crit_upper, crit_type)
              
         return True
     
@@ -211,7 +221,9 @@ class BackendRPCMethods:
                 current_charts = {}
 
                 for ts, value in values.items():
-                    for type in ['upper_limit', 'max', 'avg', 'min', 'lower_limit']:
+                    for type in ['upper_limit', 'max', 'avg', 'min', 'lower_limit',
+                                 'warn_lower', 'warn_upper', 'warn_type', 'crit_lower',
+                                 'crit_upper', 'crit_type']:
                         if not type in current_charts:
                             current_charts[type] = []
                         

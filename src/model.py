@@ -527,32 +527,33 @@ class Plot(ModelBase):
             old_max_timestamp = self.max_timestamp
             self.max_timestamp = timestamp
         
+            smallest_tf = None
             for dp in DataPoint.getByTimestamp(conn, self, timestamp, active_tfs_only=True):
                 dps[dp.timeframe.interval] = dp
-
-            # having no dps or just the one for the smallest timeframe is OK because in that
-            # case we can safely create new empty dps for all the missing timeframes
-            if not ignore_missing_tf and not (len(dps) == 0 or (len(dps) == 1 and tfs[0].interval in dps)):
-                print("len(dps) == %d; len(tfs) == %d" % (len(dps), len(tfs)))
-                print("old current_timestamp:", debug_ts, "timestamp:", timestamp)
-
-                if len(dps) != len(tfs):
-                    print("Can't process update due to missing intermediary DPs which were already " \
-                          "cleaned up.")
-                    
-                    # revert change to max_timestamp as we weren't able to load all datapoints
-                    # for the specified timeframe
-                    self.max_timestamp = old_max_timestamp
-                    
-                    return None
-
-                self.cache_dps = dps
-                return (tfs, dps)
                 
-        # BUG: we need to make sure that the number of dps returned
-        # by getByTimestamp is equal to the number of active tfs and
-        # and skip the update when they're not; make sure not to wipe the
-        # cache in this case as this might degrade performance
+                if smallest_tf == None or dp.timeframe.interval < smallest_tf:
+                    smallest_tf = dp.timeframe.interval
+
+            # fill in missing (smaller) DPs
+            for tf in tfs:
+                if not tf.interval in dps and (smallest_tf == None or smallest_tf > tf.interval):
+                    dp = DataPoint(self, tf,
+                               timestamp - timestamp % tf.interval)
+                    
+                    dps[tf.interval] = dp
+                    
+            if len(dps) != len(tfs):
+                print("Can't process update due to missing intermediary DPs which were already " \
+                      "cleaned up.")
+
+                # revert change to max_timestamp as we weren't able to load all datapoints
+                # for the specified timeframe
+                self.max_timestamp = old_max_timestamp
+
+                return None
+            
+            self.cache_dps = dps
+            return (tfs, dps)
 
         self.current_timestamp = timestamp
         
@@ -1567,7 +1568,7 @@ def createModelConnection(dsn):
 
     engine = create_engine(dsn, listeners=[SetTextFactory()])
 
-    engine.echo = True
+    #engine.echo = True
 
     conn = engine.connect()
 

@@ -21,6 +21,7 @@ def get_xmlrpc_url(config):
 class PerfdataParser(object):
     _perfRegex = re.compile('([^= ][^=]*)=([^ ]+)')
     _intRegex = re.compile('^([+-]?[0-9,.]+)[ ]*(.*?)$')
+    _rangeRegex = re.compile('^(@?)([^:]*)(:?)([^:]*)$')
     
     _bytesuffixes = {
         'B': 1024**0,
@@ -112,13 +113,13 @@ class PerfdataParser(object):
             unit = raw['input_uom']
             
             if len(values) >= 2:
-                warn = PerfdataParser.parsePerfdataNumber(values[1], unit)
+                warn = PerfdataParser.parseRange(values[1], unit)
                 
                 if warn != None:
                     plot['warn'] = warn
             
             if len(values) >= 3:
-                crit = PerfdataParser.parsePerfdataNumber(values[2], unit)
+                crit = PerfdataParser.parseRange(values[2], unit)
                 
                 if crit != None:
                     plot['crit'] = crit
@@ -151,5 +152,42 @@ class PerfdataParser(object):
             plots[key] = plot
         
         return plots
+    
+    def parseRange(range, unit):
+        match = PerfdataParser._rangeRegex.match(range)
         
+        if not match:
+            print "Failed to parse range: " + range
+            return None
+        
+        if match.group(0) == '@':
+            type = 'inside'
+        else:
+            type = 'outside'
+            
+        lower = match.group(2)
+        upper = match.group(4)
+        
+        if match.group(3) == '':
+            upper = lower
+            lower = '0'
+        
+        if lower == '~':
+            lower = { 'value': None }
+        else:
+            lower = PerfdataParser.parsePerfdataNumber(lower, unit)
+            
+        if upper == '':
+            upper = { 'value': None }
+        else:
+            upper = PerfdataParser.parsePerfdataNumber(upper, unit)
+        
+        return {
+            'lower': lower,
+            'upper': upper,
+            'type': type
+        }
+    
+    parseRange = staticmethod(parseRange)
+
     parse = staticmethod(parse)

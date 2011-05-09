@@ -172,15 +172,15 @@ class PerfdataParser(object):
             upper = lower
             lower = '0'
         
-        if lower == '~':
+        lower = PerfdataParser.parsePerfdataNumber(lower, unit)
+
+        if lower == None:
             lower = { 'value': None }
-        else:
-            lower = PerfdataParser.parsePerfdataNumber(lower, unit)
             
-        if upper == '':
+        upper = PerfdataParser.parsePerfdataNumber(upper, unit)
+
+        if upper == None:
             upper = { 'value': None }
-        else:
-            upper = PerfdataParser.parsePerfdataNumber(upper, unit)
         
         return {
             'lower': lower,

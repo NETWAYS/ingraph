@@ -1,13 +1,5 @@
 {
-"re": "/^.*ping$/",
-
-"flot": {
-    "yaxes": [{
-        "position": "left"
-    }, {
-        "position": "right"
-    }]
-},
+"re": "/^.*ping.*$/",
 
 "series": [{
     "re": "/pl-avg/",
@@ -18,7 +10,6 @@
     "re": "/rta-avg/",
     "unit": "ms",
     "label": "Round Trip Time",
-    "yaxis": 2,
     "color": "#00FF00"
 }]
 }

@@ -1,6 +1,6 @@
 @CHARSET "UTF-8";
 
-.tickLabels, .legendLabel, .iG-text {
+.tickLabel, .legendLabel, .iG-text {
     font: bold 11px tahoma,arial,helvetica;
 }
 

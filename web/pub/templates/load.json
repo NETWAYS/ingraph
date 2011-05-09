@@ -3,9 +3,6 @@
 
 "flot": {
     "colors": ["#ff0000", "#00cc00", "#ff8000"],
-    "yaxes": [{
-        "position": "left"
-    }],
     "series": {
         "lines": {
             "fill": true,

@@ -40,24 +40,30 @@ foreach($data as $host => $services) {
 				
 				foreach($series as $seriesi) {
 					
+					$key = sprintf('%s-%s-%s', $host, $service, $seriesi['label']);
+					
 					$match = false;
 					
 					foreach($template['series'] as $tseries) {
 						
 						if(preg_match($tseries['re'], $seriesi['label'])) {
-							$fseries[] = array(
-								'data' => $seriesi['data'],
-								'label' => $tseries['label'] ? $tseries['label'] : $seriesi['label'],
-								'unit' => $tseries['unit'] ? $tseries['unit'] : $seriesi['unit'],
-								'xaxis' => $tseries['xaxis'] ? $tseries['xaxis'] : 1,
-								'yaxis' => $tseries['yaxis'] ? $tseries['yaxis'] : 1,
-								'color' => $tseries['color'] ? $tseries['color'] : null,
-								'series' => $tseries['series'] ? $tseries['series'] : new stdClass(),
-								'lines' => $tseries['lines'] ? $tseries['lines'] : new stdClass(),
-								'id' => $tseries['id'] ? $tseries['id'] : null,
-								'fillBetween' => $tseries['fillBetween'] ? $tseries['fillBetween'] : null,
-								'disabled' =>  false
-							);
+							if(!in_array($key, $fseries)) {
+								$fseries[$key] = array(
+									'data' => $seriesi['data'],
+									'label' => $tseries['label'] ? $tseries['label'] : $seriesi['label'],
+									'unit' => $tseries['unit'] ? $tseries['unit'] : $seriesi['unit'],
+									'xaxis' => $tseries['xaxis'] ? $tseries['xaxis'] : 1,
+									'yaxis' => $tseries['yaxis'] ? $tseries['yaxis'] : 1,
+									'color' => $tseries['color'] ? $tseries['color'] : null,
+									'series' => $tseries['series'] ? $tseries['series'] : new stdClass(),
+									'lines' => $tseries['lines'] ? $tseries['lines'] : new stdClass(),
+									'id' => $tseries['id'] ? $tseries['id'] : null,
+									'fillBetween' => $tseries['fillBetween'] ? $tseries['fillBetween'] : null,
+									'disabled' =>  false
+								);
+							} else {
+								array_merge(&$fseries[$key], $tseries);
+							}
 							
 							$match = true;
 							
@@ -65,7 +71,7 @@ foreach($data as $host => $services) {
 						}
 					}
 					if(!$match) {
-						$fseries[] = array(
+						$fseries[$key] = array(
 							'data' => $seriesi['data'],
 							'label' => $seriesi['label'],
 							'unit' => $seriesi['unit'],
@@ -83,7 +89,7 @@ foreach($data as $host => $services) {
 			}
 		}
 		
-		$flot['series'] = $series;
+		$flot['series'] = array_values($series);
 	}
 }
 

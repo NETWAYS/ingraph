@@ -18,7 +18,7 @@ Ext.ux.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
                            {name : 'points', defaultValue : {}},
                            {name : 'bars', defaultValue : {}},
                            {name : 'shadowSize', defaultValue : 3},
-                           {name : 'stack', defaultValue : null},
+                           {name : 'stack'},
                            {name : 'disabled', defaultValue : false}
             ],
             autoLoad : true
@@ -35,7 +35,9 @@ Ext.ux.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
                         var r = store.getById(mr.id) || store.getAt(store.find('label', mr.get('label')));
                         if(r) {
                             Ext.iterate(mr.getChanges(), function(k, v) {
-                                r.set(k, v);
+                            	if(k != 'data') {
+                                    r.set(k, v);
+                            	}
                             });
                         }
                     });

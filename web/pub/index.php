@@ -38,6 +38,9 @@
     <script type="text/javascript" src="lib/inGraph/Ext.ux.FlotJsonStore.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.TimeframeButtonGroup.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.FlotPanel.js"></script>
+    <script type="text/javascript" src="lib/inGraph/Ext.ux.AutoComboBox.js"></script>
+    <script type="text/javascript" src="lib/inGraph/Ext.ux.ComboController.js"></script>
+    <script type="text/javascript" src="lib/inGraph/Ext.ux.ComboDependency.js"></script>
     
     <link rel="stylesheet" type="text/css" href="lib/ext/resources/css/ext-all-notheme.css" />
     <link rel="stylesheet" type="text/css" href="lib/ext/resources/css/xtheme-gray.css" />
@@ -73,6 +76,8 @@ $t = array(
 
 <script type="text/javascript">
 Ext.onReady(function() {
+	Ext.QuickTips.init();
+    
 	Ext.ux.TimeframeButtonGroup.prototype.frames = iG.timeFrames.getAll();
     var frames = iG.timeFrames.getDefault();
 
@@ -106,6 +111,7 @@ Ext.onReady(function() {
     */
     
     var viewport = new Ext.Viewport({
+        boxMinWidth : 400,
         layout  : 'border',
         items   : [{
             region          : 'north',
@@ -117,61 +123,20 @@ Ext.onReady(function() {
             labelAlign      : 'top',
             items           : [{
                 layout  : 'column',
-
+                width : 700,
                 defaults: {
-                    columnWidth : .15,
+                    columnWidth : .40,
                     layout      : 'form',
-                    anchor      : '95%',
+                    anchor      : '70%'
                 },
 
                 items   : [{
 
                     items: [{
-	                    xtype           : 'combo',
-	                    minChars        : minChars,
-	                    pageSize        : limit,
-	                    triggerAction   : 'all',
-	                    hideTrigger     : true,
-	                    listEmptyText   : 'No results...',
-	                    editable        : true,
-	                    
-	                    id          : 'iG-Host',
-	                    hiddenName  : 'host',
-	                    fieldLabel  : 'Host',
-	                    queryParam  : 'host',
-	                    store       : new Ext.data.JsonStore({
-	                        autoDestroy     : true,
-	                        url             : 'actions/hosts.php',
-	                        root            : 'results',
-	                        fields          : ['host'],
-	                        totalProperty   : 'total',
-	                        paramNames      : {
-	                            start   : 'offset'
-	                        },
-	                        baseParams:     {
-	                            offset  : 0,
-	                            limit   : limit
-	                        }
-	                    }),
-	                    valueField      : 'host',
-	                    displayField    : 'host',
-	                    listeners       : {
-	                        focus   : function() {
-	                            this.getStore().load();
-	                        },
-	                        select  : function() {
-	                            Ext.getCmp('iG-Service').enable();
-	                            Ext.getCmp('iG-Service').clearValue();
-	                        },
-	                        change  : function(self, value) {
-	                            if(value) {
-	                                Ext.getCmp('iG-Service').enable();
-	                            } else {
-	                                Ext.getCmp('iG-Service').disable();
-	                            }
-	                            Ext.getCmp('iG-Service').clearValue();
-	                        }
-	                    }
+	                    xtype           : 'autocombo',
+                        name : 'host',
+                        url : 'actions/hosts.php',
+                        plugins: [new Ext.ux.ComboController({observe: 'service'})]
                     }, {
                         xtype           : 'datefield',
                         format	        : 'Y-m-d H:i:s',
@@ -183,46 +148,11 @@ Ext.onReady(function() {
                     }]
                 }, {
 	                items: [{
-	                    xtype           : 'combo',
-	                    minChars        : minChars,
-	                    pageSize        : limit,
-	                    triggerAction   : 'all',
-	                    hideTrigger     : true,
-	                    listEmptyText   : 'No results...',
-	                    editable        : true,
-	                    
-	                    id          : 'iG-Service',
-	                    hiddenName  : 'service',
-	                    fieldLabel  : 'Service',
-	                    queryParam  : 'service',
-	                    store       : new Ext.data.JsonStore({
-	                        autoDestroy     : true,
-	                        url             : 'actions/services.php',
-	                        root            : 'results',
-	                        fields          : ['service'],
-	                        totalProperty   : 'total',
-	                        paramNames      : {
-	                            start   : 'offset'
-	                        },
-	                        baseParams      : {
-	                            offset  : 0,
-	                            limit   : limit
-	                        },
-	                        listeners:      {
-	                            beforeload   : function(self, options) {
-	                                options.params['host'] = Ext.getCmp('iG-Host').getValue();
-	                                return true;
-	                            }
-	                        }
-                        }),
-                        valueField      : 'service',
-                        displayField    : 'service',
-                        disabled        : true,
-                        listeners       : {
-                            focus   : function() {
-                                this.getStore().load();
-                            }
-                        }
+	                    xtype           : 'autocombo',
+                        name : 'service',
+                        url : 'actions/services.php',
+                        plugins : [new Ext.ux.ComboDependency({depends : {host : 'host'}})],
+                        disabled : true
 	                }, {
                         xtype           : 'datefield',
                         format	        : 'Y-m-d H:i:s',

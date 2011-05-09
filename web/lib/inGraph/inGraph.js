@@ -48,13 +48,32 @@ if(!Array.prototype.filter) Array.prototype.filter = function(f, o) {
   return result;
 };
 
-/**
- * Returns the last element in the array or null if empty.
- */
 if(!Array.prototype.last) Array.prototype.last = function() {
 	var n = this.length;
 	
 	return n ? this[n-1] : null; 
+};
+
+if(!Array.prototype.sum) Array.prototype.sum = function() {
+	for(var i=0, sum=0; i < this.length; sum += this[i++]);
+	return sum;
+};
+
+if(!Array.prototype.mean) Array.prototype.mean = function() {
+	return this.sum()/this.length;
+};
+
+if(!Array.prototype.std) Array.prototype.std = function() {
+return Math.sqrt(
+	1/(data.length-1)*
+	(
+		data.map(function(v) {
+		    return Math.pow(v, 2);
+		}).sum()
+	-
+		1/data.length*Math.pow(data.sum(), 2)
+	)
+);
 };
 
 if(!String.prototype.format) String.prototype.format = function() {
@@ -77,6 +96,10 @@ if(!String.prototype.format) String.prototype.format = function() {
     }
     
     return str;
+};
+
+if(!String.prototype.ucfirst) String.prototype.ucfirst = function() {
+	return this.substr(0, 1).toUpperCase() + this.substr(1, this.length);
 };
 
 var iG = {};

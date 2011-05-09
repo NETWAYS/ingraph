@@ -2,15 +2,19 @@
 "re": "/^.*-cpu$/",
 
 "flot": {
-    "yaxes": [{
-        "position": "left"
-    }],
-    "series": {
-        "stack": true
+    "lines": {
+        "fill": true
     }
 },
 
 "series": [{
-    "re": "/.*-avg/"
+    "re": "/.*-avg/",
+    "series" : {
+        "stack" : "idle"
+    },
+    "stack" : "idle"
+},{
+    "re": "/.*Idle-avg$/i",
+    "id": "idle"
 }]
 }

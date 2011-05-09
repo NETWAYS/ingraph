@@ -230,6 +230,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
         			cls : 'iG-hs'
         		}
         	}, {
+        		autoAddYAxes : false,
         	    flotOptions : {
         	        xaxis       : {
         	            show       : true,
@@ -368,6 +369,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 			            
 			            this.store.removeAll(true);
 			            this.store.add(series);
+			            this.store.fireEvent('load', this.store, series);
                 	}
                 },
                 refresh: {

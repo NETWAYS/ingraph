@@ -8,6 +8,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     
     absolute : true,
     
+    autoAddYAxes : true,
+    
     defaultFlotOptions : {
         legend : {
             show : true,
@@ -50,6 +52,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         });
         
         cfg.selection = new Array();
+        cfg.yaxes = new Array();
         
         Ext.ux.Flot.superclass.constructor.call(this, cfg);
     },
@@ -209,6 +212,10 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
                 if(!record.get('disabled')) {
                     var data = Ext.apply({}, record.data);
                     
+                    if(this.autoAddYAxes) {
+                        this.axify(data);
+                    }
+                    
                     /*
                     if(ranges) {
                         data.data = data.data.filter(function(xy) {
@@ -230,6 +237,35 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
                 }
             }, this);
             
+            if(this.autoAddYAxes) {
+            	delete this.flotOptions.yaxis;
+            	this.flotOptions.yaxes = new Array();
+            	Ext.each(this.yaxes, function(axe, i) {
+            		this.flotOptions.yaxes.push({
+            			position : i % 2 == 0 ? 'left' : 'right',
+            			tickFormatter : function(v, axis) {
+            				if(!this.tmpTicks) {
+            					this.tmpTicks = axis.tickGenerator(axis);
+            				}
+            				
+            				if(v == this.tmpTicks.last()) {
+            					delete this.tmpTicks;
+            					
+            					qtip = new Array();
+            					Ext.each(series, function(s, i) {
+                                    if(s.yaxis == axis.n) {
+                                        qtip.push('{0} &#040;{1}&#041;'.format(s.label, s.unit));
+                                    }
+                                });
+                                return '<div ext:qtip="{0}">{1}</div>'.format(qtip.join('<br />'), qtip[0]);
+            				}
+            				
+            				return v.toFixed(axis.tickDecimals);
+            			}
+            		});
+            	}, this);
+            }
+
             this.plot(series);
 
             this.fireEvent('refresh', this);
@@ -255,6 +291,16 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             return this.flot.draw();
         }
         return null;
+    },
+    
+    axify : function(series) {
+    	var iof = this.yaxes.indexOf(series.unit);
+    	if(-1 === iof) {
+    		iof = this.yaxes.push(series.unit);
+    	} else {
+    		++iof;
+    	}
+    	series.yaxis = iof;
     },
     
     showTooltip : function(event, pos, item) {

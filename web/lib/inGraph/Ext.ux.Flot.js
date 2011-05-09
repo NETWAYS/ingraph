@@ -265,6 +265,14 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             		});
             	}, this);
             }
+            
+            series.sort(function(a, b) {
+            	return a.data.map(function(v) {
+            		return parseFloat(v[1]);
+            	}).mean() - b.data.map(function(v) {
+                    return parseFloat(v[1]);
+                }).mean();
+            });
 
             this.plot(series);
 

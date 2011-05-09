@@ -63,17 +63,15 @@ if(!Array.prototype.mean) Array.prototype.mean = function() {
 	return this.sum()/this.length;
 };
 
+if(!Array.prototype.variance) Array.prototype.variance = function(bias) {
+	bias = bias || false;
+	return (this.map(function(v) {
+        return Math.pow(v, 2);
+    }).sum() - (Math.pow(this.sum(), 2) / this.length)) / bias ? this.length : this.length -1;
+};
+
 if(!Array.prototype.std) Array.prototype.std = function() {
-return Math.sqrt(
-	1/(data.length-1)*
-	(
-		data.map(function(v) {
-		    return Math.pow(v, 2);
-		}).sum()
-	-
-		1/data.length*Math.pow(data.sum(), 2)
-	)
-);
+	return Math.sqrt(this.variance());
 };
 
 if(!String.prototype.format) String.prototype.format = function() {

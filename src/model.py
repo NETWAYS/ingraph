@@ -284,7 +284,7 @@ hostservice = Table('hostservice', metadata,
     Column('service_id', Integer, ForeignKey('service.id'), nullable=False),
     Column('parent_hostservice_id', Integer, ForeignKey('hostservice.id')),
     
-    UniqueConstraint('host_id', 'service_id', name='uc_hs_1'),
+    UniqueConstraint('host_id', 'service_id', 'parent_hostservice_id', name='uc_hs_1'),
     
     mysql_engine='InnoDB'
 )
@@ -1475,12 +1475,12 @@ class DataPoint(ModelBase):
                 obj.saved_count = obj.count = max(0, row[datapoint.c.count])
                 obj.saved_lower_limit = obj.lower_limit = row[datapoint.c.lower_limit]
                 obj.saved_upper_limit = obj.upper_limit = row[datapoint.c.upper_limit]
-                obj.saved_warn_lower = obj.lower_limit = row[datapoint.c.warn_lower]
-                obj.saved_warn_upper = obj.upper_limit = row[datapoint.c.warn_upper]
-                obj.saved_warn_type = obj.lower_limit = row[datapoint.c.warn_type]
-                obj.saved_crit_lower = obj.upper_limit = row[datapoint.c.crit_lower]
-                obj.saved_crit_upper = obj.lower_limit = row[datapoint.c.crit_upper]
-                obj.saved_crit_type = obj.upper_limit = row[datapoint.c.crit_type]
+                obj.saved_warn_lower = obj.warn_lower = row[datapoint.c.warn_lower]
+                obj.saved_warn_upper = obj.warn_upper = row[datapoint.c.warn_upper]
+                obj.saved_warn_type = obj.warn_type = row[datapoint.c.warn_type]
+                obj.saved_crit_lower = obj.crit_lower = row[datapoint.c.crit_lower]
+                obj.saved_crit_upper = obj.crit_upper = row[datapoint.c.crit_upper]
+                obj.saved_crit_type = obj.crit_type = row[datapoint.c.crit_type]
 
                 obj._inserted = True                                
                 obj.activate()

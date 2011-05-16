@@ -1,29 +1,25 @@
 Ext.ux.ComboController = Ext.extend(Object, {
 	
-	idFormat : 'iG-{0}',
-	
 	constructor : function(cfg) {
 		Ext.apply(this, cfg);
 	},
 	
 	init : function(combo) {
-		var obs = this.observe,
-			idFormat = this.idFormat;
-		if(!Ext.isArray(obs)) {
-			obs = new Array(obs);
+		if(!Ext.isArray(this.observe)) {
+			this.observe = new Array(this.observe);
 		}
 		
 		combo.on({
 			select  : function() {				
-				Ext.each(obs, function(id) {
-					id = idFormat.format(id.ucfirst());
+				Ext.each(this.observe, function(id) {
+					id = this.formatId(id);
 	                Ext.getCmp(id).enable();
 	                Ext.getCmp(id).clearValue();					
-				}); 
+				}, this); 
             },
             change  : function(self, value) {
-				Ext.each(obs, function(id) {
-					id = idFormat.format(id.ucfirst());
+				Ext.each(this.observe, function(id) {
+					id = this.formatId(id);
 					
 	                Ext.getCmp(id).clearValue();
 	                
@@ -33,10 +29,12 @@ Ext.ux.ComboController = Ext.extend(Object, {
 	                	Ext.getCmp(id).disable();
 	                }	                
 	                
-				});
+				}, this);
             },
-			scope : combo
+			scope : this
 		});
 	}
 	
 });
+
+Ext.apply(Ext.ux.ComboController.prototype, Ext.ux.idInterface.prototype);

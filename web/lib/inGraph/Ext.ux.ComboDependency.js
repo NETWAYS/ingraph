@@ -1,31 +1,29 @@
 Ext.ux.ComboDependency = Ext.extend(Object, {
 	
-	idFormat : 'iG-{0}',
-	
 	constructor : function(cfg) {
 		Ext.apply(this, cfg);
 	},
 	
 	init : function(combo) {
-		var deps = this.depends,
-			idFormat = this.idFormat;
-		if(!Ext.isArray(deps)) {
-			deps = new Array(deps);
+		if(!Ext.isArray(this.depends)) {
+			this.depends = new Array(this.depends);
 		}
 		
 		combo.getStore().on({
 			beforeload  : function(self, options) {
-				Ext.each(deps, function(dep) {
+				Ext.each(this.depends, function(dep) {
 					Ext.iterate(dep, function(param, id) {
-						id = idFormat.format(id.ucfirst());
+						id = this.formatId(id);
 						options.params[param] = Ext.getCmp(id).getValue();
-					});					
-				});
+					}, this);					
+				}, this);
 				
 				return true;
             },
-			scope : combo
+			scope : this
 		});
 	}
 	
 });
+
+Ext.apply(Ext.ux.ComboDependency.prototype, Ext.ux.idInterface.prototype);

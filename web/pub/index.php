@@ -17,6 +17,7 @@
     <script type="text/javascript" src="lib/flot/jquery.flot.threshold.js"></script>
     <script type="text/javascript" src="lib/flot/jquery.flot.resize.js"></script>
     <script type="text/javascript" src="lib/flot/jquery.flot.spline.js"></script>
+    <script type="text/javascript" src="lib/flot/jquery.flot.highlight.js"></script>
     
     <script type="text/javascript" src="lib/ext/adapter/jquery/ext-jquery-adapter-debug.js"></script>
     <script type="text/javascript" src="lib/ext/ext-all-debug.js"></script>
@@ -38,6 +39,7 @@
     <script type="text/javascript" src="lib/inGraph/Ext.ux.FlotJsonStore.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.TimeframeButtonGroup.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.FlotPanel.js"></script>
+    <script type="text/javascript" src="lib/inGraph/Ext.ux.idInterface.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.AutoComboBox.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.ComboController.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.ComboDependency.js"></script>
@@ -169,8 +171,8 @@ Ext.onReady(function() {
                 text       : 'Display',
                 formBind   : true,
                 handler    : function(self, e) {
-                    var h   = Ext.getCmp('iG-Host').getValue(),
-                        s   = Ext.getCmp('iG-Service').getValue(),
+                    var h   = Ext.getCmp('iG-host').getValue(),
+                        s   = Ext.getCmp('iG-service').getValue(),
                         st  = Ext.getCmp('iG-Start').getValue(),
                         et  = Ext.getCmp('iG-End').getValue();
 

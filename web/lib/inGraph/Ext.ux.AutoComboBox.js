@@ -1,8 +1,8 @@
 Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
 	
-	idFormat : 'iG-{0}',
+	minChars : 0,
 	
-	minChars : 3,
+	height : 30,
 	
 	pageSize : 20,
 	
@@ -16,10 +16,10 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
             listEmptyText : _('No results...'),
             editable : true,
             tpl : '<tpl for="."><div ext:qtip="{{0}}" class="x-combo-list-item">{{0}}</div></tpl>'.format(cfg.name),
-            id : this.idFormat.format(cfg.name.ucfirst()),
+            id : this.formatId(cfg.name),
             hiddenName : cfg.name,
             fieldLabel : cfg.name.ucfirst(),
-            queryParam : 'host',
+            queryParam : cfg.name,
             store : new Ext.data.JsonStore({
                 autoDestroy : true,
                 url : cfg.url,
@@ -35,16 +35,42 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
                 }
             }),
             valueField : cfg.name,
-            displayField : cfg.name,
-            listeners : {
-                focus : function() {
-                    this.getStore().load();
-                }
-            }
+            displayField : cfg.name
 		});
 		
 		Ext.ux.AutoComboBox.superclass.constructor.call(this, cfg);
+		
+		this.store.on({
+			beforeload : function(store, options) {
+				var value = options.params[this.valueField] || store.baseParams[this.valueField];
+				
+				if(value) {
+					if(value.charAt(0) != '%') {
+						value = '%' + value;
+					}
+					if(value.charAt(value.length-1) != '%') {
+						value += '%';
+					}
+					store.setBaseParam(this.valueField, value);
+				}
+			},
+			scope : this
+		});
+	},
+	
+	onRender : function() {
+		Ext.ux.AutoComboBox.superclass.onRender.apply(this, arguments);
+		
+		this.el.on({
+			click : function() {
+				this.selectText();
+				this.getStore().reload();
+			},
+			scope : this
+		});
 	}
+	
 });
 
 Ext.reg('autocombo', Ext.ux.AutoComboBox);
+Ext.apply(Ext.ux.AutoComboBox.prototype, Ext.ux.idInterface.prototype);

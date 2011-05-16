@@ -9,7 +9,29 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     absolute : true,
     
     autoAddYAxes : true,
-    
+
+    units : {
+    	time : {
+    		factor : 1000,
+    		expected : 's',
+    		units : ['ms', 'ns']
+    	},
+    	'byte' : {
+    		factor : 0.001,
+    		expected : 'B',
+    		units : ['KB', 'MB', 'GB', 'TB']
+    	},
+    	percent : {
+    		expected : '%'
+    	},
+    	raw : {
+    		expected : 'raw'
+    	},
+    	counter : {
+    		expected : 'counter'
+    	}
+    },
+      
     defaultFlotOptions : {
         legend : {
             show : true,
@@ -240,6 +262,9 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             if(this.autoAddYAxes) {
             	delete this.flotOptions.yaxis;
             	this.flotOptions.yaxes = new Array();
+            	
+            	var self = this;
+            	
             	Ext.each(this.yaxes, function(axe, i) {
             		this.flotOptions.yaxes.push({
             			position : i % 2 == 0 ? 'left' : 'right',
@@ -248,19 +273,52 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             					this.tmpTicks = axis.tickGenerator(axis);
             				}
             				
+            				if(!this.unit) {
+            					var u = self.units[axe],
+            					    l = u.expected;
+            					    
+            					this.unit = {
+            						label : l,
+            						factor : 1
+            					};
+            					
+            					if(u.factor) {
+            						var m = this.tmpTicks.mean(),
+            						    a = u.units.length,
+            						    i = 0;
+            						
+            						if(m >= 1) {
+	            						while((m*=u.factor) > 1 && i < a) {
+	            							l = u.units[i++];
+	            						}
+            						} else {
+                                        while((m*=u.factor) < 100 && i < a) {
+                                            l = u.units[i++];
+                                        }            							
+            						}
+            						
+            						this.unit = {
+            							factor : Math.pow(u.factor, i),
+            							label : l
+            						};
+            					}
+            					
+            					axis.unit = this.unit;
+           				    }
+            				
             				if(v == this.tmpTicks.last()) {
             					delete this.tmpTicks;
             					
             					qtip = new Array();
-            					Ext.each(series, function(s, i) {
+            					Ext.each(series, function(s) {
                                     if(s.yaxis == axis.n) {
-                                        qtip.push('{0} &#040;{1}&#041;'.format(s.label, s.unit));
+                                        qtip.push('{0} &#040;{1}&#041;'.format(s.label, this.unit.label));
                                     }
-                                });
+                                }, this);
                                 return '<div ext:qtip="{0}">{1}</div>'.format(qtip.join('<br />'), qtip[0]);
             				}
             				
-            				return v.toFixed(axis.tickDecimals);
+            				return (v * this.unit.factor).toFixed(axis.tickDecimals);
             			}
             		});
             	}, this);
@@ -321,8 +379,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         this.tooltip.update(Ext.ux.Flot.tooltipTemplate.apply({
             label : item.series.label,
             x : item.series.xaxis.tickFormatter.call(item.series.xaxis, item.datapoint[0], item.series.xaxis),
-            y : item.datapoint[1].toFixed(2),
-            unit : item.series.unit
+            y : item.series.yaxis.tickFormatter.call(item.series.yaxis, item.datapoint[1], item.series.yaxis),
+            unit : item.series.yaxis.unit.label
         }));
         
         this.tooltip.showAt([pos.pageX + 10, pos.pageY + 10]);
@@ -388,6 +446,13 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
                 this.store.load();
             }
         }
+    },
+    
+    resetTemplate : function() {
+        if(typeof this.store.reader.jsonData.options !== 'undefined') {
+        	delete this.store.reader.jsonData.options;
+        }
+        this.flotOptions = Ext.apply({}, Ext.ux.util.clone(this.defaultFlotOptions));
     },
     
     getStore : function() {

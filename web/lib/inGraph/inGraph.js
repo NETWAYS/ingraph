@@ -132,33 +132,33 @@ iG.timeFrames = (function() {
         title   : 'Hourly',
         start   : (function() {
         	var d = new Date();
-        	return (Math.ceil(d/1000) - (3600));
+        	return (Math.ceil(d/1000) - (4200));
         }),
         show	: false,
     }, {
         title   : 'Daily',
         start   : (function() {
         	var d = new Date();
-        	return (Math.ceil(d/1000) - (86400));
+        	return (Math.ceil(d/1000) - (90000));
         }),
         overview: true
     }, {
         title   : 'Weekly',
         start   : (function() {
         	var d = new Date();
-        	return (Math.ceil(d/1000) - (604800));
+        	return (Math.ceil(d/1000) - (691200));
         })
     }, {
         title   : 'Monthly',
         start   : (function() {
         	var d = new Date();
-        	return (Math.ceil(d/1000) - (2678400));
+        	return (Math.ceil(d/1000) - (2937600));
         })
     }, {
         title   : 'Yearly',
         start   : (function() {
         	var d = new Date();
-        	return (Math.ceil(d/1000) - (31536000));
+        	return (Math.ceil(d/1000) - (31968000));
         })
 	}]);
 	

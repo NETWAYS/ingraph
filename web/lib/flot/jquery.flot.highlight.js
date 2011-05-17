@@ -3,6 +3,15 @@
     function init(plot) {   	
     	var restore = {};
     	
+    	function highlightHandler(evt, pos, item) {
+    		if(item) {
+    			unHighlightSeries(plot.getData());
+    			highlightSeries(new Array($.extend(item.series, {index : item.seriesIndex})));
+    		} else {
+    			unHighlightSeries(plot.getData());
+    		}
+    	}
+    	
     	function highlightSeries(series) {
     		var draw = false;
     		
@@ -46,21 +55,14 @@
         plot.hooks.bindEvents.push(function(plot, eventHolder) {
         	if(!plot.getOptions().series.lines.highlight) return;
         	
-        	plot.getPlaceholder().bind('plothover', function (evt, pos, item) {
-        		if(item) {
-        			unHighlightSeries(plot.getData());
-        			highlightSeries(new Array($.extend(item.series, {index : item.seriesIndex})));
-        		} else {
-        			unHighlightSeries(plot.getData());
-        		}
-        	});
+        	plot.getPlaceholder().bind('plothover', highlightHandler);
 
         });
         
         plot.hooks.shutdown.push(function (plot, eventHolder) {
         	if(!plot.getOptions().series.lines.highlight) return;
         	
-        	plot.getPlaceholder().unbind('plothover');
+        	plot.getPlaceholder().unbind('plothover', highlightHandler);
         });
     }
     

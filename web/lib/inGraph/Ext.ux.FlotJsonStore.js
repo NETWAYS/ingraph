@@ -18,10 +18,12 @@ Ext.ux.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
                            {name : 'points', defaultValue : {}},
                            {name : 'bars', defaultValue : {}},
                            {name : 'shadowSize', defaultValue : 3},
-                           {name : 'stack'},
-                           {name : 'disabled', defaultValue : false}
+                           {name : 'stack', defaultValue : null},
+                           {name : 'disabled', defaultValue : false},
+                           {name : 'key'}
             ],
-            autoLoad : true
+            autoLoad : true,
+            idProperty : 'key'
         });
 
         Ext.ux.FlotJsonStore.superclass.constructor.call(this, Ext.apply(cfg, {

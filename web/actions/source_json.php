@@ -58,6 +58,8 @@ foreach($data as $host => $services) {
 									'series' => $tseries['series'] ? $tseries['series'] : new stdClass(),
 									'lines' => $tseries['lines'] ? $tseries['lines'] : new stdClass(),
 									'id' => $tseries['id'] ? $tseries['id'] : null,
+									'stack' => $tseries['stack'] ? $tseries['stack'] : null,
+									'key' => $key,
 									'fillBetween' => $tseries['fillBetween'] ? $tseries['fillBetween'] : null,
 									'disabled' =>  false
 								);
@@ -78,6 +80,7 @@ foreach($data as $host => $services) {
 							'xaxis' => 1,
 							'yaxis' => 1,
 							'color' => null,
+						    'key' => $key,
 							'disabled' =>  true
 						);						
 					}

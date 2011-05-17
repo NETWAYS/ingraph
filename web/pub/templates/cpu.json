@@ -9,9 +9,6 @@
 
 "series": [{
     "re": "/.*-avg/",
-    "series" : {
-        "stack" : "idle"
-    },
     "stack" : "idle"
 },{
     "re": "/.*Idle-avg$/i",

@@ -376,12 +376,51 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             });
         }
         
-        this.tooltip.update(Ext.ux.Flot.tooltipTemplate.apply({
-            label : item.series.label,
-            x : item.series.xaxis.tickFormatter.call(item.series.xaxis, item.datapoint[0], item.series.xaxis),
-            y : item.series.yaxis.tickFormatter.call(item.series.yaxis, item.datapoint[1], item.series.yaxis),
-            unit : item.series.yaxis.unit.label
-        }));
+        var xy = item.series.data[item.dataIndex],
+        	x = xy[0],
+        	y = xy[1],
+        	html = Ext.ux.Flot.tooltipTemplate.apply({
+                label : item.series.label,
+                x : item.series.xaxis.tickFormatter.call(item.series.xaxis, item.datapoint[0], item.series.xaxis),
+                y : item.series.yaxis.tickFormatter.call(item.series.yaxis, item.datapoint[1], item.series.yaxis),
+                unit : item.series.yaxis.unit.label
+            }),
+            dist = 10,
+            ac = {};
+        
+		ac['x{0}'.format(item.series.xaxis.n)] = x;
+		ac['y{0}'.format(item.series.yaxis.n)] = y;
+		var icc = this.flot.p2c(ac);
+        
+        Ext.each(this.flot.getData(), function(series) {        	
+        	if(series.index == item.seriesIndex) {
+        		return;
+        	}
+        	
+        	var i = series.data.map(function(xy) {
+	    		return xy[0];
+	    	}).bsearch(x);
+        	
+        	if(i != -1) {
+        		var point = series.data[i];
+        		var ac = {};
+        		ac['x{0}'.format(series.xaxis.n)] = point[0];
+        		ac['y{0}'.format(series.yaxis.n)] = point[1];
+        		
+        		pcc = this.flot.p2c(ac);
+        		
+        		if(Math.pow(Math.abs(pcc.left - icc.left), 2) + Math.pow(Math.abs(pcc.top - icc.top), 2) <= Math.pow(dist, 2)) {
+                	html += Ext.ux.Flot.tooltipTemplate.apply({
+                        label : series.label,
+                        x : series.xaxis.tickFormatter.call(item.series.xaxis, point[0], series.xaxis),
+                        y : series.yaxis.tickFormatter.call(item.series.yaxis, point[1], series.yaxis),
+                        unit : series.yaxis.unit.label
+                    });      			
+        		}
+        	}
+        }, this);
+        
+        this.tooltip.update(html);
         
         this.tooltip.showAt([pos.pageX + 10, pos.pageY + 10]);
         

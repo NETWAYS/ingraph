@@ -74,6 +74,22 @@ if(!Array.prototype.std) Array.prototype.std = function() {
 	return Math.sqrt(this.variance());
 };
 
+if (!Array.prototype.bsearch) Array.prototype.bsearch = function(value) {
+	var high = this.length,
+		low = -1,
+		mid;
+		
+	while(high - low > 1) {
+		if(this[mid = high + low >> 1] < value) {
+			low = mid;
+		} else {
+			high = mid;
+		}
+	}
+	
+	return this[high] != value ? -1 : high;
+}
+
 if(!String.prototype.format) String.prototype.format = function() {
 	var str = this,
 		t = 0;

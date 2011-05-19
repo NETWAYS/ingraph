@@ -1248,7 +1248,7 @@ class DataPoint(ModelBase):
 
         assert granularity > 0
         
-        max_tf_interval = 0
+        max_tf_interval = 60
         min_tf_interval = None
         for tf in tfs:
             if tf.interval > max_tf_interval:

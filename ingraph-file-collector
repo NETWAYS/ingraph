@@ -139,9 +139,10 @@ while  True:
         last_flush = time()
         ts_old = logdata['timestamp']
 
-updates_pickled = pickle.dumps(updates)
-st = time()
-api.insertValueBulk(updates_pickled)
-et = time()
-print("%d updates (%d lines) took %f seconds (%s -> %s)" % \
-      (len(updates), line_count, et - st, datetime.fromtimestamp(ts_old), datetime.fromtimestamp(logdata['timestamp'])))
+if len(updates) > 0:
+    updates_pickled = pickle.dumps(updates)
+    st = time()
+    api.insertValueBulk(updates_pickled)
+    et = time()
+    print("%d updates (%d lines) took %f seconds (%s -> %s)" % \
+          (len(updates), line_count, et - st, datetime.fromtimestamp(ts_old), datetime.fromtimestamp(logdata['timestamp'])))

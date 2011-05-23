@@ -300,7 +300,6 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
         	        xaxis       : {
         	            show       : true,
         	            mode       : 'time',
-        	            timeformat : '%d %b, %y',
         	            ticks      : function(axis) {
         	            	var ticks = new Array(),
         	            	    c     = 4;

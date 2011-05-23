@@ -10,7 +10,6 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
 		cfg.name = cfg.name.toLowerCase();
 		
 		Ext.applyIf(cfg, {
-            width : 240,
             triggerAction : 'all',
             hideTrigger : true,
             listEmptyText : _('No results...'),

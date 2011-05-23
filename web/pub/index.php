@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http : //www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
@@ -25,14 +25,12 @@
     <script type="text/javascript" src="lib/ext/examples/ux/TabScrollerMenu.js"></script>
     <script type="text/javascript" src="lib/ext/examples/ux/CheckColumn.js"></script>
     
-	<script type="text/javascript" src="lib/inGraph/Ext.ux.Printer/Printer.js"></script>
-	<script type="text/javascript" src="lib/inGraph/Ext.ux.Printer/renderers/Base.js"></script>
-    <script type="text/javascript" src="lib/inGraph/Ext.ux.Printer/renderers/Flot.js"></script>
+    <script type="text/javascript" src="lib/inGraph/inGraph.js"></script>
+    
+    <script type="text/javascript" src="lib/inGraph/Ext.form.DateField.parseDate.js"></script>
     
     <script type="text/javascript" src="lib/inGraph/Ext.ux.util.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.ColorField.js"></script>
-    
-    <script type="text/javascript" src="lib/inGraph/inGraph.js"></script>
     
     <script type="text/javascript" src="lib/inGraph/Ext.ux.Flot.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.FlotJsonReader.js"></script>
@@ -79,110 +77,106 @@ $t = array(
 <script type="text/javascript">
 Ext.onReady(function() {
 	Ext.QuickTips.init();
-    
-	Ext.ux.TimeframeButtonGroup.prototype.frames = iG.timeFrames.getAll();
-    var frames = iG.timeFrames.getDefault();
 
-    /*
-    var d = new Date();
-    console.log(d.getTimezoneOffset());
-    */
+	Ext.ux.TimeframeButtonGroup.prototype.frames = iG.timeFrames.getAll();
     
-    var limit       = 10;
-    var minChars    = 3;
+    var limit = 10,
+        minChars = 3,
+        inputWidth = 240;
 
     /*
     Ext.fly('flot').setSize(800,300);
-    $.plot($('#flot'), [{data: [[1,1],[2,1],[3,1],[4,1]], color: 'red', id: 'red', lines: {fill:false}}, {data: [[1,10],[2,10],[3,10],[4,10]], color: 'yellow', id: 'yellow', fillBetween: 'red'}, {data: [[1,5],[2,5],[3,5],[4,5]], color: 'green', id: 'green', lines: {fill:false}}], {
-        series: {
-            lines: {
-                show: true,
-                lineWidth: 1,
-                spline: false,
-                splinen: 20,
-                fill: true
+    $.plot($('#flot'), [{data : [[1,1],[2,1],[3,1],[4,1]], color : 'red', id : 'red', lines : {fill : false}}, {data : [[1,10],[2,10],[3,10],[4,10]], color : 'yellow', id : 'yellow', fillBetween : 'red'}, {data : [[1,5],[2,5],[3,5],[4,5]], color : 'green', id : 'green', lines : {fill : false}}], {
+        series : {
+            lines : {
+                show : true,
+                lineWidth : 1,
+                spline : false,
+                splinen : 20,
+                fill : true
             },
-            points: {
-                show: true
+            points : {
+                show : true
             }
         },
-        grid: {
-            hoverable: true
+        grid : {
+            hoverable : true
         }
     });
     */
     
     var viewport = new Ext.Viewport({
         boxMinWidth : 400,
-        layout  : 'border',
-        items   : [{
-            region          : 'north',
-            border          : true,
-            height          : 150,
-            xtype           : 'form',
-            frame           : true,
-            bodyStyle       : 'padding: 5px',
-            labelAlign      : 'top',
-            items           : [{
-                layout  : 'column',
+        layout : 'border',
+        items : [{
+            region : 'north',
+            border : true,
+            height : 150,
+            xtype : 'form',
+            frame : true,
+            bodyStyle : 'padding : 5px',
+            labelAlign : 'top',
+            items : [{
+                layout : 'column',
                 width : 700,
-                defaults: {
+                defaults : {
                     columnWidth : .40,
-                    layout      : 'form',
-                    anchor      : '70%'
+                    layout : 'form',
+                    anchor : '70%'
                 },
 
-                items   : [{
-
-                    items: [{
-	                    xtype           : 'autocombo',
+                items : [{
+                    defaults : {
+                        width : inputWidth
+                    },
+                    items : [{
+	                    xtype : 'autocombo',
                         name : 'host',
                         url : 'actions/hosts.php',
-                        plugins: [new Ext.ux.ComboController({observe: 'service'})]
+                        plugins : [new Ext.ux.ComboController({observe : 'service'})]
                     }, {
-                        xtype           : 'datefield',
-                        format	        : 'Y-m-d H:i:s',
-                        validationEvent	: false,
-                        validateOnBlur	: false,
-
-                        id	            : 'iG-Start',
-                        fieldLabel	    : 'Start'
+                        xtype : 'datefield',
+                        format : 'Y-m-d H:i:s',
+                        id : 'iG-Start',
+                        fieldLabel : 'Start'
                     }]
                 }, {
-	                items: [{
-	                    xtype           : 'autocombo',
+                    defaults : {
+                        width : inputWidth
+                    },
+	                items : [{
+	                    xtype : 'autocombo',
                         name : 'service',
                         url : 'actions/services.php',
                         plugins : [new Ext.ux.ComboDependency({depends : {host : 'host'}})],
                         disabled : true
 	                }, {
-                        xtype           : 'datefield',
-                        format	        : 'Y-m-d H:i:s',
-                        validationEvent	: false,
-                        validateOnBlur	: false,
-
-                        id	            : 'iG-End',
-                        fieldLabel	    : 'End'
+                        xtype : 'datefield',
+                        format : 'Y-m-d H:i:s',
+                        id : 'iG-End',
+                        fieldLabel : 'End'
                     }]
                 }]
             }],
-            buttonAlign: 'left',
-            buttons    : [{
-                text       : 'Display',
-                formBind   : true,
-                handler    : function(self, e) {
+            buttonAlign : 'left',
+            buttons : [{
+                text : 'Display',
+                formBind : true,
+                handler : function(self, e) {
                     var h   = Ext.getCmp('iG-host').getValue(),
                         s   = Ext.getCmp('iG-service').getValue(),
                         st  = Ext.getCmp('iG-Start').getValue(),
                         et  = Ext.getCmp('iG-End').getValue();
 
                     if(h && s) {
+                    	var frames = iG.timeFrames.getDefault();
+                        
                         if(st || et) {
                             frames.clear();
                             frames.add({
                                 title : 'Custom Timerange',
-                                start : iG.functor(st || ''),
-                                end : iG.functor(et || '')
+                                start : iG.functor(st ? st.getTime()/1000 : ''),
+                                end : iG.functor(et ? et.getTime()/1000 : '')
                             });
                         }
                         
@@ -195,33 +189,33 @@ Ext.onReady(function() {
                             
                             frames.each(function(frame) {         
                             	panels.push({
-                                    xtype       : 'flotpanel',
-                                    title       : frame.title,
-                                    host        : h,
-                                    service     : s,
-                                    bodyStyle   : 'padding: 5px',
-                                    store       : new Ext.ux.FlotJsonStore({
-                                        url         : 'actions/source_json.php',
-                                        baseParams  : {
-                                            host    : h,
+                                    xtype : 'flotpanel',
+                                    title : frame.title,
+                                    host : h,
+                                    service : s,
+                                    bodyStyle : 'padding : 5px',
+                                    store : new Ext.ux.FlotJsonStore({
+                                        url : 'actions/source_json.php',
+                                        baseParams : {
+                                            host : h,
                                             service : s,
-                                            start   : frame.start(),
-                                            end     : frame.end()
+                                            start : frame.start(),
+                                            end : frame.end()
                                         }
                                     }),
-                                    frame       : frame,
-                                    overview    : frame.overview
+                                    frame : frame,
+                                    overview : frame.overview
                                 });
                             });
 
                             tab = viewport.hostServiceTabs.add({
-                                title       : '{0} - {1}'.format(h, s),
-                                header      : false,
-                                autoScroll  : true,
-                                defaults: {
-                                    collapsible: true
+                                title : '{0} - {1}'.format(h, s),
+                                header : false,
+                                autoScroll : true,
+                                defaults : {
+                                    collapsible : true
                                 },
-                                items   : panels
+                                items : panels
                             });
                         }
 
@@ -230,12 +224,12 @@ Ext.onReady(function() {
                 }
             }]
         }, {
-            region          : 'center',
-            xtype           : 'tabpanel',
-            plugins         : [new Ext.ux.TabScrollerMenu()],
+            region : 'center',
+            xtype : 'tabpanel',
+            plugins : [new Ext.ux.TabScrollerMenu()],
             enableTabScroll : true,
-            ref             : 'hostServiceTabs',
-            defaults        : {
+            ref : 'hostServiceTabs',
+            defaults : {
                 closable : true
             }
         }]

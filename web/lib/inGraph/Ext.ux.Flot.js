@@ -49,7 +49,10 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         },
         xaxis : {
             show : true,
-            mode : 'time'
+            mode : 'time',
+            tickFormatter : function(time) {
+            	return (new Date(time)).format('M d, Y H:i:s');
+            }
         },
         series : {
             lines : {
@@ -69,7 +72,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         cfg = cfg || {};
         
         Ext.applyIf(cfg, {
-            flotOptions : Ext.apply({}, Ext.ux.util.clone(this.defaultFlotOptions)),
+            flotOptions : {},
             id : Ext.id(null, 'flot-container')
         });
         
@@ -77,6 +80,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         cfg.yaxes = new Array();
         
         Ext.ux.Flot.superclass.constructor.call(this, cfg);
+        
+        this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions, this.flotOptions);
     },
     
     initComponent : function() {
@@ -216,7 +221,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
                 return;
             }
             if(typeof this.store.reader.jsonData.options !== 'undefined') {
-                this.flotOptions = iG.merge(this.store.reader.jsonData.options, this.flotOptions);
+                this.flotOptions = iG.merge(true, {}, this.flotOptions, this.store.reader.jsonData.options);
             }
             
             var series = new Array(),

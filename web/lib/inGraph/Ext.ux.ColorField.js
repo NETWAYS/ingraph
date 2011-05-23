@@ -149,7 +149,6 @@ Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField,  {
     },
     
     onSelect: function(m, d){
-    	console.log(d);
         this.setValue(d);
         this.fireEvent('select', this, d);
         this.el.setStyle('background', d);

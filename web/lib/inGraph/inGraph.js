@@ -377,3 +377,16 @@ iG.timeFrames = (function() {
 iG.merge = function() {
 	return jQuery.extend.apply(jQuery, arguments);
 }
+
+iG.getXIndex = function(x, series) {
+	var i = series.map(function(xy) {
+		return xy[0];
+	}).bsearch(x);
+	
+	return i == -1 ? false : i;
+}
+
+iG.getY = function(x, series, fn) {
+	var i = iG.getXIndex(x, series);
+	return i ? (typeof fn == 'function' ? fn(series[i][1]) : series[i][1]) : undefined;
+}

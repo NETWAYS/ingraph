@@ -55,7 +55,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                     	boxLabel   : _('Show datapoints'),
                     	handler    : function(box, checked) {
                     		var flot = this.flot;
-                    		iG.merge(flot.flotOptions, {
+                    		iG.merge(true, flot.flotOptions, {
                     			series: {
                     				points: {
                     					show: checked
@@ -72,7 +72,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                         boxLabel   : _('Smooth'),
                         handler    : function(box, checked) {
                             var flot = this.flot;
-                            iG.merge(flot.flotOptions, {
+                            iG.merge(true, flot.flotOptions, {
                                 series: {
                                     lines: {
                                         spline: checked
@@ -439,7 +439,8 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                 refresh: {
                 	fn     : function(flot) {
                 		Ext.select('.tickLabel', false, flot.el.id).each(function(el) {
-                			el.setLeft(el.getLeft() > 0 ? el.getLeft()-20 : el.getLeft()+20);
+                			var o = 40;
+                			el.setLeft(el.getLeft() > 0 ? el.getLeft()-o-10 : el.getLeft()+o);
                 		}, this);
                 	}
                 },

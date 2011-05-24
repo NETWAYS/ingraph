@@ -9,6 +9,10 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     absolute : true,
     
     autoAddYAxes : true,
+    
+    markingsCritColor : 'rgba(255,0,0,0.4)',
+    
+    markingsWarnColor : 'rgba(255,255,0,0.4)',
 
     units : {
     	time : {
@@ -225,7 +229,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             }
             
             var series = new Array(),
-                ranges = this.selection.last();
+                ranges = this.selection.last(),
+                markings = new Array();
                 
                 
             if(this.absolute) {
@@ -257,8 +262,137 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
                     }
                     */
                     
+
+                    /**
+                     * @TODO: Refactor.
+                     */
+                    if(data.key.substr(-4) == '-avg') {
+                    	var prefix = data.key.substr(0, data.key.length - 4),
+                    	    store = this.store,
+                    		getData = function(id) {
+                    			var series = store.getById('{0}-{1}'.format(prefix, id));
+                    			return series ? series.get('data') : false;
+                    		},
+                    		thresholds = {},
+                    	    c = getData('crit_type'),
+                    	    w = getData('warn_type');
+
+                    	if(c || w) {
+                    		thresholds['crit_type'] = c;
+                    		thresholds['warn_type'] = w;
+                    		Ext.iterate(['crit_lower', 'crit_upper', 'warn_lower', 'warn_upper'], function(threshold) {
+                    			thresholds[threshold] = getData(threshold);
+                    		});
+                    		var marking = {};
+
+	                    	Ext.each(data.data, function(xy, i) {
+	                    		var x = xy[0],
+	                    			y = parseFloat(xy[1]),
+	                    			ctype = iG.getY(x, thresholds['crit_type']),
+	                    			clower = iG.getY(x, thresholds['crit_lower'], parseFloat),
+	                    			cupper = iG.getY(x, thresholds['crit_upper'], parseFloat),
+	                    			wtype = iG.getY(x, thresholds['warn_type']),
+	                    			wlower = iG.getY(x, thresholds['warn_lower'], parseFloat),
+	                    			wupper = iG.getY(x, thresholds['warn_upper'], parseFloat),
+	                    			isViolation = function(type, lower, upper) {
+	                    				var violation;
+	                    				
+	                    				if(lower == 0 && upper == 0) {
+	                    					return false;
+	                    				}
+	                    				
+	                    				switch(type) {
+		                    				case 'inside':
+		                    					violation = y > lower && y < upper ? true : false;
+		                    					break;
+		                    				case 'outside':
+		                    					violation = y < lower || y > upper ? true : false;
+		                    					break;
+		                    				default:
+		                    					violation = false;
+	                    				}
+	                    				
+	                    				return violation;
+	                    			};
+	                    			
+	                    		if(!ctype && !wtype) {
+	                    			return;
+	                    		}
+	                    		
+	                    		if(isViolation(ctype, clower, cupper)) {
+	                    			if(marking.from && marking.type == 'w') {
+	                    				markings.push({
+	                    					color : this.markingsWarnColor,
+	                    					xaxis : {
+		                    					from : marking.from,
+		                    					to : x
+	                    					}
+	                    				});
+	                    				marking = {};
+	                    			}
+	                    			
+	                    			if(!marking.from) {
+		                    			marking = {
+		                    			    from : x,
+		                    			    type : 'c'
+		                    			};
+	                    			}
+	                    		} else if(marking.from && marking.type == 'c') {
+                    				markings.push({
+                    					color : this.markingsCritColor,
+                    					xaxis : {
+	                    					from : marking.from,
+	                    					to : x
+                    					}
+                    				});
+                    				marking = {};	                    			
+	                    		} 
+	                    		
+	                    		if(isViolation(wtype, wlower, wupper) && !marking.from) {
+	                    			marking = {
+	                    			    from : x,
+	                    			    type : 'w'
+	                    			};
+	                    		} else if(marking.from && marking.type == 'w') {
+                    				markings.push({
+                    					color : this.markingsWarnColor,
+                    					xaxis : {
+	                    					from : marking.from,
+	                    					to : x
+                    					}
+                    				});
+                    				marking = {};                    			
+	                    		}
+
+	                    		if(i == data.data.length-1) {
+	                    			if(marking.from) {
+	                    				if(marking.type == 'c') {
+	                        				markings.push({
+	                        					color : this.markingsCritColor,
+				            					xaxis : {
+				                					from : marking.from,
+				                					to : x
+				            					}
+	                        				});
+	                    				} else {
+	                        				markings.push({
+	                        					color : this.markingsWarnColor,
+				            					xaxis : {
+				                					from : marking.from,
+				                					to : x
+				            					}
+	                        				});
+	                    				}
+	                    			}
+	                    		}
+	                    		
+	                    	}, this);
+                    	}
+                    	
+                    }
+                    
                     if(data.data.length) {
-                        data.lines = iG.merge(this.flotOptions.lines, data.lines);
+                        data.lines = iG.merge(true, {}, this.flotOptions.lines, data.lines);
                         series.push(data);
                     }
                 }
@@ -336,6 +470,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
                     return parseFloat(v[1]);
                 }).mean();
             });
+            
+            this.flotOptions.grid.markings = markings;
 
             this.plot(series);
 

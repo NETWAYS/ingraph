@@ -34,8 +34,11 @@ foreach($data as $host => $services) {
 	foreach($services as $service => $series) {
 		foreach($templates as $template) {
 			if(preg_match($template['re'], $service)) {
-				$flot['options'] = $template['flot'];
-				
+				$flot['options'] = array(
+					'flot' => $template['flot'],
+					'generic' => $template['generic']
+				);
+					
 				$fseries = array();
 				
 				foreach($series as $seriesi) {

@@ -86,6 +86,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         Ext.ux.Flot.superclass.constructor.call(this, cfg);
         
         this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions, this.flotOptions);
+        this.genericOptions = {};
     },
     
     initComponent : function() {
@@ -225,7 +226,15 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
                 return;
             }
             if(typeof this.store.reader.jsonData.options !== 'undefined') {
-                this.flotOptions = iG.merge(true, {}, this.flotOptions, this.store.reader.jsonData.options);
+            	if(this.store.reader.jsonData.options.flot) {
+            		this.flotOptions = iG.merge(true, {}, this.flotOptions, this.store.reader.jsonData.options.flot);
+            	}
+            	if(this.store.reader.jsonData.options.generic) {
+            		this.genericOptions = this.store.reader.jsonData.options.generic;
+            		if(this.genericOptions.refreshInterval) {
+            			this.store.setRefresh(this.genericOptions.refreshInterval, true);
+            		}
+            	}
             }
             
             var series = new Array(),

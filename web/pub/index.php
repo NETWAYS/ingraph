@@ -29,9 +29,11 @@
     
     <script type="text/javascript" src="lib/inGraph/Ext.form.DateField.parseDate.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.data.Store.autoRefresh.js"></script>
+    <script type="text/javascript" src="lib/inGraph/Ext.data.Store.exception.Message.js"></script>
     
     <script type="text/javascript" src="lib/inGraph/Ext.ux.util.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.ColorField.js"></script>
+    <script type="text/javascript" src="lib/inGraph/Ext.ux.Toast.js"></script>
     
     <script type="text/javascript" src="lib/inGraph/Ext.ux.Flot.js"></script>
     <script type="text/javascript" src="lib/inGraph/Ext.ux.FlotJsonReader.js"></script>

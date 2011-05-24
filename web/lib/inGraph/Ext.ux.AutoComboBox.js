@@ -7,6 +7,8 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
 	pageSize : 20,
 	
 	constructor : function(cfg) {
+		cfg = cfg || {};
+		cfg.storeCfg = cfg.storeCfg || {};
 		cfg.name = cfg.name.toLowerCase();
 		
 		Ext.applyIf(cfg, {
@@ -19,23 +21,27 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
             hiddenName : cfg.name,
             fieldLabel : cfg.name.ucfirst(),
             queryParam : cfg.name,
-            store : new Ext.data.JsonStore({
-                autoDestroy : true,
-                url : cfg.url,
-                root : 'results',
-                fields : [cfg.name],
-                totalProperty : 'total',
-                paramNames : {
-                    start : 'offset'
-                },
-                baseParams:     {
-                    offset : 0,
-                    limit : cfg.pageSize || this.pageSize
-                }
-            }),
             valueField : cfg.name,
             displayField : cfg.name
 		});
+		
+		Ext.applyIf(cfg.storeCfg, {
+            autoDestroy : true,
+            url : cfg.url,
+            root : 'results',
+            fields : [cfg.name],
+            totalProperty : 'total',
+            paramNames : {
+                start : 'offset'
+            },
+            baseParams:     {
+                offset : 0,
+                limit : cfg.pageSize || this.pageSize
+            }
+		});
+		
+		cfg.store = new Ext.data.JsonStore(cfg.storeCfg);
+		delete cfg.storeCfg;
 		
 		Ext.ux.AutoComboBox.superclass.constructor.call(this, cfg);
 		

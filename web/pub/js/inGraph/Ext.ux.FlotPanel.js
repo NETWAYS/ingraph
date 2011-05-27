@@ -159,13 +159,13 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                                             items : [{
                                         		xtype : 'autocombo',
                                         		name : 'host',
-                                        		url : 'actions/hosts.php',
+                                        		url : 'data/hosts',
                                         		id : Ext.ux.idInterface.prototype.formatId(hcid),
                                         		plugins: [new Ext.ux.ComboController({observe: scid})]
                                         	}, {
                                         		xtype : 'autocombo',
                                         		name : 'service',
-                                        		url : 'actions/services.php',
+                                        		url : 'data/services',
                                         		id : Ext.ux.idInterface.prototype.formatId(scid),
                                         		plugins : [new Ext.ux.ComboDependency({depends : {host : hcid}})],
                                         		disabled : true,

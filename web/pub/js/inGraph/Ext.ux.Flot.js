@@ -245,7 +245,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             if(this.absolute) {
                 Ext.apply(this.flotOptions.xaxis, {
                     min : this.store.reader.jsonData.start ? this.store.reader.jsonData.start*1000 : null,
-                    max : this.store.reader.jsonData.end*1000
+                    max : this.store.reader.jsonData.end ? this.store.reader.jsonData.end*1000 : (new Date()).getTime()
                 });
             }
 

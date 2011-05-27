@@ -1,5 +1,5 @@
 {
-"re": "/^.*ping.*$/",
+"re": "/ping/i",
 
 "series": [{
     "re": "/pl-avg/",

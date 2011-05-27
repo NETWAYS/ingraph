@@ -1,5 +1,5 @@
 {
-"re": "/^.*-cpu$/",
+"re": "/cpu$/i",
 
 "flot": {
     "lines": {

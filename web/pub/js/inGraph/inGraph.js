@@ -321,7 +321,7 @@ iG.timeFrames = (function() {
 		add : function(i, o) {
 			Ext.applyIf(o, {
 					show	: true,
-					end		: iG.functor(''),
+					end		: function() { return Math.ceil((new Date()).getTime()/1000); },
 					overview: false,
 					id		: o.title.toUpperCase(),
 					index	: i

@@ -45,117 +45,155 @@ Ext.onReady(function() {
         items : [{
             region : 'north',
             border : true,
-            height : 150,
+            height : 90,
             xtype : 'form',
             frame : true,
-            bodyStyle : 'padding : 5px',
+            bodyStyle : 'padding:5px',
             labelAlign : 'top',
             items : [{
-                layout : 'column',
-                width : 700,
-                defaults : {
-                    columnWidth : .40,
-                    layout : 'form',
-                    anchor : '70%'
+                autoScroll : true,
+                layout : 'table',
+                layoutConfig : {
+                    columns : 6
                 },
-
+                defaults : {
+                    bodyStyle : 'padding:5px'
+                },
                 items : [{
-                    defaults : {
-                        width : inputWidth
-                    },
-                    items : [{
+                    items : {
 	                    xtype : 'autocombo',
-                        name : 'host',
-                        url : 'data/hosts',
-                        plugins : [new Ext.ux.ComboController({observe : 'service'})]
-                    }, {
-                        xtype : 'datefield',
-                        format : 'Y-m-d H:i:s',
-                        id : 'iG-Start',
-                        fieldLabel : 'Start'
-                    }]
-                }, {
-                    defaults : {
-                        width : inputWidth
-                    },
-	                items : [{
-	                    xtype : 'autocombo',
-                        name : 'service',
-                        url : 'data/services',
-                        plugins : [new Ext.ux.ComboDependency({depends : {host : 'host'}})],
-                        disabled : true
-	                }, {
-                        xtype : 'datefield',
-                        format : 'Y-m-d H:i:s',
-                        id : 'iG-End',
-                        fieldLabel : 'End'
-                    }]
-                }]
-            }],
-            buttonAlign : 'left',
-            buttons : [{
-                text : 'Display',
-                formBind : true,
-                handler : function(self, e) {
-                    var h   = Ext.getCmp('iG-host').getValue(),
-                        s   = Ext.getCmp('iG-service').getValue(),
-                        st  = Ext.getCmp('iG-Start').getValue(),
-                        et  = Ext.getCmp('iG-End').getValue();
-
-                    if(h && s) {
-                    	var frames = iG.timeFrames.getDefault();
-                        
-                        if(st || et) {
-                            frames.clear();
-                            frames.add({
-                                title : 'Custom Timerange',
-                                start : iG.functor(st ? st.getTime()/1000 : ''),
-                                end : iG.functor(et ? et.getTime()/1000 : Math.ceil((new Date()).getTime()/1000))
-                            });
-                        }
-                        
-                        var tab = viewport.hostServiceTabs.items.find(function(t) {
-                            return t.title === '{0} - {1}'.format(h, s);
-                        });
-
-                        if(!tab) {
-                            var panels = new Array();
-                            
-                            frames.each(function(frame) {         
-                            	panels.push({
-                                    xtype : 'flotpanel',
-                                    title : frame.title,
-                                    host : h,
-                                    service : s,
-                                    bodyStyle : 'padding : 5px',
-                                    store : new Ext.ux.FlotJsonStore({
-                                        url : 'data/plots',
-                                        baseParams : {
-                                            host : h,
-                                            service : s,
-                                            start : frame.start(),
-                                            end : frame.end()
-                                        }
-                                    }),
-                                    frame : frame,
-                                    overview : frame.overview
-                                });
-                            });
-
-                            tab = viewport.hostServiceTabs.add({
-                                title : '{0} - {1}'.format(h, s),
-                                header : false,
-                                autoScroll : true,
-                                defaults : {
-                                    collapsible : true
-                                },
-                                items : panels
-                            });
-                        }
-
-                        viewport.hostServiceTabs.setActiveTab(tab);
+	                    name : 'host',
+	                    url : 'data/hosts',
+	                    plugins : [new Ext.ux.ComboController({observe : 'service'})],
+	                    width : 240,
+	                    emptyText : _('Choose Host')
                     }
-                }
+                }, {
+                    items : {
+	                    xtype : 'autocombo',
+	                    name : 'service',
+	                    url : 'data/services',
+	                    plugins : [new Ext.ux.ComboDependency({depends : {host : 'host'}})],
+	                    disabled : true,
+	                    width : 240,
+	                    emptyText : _('Choose Service')
+                    }
+                }, {
+                    items : {
+	                    xtype : 'button',
+	                    text : _('Display Graph'),
+	                    width : 80,
+                        cls : 'x-btn-text-left',
+                        handler : function(self, e) {
+                            var h   = Ext.getCmp('iG-host').getValue(),
+                                s   = Ext.getCmp('iG-service').getValue(),
+                                st  = Ext.getCmp('iG-Start').getValue(),
+                                et  = Ext.getCmp('iG-End').getValue();
+
+                            if(h && s) {
+                                var frames = iG.timeFrames.getDefault();
+                                
+                                if(st || et) {
+                                    frames.clear();
+                                    frames.add({
+                                        title : 'Custom Timerange',
+                                        start : iG.functor(st ? st.getTime()/1000 : ''),
+                                        end : iG.functor(et ? et.getTime()/1000 : Math.ceil((new Date()).getTime()/1000))
+                                    });
+                                }
+                                
+                                var tab = viewport.hostServiceTabs.items.find(function(t) {
+                                    return t.title === '{0} - {1}'.format(h, s);
+                                });
+
+                                if(tab) {
+                                    Ext.destroy(tab);
+                                }
+
+                                var panels = new Array();
+                                    
+                                frames.each(function(frame) {         
+                                    panels.push({
+                                        xtype : 'flotpanel',
+                                        title : frame.title,
+                                        host : h,
+                                        service : s,
+                                        bodyStyle : 'padding : 5px',
+                                        store : new Ext.ux.FlotJsonStore({
+                                            url : 'data/plots',
+                                            baseParams : {
+                                                host : h,
+                                                service : s,
+                                                start : frame.start(),
+                                                end : frame.end()
+                                            }
+                                        }),
+                                        frame : frame,
+                                        overview : frame.overview
+                                    });
+                                });
+                                
+                                tab = viewport.hostServiceTabs.add({
+                                    title : '{0} - {1}'.format(h, s),
+                                    header : false,
+                                    autoScroll : true,
+                                    defaults : {
+                                        collapsible : true
+                                    },
+                                    items : panels
+                                });
+
+                                viewport.hostServiceTabs.setActiveTab(tab);
+                            }
+                        }
+                    }
+                }, {
+                    items : {
+	                    xtype : 'datefield',
+	                    format : 'Y-m-d H:i:s',
+	                    id : 'iG-Start',
+	                    fieldLabel : 'Start',
+	                    width : 150,
+	                    emptyText : _('Starttime')
+                    }
+                }, {
+                    items : {
+	                    xtype : 'datefield',
+	                    format : 'Y-m-d H:i:s',
+	                    id : 'iG-End',
+	                    fieldLabel : 'End',
+	                    width : 150,
+	                    emptyText : _('Endtime')
+                    }
+                }, {
+                    items : {
+	                    xtype   : 'box',
+	                    autoEl  : {
+	                        tag : 'img',
+	                        src : 'images/grapherv2_logo.png'
+	                    }
+                    },
+                    rowspan : 2
+                }, {
+                    items : {
+	                    xtype : 'autocombo',
+	                    name : 'views',
+	                    url : 'data/views',
+	                    emptyText : _('Choose View'),
+	                    width : 490
+                    },
+                    colspan : 2
+                }, {
+                    items : {
+	                    xtype : 'button',
+	                    text : _('Display View'),
+	                    width : 80,
+                        cls : 'x-btn-text-left',
+                        handler : function(self, e) {
+                            Ext.ux.Toast.msg('Patience.', 'Not yet implemented');
+                        }
+                    }
+                }]
             }]
         }, {
             region : 'center',

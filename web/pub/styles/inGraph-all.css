@@ -9,3 +9,7 @@
     color: #D0D0D0;
     background-color: #D0D0D0
 }
+
+.x-btn-text-left .x-btn-mc {
+    text-align : left !important;
+}

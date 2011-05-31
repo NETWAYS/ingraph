@@ -17,10 +17,10 @@ class TemplatesModel extends _MVC_Model {
 	protected function readTemplates($default) {
 		$templates = iterator_to_array(_MVC_Util::RegexRecursiveDirectoryIterator($this->dir, '/\.json$/i'), true);
 		
-		foreach($templates as $key => $template) {
+		foreach($templates as $path => $template) {
 			$content = json_decode(file_get_contents($template->getRealPath()), true);
 			if(!$content) {
-				trigger_error(sprintf('Template %s not readable. Maybe the JSON format is wrong.', $template->getRealPath()), E_USER_WARNING);
+				//_MVC_Logger::warn(sprintf('Template %s not readable. Maybe the JSON format is wrong.', $template->getRealPath()));
 				continue;
 			}
 			

@@ -37,7 +37,8 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
             baseParams:     {
                 offset : 0,
                 limit : cfg.pageSize || this.pageSize
-            }
+            },
+            idProperty : cfg.name
 		});
 		
 		cfg.store = new Ext.data.JsonStore(cfg.storeCfg);

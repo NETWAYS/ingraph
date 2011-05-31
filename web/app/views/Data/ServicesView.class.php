@@ -1,6 +1,6 @@
 <?php
 
-class Data_ServicesView extends _MVC_View {
+class Data_ServicesView extends XMLRPCView {
     
     public function getAjax($parameters) {
         $services = $this->getParameter('services');

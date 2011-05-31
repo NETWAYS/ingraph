@@ -167,8 +167,8 @@ Ext.onReady(function() {
                     }
                 }, {
                     items : {
-	                    xtype   : 'box',
-	                    autoEl  : {
+	                    xtype : 'box',
+	                    autoEl : {
 	                        tag : 'img',
 	                        src : 'images/grapherv2_logo.png'
 	                    }
@@ -177,9 +177,12 @@ Ext.onReady(function() {
                 }, {
                     items : {
 	                    xtype : 'autocombo',
-	                    name : 'views',
+	                    name : 'view',
 	                    url : 'data/views',
 	                    emptyText : _('Choose View'),
+                        storeCfg : {
+                            fields : ['view', 'config']
+                        },
 	                    width : 490
                     },
                     colspan : 2
@@ -190,7 +193,69 @@ Ext.onReady(function() {
 	                    width : 80,
                         cls : 'x-btn-text-left',
                         handler : function(self, e) {
-                            Ext.ux.Toast.msg('Patience.', 'Not yet implemented');
+                            var v = Ext.getCmp('iG-view'),
+                                c = v.store.getById(v.getValue()).get('config'),
+                                panels = new Array();
+
+                            c.title = c.title || 'View';
+                            
+                            var tab = viewport.hostServiceTabs.items.find(function(t) {
+                                return t.title === c.title;
+                            });
+                            
+                            if(tab) {
+                                Ext.destroy(tab);
+                            }
+                            
+                            Ext.each(c.panels, function(panelCfg) {
+                                var start = panelCfg.start || '';
+                                if(start) {
+                                    start = strtotime(start);
+                                    if(start) {
+                                        start = Math.ceil(start);
+                                    } else {
+                                        start = '';
+                                    }
+                                }
+                                
+                                var frame = {
+                                    title : panelCfg.title || 'Panel',
+                                    start : iG.functor(start),
+                                    end : iG.functor(panelCfg.end ? '' : Math.ceil((new Date()).getTime()/1000))
+                                };
+                                
+                                panels.push({
+                                    xtype : 'flotpanel',
+                                    titleFormat : '{frame}',
+                                    title : frame.title,
+                                    frame : frame,
+                                    bodyStyle : 'padding : 5px',
+                                    store : new Ext.ux.FlotJsonStore({
+                                        url : 'data/combined',
+                                        baseParams : {
+                                            config : Ext.encode({
+                                                data : Ext.isArray(panelCfg.data) ? panelCfg.data : new Array(panelCfg.data),
+                                                flot : c.flot || {},
+                                                generic : c.generic || {}
+                                            }),
+                                            start : frame.start(),
+                                            end : frame.end()
+                                        }
+                                    })
+                                });
+                            });
+
+                            tab = viewport.hostServiceTabs.add({
+                                title : c.title,
+                                header : false,
+                                autoScroll : true,
+                                defaults : {
+                                    collapsible : true
+                                },
+                                items : panels
+                            });
+
+                            viewport.hostServiceTabs.setActiveTab(tab);
                         }
                     }
                 }]

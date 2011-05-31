@@ -7,7 +7,7 @@ Ext.ux.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     constructor : function(cfg) {
         Ext.applyIf(cfg, {
             autoDestroy : true,
-            root : 'series',
+            root : 'results',
             fields : [{name : 'data', defaultValue : []},
                        {name : 'label', defaultValue : null},
                        {name : 'unit', defaultValue : ''},

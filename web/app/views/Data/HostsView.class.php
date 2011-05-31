@@ -1,6 +1,6 @@
 <?php
 
-class Data_HostsView extends _MVC_View {
+class Data_HostsView extends XMLRPCView {
 	
 	public function getAjax($parameters) {
 		$hosts = $this->getParameter('hosts');

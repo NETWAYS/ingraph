@@ -3,20 +3,23 @@
 class Data_PlotsAction extends XMLRPCAction {
     
     public function executePost($parameters) {
-        foreach(array('start', 'end', 'interval') as $parameter) {
-        	$parameters->set($parameter, $this->strtoint($parameters->get($parameter, '')));	
-        }
+    	parent::executePost($parameters);
         
-        $this->setParameter('plots', $this->getClient()->call(
-            'getPlotValues',
-            array(
-                $parameters->get('host', '%'),
-                $parameters->get('service'),
-                $parameters->get('start', ''),
-                $parameters->get('end', ''),
-                $parameters->get('interval', '')
-            )
-        ));
+    	try {
+	        $this->setParameter('plots', $this->getClient()->call(
+	            'getPlotValues',
+	            array(
+	                $parameters->get('host', '%'),
+	                $parameters->get('service'),
+	                $parameters->get('start', ''),
+	                $parameters->get('end', ''),
+	                $parameters->get('interval', '')
+	            )
+	        ));
+    	} catch(XMLRPCClientError $e) {
+			$this->setParameter('exception', $e);
+			return false;
+		}
 
         $this->setParameter('template',
         	$this->scope->getController()->createBottle('Template_Service',
@@ -25,14 +28,6 @@ class Data_PlotsAction extends XMLRPCAction {
         		'php'
         	)->execute()->getContent()
         );
-    }
-    
-    protected function strtoint($str) {
-    	if(is_numeric($str)) {
-    		return intval($str);
-    	}
-    	
-    	return $str;
     }
     
 }

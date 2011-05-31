@@ -2,7 +2,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 	
 	loadMask		: true,
 	
-	overview		: true,
+	overview		: false,
 	
 	titleFormat     : '{frame} {0} {host} {service}'.format(_('graph for')),
 	

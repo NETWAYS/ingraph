@@ -1,6 +1,6 @@
 <?php
 
-class Data_PlotsView extends _MVC_View {
+class Data_PlotsView extends XMLRPCView {
     
     public function getAjax($parameters) {
         $plots = $this->getParameter('plots');
@@ -16,10 +16,10 @@ class Data_PlotsView extends _MVC_View {
         		$chart['key'] = $chart['host'] . $chart['service'] . $chart['label'];
         		$chart['disabled'] = true;
         		
-        		foreach($template['series'] as $options) {
-        			if(preg_match($options['re'], $chart['label'])) {
+        		foreach($template['series'] as $seriesCfg) {
+        			if(preg_match($seriesCfg['re'], $chart['label'])) {
         				$chart['disabled'] = false;
-        				$chart = array_merge($chart, array_diff_key($options, array_fill_keys(array('re'), null)));
+        				$chart = array_merge($chart, array_diff_key($seriesCfg, array_fill_keys(array('re'), null)));
         			}
         		}
         		
@@ -28,20 +28,12 @@ class Data_PlotsView extends _MVC_View {
         }
         
         return json_encode(array(
-        	'series' => $data,
+        	'results' => $data,
         	'total' => count($data),
         	'options' => array_diff_key($template, array_fill_keys(array('re', 'series'), null)),
         	'start' => $parameters->get('start', null),
         	'end' => $parameters->get('end', null)
         ));
-    }
-    
-    private function ensureTypes($xy) {
-    	return array(intval($xy["x"])*1000, floatval($xy["y"]));
-    }
-    
-    private function sortX($a, $b) {
-    	return ($a["x"] == $b["x"]) ? 0 : (($a["x"] < $b["x"]) ? -1 : 1);
     }
     
 }

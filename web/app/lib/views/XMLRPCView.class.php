@@ -3,11 +3,14 @@
 class XMLRPCView extends _MVC_View {
 	
     protected function ensureTypes($xy) {
-        return array(intval($xy["x"])*1000, floatval($xy["y"]));
+        return array(
+        	intval($xy['x'])*1000,
+        	$xy['y'] ? floatval($xy['y']) : null
+        );
     }
     
     protected function sortX($a, $b) {
-        return ($a["x"] == $b["x"]) ? 0 : (($a["x"] < $b["x"]) ? -1 : 1);
+        return ($a['x'] == $b['x']) ? 0 : (($a['x'] < $b['x']) ? -1 : 1);
     }
     
     public function errorAjax($parameters) {

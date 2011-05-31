@@ -79,23 +79,31 @@ while  True:
         uom = perfresult['raw']['uom']
         raw_value = str(perfresult['raw']['value'])
         
+        warn_lower = None
+        warn_upper = None
+        warn_type = None            
+
         if 'warn' in perfresult:
-            warn_lower = str(perfresult['warn']['lower']['value'])
-            warn_upper = str(perfresult['warn']['upper']['value'])
+            if perfresult['warn']['lower']['value'] != None:
+                warn_lower = str(perfresult['warn']['lower']['value'])
+                
+            if perfresult['warn']['upper']['value'] != None:
+                warn_upper = str(perfresult['warn']['upper']['value'])
+
             warn_type = str(perfresult['warn']['type'])
-        else:
-            warn_lower = None
-            warn_upper = None
-            warn_type = None            
         
+        crit_lower = None
+        crit_upper = None
+        crit_type = None
+
         if 'crit' in perfresult:
-            crit_lower = str(perfresult['crit']['lower']['value'])
-            crit_upper = str(perfresult['crit']['upper']['value'])
+            if perfresult['crit']['lower']['value'] != None:
+                crit_lower = str(perfresult['crit']['lower']['value'])
+                
+            if perfresult['crit']['upper']['value'] != None:
+                crit_upper = str(perfresult['crit']['upper']['value'])
+
             crit_type = str(perfresult['crit']['type'])
-        else:
-            crit_lower = None
-            crit_upper = None
-            crit_type = None
 
         if 'min' in perfresult:
             min_value = str(perfresult['min']['value'])

@@ -58,7 +58,7 @@ class XMLRPCClientModel extends _MVC_Model {
 					CURLOPT_URL => $this->uri,
 					CURLOPT_POSTFIELDS => $this->encode_request($method, $params),
 					CURLOPT_RETURNTRANSFER => true,
-					CURLOPT_TIMEOUT => 120
+					CURLOPT_TIMEOUT => 240
 				));
 				
 				curl_multi_add_handle($mh, $ch);
@@ -66,19 +66,17 @@ class XMLRPCClientModel extends _MVC_Model {
 				$handles[] = $ch;
 			}
 
-			$running = $status = $e = null;
+			$running = null;
 			do {
-				$status = curl_multi_exec($mh, $running);
-			    $info = curl_multi_info_read($mh);
-			    if (false !== $info && $info['result'] !== CURLE_OK) {
-			    	$e = sprintf('cURL: %s.', curl_error($info['handle']));
-			    	//_MVC_Logger::warn($e);
-			    }
-			} while($status === CURLM_CALL_MULTI_PERFORM || $running);
-			
-			if($e) {
-				throw new XMLRPCClientError($e);
-			}
+				curl_multi_exec($mh, $running);
+				$ready = curl_multi_select($mh);
+				if($ready > 0) {
+				    $info = curl_multi_info_read($mh);
+				    if (false !== $info && $info['result'] !== CURLE_OK) {
+				    	throw new XMLRPCClientError(sprintf('cURL: %s.', curl_error($info['handle'])));
+				    }
+				}
+			} while($running > 0 && $ready != -1);
 
 			foreach($handles as $ch) {			
 				$response = array_merge_recursive($response, $this->decode_response(curl_multi_getcontent($ch)));

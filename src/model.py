@@ -614,8 +614,6 @@ class Plot(ModelBase):
     _quoteNumber = staticmethod(_quoteNumber)
 
     def executeUpdateQueries(conn, queries):
-        print "executeUpdateQueries"
-
         if conn.dialect.name == 'mysql':
             sql_values = ', '.join(["""
 (%s, %s, %s,
@@ -966,6 +964,8 @@ class DataPoint(object):
         
         rows = list(result)
         
+        print "Rows:", len(rows)
+        
         charts = OrderedDict()
 
         for plot in plots:
@@ -987,35 +987,35 @@ class DataPoint(object):
                 if prev_row != None and \
                         row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > 2 * granularity:
                     ts_null = prev_row[datapoint.c.timestamp] + (row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp]) / 2
-                    chart['min'].append({'x': ts_null, 'y': None})
-                    chart['max'].append({'x': ts_null, 'y': None})
-                    chart['avg'].append({'x': ts_null, 'y': None})
+                    chart['min'].append([ts_null, None])
+                    chart['max'].append([ts_null, None])
+                    chart['avg'].append([ts_null, None])
     
-                    chart['lower_limit'].append({'x': ts_null, 'y': None})
-                    chart['upper_limit'].append({'x': ts_null, 'y': None})
+                    chart['lower_limit'].append([ts_null, None])
+                    chart['upper_limit'].append([ts_null, None])
     
-                    chart['warn_lower'].append({'x': ts_null, 'y': None})
-                    chart['warn_upper'].append({'x': ts_null, 'y': None})
-                    chart['warn_type'].append({'x': ts_null, 'y': None})
+                    chart['warn_lower'].append([ts_null, None])
+                    chart['warn_upper'].append([ts_null, None])
+                    chart['warn_type'].append([ts_null, None])
     
-                    chart['crit_lower'].append({'x': ts_null, 'y': None})
-                    chart['crit_upper'].append({'x': ts_null, 'y': None})
-                    chart['crit_type'].append({'x': ts_null, 'y': None})
+                    chart['crit_lower'].append([ts_null, None])
+                    chart['crit_upper'].append([ts_null, None])
+                    chart['crit_type'].append([ts_null, None])
 
-                chart['min'].append({'x': ts, 'y': row[datapoint.c.min]})
-                chart['max'].append({'x': ts, 'y': row[datapoint.c.max]})
-                chart['avg'].append({'x': ts, 'y': row[datapoint.c.avg]})
+                chart['min'].append([ts, row[datapoint.c.min]])
+                chart['max'].append([ts, row[datapoint.c.max]])
+                chart['avg'].append([ts, row[datapoint.c.avg]])
 
-                chart['lower_limit'].append({'x': ts, 'y': row[datapoint.c.lower_limit]})
-                chart['upper_limit'].append({'x': ts, 'y': row[datapoint.c.upper_limit]})
+                chart['lower_limit'].append([ts, row[datapoint.c.lower_limit]])
+                chart['upper_limit'].append([ts, row[datapoint.c.upper_limit]])
 
-                chart['warn_lower'].append({'x': ts, 'y': row[datapoint.c.warn_lower]})
-                chart['warn_upper'].append({'x': ts, 'y': row[datapoint.c.warn_upper]})
-                chart['warn_type'].append({'x': ts, 'y': row[datapoint.c.warn_type]})
+                chart['warn_lower'].append([ts, row[datapoint.c.warn_lower]])
+                chart['warn_upper'].append([ts, row[datapoint.c.warn_upper]])
+                chart['warn_type'].append([ts, row[datapoint.c.warn_type]])
 
-                chart['crit_lower'].append({'x': ts, 'y': row[datapoint.c.crit_lower]})
-                chart['crit_upper'].append({'x': ts, 'y': row[datapoint.c.crit_upper]})
-                chart['crit_type'].append({'x': ts, 'y': row[datapoint.c.crit_type]})
+                chart['crit_lower'].append([ts, row[datapoint.c.crit_lower]])
+                chart['crit_upper'].append([ts, row[datapoint.c.crit_upper]])
+                chart['crit_type'].append([ts, row[datapoint.c.crit_type]])
                 
                 prev_row = row
                 
@@ -1048,7 +1048,7 @@ creates a DB connection
 def createModelEngine(dsn):
     global dbload_max_timestamp
 
-    engine = create_engine(dsn, listeners=[SetTextFactory()], pool_size=50, max_overflow=0)
+    engine = create_engine(dsn, listeners=[SetTextFactory()], pool_size=15, max_overflow=0)
 
     #engine.echo = True
 

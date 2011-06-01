@@ -222,14 +222,14 @@ class BackendRPCMethods:
                                                          end_timestamp, granularity)
 
             for plot_obj, plot_charts in dps.iteritems():
-                for type, chart in plot_charts.iteritems():
+                for type, data in plot_charts.iteritems():
                     label = plot_obj.name + '-' + type
                     
                     if hostservice_obj.parent_hostservice != None:
                         label = hostservice_obj.service.name + '-' + label
                     
                     charts.append({'host': hostservice_obj.host.name, 'service': hostservice_obj.service.name, 
-                                   'label': label, 'unit': plot_obj.unit, 'values': chart})
+                                   'label': label, 'unit': plot_obj.unit, 'data': data})
         
         et = time.time()
         

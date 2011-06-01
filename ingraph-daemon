@@ -214,7 +214,6 @@ class BackendRPCMethods:
 
         result_services = model.HostService.getByHostAndServicePattern(engine, host_pattern, service_pattern)
 
-        st = time.time()
         for hostservice_obj in result_services['services']:        
             plot_objs = model.Plot.getByHostServiceAndName(engine, hostservice_obj, None)
                 
@@ -230,10 +229,6 @@ class BackendRPCMethods:
                     
                     charts.append({'host': hostservice_obj.host.name, 'service': hostservice_obj.service.name, 
                                    'label': label, 'unit': plot_obj.unit, 'data': data})
-        
-        et = time.time()
-        
-        print "Got plot values in %f seconds" % (et - st)
 
         return result
  

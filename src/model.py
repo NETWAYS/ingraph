@@ -961,12 +961,9 @@ class DataPoint(object):
                           between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % data_tf.interval, end_timestamp))) \
                 .order_by(datapoint.c.timestamp.asc())
         result = conn.execute(sel)
-        
-        rows = list(result)
-        
-        print "Rows:", len(rows)
-        
+
         charts = OrderedDict()
+        prev_rows = {}
 
         for plot in plots:
             chart = {}
@@ -975,52 +972,59 @@ class DataPoint(object):
                              'warn_lower', 'warn_upper', 'warn_type', 'crit_lower',
                              'crit_upper', 'crit_type']:
                 chart[type] = []
-
-            prev_row = None
-            
-            for row in rows:
-                if row[datapoint.c.plot_id] != plot.id:
-                    continue
-                
-                ts = row[datapoint.c.timestamp]
-                
-                if prev_row != None and \
-                        row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > 2 * granularity:
-                    ts_null = prev_row[datapoint.c.timestamp] + (row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp]) / 2
-                    chart['min'].append([ts_null, None])
-                    chart['max'].append([ts_null, None])
-                    chart['avg'].append([ts_null, None])
-    
-                    chart['lower_limit'].append([ts_null, None])
-                    chart['upper_limit'].append([ts_null, None])
-    
-                    chart['warn_lower'].append([ts_null, None])
-                    chart['warn_upper'].append([ts_null, None])
-                    chart['warn_type'].append([ts_null, None])
-    
-                    chart['crit_lower'].append([ts_null, None])
-                    chart['crit_upper'].append([ts_null, None])
-                    chart['crit_type'].append([ts_null, None])
-
-                chart['min'].append([ts, row[datapoint.c.min]])
-                chart['max'].append([ts, row[datapoint.c.max]])
-                chart['avg'].append([ts, row[datapoint.c.avg]])
-
-                chart['lower_limit'].append([ts, row[datapoint.c.lower_limit]])
-                chart['upper_limit'].append([ts, row[datapoint.c.upper_limit]])
-
-                chart['warn_lower'].append([ts, row[datapoint.c.warn_lower]])
-                chart['warn_upper'].append([ts, row[datapoint.c.warn_upper]])
-                chart['warn_type'].append([ts, row[datapoint.c.warn_type]])
-
-                chart['crit_lower'].append([ts, row[datapoint.c.crit_lower]])
-                chart['crit_upper'].append([ts, row[datapoint.c.crit_upper]])
-                chart['crit_type'].append([ts, row[datapoint.c.crit_type]])
-                
-                prev_row = row
                 
             charts[plot] = chart
+            prev_rows[plot] = None
+
+        st = time()
+        for row in result:
+            plot = Plot.get(row[datapoint.c.plot_id])
+            assert plot != None
+
+            chart = charts[plot]
+            prev_row = prev_rows[plot]
+
+            ts = row[datapoint.c.timestamp]
             
+            if prev_row != None and \
+                    row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > 2 * granularity:
+                ts_null = prev_row[datapoint.c.timestamp] + (row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp]) / 2
+
+                chart['min'].append([ts_null, None])
+                chart['max'].append([ts_null, None])
+                chart['avg'].append([ts_null, None])
+
+                chart['lower_limit'].append([ts_null, None])
+                chart['upper_limit'].append([ts_null, None])
+
+                chart['warn_lower'].append([ts_null, None])
+                chart['warn_upper'].append([ts_null, None])
+                chart['warn_type'].append([ts_null, None])
+
+                chart['crit_lower'].append([ts_null, None])
+                chart['crit_upper'].append([ts_null, None])
+                chart['crit_type'].append([ts_null, None])
+
+            chart['min'].append([ts, row[datapoint.c.min]])
+            chart['max'].append([ts, row[datapoint.c.max]])
+            chart['avg'].append([ts, row[datapoint.c.avg]])
+
+            chart['lower_limit'].append([ts, row[datapoint.c.lower_limit]])
+            chart['upper_limit'].append([ts, row[datapoint.c.upper_limit]])
+
+            chart['warn_lower'].append([ts, row[datapoint.c.warn_lower]])
+            chart['warn_upper'].append([ts, row[datapoint.c.warn_upper]])
+            chart['warn_type'].append([ts, row[datapoint.c.warn_type]])
+
+            chart['crit_lower'].append([ts, row[datapoint.c.crit_lower]])
+            chart['crit_upper'].append([ts, row[datapoint.c.crit_upper]])
+            chart['crit_type'].append([ts, row[datapoint.c.crit_type]])
+            
+            prev_rows[plot] = row
+        et = time()
+        
+        print "Got plot values in %f seconds" % (et - st)
+
         return charts
 
     getValuesByInterval = staticmethod(getValuesByInterval)

@@ -1,0 +1,17 @@
+DirectoryIndex index.php
+
+Options -MultiViews -Indexes +FollowSymLinks
+Order allow,deny
+Allow from all
+
+AcceptPathInfo On
+
+RewriteEngine On
+
+RewriteBase /inGraph
+
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
+RewriteRule ^index.php.*$ ./index.php?/$0 [NC,QSA,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule (.*) index.php?/$1 [QSA,L]

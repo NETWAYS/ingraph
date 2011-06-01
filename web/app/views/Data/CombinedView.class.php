@@ -27,7 +27,9 @@ class Data_CombinedView extends XMLRPCView {
                 	}
                 }
                 
-                $data[] = $chart;
+                if(!$chart['disabled']) {
+                	$data[] = $chart;
+                }
             }
         }
         

@@ -103,14 +103,3 @@ database_size	    =	bytes_per_plot * plot_count =
 		    =	32032000000
 
 So, for 10000 plots the maximum database size is about 30GB.
-
-RAM usage
-=========
-
-In order to avoid sending unnecessary UPDATE queries to the database inGraph
-keeps a cache of recently used datapoints and periodically writes back modified
-objects to the database.
-
-The cache size for 10000 plots is about 500MB. When performing mass updates
-(e.g. when importing lots of perfdata files) the cache's size can increase to
-about three times that size.

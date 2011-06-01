@@ -217,7 +217,7 @@ class BackendRPCMethods:
         st = time.time()
         for hostservice_obj in result_services['services']:        
             plot_objs = model.Plot.getByHostServiceAndName(engine, hostservice_obj, None)
-                  
+                
             dps = model.DataPoint.getValuesByInterval(engine, plot_objs, start_timestamp,
                                                          end_timestamp, granularity)
 

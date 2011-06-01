@@ -488,26 +488,13 @@ class Plot(ModelBase):
         
         self.current_timestamp = None
         self.max_timestamp = None
+        self.min_timestamp = None 
         self.current_interval = None
         self.cache_tfs = None
         self.cache_dps = None
         
         self.last_value = 0
-        
         self.last_update = None
-        
-        self.has_ignored_missing_tf = False
-        
-#        Plot.avg_formula = datapoint.c.count * (datapoint.c.avg / (datapoint.c.count + 1)) + bindparam('upd_value') / (datapoint.c.count + 1)
-#        
-#        Plot.compile_query()
-#
-#    def compile_query(conn = None):
-#        column_keys = ['min', 'max', 'avg', 'count']
-#        Plot.update_query = datapoint.update().where(and_(datapoint.c.plot_id==bindparam('q_plot_id'), \
-#                               datapoint.c.timeframe_id==bindparam('q_timeframe_id'), \
-#                               datapoint.c.timestamp==bindparam('q_timestamp')))#.compile(conn, column_keys=column_keys)
-#    
 
     '''
     Calculates the per-second rate for a counter. Rather than storing the raw
@@ -585,8 +572,13 @@ class Plot(ModelBase):
         if max == None or max < value:
             max = value
 
+        now = time()
+
         queries = []
         for tf in tfs:
+            if tf.retention_period != None and now - timestamp > tf.retention_period:
+                continue
+
             values = {
                 'plot_id': self.id,
                 'timeframe_id': tf.id,
@@ -655,6 +647,7 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
 
             conn.execute(sql_query)
         else:
+            # TODO: fix this mess, need to consider each plot's max_timestamp, rather than just dbload_max_timestamp
             dps = {}
             conds = []
             for query in queries:
@@ -739,6 +732,7 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
             obj.id = row[plot.c.id]
             obj.hostservice = HostService.getByID(conn, row[plot.c.hostservice_id])
             obj.unit = row[plot.c.unit]
+            obj.updateMinTS(conn)
             obj.activate()
 
         return obj
@@ -763,6 +757,7 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
                 obj = Plot(hostservice, row[plot.c.name])
                 obj.id = row[plot.c.id]
                 obj.unit = row[plot.c.unit]
+                obj.updateMinTS(conn)
                 obj.activate()
         
             objs.append(obj)
@@ -787,6 +782,7 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
                 obj = Plot(hs, row[plot.c.name])
                 obj.id = row[plot.c.id]
                 obj.unit = row[plot.c.unit]
+                obj.updateMinTS(conn)
                 obj.activate()
 
             objs.append(obj)
@@ -809,6 +805,14 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
         else:
             upd = plot.update().where(plot.c.id==self.id).values(hostservice_id=self.hostservice.id, unit=self.unit)
             conn.execute(upd)
+
+    def activate(self):
+        ModelBase.activate(self)
+        
+    def updateMinTS(self, conn):
+        if self.id != None:
+            sel = select([func.min(datapoint.c.timestamp, type_=Integer).label('mintimestamp')]).where(datapoint.c.plot_id==self.id)
+            self.min_timestamp = conn.execute(sel).scalar()
 
 timeframe = Table('timeframe', metadata,
     Column('id', Integer, Sequence('timeframe_id_seq'), nullable=False, primary_key=True),
@@ -922,11 +926,11 @@ class DataPoint(object):
 
         tfs = TimeFrame.getAll(conn)
 
-        plot_conds = or_(*[datapoint.c.plot_id==plot.id for plot in plots])
-
         if start_timestamp == None:
-            sel = select([func.min(datapoint.c.timestamp, type_=Integer).label('mintimestamp')]).where(plot_conds)
-            start_timestamp = conn.execute(sel).scalar()
+            for plot in plots:
+                if start_timestamp == None or \
+                        plot.min_timestamp != None and plot.min_timestamp < start_timestamp:
+                    start_timestamp = plot.min_timestamp
             
         if end_timestamp == None:
             end_timestamp = time()
@@ -945,19 +949,20 @@ class DataPoint(object):
 
         data_tf = None
 
-        for tf in tfs:
-            if tf.interval < granularity:
-                continue
+        for tf in sorted(tfs, cmp=lambda x,y: cmp(x.interval, y.interval), reverse=True):
+            if tf.interval < granularity and data_tf != None:
+                break
 
-            if data_tf == None or data_tf.interval > tf.interval:
-                data_tf = tf
-                granularity = tf.interval
+            data_tf = tf
+        
+        granularity = data_tf.interval
 
         assert granularity > 0
         
         # properly align interval with the timeframe
         start_timestamp = start_timestamp - start_timestamp % granularity
         
+        plot_conds = or_(*[datapoint.c.plot_id==plot.id for plot in plots])
         sel = select([datapoint],
                      and_(datapoint.c.timeframe_id==data_tf.id,
                           plot_conds,

@@ -12,6 +12,8 @@ $t = array_merge(array(
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 
+	Ext.Ajax.timeout = 10*60*1000;
+
 	Ext.ux.TimeframeButtonGroup.prototype.frames = iG.timeFrames.getAll();
     
     var limit = 10,
@@ -217,11 +219,24 @@ Ext.onReady(function() {
                                         start = '';
                                     }
                                 }
+                                var end = panelCfg.end;
+                                if(end) {
+                                    end = strtotime(end);
+                                    if(end) {
+                                        end = Math.ceil(end);
+                                    } else {
+                                        end = Math.ceil((new Date()).getTime()/1000);
+                                    }
+                                } else {
+                                    end = Math.ceil((new Date()).getTime()/1000);
+                                }                    
+
+                                
                                 
                                 var frame = {
                                     title : panelCfg.title || 'Panel',
                                     start : iG.functor(start),
-                                    end : iG.functor(panelCfg.end ? '' : Math.ceil((new Date()).getTime()/1000))
+                                    end : iG.functor(end)
                                 };
                                 
                                 panels.push({
@@ -239,7 +254,8 @@ Ext.onReady(function() {
                                                 generic : c.generic || {}
                                             }),
                                             start : frame.start(),
-                                            end : frame.end()
+                                            end : frame.end(),
+                                            interval : panelCfg.interval || ''
                                         }
                                     })
                                 });

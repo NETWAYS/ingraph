@@ -9,7 +9,8 @@ class Data_CombinedAction extends XMLRPCAction {
 		$this->setParameter('config', $config);
 		
 		$start = $parameters->get('start', '');
-		$end = $parameters->get('end');
+		$end = $parameters->get('end', '');
+		$interval = $parameters->get('interval', '');
 		
 		$mp = array();
 		
@@ -19,7 +20,7 @@ class Data_CombinedAction extends XMLRPCAction {
 				$dataCfg['service'],
 				$start,
 				$end,
-				array_key_exists('interval', $dataCfg) ? $dataCfg['interval'] : ''
+				$interval
 			);
 		}
 		

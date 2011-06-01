@@ -57,14 +57,15 @@ class XMLRPCClientModel extends _MVC_Model {
 				curl_setopt_array($ch, array(
 					CURLOPT_URL => $this->uri,
 					CURLOPT_POSTFIELDS => $this->encode_request($method, $params),
-					CURLOPT_RETURNTRANSFER => true
+					CURLOPT_RETURNTRANSFER => true,
+					CURLOPT_TIMEOUT => 120
 				));
 				
 				curl_multi_add_handle($mh, $ch);
 				
 				$handles[] = $ch;
 			}
-			
+
 			$running = $status = $e = null;
 			do {
 				$status = curl_multi_exec($mh, $running);
@@ -78,11 +79,12 @@ class XMLRPCClientModel extends _MVC_Model {
 			if($e) {
 				throw new XMLRPCClientError($e);
 			}
-			
+
 			foreach($handles as $ch) {			
 				$response = array_merge_recursive($response, $this->decode_response(curl_multi_getcontent($ch)));
 			}
-			
+
+
 			curl_multi_close($mh);
 		}
 

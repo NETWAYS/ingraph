@@ -10,12 +10,12 @@ class Data_CombinedView extends XMLRPCView {
         
         if(count($plots['charts'])) {
             foreach($plots['charts'] as $chart) {
-                usort($chart['values'], array($this, 'sortX'));
+                //usort($chart['values'], array($this, 'sortX'));
                 $chart['data'] = array_map(array($this, 'ensureTypes'), $chart['values']);
                 unset($chart['values']);
                 $chart['key'] = $chart['host'] . $chart['service'] . $chart['label'];
                 $chart['disabled'] = true;
-                
+
                 foreach($config['data'] as $dataCfg) {
                 	if($dataCfg['host'] == $chart['host'] && $dataCfg['service'] == $chart['service']) {
                 		foreach($dataCfg['series'] as $seriesCfg) {

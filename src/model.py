@@ -488,7 +488,6 @@ class Plot(ModelBase):
         
         self.current_timestamp = None
         self.max_timestamp = None
-        self.min_timestamp = None 
         self.current_interval = None
         self.cache_tfs = None
         self.cache_dps = None
@@ -732,7 +731,6 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
             obj.id = row[plot.c.id]
             obj.hostservice = HostService.getByID(conn, row[plot.c.hostservice_id])
             obj.unit = row[plot.c.unit]
-            obj.updateMinTS(conn)
             obj.activate()
 
         return obj
@@ -757,7 +755,6 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
                 obj = Plot(hostservice, row[plot.c.name])
                 obj.id = row[plot.c.id]
                 obj.unit = row[plot.c.unit]
-                obj.updateMinTS(conn)
                 obj.activate()
         
             objs.append(obj)
@@ -782,7 +779,6 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
                 obj = Plot(hs, row[plot.c.name])
                 obj.id = row[plot.c.id]
                 obj.unit = row[plot.c.unit]
-                obj.updateMinTS(conn)
                 obj.activate()
 
             objs.append(obj)
@@ -809,11 +805,6 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
     def activate(self):
         ModelBase.activate(self)
         
-    def updateMinTS(self, conn):
-        if self.id != None:
-            sel = select([func.min(datapoint.c.timestamp, type_=Integer).label('mintimestamp')]).where(datapoint.c.plot_id==self.id)
-            self.min_timestamp = conn.execute(sel).scalar()
-
 timeframe = Table('timeframe', metadata,
     Column('id', Integer, Sequence('timeframe_id_seq'), nullable=False, primary_key=True),
     Column('interval', Integer, nullable=False),
@@ -919,6 +910,9 @@ Index('idx_dp_2', datapoint.c.timestamp)
 
 class DataPoint(object):
     def getValuesByInterval(conn, plots, start_timestamp=None, end_timestamp=None, granularity=None):
+        if len(plots) == 0:
+            return {}
+
         if end_timestamp < start_timestamp:
             tmp = end_timestamp
             end_timestamp = start_timestamp
@@ -927,10 +921,7 @@ class DataPoint(object):
         tfs = TimeFrame.getAll(conn)
 
         if start_timestamp == None:
-            for plot in plots:
-                if start_timestamp == None or \
-                        plot.min_timestamp != None and plot.min_timestamp < start_timestamp:
-                    start_timestamp = plot.min_timestamp
+            start_timestamp = 0
             
         if end_timestamp == None:
             end_timestamp = time()
@@ -956,6 +947,9 @@ class DataPoint(object):
             data_tf = tf
         
         granularity = data_tf.interval
+        
+        start_timestamp -= 1.5 * granularity
+        end_timestamp += 1.5 * granularity
 
         assert granularity > 0
         

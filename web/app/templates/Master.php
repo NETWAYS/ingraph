@@ -44,6 +44,7 @@
     <script type="text/javascript" src="js/inGraph/Ext.ux.AutoComboBox.js"></script>
     <script type="text/javascript" src="js/inGraph/Ext.ux.ComboController.js"></script>
     <script type="text/javascript" src="js/inGraph/Ext.ux.ComboDependency.js"></script>
+    <script type="text/javascript" src="js/inGraph/Ext.ux.HostSummary.js"></script>
     
     <link rel="stylesheet" type="text/css" href="js/ext/resources/css/ext-all-notheme.css" />
     <link rel="stylesheet" type="text/css" href="js/ext/resources/css/xtheme-gray.css" />

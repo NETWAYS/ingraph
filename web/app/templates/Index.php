@@ -285,6 +285,67 @@ Ext.onReady(function() {
             defaults : {
                 closable : true
             }
+            <?php if($t['host']) {
+            	echo
+<<<HOSTSUMMARY
+			,activeTab : 0
+			,items : new Ext.ux.HostSummary({
+				host : '${t['host']}',
+				height : 200,
+				limit : 20,
+				title : '{0} {1}'.format(_('Services for'), '${t['host']}'),
+				listeners : {
+					click : function(hs, index, node) {
+						var service = hs.getRecord(node).get('service'),
+							frames = iG.timeFrames.getDefault(),
+							tabCt = hs.ownerCt,
+							tab = tabCt.items.find(function(t) {
+								return t.title === '{0} - {1}'.format(hs.host, service);
+							}),
+							panels = new Array();
+							
+						if(tab) {
+							Ext.destroy(tab);
+						}
+						
+						frames.each(function(frame) {         
+							panels.push({
+								xtype : 'flotpanel',
+								title : frame.title,
+								host : hs.host,
+								service : service,
+								bodyStyle : 'padding : 5px',
+								store : new Ext.ux.FlotJsonStore({
+									url : 'data/plots',
+									baseParams : {
+										host : hs.host,
+										service : service,
+										start : frame.start(),
+										end : frame.end()
+									}
+								}),
+								frame : frame,
+								overview : frame.overview
+							});
+						});
+							
+						tab = viewport.hostServiceTabs.add({
+							title : '{0} - {1}'.format(hs.host, service),
+							header : false,
+							autoScroll : true,
+							defaults : {
+								collapsible : true
+							},
+							items : panels
+						});
+						
+						tabCt.setActiveTab(tab);
+					}
+				}
+			})
+HOSTSUMMARY;
+            }
+            ?>
         }]
     });
 

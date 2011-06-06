@@ -10,7 +10,7 @@ class Data_PlotsView extends XMLRPCView {
         
         if(count($plots['charts'])) {
         	foreach($plots['charts'] as $chart) {
-        		array_walk(&$chart['data'], array($this, 'ensureTypes'));
+        		array_walk($chart['data'], array($this, 'ensureTypes'));
         		$chart['key'] = $chart['host'] . $chart['service'] . $chart['label'];
         		$chart['disabled'] = true;
         		

@@ -2,7 +2,7 @@
 
 class Data_CombinedView extends XMLRPCView {
     
-    public function getAjax($parameters) {
+    public function getAjax($parameters) { 	
         $plots = $this->getParameter('plots');
         $config = $this->getParameter('config');
         
@@ -24,8 +24,7 @@ class Data_CombinedView extends XMLRPCView {
                 }
                 
                 if(!$chart['disabled']) {
-	                array_walk(&$chart['data'], array($this, 'ensureTypes'));
-	                unset($chart['values']);
+	                array_walk($chart['data'], array($this, 'ensureTypes'));
 	                $chart['key'] = $chart['host'] . $chart['service'] . $chart['label'];
                 	$data[] = $chart;
                 }

@@ -21,7 +21,7 @@ class _MVC_Scope {
 		$this->response->initialize($this);
 	}
 	
-	public function getInstance() {
+	public static function getInstance() {
 		if(self::$instance === null) {
 			self::$instance = new _MVC_Scope();
 			self::$instance->initialize();

@@ -5,9 +5,9 @@ Requirements
 * SQLAlchemy version 0.6 or later (older versions are untested)
 * DB-API drivers for whatever DBMS you are going to use (e.g. MySQL, etc.)
 
-CentOS packages: python-sqlite sqlite-devel gcc
-Debian/Ubuntu packages: python-sqlalchemy python-pysqlite2
-SLES 10: python-devel sqlite-devel
+CentOS packages: python-devel gcc
+Debian/Ubuntu packages: python-sqlalchemy
+SLES 10: python-devel
 
 Installation
 ============
@@ -29,23 +29,17 @@ Configuration
 	# useradd ingraph
 
 Feel free to customize the config files. In particular you might want to change
-the XML-RPC username/password.
+the database connection string and the XML-RPC username/password.
 
-2. Create a new directory that is going to hold the database files
-(assuming you're using sqlite - skip this step if you're using MySQL
-or some other DBMS).
-
-	# mkdir /var/lib/ingraph/
-
-3. Copy the init script:
+2. Copy the init script:
 
 	# cp docs/init.d/ingraph /etc/init.d/
 
-4. Start the grapher daemon:
+3. Start the grapher daemon:
 
 	# /etc/init.d/ingraph start
 
-5. Make sure the 'ingraph-daemon' process is running:
+4. Make sure the 'ingraph-daemon' process is running:
 
 	# ps ax | grep ingraph-daemon
 	 1797 ?       S      0:01 /usr/bin/python /usr/local/bin/ingraph-daemon
@@ -55,7 +49,7 @@ In case the collector isn't running you can debug this by starting it manually:
 	# cd /etc/ingraph
 	# ingraph-daemon
 
-6. You can now either import an existing Grapher V2 database using
+5. You can now either import an existing Grapher V2 database using
    'ingraph-import-grapherv2' or import raw Nagios/Icinga perfdata logs using
    the 'ingraph-file-collector' script. The file collector script expects its
    input on stdin.

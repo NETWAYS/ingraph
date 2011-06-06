@@ -526,13 +526,13 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             });
         }
         
-        var xy = item.series.data[item.dataIndex],
+        var xy = item.datapoint,
         	x = xy[0],
         	y = xy[1],
         	html = Ext.ux.Flot.tooltipTemplate.apply({
                 label : item.series.label,
-                x : item.series.xaxis.tickFormatter.call(item.series.xaxis, item.datapoint[0], item.series.xaxis),
-                y : item.series.yaxis.tickFormatter.call(item.series.yaxis, item.datapoint[1], item.series.yaxis),
+                x : item.series.xaxis.tickFormatter.call(item.series.xaxis, x, item.series.xaxis),
+                y : item.series.yaxis.tickFormatter.call(item.series.yaxis, y, item.series.yaxis),
                 unit : item.series.yaxis.unit.label
             }),
             dist = 10,

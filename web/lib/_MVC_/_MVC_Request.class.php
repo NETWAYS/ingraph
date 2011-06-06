@@ -17,7 +17,9 @@ class _MVC_Request {
         
         $this->method = getenv('REQUEST_METHOD');
         
-        $this->url = array_shift(array_keys($_GET));
+        $this->url = array_keys($_GET);
+        $this->url = array_shift($this->url);
+        
         $this->parameters = new _MVC_ParameterHolder(array_merge(array_slice($_GET, 1), $_POST));
         
         $this->explodeUrl();

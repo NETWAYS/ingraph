@@ -193,7 +193,7 @@ class BackendRPCMethods:
         
         return {'total': result['total'], 'services': list(items)}
     
-    def getPlotValues(self, host_pattern, service_pattern, start_timestamp=None, end_timestamp=None, granularity=None):
+    def getPlotValues(self, host_pattern, service_pattern, start_timestamp=None, end_timestamp=None, granularity=None, null_tolerance=0):
         charts = []
         result = { 'charts': charts }
         
@@ -218,7 +218,7 @@ class BackendRPCMethods:
             plot_objs = model.Plot.getByHostServiceAndName(engine, hostservice_obj, None)
                 
             dps = model.DataPoint.getValuesByInterval(engine, plot_objs, start_timestamp,
-                                                         end_timestamp, granularity)
+                                                         end_timestamp, granularity, null_tolerance)
 
             for plot_obj, plot_charts in dps.iteritems():
                 for type, data in plot_charts.iteritems():
@@ -230,6 +230,10 @@ class BackendRPCMethods:
                     charts.append({'host': hostservice_obj.host.name, 'service': hostservice_obj.service.name, 
                                    'label': label, 'unit': plot_obj.unit, 'data': data})
 
+        st = time.time()
+        et = time.time()
+        
+        print "Got plot values in %f seconds" % (et - st)
         return result
  
     def shutdown(self):

@@ -907,7 +907,7 @@ Index('idx_dp_1', datapoint.c.timeframe_id, datapoint.c.timestamp)
 Index('idx_dp_2', datapoint.c.timestamp)
 
 class DataPoint(object):
-    def getValuesByInterval(conn, plots, start_timestamp=None, end_timestamp=None, granularity=None):
+    def getValuesByInterval(conn, plots, start_timestamp=None, end_timestamp=None, granularity=None, null_tolerance=0):
         if len(plots) == 0:
             return {}
 
@@ -976,7 +976,6 @@ class DataPoint(object):
             charts[plot] = chart
             prev_rows[plot] = None
 
-        st = time()
         for row in result:
             plot = Plot.get(row[datapoint.c.plot_id])
             assert plot != None
@@ -987,7 +986,7 @@ class DataPoint(object):
             ts = row[datapoint.c.timestamp]
             
             if prev_row != None and \
-                    row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > 2 * granularity:
+                    row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > (null_tolerance + 1) * granularity:
                 ts_null = prev_row[datapoint.c.timestamp] + (row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp]) / 2
 
                 chart['min'].append([ts_null, None])
@@ -1021,9 +1020,6 @@ class DataPoint(object):
             chart['crit_type'].append([ts, row[datapoint.c.crit_type]])
             
             prev_rows[plot] = row
-        et = time()
-        
-        print "Got plot values in %f seconds" % (et - st)
 
         return charts
 

@@ -15,6 +15,17 @@ import traceback
 import Queue
 from threading import Thread
 
+class _xmldumps(object):
+
+    def __init__(self, dumps):
+        self.__dumps = (dumps,)
+
+    def __call__(self, *args, **kwargs):
+        kwargs.setdefault('allow_none', 1)
+        return self.__dumps[0](*args, **kwargs)
+
+xmlrpclib.dumps = _xmldumps(xmlrpclib.dumps)
+
 print("NETWAYS inGraph (backend daemon)")
 
 class BackendRPCMethods:
@@ -292,15 +303,6 @@ class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
             return True
         
         return self.required_username == username and self.required_password == password
-
-if sys.version_info[:2] < (2,5):
-    class AllowNoneMarshaller(Marshaller):
-        def __init__(self, encoding=None, allow_none=0):
-            Marshall.__init__(self, encoding, allow_none)
-            self.allow_none = 1
-
-    xmlrpclib.FastMarshaller = None
-    xmlrpclib.Marshaller = AllowNoneMarshaller
 
 config = utils.load_config('ingraph-database.conf')
 config = utils.load_config('ingraph-xmlrpc.conf', config)

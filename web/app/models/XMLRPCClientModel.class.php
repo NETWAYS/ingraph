@@ -25,17 +25,21 @@ class XMLRPCClientModel extends _MVC_Model {
 		$response = null;
 		
 		if ($method) {
-			$request = $this->encode_request($method, $params);
+			$ch = curl_init();
 			
-			$ctx = stream_context_create(array('http' => array(
-				'method' => 'POST',
-				'header' => 'Content-Type: text/xml',
-				'content' => $request
-			)));
+			curl_setopt_array($ch, array(
+				CURLOPT_URL => $this->uri,
+				CURLOPT_POSTFIELDS => $this->encode_request($method, $params),
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_TIMEOUT => 240
+			));
 			
-			if(($response = @file_get_contents($this->uri, false, $ctx)) === false) {
-				throw new XMLRPCClientError("Can't contact {$this->address}:{$this->port}.");
+			if(($response = curl_exec($ch)) === false) {
+				curl_close($ch);
+				throw new XMLRPCClientError(sprintf('cURL: %s.', curl_error($ch)));
 			}
+			
+			curl_close($ch);
 			
 			$response = $this->decode_response($response);
 		}
@@ -104,10 +108,10 @@ class XMLRPCClientModel extends _MVC_Model {
 		}
 		
 		if(!is_array($dr)) {
-			throw new XMLRPCClientError('XMLRPC response: Unabled to read. Expected array.');
+			throw new XMLRPCClientError('XMLRPC response: Unabled to read, expected array: ' . $response);
 		}
 		if(xmlrpc_is_fault($dr)) {
-			throw new XMLRPCClientError("XMLRPC response: $dr[faultCode]: $dr[faultString].");
+			throw new XMLRPCClientError("XMLRPC response: ${dr['faultCode']}: ${dr['faultString']}.");
 		}
 		
 		return $dr;

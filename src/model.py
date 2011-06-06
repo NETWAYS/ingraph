@@ -614,6 +614,9 @@ class Plot(ModelBase):
     _quoteNumber = staticmethod(_quoteNumber)
 
     def executeUpdateQueries(conn, queries):
+        if len(queries) == 0:
+            return
+
         if conn.dialect.name == 'mysql':
             sql_values = ', '.join(["""
 (%s, %s, %s,

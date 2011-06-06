@@ -12,7 +12,7 @@ import os
 import sys
 from netways_ingraph import model, utils
 import traceback
-from Queue import Queue
+import Queue
 from threading import Thread
 
 print("NETWAYS inGraph (backend daemon)")
@@ -318,7 +318,7 @@ if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
           " interface ('xmlrpc_address' and 'xmlrpc_port' settings).")
     sys.exit(1)
 
-queryqueue = Queue(maxsize=100000)
+queryqueue = Queue.Queue(maxsize=100000)
 
 def flushDBThread(engine):
     while True:
@@ -327,7 +327,12 @@ def flushDBThread(engine):
         print "Queue size: %d" % (queryqueue.qsize())
 
         while len(items) < 10000:
-            items.append(queryqueue.get())
+            try:
+                item = queryqueue.get(timeout=10)
+            except Queue.Empty:
+                break
+
+            items.append(item)
 
         st = time.time()
         conn = engine.connect()

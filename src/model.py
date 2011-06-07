@@ -632,7 +632,7 @@ class Plot(ModelBase):
                               for query in queries])
 
             sql_query = """
-INSERT DELAYED INTO datapoint (plot_id, timeframe_id, timestamp,
+INSERT INTO datapoint (plot_id, timeframe_id, timestamp,
                        min, max, avg, count,
                        lower_limit, upper_limit,
                        warn_lower, warn_upper, warn_type,
@@ -957,6 +957,15 @@ class DataPoint(object):
         # properly align interval with the timeframe
         start_timestamp = start_timestamp - start_timestamp % granularity
         
+        hostservices = set([hostservice for plot.hostservice in plots])
+        comment_objs = Comment.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
+        
+        comments = [{ 'id': comment_obj.id, 'host': comment_obj.hostservice.host.name,
+                     'parent_service': comment_obj.hostservice.parent_hostservice.service.name if comment_obj.hostservice.parent_hostservice != None else None,
+                     'service': comment_obj.hostservice.service.name,
+                     'timestamp': comment_obj.timestamp, 'timestamp_comment': comment_obj.timestamp_comment,
+                      'author': comment_obj.author, 'text': comment_obj.text } for comment_obj in comment_objs]
+        
         plot_conds = or_(*[datapoint.c.plot_id==plot.id for plot in plots])
         sel = select([datapoint],
                      and_(datapoint.c.timeframe_id==data_tf.id,
@@ -1024,7 +1033,7 @@ class DataPoint(object):
             
             prev_rows[plot] = row
 
-        return charts
+        return { 'comments': comments, 'charts': charts }
 
     getValuesByInterval = staticmethod(getValuesByInterval)
 
@@ -1040,6 +1049,97 @@ class DataPoint(object):
             conn.execute(delsql)
     
     cleanupOldData = staticmethod(cleanupOldData)
+    
+comment = Table('comment', metadata,
+    Column('id', Integer, Sequence('comment_id_seq'), nullable=False, primary_key=True),
+    Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False, primary_key=True),
+    Column('timestamp', Integer, nullable=False, primary_key=True),
+    Column('comment_timestamp', Integer, nullable=False),
+    Column('author', String(128), nullable=False),
+    Column('text', String(512), nullable=False)
+)
+
+class Comment(ModelBase):
+    def __init__(self, hostservice, timestamp, author, text):
+        self.id = None
+        self.hostservice = hostservice
+        self.timestamp = timestamp
+        self.comment_timestamp = time()
+        self.author = author
+        self.text = text
+    
+    def getByID(conn, id):
+        obj = Comment.get(id)
+        
+        if obj == None:
+            sel = comment.select().where(comment.c.id==id)
+            res = conn.execute(sel)
+            row = res.fetchone()
+            
+            assert row != None
+
+            hostservice = HostService.getByID(conn, row[comment.c.hostservice_id])
+
+            obj = Comment(hostservice, row[comment.c.timestamp], row[comment.c.author], row[comment.c.text])
+            obj.id = row[host.c.id]
+            obj.comment_timestamp = row[comment.c.comment_timestamp]
+            obj.activate()
+        
+        return obj
+    
+    getByID = staticmethod(getByID) 
+    
+    def getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp):
+        conds = or_(*[comment.c.hostservice_id == hostservice.id for hostservice in hostservices])
+        
+        sel = comment.select().where(and_(conds, comment.c.timestamp.between(start_timestamp, end_timestamp)))
+        result = conn.execute(sel)
+        
+        objs = []
+        
+        for row in result:
+            obj = Comment.get(row[comment.c.id])
+            
+            if obj == None:
+                hostservice = HostService.getByID(conn, row[comment.c.hostservice_id])
+    
+                obj = Comment(hostservice, row[comment.c.timestamp], row[comment.c.author], row[comment.c.text])
+                obj.id = row[host.c.id]
+                obj.comment_timestamp = row[comment.c.comment_timestamp]
+                obj.activate()
+            
+            objs.append(obj)
+            
+        return objs
+                
+    getByHostServicesAndInterval = staticmethod(getByHostServicesAndInterval)
+
+    def save(self, conn):
+        self.comment_timestamp = time()
+
+        if self.id == None:
+            if self.hostservice.id == None:
+                self.hostservice.save(conn)
+                
+            assert self.hostservice.id != None
+
+            ins = comment.insert().values(hostservice_id=self.hostservice.id, timestamp=self.timestamp,
+                                          comment_timestamp=self.comment_timestamp, author=self.author,
+                                          text=self.text)
+
+            result = conn.execute(ins)
+            self.id = result.last_inserted_ids()[0]
+            self.activate()
+        else:
+            upd = comment.update().where(comment.c.id==self.id).values(comment_timestamp=self.comment_timestamp,
+                                                                       text=self.text)
+            conn.execute(upd)
+            
+    def delete(self, conn):
+        if self.id == None:
+            return
+        
+        conn.execute(comment.delete().where(comment.c.id==self.id))
 
 class SetTextFactory(PoolListener):
     def connect(self, dbapi_con, con_record):
@@ -1097,7 +1197,7 @@ def runMaintenanceTasks(conn):
         
         last_vacuum = time()
 
-    if last_cleanup + 30 * 60 < time():
+    if last_cleanup + 24 * 60 * 60 < time():
         DataPoint.cleanupOldData(conn)
         
         last_cleanup = time()

@@ -206,7 +206,8 @@ class BackendRPCMethods:
     
     def getPlotValues(self, host_pattern, service_pattern, start_timestamp=None, end_timestamp=None, granularity=None, null_tolerance=0):
         charts = []
-        result = { 'charts': charts }
+        comments = []
+        result = { 'comments': comments, 'charts': charts }
         
         if host_pattern != None:
             host_pattern = host_pattern.replace('*', '%')
@@ -231,7 +232,9 @@ class BackendRPCMethods:
             dps = model.DataPoint.getValuesByInterval(engine, plot_objs, start_timestamp,
                                                          end_timestamp, granularity, null_tolerance)
 
-            for plot_obj, plot_charts in dps.iteritems():
+            comments.extend(dps['comments'])
+
+            for plot_obj, plot_charts in dps['charts'].iteritems():
                 for type, data in plot_charts.iteritems():
                     label = plot_obj.name + '-' + type
                     
@@ -253,6 +256,31 @@ class BackendRPCMethods:
         shutdown_server = True
         
         return True
+    
+    def addComment(self, host, parent_service, service, timestamp, author, text):
+        host_obj = self._createHost(conn, host)
+        if parent_service != None:
+            parent_service_obj = self._createService(conn, parent_service)
+            parent_hostservice_obj = self._createHostService(conn, host_obj, parent_service_obj, None)
+        else:
+            parent_hostservice_obj = None
+        service_obj = self._createService(conn, service)
+
+        hostservice_obj = self._createHostService(conn, host_obj, service_obj, parent_hostservice_obj)
+
+        comment = Comment(hostservice_obj, timestamp, author, text)
+        comment.save(engine)
+
+        return comment.id
+    
+    def deleteComment(self, comment_id):
+        comment = Comment.getByID(engine, comment_id)
+        comment.delete(engine)
+    
+    def updateComment(self, comment_id, text):
+        comment = Comment.getByID(engine, comment_id)
+        comment.text = text
+        comment.save()
 
 # http://www.acooke.org/cute/BasicHTTPA0.html
 class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
@@ -320,7 +348,7 @@ if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
           " interface ('xmlrpc_address' and 'xmlrpc_port' settings).")
     sys.exit(1)
 
-queryqueue = Queue.Queue(maxsize=100000)
+queryqueue = Queue.Queue(maxsize=200000)
 
 def flushDBThread(engine):
     while True:
@@ -328,7 +356,7 @@ def flushDBThread(engine):
 
         print "Queue size: %d" % (queryqueue.qsize())
 
-        while len(items) < 10000:
+        while len(items) < 5000:
             try:
                 item = queryqueue.get(timeout=10)
             except Queue.Empty:

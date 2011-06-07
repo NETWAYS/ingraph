@@ -365,11 +365,14 @@ def flushDBThread(engine):
             items.append(item)
 
         st = time.time()
-        conn = engine.connect()
-        transaction = conn.begin()        
-        model.Plot.executeUpdateQueries(conn, items)
-        transaction.commit()
-        conn.close()
+        try:
+            conn = engine.connect()
+            transaction = conn.begin()
+            model.Plot.executeUpdateQueries(conn, items)
+            transaction.commit()
+            conn.close()
+        except Exception, e:
+            print e
         et = time.time()
         
         print "Flushed %d updates in %f seconds." % (len(items), et - st)

@@ -963,7 +963,7 @@ class DataPoint(object):
         comments = [{ 'id': comment_obj.id, 'host': comment_obj.hostservice.host.name,
                      'parent_service': comment_obj.hostservice.parent_hostservice.service.name if comment_obj.hostservice.parent_hostservice != None else None,
                      'service': comment_obj.hostservice.service.name,
-                     'timestamp': comment_obj.timestamp, 'timestamp_comment': comment_obj.timestamp_comment,
+                     'timestamp': comment_obj.timestamp, 'comment_timestamp': comment_obj.comment_timestamp,
                       'author': comment_obj.author, 'text': comment_obj.text } for comment_obj in comment_objs]
         
         plot_conds = or_(*[datapoint.c.plot_id==plot.id for plot in plots])

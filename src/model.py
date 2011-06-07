@@ -957,7 +957,7 @@ class DataPoint(object):
         # properly align interval with the timeframe
         start_timestamp = start_timestamp - start_timestamp % granularity
         
-        hostservices = set([hostservice for plot.hostservice in plots])
+        hostservices = set([plot.hostservice for plot in plots])
         comment_objs = Comment.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
         
         comments = [{ 'id': comment_obj.id, 'host': comment_obj.hostservice.host.name,
@@ -1153,7 +1153,7 @@ def createModelEngine(dsn):
 
     engine = create_engine(dsn, listeners=[SetTextFactory()], pool_size=15, max_overflow=0)
 
-    #engine.echo = True
+    engine.echo = True
 
     conn = engine.connect()
 
@@ -1168,8 +1168,6 @@ def createModelEngine(dsn):
 
     metadata.create_all(engine)
     
-#    Plot.compile_query(conn)
-
     sel = select([func.max(datapoint.c.timestamp, type_=Integer).label('maxtimestamp')])
     dbload_max_timestamp = conn.execute(sel).scalar()
     

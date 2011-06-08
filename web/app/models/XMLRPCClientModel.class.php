@@ -11,6 +11,8 @@ class XMLRPCClientModel extends _MVC_Model {
 	protected $user = null;
 	protected $password = null;
 	
+	protected $timeout = 240;
+	
 	public function __construct($user, $password, $address, $port) {
 		$this->uri = sprintf($this->uriFormat, $user, $password, $address, $port);
 		
@@ -31,12 +33,15 @@ class XMLRPCClientModel extends _MVC_Model {
 				CURLOPT_URL => $this->uri,
 				CURLOPT_POSTFIELDS => $this->encode_request($method, $params),
 				CURLOPT_RETURNTRANSFER => true,
-				CURLOPT_TIMEOUT => 240
+				CURLOPT_TIMEOUT => $this->timeout
 			));
 			
-			if(($response = curl_exec($ch)) === false) {
+			$response = curl_exec($ch);
+			
+			if($response === false || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200) {
+				$e = $response === false ? curl_error($ch) : $response;
 				curl_close($ch);
-				throw new XMLRPCClientError(sprintf('cURL: %s.', curl_error($ch)));
+				throw new XMLRPCClientError(sprintf('cURL: %s.', $e));
 			}
 			
 			curl_close($ch);
@@ -62,7 +67,7 @@ class XMLRPCClientModel extends _MVC_Model {
 					CURLOPT_URL => $this->uri,
 					CURLOPT_POSTFIELDS => $this->encode_request($method, $params),
 					CURLOPT_RETURNTRANSFER => true,
-					CURLOPT_TIMEOUT => 240
+					CURLOPT_TIMEOUT => $this->timeout
 				));
 				
 				curl_multi_add_handle($mh, $ch);
@@ -84,6 +89,7 @@ class XMLRPCClientModel extends _MVC_Model {
 
 			foreach($handles as $ch) {			
 				$response = array_merge_recursive($response, $this->decode_response(curl_multi_getcontent($ch)));
+				curl_close($ch);
 			}
 
 

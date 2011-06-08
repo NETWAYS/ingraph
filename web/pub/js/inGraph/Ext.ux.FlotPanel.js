@@ -253,6 +253,13 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
         	    },
         	    single : true
         	},
+        	beforeautorefresh : {
+        		fn : function() {
+        			if(this.ownerCt.hidden) {
+        				return false;
+        			}
+        		}
+        	},
         	scope	: this
         });
         this.store.on({
@@ -351,6 +358,15 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
         			this.overview.getFlot().setSelection({
         				xaxis	: ranges.xaxis
         			}, true);
+        		},
+        		zoom : function(flot, ranges) {
+        			if(ranges) {
+            			this.overview.getFlot().setSelection({
+            				xaxis	: ranges.xaxis
+            			}, true);       				
+        			} else {
+        				this.overview.getFlot().clearSelection();
+        			}
         		},
         		scope			: this
         	});

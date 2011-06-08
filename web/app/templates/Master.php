@@ -48,6 +48,8 @@
     <script type="text/javascript" src="js/inGraph/Ext.ux.ComboDependency.js"></script>
     <script type="text/javascript" src="js/inGraph/Ext.ux.HostSummary.js"></script>
     
+    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.Interface.Viewport.js"></script>
+    
     <link rel="stylesheet" type="text/css" href="js/ext/resources/css/ext-all-notheme.css" />
     <link rel="stylesheet" type="text/css" href="js/ext/resources/css/xtheme-gray.css" />
     

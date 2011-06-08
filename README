@@ -31,6 +31,9 @@ Configuration
 Feel free to customize the config files. In particular you might want to change
 the database connection string and the XML-RPC username/password.
 
+Use of MySQL as the database backend is highly recommended although other
+backends should work just fine.
+
 2. Copy the init script:
 
 	# cp docs/init.d/ingraph /etc/init.d/

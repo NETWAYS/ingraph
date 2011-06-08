@@ -253,6 +253,13 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
         	    },
         	    single : true
         	},
+        	beforeautorefresh : {
+        		fn : function() {
+        			if(this.ownerCt.hidden) {
+        				return false;
+        			}
+        		}
+        	},
         	scope	: this
         });
         this.store.on({

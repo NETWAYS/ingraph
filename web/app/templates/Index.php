@@ -171,8 +171,7 @@ Ext.onReady(function() {
                     items : {
 	                    xtype : 'box',
 	                    autoEl : {
-	                        tag : 'img',
-	                        src : 'images/grapherv2_logo.png'
+	                        tag : 'div'
 	                    }
                     },
                     rowspan : 2

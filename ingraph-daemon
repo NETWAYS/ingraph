@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import time
+import signal
 from fnmatch import fnmatch
 from random import randint
 from SocketServer import ThreadingTCPServer

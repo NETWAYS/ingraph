@@ -487,7 +487,6 @@ class Plot(ModelBase):
         self.unit = None
         
         self.current_timestamp = None
-        self.max_timestamp = None
         self.current_interval = None
         self.cache_tfs = None
         self.cache_dps = None
@@ -502,7 +501,7 @@ class Plot(ModelBase):
     def _calculateRateHelper(last_timestamp, timestamp, last_value, value):
         if last_timestamp == None or last_timestamp >= timestamp:
             return None
-    
+
         if last_value > value:
             # We're checking for possible overflows by comparing the last raw value with the current
             # raw value. If the last value is greater than 80% of the 32 or 64 bit boundary and the
@@ -614,6 +613,8 @@ class Plot(ModelBase):
     _quoteNumber = staticmethod(_quoteNumber)
 
     def executeUpdateQueries(conn, queries):
+        global dbload_max_timestamp
+
         if len(queries) == 0:
             return
 
@@ -647,7 +648,8 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
 
             conn.execute(sql_query)
         else:
-            # TODO: fix this mess, need to consider each plot's max_timestamp, rather than just dbload_max_timestamp
+            # TODO: fix this mess
+            st = time()
             dps = {}
             conds = []
             for query in queries:
@@ -666,11 +668,17 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
             if len(conds) > 0:
                 result = conn.execute(select(columns=[datapoint.c.plot_id, datapoint.c.timeframe_id,
                                                         datapoint.c.timestamp, datapoint.c.min,
-                                                        datapoint.c.max], from_obj=[datapoint]).where(or_(*conds)))
+                                                        datapoint.c.max, datapoint.c.avg, datapoint.c.count],
+                                             from_obj=[datapoint]).where(or_(*conds)))
     
                 for row in result:
                     dp = (row[datapoint.c.plot_id], row[datapoint.c.timeframe_id], row[datapoint.c.timestamp])
-                    dpsdb[dp]= row
+                    dpsdb[dp]= {
+                        'min': row[datapoint.c.min],
+                        'max': row[datapoint.c.max],
+                        'avg': row[datapoint.c.avg],
+                        'count': row[datapoint.c.count],
+                    }
 
             inserts = []
             updates = []
@@ -678,43 +686,48 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
             for dp, query in dps.items():
                 row = {}
 
+                if query['timestamp'] > dbload_max_timestamp:
+                    dbload_max_timestamp = query['timestamp']
+
                 if dp in dpsdb:
                     row = dpsdb[dp]
+                    
                     # update
-                    print "UPDATE"
-                    pass
+                    if query['min'] < row['min']:
+                        row['min'] = query['min']
+                        
+                    if query['max'] > row['max']:
+                        row['max'] = query['max']
+                        
+                    row['avg'] = row['count'] * (row['avg'] / (row['count'] + 1)) + \
+                                           query['avg'] / (row['count'] + 1)
+                    row['count'] = row['count'] + 1
+                    
+                    updates.append(row)
                 else:
-                    print "INSERT"
-
                     row = {
-                        datapoint.c.min: query['min'],
-                        datapoint.c.max: query['max']
+                        'min': query['min'],
+                        'max': query['max'],
+                        'avg': query['avg'],
+                        'count': 1
                     }
 
                     inserts.append(query)
-                    pass
                 
                 dpsdb[dp] = row
 
-            conn.execute(datapoint.insert(), inserts)
+            et = time()
+            
+            print "(SLOW) update prep: %f" % (et - st)
+
+            if len(inserts) > 0:
+                conn.execute(datapoint.insert(), inserts)
             
             for update in updates:
-                pass
-
-#            for dp, query in dps:
-#                # TODO: support for min/max values
-#                values = {
-#                    'avg': datapoint.c.count * (datapoint.c.avg / (datapoint.c.count + 1)) + query['avg'] / (datapoint.c.count + 1),
-#                    'count': datapoint.c.count + 1
-#                }
-#
-#                result = conn.execute(datapoint.update().where(and_(datapoint.c.plot_id==query['plot_id'],
-#                                                                    datapoint.c.timeframe_id==query['timeframe_id'],
-#                                                                    datapoint.c.timestamp==query['timestamp'])),
-#                                      [values])
-#                
-#                if result.rowcount == 0:
-#                    conn.execute(datapoint.insert(), [query])
+                cond = and_(datapoint.c.plot_id==query['plot_id'],
+                            datapoint.c.timeframe_id==query['timeframe_id'],
+                            datapoint.c.timestamp==query['timestamp'])
+                conn.execute(datapoint.update().where(cond).values(update))
     
     executeUpdateQueries = staticmethod(executeUpdateQueries)
 
@@ -899,10 +912,10 @@ datapoint = Table('datapoint', metadata,
     Column('upper_limit', Numeric(precision=20, scale=5, asdecimal=False)),
     Column('warn_lower', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
     Column('warn_upper', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
-    Column('warn_type', Enum('inside', 'outside'), nullable=True),
+    Column('warn_type', Enum('inside', 'outside', name='warn_type_enum'), nullable=True),
     Column('crit_lower', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
     Column('crit_upper', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
-    Column('crit_type', Enum('inside', 'outside'), nullable=True),
+    Column('crit_type', Enum('inside', 'outside', name='crit_type_enum'), nullable=True),
     Column('count', Integer, nullable=False),
 )
 
@@ -960,11 +973,19 @@ class DataPoint(object):
         hostservices = set([plot.hostservice for plot in plots])
         comment_objs = Comment.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
         
-        comments = [{ 'id': comment_obj.id, 'host': comment_obj.hostservice.host.name,
-                     'parent_service': comment_obj.hostservice.parent_hostservice.service.name if comment_obj.hostservice.parent_hostservice != None else None,
+        comments = []
+        
+        for comment_obj in comment_objs:
+            if comment_obj.hostservice.parent_hostservice != None:
+                parent_service = comment_obj.hostservice.parent_hostservice.service.name
+            else:
+                parent_service = None
+            
+            comments.append({ 'id': comment_obj.id, 'host': comment_obj.hostservice.host.name,
+                     'parent_service': parent_service,
                      'service': comment_obj.hostservice.service.name,
                      'timestamp': comment_obj.timestamp, 'comment_timestamp': comment_obj.comment_timestamp,
-                      'author': comment_obj.author, 'text': comment_obj.text } for comment_obj in comment_objs]
+                      'author': comment_obj.author, 'text': comment_obj.text })
         
         plot_conds = or_(*[datapoint.c.plot_id==plot.id for plot in plots])
         sel = select([datapoint],
@@ -1143,7 +1164,10 @@ class Comment(ModelBase):
 
 class SetTextFactory(PoolListener):
     def connect(self, dbapi_con, con_record):
-        dbapi_con.text_factory = str
+        try:
+            dbapi_con.text_factory = str
+        except Exception:
+            pass
 
 '''
 creates a DB connection
@@ -1151,9 +1175,9 @@ creates a DB connection
 def createModelEngine(dsn):
     global dbload_max_timestamp
 
-    engine = create_engine(dsn, listeners=[SetTextFactory()], pool_size=15, max_overflow=0)
+    engine = create_engine(dsn, listeners=[SetTextFactory()])
 
-    engine.echo = True
+    #engine.echo = True
 
     conn = engine.connect()
 

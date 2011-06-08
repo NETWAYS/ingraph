@@ -66,7 +66,7 @@ if password.strip() == '':
 
 dsn = 'mysql://%s:%s@%s:%d/%s' % (username, password, hostname, port, database)
 
-engine = create_engine(dsn, connect_args={'cursorclass': MySQLdb.cursors.SSCursor})
+engine = create_engine(dsn)#, connect_args={'cursorclass': MySQLdb.cursors.SSCursor})
 
 metadata = MetaData()
 metadata.bind = engine
@@ -75,12 +75,12 @@ metadata.reflect()
 engine.execute('SET @@NET_READ_TIMEOUT=259200;')
 
 agts = [
-    ('none', 300, 2*7*24*60*60),
+    ('none', 60, 2*7*24*60*60),
     ('hour', 60*60, 28*7*24*60*60),
     ('day', 60*60*24, 52*7*24*60*60),
     ('week', 60*60*24*7, 2*52*7*24*60*60),
-    ('month', 60*60*24*31, 4*52*7*24*60*60),
-    ('year', 60*60*24*365, None)
+    #('month', 60*60*24*31, 4*52*7*24*60*60),
+    #('year', 60*60*24*365, None)
 ]
 
 ng_data = metadata.tables['ng_data']
@@ -119,11 +119,19 @@ _timesuffixes = {
     'us': 10**(-6)
 }
 
+tf = api.setupTimeFrame(300, 14*7*24*60*60)
+tf = api.setupTimeFrame(900, 14*7*24*60*60)
+
 for (name, interval, retention_period) in reversed(agts):
     processed.append(name)
+    
+    print name, interval, retention_period
 
     tf = api.setupTimeFrame(interval, retention_period)
     
+    if name != 'none':
+        continue
+
     data_join = ng_data.join(ng_perf).join(ng_host_service).join(ng_host).join(ng_service) \
                 .join(ng_aggregate_type).join(ng_perf_type)
     sel = select([ng_host.c.host_name, ng_service.c.service_name, ng_data.c.data_key, \
@@ -145,7 +153,7 @@ for (name, interval, retention_period) in reversed(agts):
     not possible to properly import these values due to how Grapher V2
     is handling perfdata for check_multi. 
     ''' 
-    
+
     for row in result:
         row_num += 1
         
@@ -184,21 +192,11 @@ for (name, interval, retention_period) in reversed(agts):
         plotname = row[ng_data.c.data_key]
         
         if plotname[-4:] == '_min' or plotname[-4:] == '_max':
-            if type != 'RAW':
-                continue
-            
-            if plotname[-4:] == '_min':
-                lower_limit = value
-            else:
-                upper_limit = value
-                
-            value = None
-            
-            plotname = plotname[:-4]
+            continue
 
         update = (row[ng_host.c.host_name], None, row[ng_service.c.service_name], \
                   plotname, ts, number['uom'], value, min, max, \
-                  lower_limit, upper_limit, None, None, None, None, None, None, interval)
+                  lower_limit, upper_limit, None, None, None, None, None, None)#, interval)
         
         updates.append(update)
         
@@ -212,6 +210,11 @@ for (name, interval, retention_period) in reversed(agts):
             ts_old = ts
             row_num = 0
 
-    api.insertValueBulk(pickle.dumps(updates))
+    if len(updates) > 0:
+        st = time.time()
+        api.insertValueBulk(pickle.dumps(updates))
+        et = time.time()
+        print("%d updates took %f seconds; %d rows (%s -> %s)" % \
+              (len(updates), et - st, row_num, datetime.fromtimestamp(ts_old), datetime.fromtimestamp(ts)))
     
     api.disableTimeFrame(tf)

@@ -73,8 +73,6 @@ class BackendRPCMethods:
 
         return True
 
-    # TODO: methods for enabling/disabling/listing timeframes
-
     def _createHost(self, conn, name):
         if name in self.hosts:
             return self.hosts[name]
@@ -142,7 +140,6 @@ class BackendRPCMethods:
         updates = cPickle.loads(updates_raw)
         
         conn = engine.connect()
-        transaction = conn.begin()
         
         for update in updates:
             (host, parent_service, service, plot, timestamp, unit, value, \
@@ -168,7 +165,6 @@ class BackendRPCMethods:
             for query in queries:
                 queryqueue.put(query)
         
-        transaction.commit()
         conn.close()
 
         return True
@@ -372,8 +368,10 @@ def flushDBThread(engine):
             model.Plot.executeUpdateQueries(conn, items)
             transaction.commit()
             conn.close()
-        except Exception, e:
-            print e
+        except Exception:
+            print "Exception occured while flushing DB updates:"
+            traceback.print_exc()
+
         et = time.time()
         
         print "Flushed %d updates in %f seconds." % (len(items), et - st)

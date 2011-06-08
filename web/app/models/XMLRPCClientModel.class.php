@@ -25,7 +25,7 @@ class XMLRPCClientModel extends _MVC_Model {
 	
 	public function call($method='', $params=array()) {
 		$response = null;
-		
+
 		if ($method) {
 			$ch = curl_init();
 			

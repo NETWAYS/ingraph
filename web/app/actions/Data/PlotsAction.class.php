@@ -13,7 +13,8 @@ class Data_PlotsAction extends XMLRPCAction {
 	                $parameters->get('service'),
 	                $parameters->get('start', ''),
 	                $parameters->get('end', ''),
-	                $parameters->get('interval', '')
+	                $parameters->get('interval', ''),
+	                (int)$parameters->get('nullTolerance', _MVC_Config::get('daemon.nullTolerance', 0))
 	            )
 	        ));
     	} catch(XMLRPCClientError $e) {

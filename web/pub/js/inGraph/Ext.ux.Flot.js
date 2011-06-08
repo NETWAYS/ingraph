@@ -101,7 +101,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             'plotselecting',
             'plotselected',
             'contextmenu',
-            'selectionchange'
+            'selectionchange',
+            'zoom'
         );
     },
     
@@ -640,6 +641,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             } else {
                 this.store.load();
             }
+            
+            this.fireEvent('zoom', this, ranges);
         }
     },
     

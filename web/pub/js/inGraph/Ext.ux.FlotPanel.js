@@ -359,6 +359,15 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
         				xaxis	: ranges.xaxis
         			}, true);
         		},
+        		zoom : function(flot, ranges) {
+        			if(ranges) {
+            			this.overview.getFlot().setSelection({
+            				xaxis	: ranges.xaxis
+            			}, true);       				
+        			} else {
+        				this.overview.getFlot().clearSelection();
+        			}
+        		},
         		scope			: this
         	});
         	

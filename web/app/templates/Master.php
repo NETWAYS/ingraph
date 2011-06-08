@@ -32,8 +32,10 @@
     <script type="text/javascript" src="js/inGraph/Ext.data.Store.exception.Message.js"></script>
     
     <script type="text/javascript" src="js/inGraph/Ext.ux.util.js"></script>
-    <script type="text/javascript" src="js/inGraph/Ext.ux.ColorField.js"></script>
     <script type="text/javascript" src="js/inGraph/Ext.ux.Toast.js"></script>
+    
+    <script type="text/javascript" src="js/ext-add-ons/Ext.ux.ColorField.js"></script>
+    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.Interface.TemplateWindow.js"></script>
     
     <script type="text/javascript" src="js/inGraph/Ext.ux.Flot.js"></script>
     <script type="text/javascript" src="js/inGraph/Ext.ux.FlotJsonReader.js"></script>

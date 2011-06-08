@@ -17,8 +17,7 @@ Ext.onReady(function() {
 	Ext.ux.TimeframeButtonGroup.prototype.frames = iG.timeFrames.getAll();
     
     var limit = 10,
-        minChars = 3,
-        inputWidth = 240;
+        minChars = 3;
 
     /*
     Ext.fly('flot').setSize(800,300);
@@ -67,7 +66,6 @@ Ext.onReady(function() {
 	                    name : 'host',
 	                    url : 'data/hosts',
 	                    plugins : [new Ext.ux.ComboController({observe : 'service'})],
-	                    width : 240,
 	                    emptyText : _('Choose Host')
                     }
                 }, {
@@ -77,7 +75,6 @@ Ext.onReady(function() {
 	                    url : 'data/services',
 	                    plugins : [new Ext.ux.ComboDependency({depends : {host : 'host'}})],
 	                    disabled : true,
-	                    width : 240,
 	                    emptyText : _('Choose Service')
                     }
                 }, {

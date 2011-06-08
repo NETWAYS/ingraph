@@ -86,6 +86,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         Ext.ux.Flot.superclass.constructor.call(this, cfg);
         
         this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions, this.flotOptions);
+        this.initialFlotOptions = this.flotOptions;
         this.genericOptions = {};
     },
     
@@ -650,7 +651,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         if(typeof this.store.reader.jsonData.options !== 'undefined') {
         	delete this.store.reader.jsonData.options;
         }
-        this.flotOptions = Ext.apply({}, Ext.ux.util.clone(this.defaultFlotOptions));
+        this.flotOptions = this.initialFlotOptions;
     },
     
     getStore : function() {

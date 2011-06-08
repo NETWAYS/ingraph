@@ -251,7 +251,13 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
 
             this.store.each(function(record) {
                 if(!record.get('disabled')) {
-                    var data = Ext.apply({}, record.data);
+                	var data = {};
+                	Ext.iterate(record.data, function(k, v) {
+                		if(v === undefined) {
+                			return;
+                		}
+                		data[k] = v;
+                	});
                     
                     if(this.autoAddYAxes) {
                         this.axify(data);

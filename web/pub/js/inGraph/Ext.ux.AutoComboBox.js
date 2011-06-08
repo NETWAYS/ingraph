@@ -58,6 +58,8 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
 						value += '%';
 					}
 					store.setBaseParam(this.valueField, value);
+				} else {
+					store.setBaseParam(this.valueField, '%');
 				}
 			},
 			scope : this

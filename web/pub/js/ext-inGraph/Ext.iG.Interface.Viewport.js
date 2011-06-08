@@ -133,6 +133,12 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
     	});
     	
     	Ext.iG.Interface.Viewport.superclass.constructor.call(this, cfg);
+    	
+    	if(this.host && this.service) {
+    		this.addHostServiceTab(this.host, this.service, false, false);
+    	} else if(this.host) {
+    		this.addHostSummaryTab(this.host);
+		}
     },
     
     addHostServiceTab : function(h, s, st, et) {
@@ -265,6 +271,65 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
 	        },
 	        items : panels
 	    });
+	
+	    this.tabs.setActiveTab(tab);
+    },
+    
+    addHostSummaryTab : function(h) {
+	    var tab = this.tabs.add(new Ext.ux.HostSummary({
+			host : h,
+			height : 200,
+			limit : 20,
+			title : '{0} {1}'.format(_('Services for'), h),
+			listeners : {
+				click : function(hs, index, node) {
+					var service = hs.getRecord(node).get('service'),
+						frames = iG.timeFrames.getDefault(),
+						tab = this.tabs.items.find(function(t) {
+							return t.title === '{0} - {1}'.format(hs.host, service);
+						}),
+						panels = new Array();
+						
+					if(tab) {
+						Ext.destroy(tab);
+					}
+					
+					frames.each(function(frame) {         
+						panels.push({
+							xtype : 'flotpanel',
+							title : frame.title,
+							host : hs.host,
+							service : service,
+							bodyStyle : 'padding : 5px',
+							store : new Ext.ux.FlotJsonStore({
+								url : 'data/plots',
+								baseParams : {
+									host : hs.host,
+									service : service,
+									start : frame.start(),
+									end : frame.end()
+								}
+							}),
+							frame : frame,
+							overview : frame.overview
+						});
+					});
+						
+					tab = this.tabs.add({
+						title : '{0} - {1}'.format(hs.host, service),
+						header : false,
+						autoScroll : true,
+						defaults : {
+							collapsible : true
+						},
+						items : panels
+					});
+					
+					this.tabs.setActiveTab(tab);
+				},
+				scope : this
+			}
+	    }));
 	
 	    this.tabs.setActiveTab(tab);
     }

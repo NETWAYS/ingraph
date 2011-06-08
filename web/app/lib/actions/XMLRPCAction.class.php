@@ -10,7 +10,7 @@ class XMLRPCAction extends _MVC_Action {
 	
     private function strtoint($str) {
     	if(is_numeric($str)) {
-    		return intval($str);
+    		return (int)$str;
     	}
     	
     	return $str;

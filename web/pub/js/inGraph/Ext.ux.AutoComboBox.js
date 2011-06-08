@@ -6,6 +6,8 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
 	
 	pageSize : 20,
 	
+	width : 240,
+	
 	constructor : function(cfg) {
 		cfg = cfg || {};
 		cfg.storeCfg = cfg.storeCfg || {};

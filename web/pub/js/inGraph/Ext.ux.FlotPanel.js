@@ -113,109 +113,50 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                                 });
                             });
                             
-                            if(!this.templateWindow) {
-                            	var hcid = Ext.id(),
-                            	    scid = Ext.id();
-                            	    
-	                            this.templateWindow = new Ext.Window({
-	                                layout      : 'fit',
-	                                width       : 500,
-	                                height      : 400,
-	                                border      : true,
-	                                closable    : true,
-	                                closeAction : 'hide',
-	                                collapsible : true,
-	                                autoScroll  : true,
-	                                title       : 'Template',
-	                                constrain : true,
-	                                modal : true,
-	                                renderTo : Ext.getBody(),
-	                                items       : [{
-	                                    xtype       : 'tabpanel',
-	                                    activeItem  : 0,
-	                                    items       : [{
-	                                    	title         : _('Series'),
-	                                    	xtype         : 'editorgrid',
-	                                    	clicksToEdit  : 1,
-	                                    	plugins       : ['checkcolumn'],
-	                                    	store         : this.flot.getStore(),
-											cm            : new Ext.grid.ColumnModel({
-												defaults: {
-											        width    : 120,
-											        sortable : true
-											    },
-											    columns: [
-											        {xtype: 'checkcolumn', header: 'Disabled', dataIndex: 'disabled', width: 55},
-												    {header: 'Label', dataIndex: 'label'},
-												    {header: 'Color', dataIndex: 'color', editor: new Ext.ux.MyColorField()}
-											    ]
-											})
-	                                    }, {
-	                                    	title  : _('Flot')
-	                                    }, {
-                                            title  : _('Datasource'),
-                                            xtype : 'form',
-                                            autoHeight : true,
-                                            items : [{
-                                        		xtype : 'autocombo',
-                                        		name : 'host',
-                                        		url : 'data/hosts',
-                                        		id : Ext.ux.idInterface.prototype.formatId(hcid),
-                                        		plugins: [new Ext.ux.ComboController({observe: scid})]
-                                        	}, {
-                                        		xtype : 'autocombo',
-                                        		name : 'service',
-                                        		url : 'data/services',
-                                        		id : Ext.ux.idInterface.prototype.formatId(scid),
-                                        		plugins : [new Ext.ux.ComboDependency({depends : {host : hcid}})],
-                                        		disabled : true,
-                                        		listeners : {
-                                        			select : function() {
-                                        				var h = Ext.getCmp(Ext.ux.idInterface.prototype.formatId(hcid)).getValue(),
-                                        				    s = Ext.getCmp(Ext.ux.idInterface.prototype.formatId(scid)).getValue();
-                                        				 
-                                        				this.flot.resetTemplate();
-                                        				  
-                                        				Ext.apply(this.store.baseParams, {
-                                        					host : h,
-                                        					service : s
-                                        				});
-                                        				
-                                        				this.store.removeAll(true);
-                                        				
-                                        				this.host = h;
-                                        				this.service = s;
-                                        				
-                                        				this.store.load();
-                                        				
-                                        				if(this.overview) {
-                                        					var r = this.overview.flot.getSelection();
-                                        					
-                                        					this.overview.resetTemplate();
-                                        					
-	                                                        Ext.apply(this.overview.store.baseParams, {
-	                                                            host : h,
-	                                                            service : s
-	                                                        });
-	                                                        
-	                                                        this.overview.store.removeAll(true);
-	                                                        
-	                                                        this.overview.host = h;
-	                                                        this.overview.service = s;
-	                                                        
-	                                                        this.overview.store.load(r ? {
-	                                                        	callback : function() {
-	                                                        		this.flot.setSelection(r);
-	                                                        	},
-	                                                        	scope : this.overview
-	                                                        } : {});
-                                        				}
-                                        			},
-                                        			scope : this
-                                        		}
-                                        	}]
-                                        }]
-	                                }]
+                            if(!this.templateWindow) {                   	    
+	                            this.templateWindow = new Ext.iG.Interface.TemplateWindow({
+	                            	store : this.store,
+	                            	listeners : {
+	                            		sourcechange : function(w, h, s) {
+                            				this.flot.resetTemplate();
+                          				  
+                            				Ext.apply(this.store.baseParams, {
+                            					host : h,
+                            					service : s
+                            				});
+                            				
+                            				this.store.removeAll(true);
+                            				
+                            				this.host = h;
+                            				this.service = s;
+                            				
+                            				this.store.load();
+                            				
+                            				if(this.overview) {
+                            					var r = this.overview.flot.getSelection();
+                            					
+                            					this.overview.resetTemplate();
+                            					
+                                                Ext.apply(this.overview.store.baseParams, {
+                                                    host : h,
+                                                    service : s
+                                                });
+                                                
+                                                this.overview.store.removeAll(true);
+                                                
+                                                this.overview.host = h;
+                                                this.overview.service = s;
+                                                
+                                                this.overview.store.load(r ? {
+                                                	callback : function() {
+                                                		this.flot.setSelection(r);
+                                                	},
+                                                	scope : this.overview
+                                                } : {});
+                            				}	                            			
+	                            		},
+	                            		scope : this
+	                            	}
 	                            });
                             }
 

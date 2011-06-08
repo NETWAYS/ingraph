@@ -4,8 +4,8 @@ class XMLRPCView extends _MVC_View {
 	
     protected function ensureTypes(&$xy) {
         $xy = array(
-        	intval($xy[0])*1000,
-        	is_numeric($xy[1]) ? floatval($xy[1]) : null
+        	(int)$xy[0]*1000,
+        	is_numeric($xy[1]) ? (float)$xy[1] : null
         );
     }
     

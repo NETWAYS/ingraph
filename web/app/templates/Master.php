@@ -32,8 +32,10 @@
     <script type="text/javascript" src="js/inGraph/Ext.data.Store.exception.Message.js"></script>
     
     <script type="text/javascript" src="js/inGraph/Ext.ux.util.js"></script>
-    <script type="text/javascript" src="js/inGraph/Ext.ux.ColorField.js"></script>
     <script type="text/javascript" src="js/inGraph/Ext.ux.Toast.js"></script>
+    
+    <script type="text/javascript" src="js/ext-add-ons/Ext.ux.ColorField.js"></script>
+    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.Interface.TemplateWindow.js"></script>
     
     <script type="text/javascript" src="js/inGraph/Ext.ux.Flot.js"></script>
     <script type="text/javascript" src="js/inGraph/Ext.ux.FlotJsonReader.js"></script>
@@ -45,6 +47,8 @@
     <script type="text/javascript" src="js/inGraph/Ext.ux.ComboController.js"></script>
     <script type="text/javascript" src="js/inGraph/Ext.ux.ComboDependency.js"></script>
     <script type="text/javascript" src="js/inGraph/Ext.ux.HostSummary.js"></script>
+    
+    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.Interface.Viewport.js"></script>
     
     <link rel="stylesheet" type="text/css" href="js/ext/resources/css/ext-all-notheme.css" />
     <link rel="stylesheet" type="text/css" href="js/ext/resources/css/xtheme-gray.css" />

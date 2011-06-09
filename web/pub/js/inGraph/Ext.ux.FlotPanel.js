@@ -6,6 +6,10 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 	
 	titleFormat     : '{frame} {0} {host} {service}'.format(_('graph for')),
 	
+	zoomSteps : 3,
+	
+	zoomMax : 5*60*1000,
+	
 	constructor		: function(cfg) {
 		cfg = cfg || {};
 		
@@ -21,12 +25,6 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                     active		: cfg.frame.id,
                     listeners	: {
                     	framechange	: function(frame) {
-                    		if(this.overview) {
-                    			this.overview.getFlot().setSelection({
-                    				xaxis: {from: frame.start()}
-                    			});
-                    		}
-                    		
                     		this.frame = frame;
                     	
 	                        this.setTitle(this.titleFormat.format({
@@ -42,7 +40,15 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 	                        	this.store.setBaseParam(k, v);
 	                        }, this);
 
-                    		this.store.load();
+                    		this.store.load({
+                    			callback : function() {
+                    				this.overview.getFlot().setSelection(
+                    				    this.flot.getRange(),
+                    				    true
+                    				);
+                    			},
+                    			scope : this
+                    		});
                     	},
                     	scope		: this
                     },
@@ -164,6 +170,34 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                         },
                         scope   : this
 	                }]
+                }, {
+                    xtype   : 'buttongroup',
+                    items   : [{
+                    	width : 16,
+                    	iconCls : 'icon-zoom-in',
+                    	handler : function() {
+                    		var r = this.flot.getRange(),
+                    			i = r.xaxis.to - r.xaxis.from,
+                    			s = Math.ceil(i / (this.zoomSteps));
+                    		
+                    		if(i <= this.zoomMax) {
+                    			return;
+                    		}
+                    		
+                    		r.xaxis.from += s;
+                    		r.xaxis.to -= s;
+                    		
+                    		this.flot.select(r);
+                    	},
+                    	scope : this
+                    }, {
+                    	width : 16,
+                    	iconCls : 'icon-zoom-out',
+                    	handler : function() {
+                    		this.flot.unselect();
+                    	},
+                    	scope : this
+                    }]
                 }]
             },
             defaults    : {
@@ -293,18 +327,12 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
         	}]);
         	
         	this.flot.on({
-        		plotselected	: function(flot, event, ranges) {
-        			this.timeframes.noneActive();
-        			
-        			this.overview.getFlot().setSelection({
-        				xaxis	: ranges.xaxis
-        			}, true);
+        		zoomin	: function(flot, ranges) {
+        			this.overview.getFlot().setSelection(ranges, true);
         		},
-        		zoom : function(flot, ranges) {
+        		zoomout : function(flot, ranges) {
         			if(ranges) {
-            			this.overview.getFlot().setSelection({
-            				xaxis	: ranges.xaxis
-            			}, true);       				
+            			this.overview.getFlot().setSelection(ranges, true);       				
         			} else {
         				this.overview.getFlot().clearSelection();
         			}
@@ -361,7 +389,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                 		if(!ranges || !ranges.xaxis) {
                 			return;
                 		}
-                		flot.showSelectionHint(event, pos, ranges);
+                		flot.showSelectionHint(pos, ranges);
                 		
                 		var series = new Array();
                 		

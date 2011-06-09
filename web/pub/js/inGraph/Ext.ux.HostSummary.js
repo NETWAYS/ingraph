@@ -3,7 +3,7 @@ Ext.ux.HostSummary = Ext.extend(Ext.DataView, {
 	tpl : new Ext.XTemplate(
 		'<tpl for=".">',
 	    '<div class="iG-service-preview" id="{service}">',
-	    '<div class="thumb"><img src="http://localhost/inGraph/images/chart.png" title="{service}"></div>',
+	    '<div class="thumb"><img src="images/chart.png" title="{service}"></div>',
 	    '<span class="x-editable">{service}</span>',
 	    '</div>',
 	    '</tpl>',

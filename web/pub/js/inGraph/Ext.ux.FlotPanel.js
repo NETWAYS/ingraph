@@ -93,7 +93,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                 }, {
                 	xtype   : 'buttongroup',
                 	items   : [{
-                        text    : 'Options',
+                        text    : 'Template',
                         handler : function(button, event) {
                             var c = new Array();
 
@@ -169,6 +169,33 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                             this.templateWindow.show();
                         },
                         scope   : this
+	                }, {
+	                	xtype : 'splitbutton',
+	                	text : _('Options'),
+	                   	menu : {
+	                   		layout : 'form',
+	                        items: {
+	                        	xtype : 'slider',
+	                        	fieldLabel : _('Null tolerance'),
+	                        	increment : 5,
+	                        	minValue : 0,
+	                        	maxValue : 100,
+	                        	value : 10,
+	                        	width : 100,
+	                        	plugins : [new Ext.ux.SliderTip()],
+	                        	listeners : {
+	                        		changecomplete : function(slider, v) {
+	                        			this.store.setBaseParam('nullTolerance', v);
+	                        			this.store.load();
+	                        			if(this.overview) {
+		                        			this.overview.getStore().setBaseParam('nullTolerance', v);
+		                        			this.overview.getStore().load();	                        				
+	                        			}
+	                        		},
+	                        		scope : this
+	                        	}
+	                        }
+	                   	}
 	                }]
                 }, {
                     xtype   : 'buttongroup',

@@ -11,7 +11,7 @@ class Data_CombinedAction extends XMLRPCAction {
 		$start = $parameters->get('start', '');
 		$end = $parameters->get('end', '');
 		$interval = $parameters->get('interval', '');
-		$nullTolerance = (int)($parameters->get('nullTolerance', _MVC_Config::get('daemon.nullTolerance', 0));
+		$nullTolerance = (int)$parameters->get('nullTolerance', _MVC_Config::get('daemon.nullTolerance', 0));
 		
 		$mp = array();
 		

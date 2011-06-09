@@ -1,10 +1,5 @@
 @CHARSET "UTF-8";
 
-body {
-    font-family: Arial,Verdana,sans-serif;
-    font-size: 7pt;
-}
-
 .tickLabel, .legendLabel, .iG-text {
     font: bold 11px tahoma,arial,helvetica;
 }

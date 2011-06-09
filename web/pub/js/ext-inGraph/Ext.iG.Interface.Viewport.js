@@ -230,9 +230,7 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
 	            }
 	        } else {
 	            end = Math.ceil((new Date()).getTime()/1000);
-	        }                    
-	
-	        
+	        }
 	        
 	        var frame = {
 	            title : panelCfg.title || 'Panel',

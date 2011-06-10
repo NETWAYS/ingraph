@@ -513,7 +513,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 	
 		this.flot.plot(this.flot.getSeries(), id);
 		
-		Ext.destroy.defer(60*1000, this, [el]);    	
+		Ext.EventManager.addListener(window, 'focus', function() {Ext.destroy.defer(60*1000, this, [el]);}, this, {single : true});  	
     }
 
 });

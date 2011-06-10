@@ -1,5 +1,6 @@
 <script type="text/javascript">
 Ext.onReady(function() {
+    
 	Ext.QuickTips.init();
 
 	Ext.ux.TimeframeButtonGroup.prototype.frames = iG.timeFrames.getAll();
@@ -8,7 +9,9 @@ Ext.onReady(function() {
         host : '<?php echo $t['host']; ?>',
         service : '<?php echo $t['service']; ?>',
     });
+    
 
     viewport.doLayout();
+    
 });
 </script>

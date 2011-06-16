@@ -10,6 +10,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     
     autoAddYAxes : true,
     
+    cls : 'flot',
+    
     markingsCritColor : 'rgba(255,0,0,0.4)',
     
     markingsWarnColor : 'rgba(255,255,0,0.4)',
@@ -80,14 +82,15 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             id : Ext.id(null, 'flot-container')
         });
         
-        cfg.selection = new Array();
-        cfg.yaxes = new Array();
+        cfg.flotOptions = iG.merge(true, {}, this.defaultFlotOptions, cfg.flotOptions);
         
         Ext.ux.Flot.superclass.constructor.call(this, cfg);
         
-        this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions, this.flotOptions);
-        this.initialFlotOptions = this.flotOptions;
-        this.genericOptions = {};
+        Ext.apply(this, {
+        	selection : new Array(),
+        	yaxes : new Array(),
+        	genericOptions : {}       	
+        });
     },
     
     initComponent : function() {
@@ -103,7 +106,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             'plotselected',
             'contextmenu',
             'selectionchange',
-            'zoom'
+            'zoomin',
+            'zoomout'
         );
     },
     
@@ -135,8 +139,6 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             flot = Ext.getCmp(event.target.id);
             flot.onPlotSelecting(event, pos, ranges);           
         });
-        $('#' + this.id).bind('plotunselected', function() {
-        });
         $('#' + this.id).bind('plotselected', function(event, range) {
             flot = Ext.getCmp(event.target.id);
             flot.onPlotSelected(event, range);
@@ -145,7 +147,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         if(this.tooltipEvent) {
             this.on(this.tooltipEvent, function(flot, event, pos, item) {
                 if(item) {
-                    flot.showTooltip(event, pos, item, false); 
+                    flot.showTooltip(pos, item, false); 
                 } else {
                     if(this.tooltip) {
                         this.tooltip.hide();
@@ -156,36 +158,21 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         
         
         this.on({
-            'plotselected' : {
-                fn : function(flot, event, ranges) {
-                    flot.select(event, ranges);
-                }
+            plotselected : function(flot, event, ranges) {
+            	flot.select(ranges);
             },
-            'contextmenu' : {
-                fn : function(flot, event) {
-                    flot.unselect(event);
-                }
-            },
-            'beforerefresh' : {
-                fn : function() {
-                
-                }
-            },
-            'refresh' : {
-                fn : function() {
-                    
-                }
+            contextmenu : function(flot, event) {
+            	event.stopEvent();
+            	flot.unselect();
             },
             scope : this
         });
         
         if(this.loadMask) {
-            this.loadMask = new Ext.LoadMask(this.el,
-                    Ext.apply({
-                        store : this.store,
-                        removeMask : true
-                    }, this.loadMask)
-            );
+            this.loadMask = new Ext.LoadMask(this.el, Ext.apply({
+            	store : this.store,
+            	removeMask : true
+            }, this.loadMask));
         }
     },
     
@@ -489,6 +476,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             });
             
             this.flotOptions.grid.markings = markings;
+            
+            this.series = series;
 
             this.plot(series);
 
@@ -503,11 +492,16 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         this.refreshTask.delay(this.refreshBuffer);
     },
     
-    plot : function(series) {
-        this.flot = $.plot($('#' + this.id), series, this.flotOptions);
+    plot : function(series, id) {
+    	id = id || this.id;
+        this.flot = $.plot($('#' + id), series, this.flotOptions);
         if(this.loadMask) {
            this.el.setStyle('position', 'relative');
         }
+    },
+    
+    getSeries : function() {
+    	return this.series;
     },
     
     draw : function() {
@@ -527,7 +521,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     	series.yaxis = iof;
     },
     
-    showTooltip : function(event, pos, item) {
+    showTooltip : function(pos, item) {
         if(!this.tooltip) {
             this.tooltip = new Ext.ToolTip({
                 renderTo : Ext.getBody()
@@ -598,7 +592,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         this.tooltip.setPagePosition([x,y]);
     },
     
-    showSelectionHint : function(event, pos, ranges) {
+    showSelectionHint : function(pos, ranges) {
         if(!this.shint) {
             this.shint = new Ext.ToolTip({
                 renderTo : Ext.getBody()
@@ -613,7 +607,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         this.shint.showAt([pos.pageX + 10, pos.pageY + 10]);
     },
     
-    select : function(event, ranges) {
+    select : function(ranges) {
         if(!ranges.xaxis) {
             return;
         }
@@ -626,11 +620,11 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
                 end : Math.ceil(ranges.xaxis.to/1000)
             }
         });
+        
+        this.fireEvent('zoomin', this, ranges);
     },
     
-    unselect : function(event) {
-        event.stopEvent();
-        
+    unselect : function() {  
         if(this.selection.pop()) {
             if(ranges = this.selection.last()) {
                 this.store.load({
@@ -643,7 +637,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
                 this.store.load();
             }
             
-            this.fireEvent('zoom', this, ranges);
+            this.fireEvent('zoomout', this, ranges);
         }
     },
     
@@ -651,7 +645,17 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         if(typeof this.store.reader.jsonData.options !== 'undefined') {
         	delete this.store.reader.jsonData.options;
         }
-        this.flotOptions = this.initialFlotOptions;
+        this.flotOptions = this.initialConfig.flotOptions;
+    },
+    
+    getRange : function() {
+    	var x = this.flot.getXAxes()[0];
+    	return {
+    		xaxis : {
+	    		from : x.min,
+	    		to : x.max
+    		}
+    	}
     },
     
     getStore : function() {

@@ -123,6 +123,20 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
             }, {
                 region : 'center',
                 xtype : 'tabpanel',
+                tbar : {
+                	items : ['->', {
+                    	width : 16,
+                    	iconCls : 'icon-print',
+                    	handler : function() {
+                    		Ext.each(this.findByType('flotpanel'), function(fp) {
+                    			fp.preparePrint();
+                    		});
+                    		
+                    		window.print();
+                    	},
+                    	scope : this               		
+                	}]
+                },
                 plugins : [new Ext.ux.TabScrollerMenu()],
                 enableTabScroll : true,
                 ref : 'tabs',
@@ -230,9 +244,7 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
 	            }
 	        } else {
 	            end = Math.ceil((new Date()).getTime()/1000);
-	        }                    
-	
-	        
+	        }
 	        
 	        var frame = {
 	            title : panelCfg.title || 'Panel',

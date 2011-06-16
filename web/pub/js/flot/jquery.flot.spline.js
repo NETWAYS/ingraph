@@ -1,4 +1,5 @@
 (function ($) {
+	
     var options = {
         series: {
             lines: {
@@ -95,17 +96,6 @@
         }
         
         plot.hooks.processRawData.push(spline);
-        
-
-        plot.hooks.bindEvents.push(function (plot, eventHolder) {
-            plot.getPlaceholder().bind('mousemove', function (event, pos, item) {
-            	/*
-            	console.log('spline event: ', event);
-            	event.preventDefault();
-            	*/
-            });
-        });
-
     }
     
     $.plot.plugins.push({
@@ -114,4 +104,5 @@
         name: 'spline',
         version: '0.1'
     });
+    
 })(jQuery);

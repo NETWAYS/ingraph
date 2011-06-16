@@ -10,6 +10,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     
     autoAddYAxes : true,
     
+    cls : 'flot',
+    
     markingsCritColor : 'rgba(255,0,0,0.4)',
     
     markingsWarnColor : 'rgba(255,255,0,0.4)',
@@ -474,6 +476,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             });
             
             this.flotOptions.grid.markings = markings;
+            
+            this.series = series;
 
             this.plot(series);
 
@@ -488,11 +492,16 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         this.refreshTask.delay(this.refreshBuffer);
     },
     
-    plot : function(series) {
-        this.flot = $.plot($('#' + this.id), series, this.flotOptions);
+    plot : function(series, id) {
+    	id = id || this.id;
+        this.flot = $.plot($('#' + id), series, this.flotOptions);
         if(this.loadMask) {
            this.el.setStyle('position', 'relative');
         }
+    },
+    
+    getSeries : function() {
+    	return this.series;
     },
     
     draw : function() {

@@ -225,6 +225,15 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                     	},
                     	scope : this
                     }]
+                }, '->', {
+                	width : 16,
+                	iconCls : 'icon-print',
+                	handler : function() {
+                		this.preparePrint();
+                		
+                		window.print();
+                	},
+                	scope : this
                 }]
             },
             defaults    : {
@@ -480,6 +489,31 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
         if(this.templateWindow) {
         	this.templateWindow.destroy();
         }
+    },
+    
+    preparePrint : function() {
+		var id = '{0}-print'.format(this.id),
+			el = Ext.DomHelper.append(Ext.getBody(), {
+			tag : 'div',
+			cls : 'flot-print-container',
+			children : [{
+				tag : 'div',
+				cls : 'flot-print-title',
+				html : this.title,
+			}, {
+				tag : 'div',
+				id : id,
+				cls : 'flot-print-graph',
+				style : {
+					width : '670px',
+					height : '170px'
+				}
+			}]
+		}, true);
+	
+		this.flot.plot(this.flot.getSeries(), id);
+		
+		Ext.EventManager.addListener(window, 'focus', function() {Ext.destroy.defer(1000, this, [el]);}, this, {single : true});  	
     }
 
 });

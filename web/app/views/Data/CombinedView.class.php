@@ -34,7 +34,7 @@ class Data_CombinedView extends XMLRPCView {
         return json_encode(array(
             'results' => $data,
             'total' => count($data),
-        	'options' => array_diff_key($config, array_fill_keys(array('panels'), null)),
+        	'options' => array_diff_key($config, array_fill_keys(array('data'), null)),
             'start' => $parameters->get('start', null),
             'end' => $parameters->get('end', null)
         ));

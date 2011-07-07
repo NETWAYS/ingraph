@@ -33,6 +33,15 @@ class PerfdataParser(object):
         'EB': 1024**6
     }
     
+    _brokensuffixes = {
+        'K': 1000**1,
+        'M': 1000**2,
+        'G': 1000**3,
+        'T': 1000**4,
+        'P': 1000**5,
+        'E': 1000**6,
+    }
+    
     _timesuffixes = {
         's': 10**0,
         'ms': 10**(-3),
@@ -66,6 +75,9 @@ class PerfdataParser(object):
         elif unit.upper() in PerfdataParser._bytesuffixes:
             uom = 'byte'
             result_value = value * PerfdataParser._bytesuffixes[unit.upper()]
+        elif unit.upper() in PerfdataParser._brokensuffixes:
+            uom = 'raw'
+            result_value = value * PerfdataParser._brokensuffixes[unit.upper()]
         elif unit in PerfdataParser._timesuffixes:
             uom = 'time'
             result_value = value * PerfdataParser._timesuffixes[unit] 

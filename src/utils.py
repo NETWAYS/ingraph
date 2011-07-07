@@ -22,6 +22,7 @@ class PerfdataParser(object):
     _perfRegex = re.compile('([^= ][^=]*)=([^ ]+)')
     _intRegex = re.compile('^([+-]?[0-9,.]+)[ ]*(.*?)$')
     _rangeRegex = re.compile('^(@?)([^:]*)(:?)([^:]*)$')
+    _multiRegex = re.compile('^([^:]+::[^:]+::)[^:]+$')
     
     _bytesuffixes = {
         'B': 1024**0,
@@ -109,9 +110,18 @@ class PerfdataParser(object):
         
         plots = {}
         
+        multi_prefix = None
+        
         for match in matches:
             key = match[0]
             values = match[1].split(';')
+            
+            multi_match = PerfdataParser._multiRegex.match(key)
+            
+            if multi_match:
+                multi_prefix = multi_match.group(1)
+            elif multi_prefix != None:
+                key = multi_prefix + key
             
             plot = {}
             

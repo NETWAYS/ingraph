@@ -902,9 +902,9 @@ class TimeFrame(ModelBase):
         self.invalidateCache()
 
 datapoint = Table('datapoint', metadata,
-    Column('plot_id', Integer, ForeignKey('plot.id'), nullable=False, primary_key=True),
-    Column('timeframe_id', Integer, ForeignKey('timeframe.id'), nullable=False, primary_key=True),
-    Column('timestamp', Integer, nullable=False, primary_key=True),
+    Column('plot_id', Integer, ForeignKey('plot.id'), nullable=False, primary_key=True, autoincrement=False),
+    Column('timeframe_id', Integer, ForeignKey('timeframe.id'), nullable=False, primary_key=True, autoincrement=False),
+    Column('timestamp', Integer, nullable=False, primary_key=True, autoincrement=False),
     Column('min', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('max', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('avg', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),

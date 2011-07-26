@@ -8,6 +8,8 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
 	
 	width : 240,
 	
+	idFormat : 'iG-{0}',
+	
 	constructor : function(cfg) {
 		cfg = cfg || {};
 		cfg.storeCfg = cfg.storeCfg || {};
@@ -18,8 +20,8 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
             hideTrigger : true,
             listEmptyText : _('No results...'),
             editable : true,
-            tpl : '<tpl for="."><div ext:qtip="{{0}}" class="x-combo-list-item">{{0}}</div></tpl>'.format(cfg.name),
-            id : this.formatId(cfg.name),
+            tpl : String.format('<tpl for="."><div ext:qtip="{{0}}" class="x-combo-list-item">{{0}}</div></tpl>', cfg.name),
+            id : String.format(this.idFormat, cfg.name),
             hiddenName : cfg.name,
             fieldLabel : cfg.name.ucfirst(),
             queryParam : cfg.name,
@@ -83,4 +85,3 @@ Ext.ux.AutoComboBox = Ext.extend(Ext.form.ComboBox, {
 });
 
 Ext.reg('autocombo', Ext.ux.AutoComboBox);
-Ext.apply(Ext.ux.AutoComboBox.prototype, Ext.ux.idInterface.prototype);

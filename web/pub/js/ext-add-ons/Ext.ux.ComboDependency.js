@@ -13,7 +13,7 @@ Ext.ux.ComboDependency = Ext.extend(Object, {
 			beforeload  : function(self, options) {
 				Ext.each(this.depends, function(dep) {
 					Ext.iterate(dep, function(param, id) {
-						id = this.formatId(id);
+						id = String.format(combo.idFormat, id);
 						options.params[param] = Ext.getCmp(id).getValue();
 					}, this);					
 				}, this);
@@ -25,5 +25,3 @@ Ext.ux.ComboDependency = Ext.extend(Object, {
 	}
 	
 });
-
-Ext.apply(Ext.ux.ComboDependency.prototype, Ext.ux.idInterface.prototype);

@@ -1,8 +1,6 @@
-Ext.ns('Ext.iG.Interface');
+Ext.ns('Ext.iG');
 
-Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
-	
-    boxMinWidth : 400,
+Ext.iG.Viewport = Ext.extend(Ext.Viewport, {
     
     layout : 'border',
     
@@ -29,7 +27,7 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
                         items : {
     	                    xtype : 'autocombo',
     	                    name : 'host',
-    	                    url : 'data/hosts',
+    	                    url : cfg.provider.hosts,
     	                    plugins : [new Ext.ux.ComboController({observe : 'service'})],
     	                    emptyText : _('Choose Host'),
     	                    ref : '../../../hostCmp'
@@ -38,7 +36,7 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
                         items : {
     	                    xtype : 'autocombo',
     	                    name : 'service',
-    	                    url : 'data/services',
+    	                    url : cfg.provider.services,
     	                    plugins : [new Ext.ux.ComboDependency({depends : {host : 'host'}})],
     	                    disabled : true,
     	                    emptyText : _('Choose Service'),
@@ -94,7 +92,7 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
                         items : {
     	                    xtype : 'autocombo',
     	                    name : 'view',
-    	                    url : 'data/views',
+    	                    url : cfg.provider.views,
     	                    emptyText : _('Choose View'),
                             storeCfg : {
                                 fields : ['view', 'config']
@@ -146,7 +144,7 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
             }]
     	});
     	
-    	Ext.iG.Interface.Viewport.superclass.constructor.call(this, cfg);
+    	Ext.iG.Viewport.superclass.constructor.call(this, cfg);
     	
     	if(this.host && this.service) {
     		this.addHostServiceTab(this.host, this.service, false, false);
@@ -168,7 +166,7 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
         }
         
         var tab = this.tabs.items.find(function(t) {
-            return t.title === '{0} - {1}'.format(h, s);
+            return t.title === String.format('{0} - {1}', h, s);
         });
 
         if(tab) {
@@ -184,8 +182,8 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
                 host : h,
                 service : s,
                 bodyStyle : 'padding : 5px',
-                store : new Ext.ux.FlotJsonStore({
-                    url : 'data/plots',
+                store : new Ext.iG.FlotJsonStore({
+                    url : this.provider.plots,
                     baseParams : {
                         host : h,
                         service : s,
@@ -196,10 +194,10 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
                 frame : frame,
                 overview : frame.overview
             });
-        });
+        }, this);
         
         tab = this.tabs.add({
-            title : '{0} - {1}'.format(h, s),
+            title : String.format('{0} - {1}', h, s),
             header : false,
             autoScroll : true,
             defaults : {
@@ -258,7 +256,7 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
 	            title : frame.title,
 	            frame : frame,
 	            bodyStyle : 'padding : 5px',
-	            store : new Ext.ux.FlotJsonStore({
+	            store : new Ext.iG.FlotJsonStore({
 	                url : 'data/combined',
 	                baseParams : {
 	                    config : Ext.encode({
@@ -288,17 +286,18 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
     },
     
     addHostSummaryTab : function(h) {
-	    var tab = this.tabs.add(new Ext.ux.HostSummary({
+	    var tab = this.tabs.add(new Ext.iG.HostSummary({
+	    	provider : this.provider,
 			host : h,
 			height : 200,
 			limit : 20,
-			title : '{0} {1}'.format(_('Services for'), h),
+			title : String.format('{0} {1}', _('Services for'), h),
 			listeners : {
 				click : function(hs, index, node) {
 					var service = hs.getRecord(node).get('service'),
 						frames = iG.timeFrames.getDefault(),
 						tab = this.tabs.items.find(function(t) {
-							return t.title === '{0} - {1}'.format(hs.host, service);
+							return t.title === String.format('{0} - {1}', hs.host, service);
 						}),
 						panels = new Array();
 						
@@ -313,8 +312,8 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
 							host : hs.host,
 							service : service,
 							bodyStyle : 'padding : 5px',
-							store : new Ext.ux.FlotJsonStore({
-								url : 'data/plots',
+							store : new Ext.iG.FlotJsonStore({
+								url : this.provider.plots,
 								baseParams : {
 									host : hs.host,
 									service : service,
@@ -325,10 +324,10 @@ Ext.iG.Interface.Viewport = Ext.extend(Ext.Viewport, {
 							frame : frame,
 							overview : frame.overview
 						});
-					});
+					}, this);
 						
 					tab = this.tabs.add({
-						title : '{0} - {1}'.format(hs.host, service),
+						title : String.format('{0} - {1}', hs.host, service),
 						header : false,
 						autoScroll : true,
 						defaults : {

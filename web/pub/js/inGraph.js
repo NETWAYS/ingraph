@@ -273,28 +273,6 @@ if (!Array.prototype.bsearch) Array.prototype.bsearch = function(value) {
 	}
 	
 	return this[high] != value ? -1 : high;
-}
-
-if(!String.prototype.format) String.prototype.format = function() {
-	var str = this,
-		t = 0;
-	
-    for(var i = 0; i < arguments.length; ++i) {
-    	var arg = arguments[i];
-    	
-    	if(typeof arg == 'object') {
-    		for(var key in arg) {
-    			var re = new RegExp('\\{' + key + '\\}', 'gi');
-    			str = str.replace(re, arg[key]);
-    		}
-    	} else {
-			var re = new RegExp('\\{' + t + '\\}', 'gi'); 
-			str = str.replace(re, arg);
-			++t;
-    	}
-    }
-    
-    return str;
 };
 
 if(!String.prototype.ucfirst) String.prototype.ucfirst = function() {

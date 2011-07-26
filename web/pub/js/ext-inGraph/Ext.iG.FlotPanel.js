@@ -1,10 +1,12 @@
-Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
+Ext.ns('Ext.iG');
+
+Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 	
 	loadMask		: true,
 	
 	overview		: false,
 	
-	titleFormat     : '{frame} {0} {host} {service}'.format(_('graph for')),
+	titleFormat     : String.format('{frame} {0} {host} {service}', _('graph for')),
 	
 	zoomSteps : 3,
 	
@@ -27,7 +29,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                     	framechange	: function(frame) {
                     		this.frame = frame;
                     	
-	                        this.setTitle(this.titleFormat.format({
+	                        this.setTitle(String.format(this.titleFormat, {
 	                            host       : this.host,
 	                            service    : this.service,
 	                            frame      : this.frame.title
@@ -120,7 +122,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                             });
                             
                             if(!this.templateWindow) {                   	    
-	                            this.templateWindow = new Ext.iG.Interface.TemplateWindow({
+	                            this.templateWindow = new Ext.iG.TemplateWindow({
 	                            	store : this.store,
 	                            	listeners : {
 	                            		sourcechange : function(w, h, s) {
@@ -242,13 +244,13 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
             }
 		});
 		
-		Ext.ux.FlotPanel.superclass.constructor.call(this, cfg);
+		Ext.iG.FlotPanel.superclass.constructor.call(this, cfg);
 	},
 	
 	initComponent	: function() {
-		Ext.ux.FlotPanel.superclass.initComponent.call(this);
+		Ext.iG.FlotPanel.superclass.initComponent.call(this);
 		
-		this.title = this.titleFormat.format({
+		this.title = String.format(this.titleFormat, {
             host    : this.host,
             service : this.service,
             frame   : this.frame.title
@@ -277,7 +279,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
             load    : { 
                 fn     : function(store, records) {
                     if(records.length) {
-                        this.setTitle(this.titleFormat.format({
+                        this.setTitle(String.format(this.titleFormat, {
                             host    : this.host,
                             service : this.service,
                             frame   : this.frame.title
@@ -286,7 +288,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
                         this.datapoints.enable();
                         this.smooth.enable();
                     } else {
-                    	this.setTitle((this.titleFormat + ' ({0})').format({
+                    	this.setTitle(String.format(this.titleFormat + ' ({0})', {
                     		host      : this.host,
                     		service   : this.service,
                     		frame     : this.frame.title
@@ -352,7 +354,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
         	        }
         	    },
         	    height      : 50,
-        	    store       : new Ext.ux.FlotJsonStore({
+        	    store       : new Ext.iG.FlotJsonStore({
         	    	url			: this.store.url,
         	    	baseParams	: Ext.applyIf({
         	    		start	: '',
@@ -471,7 +473,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 	},
 	
 	initEvents: function() {
-		Ext.ux.FlotPanel.superclass.initEvents.call(this);
+		Ext.iG.FlotPanel.superclass.initEvents.call(this);
 		
 		if(this.loadMask) {
             this.loadMask = new Ext.LoadMask(this.bwrap,
@@ -484,7 +486,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 	},
 	
     onDestroy: function() {
-        Ext.ux.FlotPanel.superclass.onDestroy.call(this);
+        Ext.iG.FlotPanel.superclass.onDestroy.call(this);
         
         if(this.templateWindow) {
         	this.templateWindow.destroy();
@@ -492,7 +494,7 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
     },
     
     preparePrint : function() {
-		var id = '{0}-print'.format(this.id),
+		var id = String.format('{0}-print', this.id),
 			el = Ext.DomHelper.append(Ext.getBody(), {
 			tag : 'div',
 			cls : 'flot-print-container',
@@ -518,4 +520,4 @@ Ext.ux.FlotPanel = Ext.extend(Ext.Panel, {
 
 });
 
-Ext.reg('flotpanel', Ext.ux.FlotPanel);
+Ext.reg('flotpanel', Ext.iG.FlotPanel);

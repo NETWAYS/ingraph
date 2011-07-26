@@ -12,14 +12,14 @@ Ext.ux.ComboController = Ext.extend(Object, {
 		combo.on({
 			select  : function() {				
 				Ext.each(this.observe, function(id) {
-					id = this.formatId(id);
+					id = String.format(combo.idFormat, id);
 	                Ext.getCmp(id).enable();
 	                Ext.getCmp(id).clearValue();					
 				}, this); 
             },
             change  : function(self, value) {
 				Ext.each(this.observe, function(id) {
-					id = this.formatId(id);
+					id = String.format(combo.idFormat, id);
 					
 	                Ext.getCmp(id).clearValue();
 	                
@@ -36,5 +36,3 @@ Ext.ux.ComboController = Ext.extend(Object, {
 	}
 	
 });
-
-Ext.apply(Ext.ux.ComboController.prototype, Ext.ux.idInterface.prototype);

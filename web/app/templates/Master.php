@@ -46,8 +46,11 @@
     <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.FlotPanel.js"></script>
     <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.TemplateWindow.js"></script>
     <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.HostSummary.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.Menu.js"></script>
     
     <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.Viewport.js"></script>
+    
+    <script type="text/javascript" src="js/inGraph/ext-inGraph-plugins/Ext.iG.TabLayout.js"></script>
     
     <link rel="stylesheet" type="text/css" href="js/ext/resources/css/ext-all-notheme.css" />
     <link rel="stylesheet" type="text/css" href="js/ext/resources/css/xtheme-gray.css" />

@@ -44,10 +44,12 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 
                     		this.store.load({
                     			callback : function() {
-                    				this.overview.getFlot().setSelection(
-                    				    this.flot.getRange(),
-                    				    true
-                    				);
+                    				if(this.overview) {
+	                    				this.overview.getFlot().setSelection(
+	                    				    this.flot.getRange(),
+	                    				    true
+	                    				);
+                    				}
                     			},
                     			scope : this
                     		});

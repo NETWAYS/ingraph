@@ -25,29 +25,29 @@
     <script type="text/javascript" src="js/ext/examples/ux/TabScrollerMenu.js"></script>
     <script type="text/javascript" src="js/ext/examples/ux/CheckColumn.js"></script>
     
-    <script type="text/javascript" src="js/ext-overrides/String.js"></script>
-    <script type="text/javascript" src="js/ext-overrides/Ext.form.DateField.parseDate.js"></script>
-    <script type="text/javascript" src="js/ext-overrides/Ext.data.Store.exception.Message.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-overrides/String.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-overrides/Ext.form.DateField.parseDate.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-overrides/Ext.data.Store.exception.Message.js"></script>
     
-    <script type="text/javascript" src="js/ext-add-ons/Ext.ux.util.js"></script>
-    <script type="text/javascript" src="js/ext-add-ons/Ext.ux.Toast.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.util.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.Toast.js"></script>
     
-    <script type="text/javascript" src="js/ext-add-ons/Ext.ux.ColorField.js"></script>
-    <script type="text/javascript" src="js/ext-add-ons/Ext.ux.AutoComboBox.js"></script>
-    <script type="text/javascript" src="js/ext-add-ons/Ext.ux.ComboController.js"></script>
-    <script type="text/javascript" src="js/ext-add-ons/Ext.ux.ComboDependency.js"></script>
-    <script type="text/javascript" src="js/ext-add-ons/Ext.ux.TimeframeButtonGroup.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.ColorField.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.AutoComboBox.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.ComboController.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.ComboDependency.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.TimeframeButtonGroup.js"></script>
     
-    <script type="text/javascript" src="js/inGraph.js"></script>
+    <script type="text/javascript" src="js/inGraph/inGraph.js"></script>
     
-    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.Flot.js"></script>
-    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.FlotJsonReader.js"></script>
-    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.FlotJsonStore.js"></script>
-    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.FlotPanel.js"></script>
-    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.TemplateWindow.js"></script>
-    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.HostSummary.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.Flot.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.FlotJsonReader.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.FlotJsonStore.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.FlotPanel.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.TemplateWindow.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.HostSummary.js"></script>
     
-    <script type="text/javascript" src="js/ext-inGraph/Ext.iG.Viewport.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-inGraph/Ext.iG.Viewport.js"></script>
     
     <link rel="stylesheet" type="text/css" href="js/ext/resources/css/ext-all-notheme.css" />
     <link rel="stylesheet" type="text/css" href="js/ext/resources/css/xtheme-gray.css" />

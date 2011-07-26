@@ -1,3 +1,5 @@
+Ext.ns('Ext.iG');
+
 Ext.iG.HostSummary = Ext.extend(Ext.DataView, {
 	
 	tpl : new Ext.XTemplate(

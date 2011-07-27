@@ -11,9 +11,11 @@ Ext.onReady(function() {
         provider : {
             hosts : 'data/hosts',
             services : 'data/services',
-            views : 'data/combined',
-            plots : 'data/plots'
-        }
+            views : 'data/views',
+            plots : 'data/plots',
+            combined : 'data/combined'
+        },
+        timeFrames : iG.timeFrames.getAll().clone()
     });
     
 

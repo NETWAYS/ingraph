@@ -19,7 +19,7 @@ Ext.iG.TabLayout =  Ext.extend(Object, {
 	
 	addins : {
 	    hostServiceRequest : function(h, s, st, et) {
-	        var frames = iG.timeFrames.getDefault();
+	        var frames = this.timeFrames.filter('show', true);
 	        
 	        if(st || et) {
 	            frames.clear();
@@ -122,7 +122,7 @@ Ext.iG.TabLayout =  Ext.extend(Object, {
 		            frame : frame,
 		            bodyStyle : 'padding : 5px',
 		            store : new Ext.iG.FlotJsonStore({
-		                url : 'data/combined',
+		                url : this.provider.combined,
 		                baseParams : {
 		                    config : Ext.encode({
 		                        data : Ext.isArray(panelCfg.data) ? panelCfg.data : new Array(panelCfg.data),
@@ -135,7 +135,7 @@ Ext.iG.TabLayout =  Ext.extend(Object, {
 		                }
 		            })
 		        });
-		    });
+		    }, this);
 		
 		    tab = this.tabLayout.getTabs().add({
 		        title : c.title,

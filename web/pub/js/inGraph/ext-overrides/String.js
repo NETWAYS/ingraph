@@ -2,6 +2,8 @@
 	var _format = String.format;
 	
 	String.format = function(format) {
+		var newargs = new Array();
+		
 		Ext.each(Ext.toArray(arguments, 1), function(arg) {
 			if(typeof arg == 'object') {
 				for(var key in arg) {
@@ -9,9 +11,13 @@
 			            return arg[key];
 			        });
 				}
+			} else {
+				newargs.push(arg);
 			}
 		});
 		
-		return _format.apply(this, arguments);
+		newargs.unshift(format);
+		
+		return _format.apply(this, newargs);
 	};
 })();

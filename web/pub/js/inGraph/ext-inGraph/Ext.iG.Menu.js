@@ -23,7 +23,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
 		                xtype : 'autocombo',
 		                name : 'host',
 		                url : cfg.provider.hosts,
-		                plugins : [new Ext.ux.ComboController({observe : 'service'})],
+		                plugins : [new Ext.ux.ComboController({control : {scope : this, cmp : 'serviceCmp'}})],
 		                emptyText : _('Choose Host'),
 		                ref : '../../hostCmp'
 		            }
@@ -32,14 +32,14 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
 		                xtype : 'autocombo',
 		                name : 'service',
 		                url : cfg.provider.services,
-		                plugins : [new Ext.ux.ComboDependency({depends : {host : 'host'}})],
+		                plugins : [new Ext.ux.ComboDependency({depends : {scope : this, param : 'host', cmp : 'hostCmp'}})],
 		                disabled : true,
 		                emptyText : _('Choose Service'),
 		                ref : '../../serviceCmp'
 		            }
 		        }, {
 		            items : {
-		                xtype : 'button',
+		                xtype : 'splitbutton',
 		                text : _('Display Graph'),
 		                width : 80,
 		                cls : 'x-btn-text-left',
@@ -55,13 +55,55 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
 		                    	this.hostRequest(h);
 		                    }
 		                },
-		                scope : this
+		                scope : this,
+		                menu : {
+		                	ignoreParentClicks : true,
+		                	items : [{
+			                	xtype : 'menutextitem',
+			                	text : _('Choose graphs to plot'),
+			                	style : {
+		                            'border' : '1px solid #999999',
+		                            'background-color' : '#D6E3F2',
+		                            'margin' : "0px 0px 1px 0px",
+		                            'display' : 'block',
+		                            'padding' : '3px',
+		                            'font-weight' : 'bold',
+		                            'font-size' : '12px',
+		                            'text-align' : 'center'
+		                        }
+			                }, (function() {
+			                	var frames = new Array();
+			                	
+			                	iG.timeFrames.getAll().each(function(frame) {
+			                		frames.push({
+			                			text : (function(frame) {
+			                				var title = frame.title;
+			                				if(frame.overview) {
+			                					title = String.format(
+			                						'{0}, {1}',
+			                						title,
+			                						_('Overview')
+			                					);
+			                				}
+			                				return title;
+			                			})(frame),
+			                			checked : frame.show,
+			                			frameKey : iG.timeFrames.getAll().getKey(frame),
+			                			handler : function(c) {
+			                				this.timeFrames.get(c.frameKey).show = !c.checked;
+			                			},
+			                			scope : this
+			                		});
+			                	}, this);
+			                	
+			                	return frames;
+			                }).call(this)]
+		                }
 		            }
 		        }, {
 		            items : {
 		                xtype : 'datefield',
 		                format : 'Y-m-d H:i:s',
-		                id : 'iG-Start',
 		                fieldLabel : 'Start',
 		                width : 150,
 		                emptyText : _('Starttime'),
@@ -71,7 +113,6 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
 		            items : {
 		                xtype : 'datefield',
 		                format : 'Y-m-d H:i:s',
-		                id : 'iG-End',
 		                fieldLabel : 'End',
 		                width : 150,
 		                emptyText : _('Endtime'),

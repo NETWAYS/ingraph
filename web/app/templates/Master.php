@@ -34,9 +34,10 @@
     
     <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.ColorField.js"></script>
     <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.AutoComboBox.js"></script>
-    <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.ComboController.js"></script>
-    <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.ComboDependency.js"></script>
     <script type="text/javascript" src="js/inGraph/ext-add-ons/Ext.ux.TimeframeButtonGroup.js"></script>
+    
+    <script type="text/javascript" src="js/inGraph/ext-plugins/Ext.ux.ComboController.js"></script>
+    <script type="text/javascript" src="js/inGraph/ext-plugins/Ext.ux.ComboDependency.js"></script>
     
     <script type="text/javascript" src="js/inGraph/inGraph.js"></script>
     

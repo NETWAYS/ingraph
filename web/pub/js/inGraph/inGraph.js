@@ -344,17 +344,13 @@ iG.timeFrames = (function() {
 	return {
 		getAll		: function() {
 			return frames;
-		},
-		
-		getDefault	: function() {
-			return frames.filter('show', true);
 		}
-	}
+	};
 })();
 
 iG.merge = function() {
 	return jQuery.extend.apply(jQuery, arguments);
-}
+};
 
 iG.getXIndex = function(x, series) {
 	var i = series.map(function(xy) {
@@ -362,9 +358,9 @@ iG.getXIndex = function(x, series) {
 	}).bsearch(x);
 	
 	return i == -1 ? false : i;
-}
+};
 
 iG.getY = function(x, series, fn) {
 	var i = iG.getXIndex(x, series);
 	return i ? (typeof fn == 'function' ? fn(series[i][1]) : series[i][1]) : undefined;
-}
+};

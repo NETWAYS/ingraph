@@ -242,7 +242,8 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             },
             defaults    : {
                 xtype   : 'flot',
-                height  : 300
+                height  : 300,
+                layout : 'container'
             }
 		});
 		

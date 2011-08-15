@@ -291,7 +291,7 @@ iG.functor = function(v) {
 };
 
 iG.timeFrames = (function() {
-	var frames = new Ext.util.MixedCollection(false, function(o) {
+	var frames = new Ext.util.MixedCollection(true, function(o) {
 		return o.title.toUpperCase();
 	});
 	

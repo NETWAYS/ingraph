@@ -30,7 +30,7 @@ Ext.iG.Viewport = Ext.extend(Ext.Viewport, {
     	
     	this.menu = new Ext.iG.Menu(Ext.apply(cfg, {
             region : 'north',
-            height : 90,
+            height : 100,
             plugins: [new Ext.iG.TabLayout({
             	tabs : this.tabs
             })]

@@ -10,10 +10,10 @@ Ext.iG.TabLayout =  Ext.extend(Object, {
 	init : function(menu) {
 		Ext.apply(menu, this.addins);
 		
-		menu.tabLayout = this;
+		menu.iGLayout = this;
 	},
 	
-	getTabs : function() {
+	getContainer : function() {
 		return this.tabs;
 	},
 	
@@ -30,7 +30,7 @@ Ext.iG.TabLayout =  Ext.extend(Object, {
 	            });
 	        }
 	        
-	        var tab = this.tabLayout.getTabs().items.find(function(t) {
+	        var tab = this.iGLayout.getContainer().items.find(function(t) {
 	            return t.title === String.format('{0} - {1}', h, s);
 	        });
 
@@ -61,17 +61,18 @@ Ext.iG.TabLayout =  Ext.extend(Object, {
 	            });
 	        }, this);
 	        
-	        tab = this.tabLayout.getTabs().add({
+	        tab = this.iGLayout.getContainer().add({
 	            title : String.format('{0} - {1}', h, s),
 	            header : false,
 	            autoScroll : true,
+                layout : panels.length > 1 ? 'anchor' : 'absolute',
 	            defaults : {
 	                collapsible : true
 	            },
 	            items : panels
 	        });
 
-	        this.tabLayout.getTabs().setActiveTab(tab);    	
+	        this.iGLayout.getContainer().setActiveTab(tab);    	
 	    },
 	    
 	    viewRequest : function(c) {
@@ -79,7 +80,7 @@ Ext.iG.TabLayout =  Ext.extend(Object, {
 
 		    c.title = c.title || 'View';
 		    
-		    var tab = this.tabLayout.getTabs().items.find(function(t) {
+		    var tab = this.iGLayout.getContainer().items.find(function(t) {
 		        return t.title === c.title;
 		    });
 		    
@@ -137,21 +138,22 @@ Ext.iG.TabLayout =  Ext.extend(Object, {
 		        });
 		    }, this);
 		
-		    tab = this.tabLayout.getTabs().add({
+		    tab = this.iGLayout.getContainer().add({
 		        title : c.title,
 		        header : false,
 		        autoScroll : true,
+                layout : panels.length > 1 ? 'vbox' : 'absolute',
 		        defaults : {
 		            collapsible : true
 		        },
 		        items : panels
 		    });
 		
-		    this.tabLayout.getTabs().setActiveTab(tab);
+		    this.iGLayout.getContainer().setActiveTab(tab);
 	    },
 	    
 	    hostRequest : function(h) {
-		    var tab = this.tabLayout.getTabs().add(new Ext.iG.HostSummary({
+		    var tab = this.iGLayout.getContainer().add(new Ext.iG.HostSummary({
 		    	provider : this.provider,
 				host : h,
 				height : 200,
@@ -161,7 +163,7 @@ Ext.iG.TabLayout =  Ext.extend(Object, {
 					click : function(hs, index, node) {
 						var service = hs.getRecord(node).get('service'),
 							frames = iG.timeFrames.getDefault(),
-							tab = this.tabLayout.getTabs().items.find(function(t) {
+							tab = this.iGLayout.getContainer().items.find(function(t) {
 								return t.title === String.format('{0} - {1}', hs.host, service);
 							}),
 							panels = new Array();
@@ -191,23 +193,24 @@ Ext.iG.TabLayout =  Ext.extend(Object, {
 							});
 						}, this);
 							
-						tab = this.tabLayout.getTabs().add({
+						tab = this.iGLayout.getContainer().add({
 							title : String.format('{0} - {1}', hs.host, service),
 							header : false,
 							autoScroll : true,
+                            layout : panels.length > 1 ? 'vbox' : 'absolute',
 							defaults : {
 								collapsible : true
 							},
 							items : panels
 						});
 						
-						this.tabLayout.getTabs().setActiveTab(tab);
+						this.iGLayout.getContainer().setActiveTab(tab);
 					},
 					scope : this
 				}
 		    }));
 		
-		    this.tabLayout.getTabs().setActiveTab(tab);
+		    this.iGLayout.getContainer().setActiveTab(tab);
 	    }
 	}
 	

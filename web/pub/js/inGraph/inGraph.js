@@ -273,28 +273,6 @@ if (!Array.prototype.bsearch) Array.prototype.bsearch = function(value) {
 	}
 	
 	return this[high] != value ? -1 : high;
-}
-
-if(!String.prototype.format) String.prototype.format = function() {
-	var str = this,
-		t = 0;
-	
-    for(var i = 0; i < arguments.length; ++i) {
-    	var arg = arguments[i];
-    	
-    	if(typeof arg == 'object') {
-    		for(var key in arg) {
-    			var re = new RegExp('\\{' + key + '\\}', 'gi');
-    			str = str.replace(re, arg[key]);
-    		}
-    	} else {
-			var re = new RegExp('\\{' + t + '\\}', 'gi'); 
-			str = str.replace(re, arg);
-			++t;
-    	}
-    }
-    
-    return str;
 };
 
 if(!String.prototype.ucfirst) String.prototype.ucfirst = function() {
@@ -313,7 +291,7 @@ iG.functor = function(v) {
 };
 
 iG.timeFrames = (function() {
-	var frames = new Ext.util.MixedCollection(false, function(o) {
+	var frames = new Ext.util.MixedCollection(true, function(o) {
 		return o.title.toUpperCase();
 	});
 	
@@ -366,17 +344,13 @@ iG.timeFrames = (function() {
 	return {
 		getAll		: function() {
 			return frames;
-		},
-		
-		getDefault	: function() {
-			return frames.filter('show', true);
 		}
-	}
+	};
 })();
 
 iG.merge = function() {
 	return jQuery.extend.apply(jQuery, arguments);
-}
+};
 
 iG.getXIndex = function(x, series) {
 	var i = series.map(function(xy) {
@@ -384,9 +358,9 @@ iG.getXIndex = function(x, series) {
 	}).bsearch(x);
 	
 	return i == -1 ? false : i;
-}
+};
 
 iG.getY = function(x, series, fn) {
 	var i = iG.getXIndex(x, series);
 	return i ? (typeof fn == 'function' ? fn(series[i][1]) : series[i][1]) : undefined;
-}
+};

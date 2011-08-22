@@ -1,4 +1,6 @@
-Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
+Ext.ns('Ext.iG');
+
+Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     
     refreshBuffer : 200,
     
@@ -84,7 +86,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         
         cfg.flotOptions = iG.merge(true, {}, this.defaultFlotOptions, cfg.flotOptions);
         
-        Ext.ux.Flot.superclass.constructor.call(this, cfg);
+        Ext.iG.Flot.superclass.constructor.call(this, cfg);
         
         Ext.apply(this, {
         	selection : new Array(),
@@ -94,7 +96,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     initComponent : function() {
-        Ext.ux.Flot.superclass.initComponent.call(this);
+        Ext.iG.Flot.superclass.initComponent.call(this);
         
         this.store = Ext.StoreMgr.lookup(this.store);
         
@@ -112,7 +114,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     onRender : function(ct, position) {  
-        Ext.ux.Flot.superclass.onRender.call(this, ct, position);
+        Ext.iG.Flot.superclass.onRender.call(this, ct, position);
         
         this.width = (this.width || ct.getWidth()) - 20;
         this.height = this.height || ct.getHeight();
@@ -124,7 +126,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     afterRender : function() {
-        Ext.ux.Flot.superclass.afterRender.call(this);
+        Ext.iG.Flot.superclass.afterRender.call(this);
         
         this.el.on({
             contextmenu : this.onContextMenu,
@@ -274,7 +276,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
                     	var prefix = data.key.substr(0, data.key.length - 4),
                     	    store = this.store,
                     		getData = function(id) {
-                    			var series = store.getById('{0}-{1}'.format(prefix, id));
+                    			var series = store.getById(String.format('{0}-{1}', prefix, id));
                     			return series ? series.get('data') : false;
                     		},
                     		thresholds = {},
@@ -455,10 +457,10 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             					qtip = new Array();
             					Ext.each(series, function(s) {
                                     if(s.yaxis == axis.n) {
-                                        qtip.push('{0} &#040;{1}&#041;'.format(s.label, this.unit.label));
+                                        qtip.push(String.format('{0} &#040;{1}&#041;', s.label, this.unit.label));
                                     }
                                 }, this);
-                                return '<div ext:qtip="{0}">{1}</div>'.format(qtip.join('<br />'), qtip[0]);
+                                return String.format('<div ext:qtip="{0}">{1}</div>', qtip.join('<br />'), qtip[0]);
             				}
             				
             				return (v * this.unit.factor).toFixed(axis.tickDecimals);
@@ -531,7 +533,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         var xy = item.datapoint,
         	x = xy[0],
         	y = xy[1],
-        	html = Ext.ux.Flot.tooltipTemplate.apply({
+        	html = Ext.iG.Flot.tooltipTemplate.apply({
                 label : item.series.label,
                 x : item.series.xaxis.tickFormatter.call(item.series.xaxis, x, item.series.xaxis),
                 y : item.series.yaxis.tickFormatter.call(item.series.yaxis, y, item.series.yaxis),
@@ -540,8 +542,8 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             dist = 10,
             ac = {};
         
-		ac['x{0}'.format(item.series.xaxis.n)] = x;
-		ac['y{0}'.format(item.series.yaxis.n)] = y;
+		ac[String.format('x{0}', item.series.xaxis.n)] = x;
+		ac[String.format('y{0}', item.series.yaxis.n)] = y;
 		var icc = this.flot.p2c(ac);
         
         Ext.each(this.flot.getData(), function(series) {        	
@@ -556,13 +558,13 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
         	if(i != -1) {
         		var point = series.data[i];
         		var ac = {};
-        		ac['x{0}'.format(series.xaxis.n)] = point[0];
-        		ac['y{0}'.format(series.yaxis.n)] = point[1];
+        		ac[String.format('x{0}', series.xaxis.n)] = point[0];
+        		ac[String.format('y{0}', series.yaxis.n)] = point[1];
         		
         		pcc = this.flot.p2c(ac);
         		
         		if(Math.pow(Math.abs(pcc.left - icc.left), 2) + Math.pow(Math.abs(pcc.top - icc.top), 2) <= Math.pow(dist, 2)) {
-                	html += Ext.ux.Flot.tooltipTemplate.apply({
+                	html += Ext.iG.Flot.tooltipTemplate.apply({
                         label : series.label,
                         x : series.xaxis.tickFormatter.call(item.series.xaxis, point[0], series.xaxis),
                         y : series.yaxis.tickFormatter.call(item.series.yaxis, point[1], series.yaxis),
@@ -599,7 +601,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             });
         }
         
-        this.shint.update(Ext.ux.Flot.sHintTpl.apply({
+        this.shint.update(Ext.iG.Flot.sHintTpl.apply({
             from : this.flot.getAxes().xaxis.tickFormatter.call(this.flot.getAxes().xaxis, ranges.xaxis.from, this.flot.getAxes().xaxis),
             to : this.flot.getAxes().xaxis.tickFormatter.call(this.flot.getAxes().xaxis, ranges.xaxis.to, this.flot.getAxes().xaxis)
         }));
@@ -691,7 +693,7 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
             this.refreshTask.cancel();
         }
         
-        Ext.ux.Flot.superclass.onDestroy.call(this);
+        Ext.iG.Flot.superclass.onDestroy.call(this);
         
         this.bindStore(null);
         
@@ -702,9 +704,9 @@ Ext.ux.Flot = Ext.extend(Ext.BoxComponent, {
 
 });
 
-Ext.reg('flot', Ext.ux.Flot);
+Ext.reg('flot', Ext.iG.Flot);
 
-Ext.ux.Flot.tooltipTemplate = new Ext.Template(
+Ext.iG.Flot.tooltipTemplate = new Ext.Template(
         '<div class = "iG-tooltip">',
         '<h3>{label}</h3>',
         '<div>{x} : {y} {unit}</div>',
@@ -713,10 +715,10 @@ Ext.ux.Flot.tooltipTemplate = new Ext.Template(
         disableFormats : true
 });
 
-Ext.ux.Flot.sHintTpl = new Ext.Template(
+Ext.iG.Flot.sHintTpl = new Ext.Template(
         '<div class = "iG-tooltip">',
-        '<div><p><b>{0} : </b> {from}</p></div>'.format(_('Start')),
-        '<div><p><b>{0} : </b> {to}</p></div>'.format(_('End')),
+        String.format('<div><p><b>{0} : </b> {from}</p></div>', _('Start')),
+        String.format('<div><p><b>{0} : </b> {to}</p></div>', _('End')),
         '</div>', {
         compiled : true,
         disableFormats : true

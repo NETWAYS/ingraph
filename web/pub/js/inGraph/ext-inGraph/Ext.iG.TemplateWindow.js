@@ -1,6 +1,6 @@
-Ext.ns('Ext.iG.Interface');
+Ext.ns('Ext.iG');
 
-Ext.iG.Interface.TemplateWindow = Ext.extend(Ext.Window, {
+Ext.iG.TemplateWindow = Ext.extend(Ext.Window, {
 	
     layout : 'fit',
     
@@ -94,11 +94,11 @@ Ext.iG.Interface.TemplateWindow = Ext.extend(Ext.Window, {
 			}]
 		});
 		
-		Ext.iG.Interface.TemplateWindow.superclass.constructor.call(this, cfg);
+		Ext.iG.TemplateWindow.superclass.constructor.call(this, cfg);
 	},
 
 	initComponent : function() {
-		Ext.iG.Interface.TemplateWindow.superclass.initComponent.call(this);
+		Ext.iG.TemplateWindow.superclass.initComponent.call(this);
 		
 		this.addEvents(
 		    'sourcechange'

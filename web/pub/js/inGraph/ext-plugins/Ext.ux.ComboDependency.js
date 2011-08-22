@@ -10,12 +10,11 @@ Ext.ux.ComboDependency = Ext.extend(Object, {
 		}
 		
 		combo.getStore().on({
-			beforeload  : function(self, options) {
-				Ext.each(this.depends, function(dep) {
-					Ext.iterate(dep, function(param, id) {
-						id = this.formatId(id);
-						options.params[param] = Ext.getCmp(id).getValue();
-					}, this);					
+			beforeload : function(self, options) {
+				Ext.each(this.depends, function(cfg) {
+					var cmp = cfg.scope[cfg.cmp];
+					
+					options.params[cfg.param] = cmp.getValue();
 				}, this);
 				
 				return true;
@@ -25,5 +24,3 @@ Ext.ux.ComboDependency = Ext.extend(Object, {
 	}
 	
 });
-
-Ext.apply(Ext.ux.ComboDependency.prototype, Ext.ux.idInterface.prototype);

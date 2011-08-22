@@ -1,4 +1,6 @@
-Ext.ux.HostSummary = Ext.extend(Ext.DataView, {
+Ext.ns('Ext.iG');
+
+Ext.iG.HostSummary = Ext.extend(Ext.DataView, {
 	
 	tpl : new Ext.XTemplate(
 		'<tpl for=".">',
@@ -22,7 +24,7 @@ Ext.ux.HostSummary = Ext.extend(Ext.DataView, {
 	        store : new Ext.data.JsonStore({
 	        	autoLoad : true,
                 autoDestroy : true,
-                url : 'data/services',
+                url : cfg.provider.services,
                 root : 'results',
                 fields : ['service'],
                 totalProperty : 'total',
@@ -38,7 +40,7 @@ Ext.ux.HostSummary = Ext.extend(Ext.DataView, {
 	        })
 		});
 		
-		Ext.ux.HostSummary.superclass.constructor.call(this, cfg);
+		Ext.iG.HostSummary.superclass.constructor.call(this, cfg);
 	}
 
 });

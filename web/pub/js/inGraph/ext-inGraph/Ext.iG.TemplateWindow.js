@@ -69,21 +69,23 @@ Ext.iG.TemplateWindow = Ext.extend(Ext.Window, {
 	                    xtype : 'autocombo',
 	                    name : 'host',
 	                    url : 'data/hosts',
-	                    id : Ext.ux.idInterface.prototype.formatId(hcid),
-	                    plugins : [new Ext.ux.ComboController({observe : scid})],
+	                    id : hcid,
+	                    ref : '../../hostCmp',
+	                    plugins : [new Ext.ux.ComboController({control : {scope : this, cmp : 'serviceCmp'}})],
 	                    emptyText : _('Choose Host')
 		        	}, {
 	                    xtype : 'autocombo',
 	                    name : 'service',
 	                    url : 'data/services',
-	                    id : Ext.ux.idInterface.prototype.formatId(scid),
-	                    plugins : [new Ext.ux.ComboDependency({depends : {host : hcid}})],
+	                    id : scid,
+	                    ref : '../../serviceCmp',
+	                    plugins : [new Ext.ux.ComboDependency({depends : {scope : this, param : 'host', cmp : 'hostCmp'}})],
 	                    disabled : true,
 	                    emptyText : _('Choose Service'),
 	                    listeners : {
 	                    	select : function() {
-                				var h = Ext.getCmp(Ext.ux.idInterface.prototype.formatId(hcid)).getValue(),
-                					s = Ext.getCmp(Ext.ux.idInterface.prototype.formatId(scid)).getValue();
+                				var h = Ext.getCmp(hcid).getValue(),
+                					s = Ext.getCmp(scid).getValue();
                 				
                 				this.fireEvent('sourcechange', this, h, s);
 	                    	},

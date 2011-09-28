@@ -89,7 +89,7 @@ metadata = MetaData()
 
 host = Table('host', metadata,
     Column('id', Integer, Sequence('host_id_seq'), nullable=False, primary_key=True),
-    Column('name', String(512), nullable=False, unique=True),
+    Column('name', String(128), nullable=False, unique=True),
     
     mysql_engine='InnoDB'
 )
@@ -198,7 +198,7 @@ class Host(ModelBase):
 
 service = Table('service', metadata,
     Column('id', Integer, Sequence('service_id_seq'), nullable=False, primary_key=True),
-    Column('name', String(512), nullable=False, unique=True),
+    Column('name', String(128), nullable=False, unique=True),
     
     mysql_engine='InnoDB'
 )
@@ -471,7 +471,7 @@ class HostService(ModelBase):
 plot = Table('plot', metadata,
     Column('id', Integer, Sequence('plot_id_seq'), nullable=False, primary_key=True),
     Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False),
-    Column('name', String(512), nullable=False),
+    Column('name', String(128), nullable=False),
     Column('unit', String(16)),
     
     UniqueConstraint('hostservice_id', 'name', name='uc_plot_1'),

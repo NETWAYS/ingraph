@@ -1,13 +1,31 @@
 #!/usr/bin/env python
-from time import time
+import time
+import signal
+from fnmatch import fnmatch
 from random import randint
-from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
-from xmlrpclib import Fault
+from SocketServer import ThreadingTCPServer
+from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, SimpleXMLRPCRequestHandler
+import xmlrpclib
+from xmlrpclib import Fault, Marshaller
 import cPickle
 from base64 import b64decode
 import os
 import sys
 from netways_ingraph import model, utils
+import traceback
+import Queue
+from threading import Thread
+
+class _xmldumps(object):
+
+    def __init__(self, dumps):
+        self.__dumps = (dumps,)
+
+    def __call__(self, *args, **kwargs):
+        kwargs.setdefault('allow_none', 1)
+        return self.__dumps[0](*args, **kwargs)
+
+xmlrpclib.dumps = _xmldumps(xmlrpclib.dumps)
 
 print("NETWAYS inGraph (backend daemon)")
 
@@ -19,7 +37,7 @@ class BackendRPCMethods:
         self.plots = {}
         
     def setupTimeFrame(self, interval, retention_period=None):
-        tfs = model.TimeFrame.getAllSorted(conn, active_only=True)
+        tfs = model.TimeFrame.getAll(engine)
          
         for tf in tfs:
             if (tf.interval < interval and interval % tf.interval != 0) or \
@@ -30,17 +48,17 @@ class BackendRPCMethods:
                 
             if tf.interval == interval:
                 tf.retention_period = retention_period
-                tf.save(conn)
+                tf.save(engine)
                 
                 return tf.id
         
         tf = model.TimeFrame(interval, retention_period)
-        tf.save(conn)
+        tf.save(engine)
         
         return tf.id
     
     def getTimeFrames(self):
-        tfs = model.TimeFrame.getAllSorted(conn, active_only=True)
+        tfs = model.TimeFrame.getAll(engine)
         
         items = {}
         
@@ -50,15 +68,13 @@ class BackendRPCMethods:
         return items
     
     def disableTimeFrame(self, tf_id):
-        tf = model.TimeFrame.getByID(conn, tf_id)
+        tf = model.TimeFrame.getByID(engine, tf_id)
         tf.active = False;
-        tf.save(conn)
+        tf.save(engine)
 
         return True
 
-    # TODO: methods for enabling/disabling/listing timeframes
-
-    def _createHost(self, name):
+    def _createHost(self, conn, name):
         if name in self.hosts:
             return self.hosts[name]
         
@@ -72,7 +88,7 @@ class BackendRPCMethods:
             
         return obj
     
-    def _createService(self, name):
+    def _createService(self, conn, name):
         if name in self.services:
             return self.services[name]
 
@@ -86,7 +102,7 @@ class BackendRPCMethods:
         
         return obj
 
-    def _createHostService(self, host, service, parent_hostservice):
+    def _createHostService(self, conn, host, service, parent_hostservice):
         hostservice_key = (host, service)
         
         if hostservice_key in self.hostservices:
@@ -104,7 +120,7 @@ class BackendRPCMethods:
         
         return obj
 
-    def _createPlot(self, hostservice, name):
+    def _createPlot(self, conn, hostservice, name):
         plot_key = (hostservice, name)
         if plot_key in self.plots:
             return self.plots[plot_key]
@@ -124,33 +140,38 @@ class BackendRPCMethods:
     def insertValueBulk(self, updates_raw):
         updates = cPickle.loads(updates_raw)
         
+        conn = engine.connect()
+        
         for update in updates:
-            if len(update) > 11:
-                (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit, tf) = update
-            else:
-                (host, parent_service, service, plot, timestamp, unit, value, min, max, lower_limit, upper_limit) = update
-                tf = None
+            (host, parent_service, service, plot, timestamp, unit, value, \
+             min, max, lower_limit, upper_limit, warn_lower, warn_upper, warn_type, \
+             crit_lower, crit_upper, crit_type) = update
             
-            host_obj = self._createHost(host)
+            host_obj = self._createHost(conn, host)
             if parent_service != None:
-                parent_service_obj = self._createService(parent_service)
-                parent_hostservice_obj = self._createHostService(host_obj, parent_service_obj, None)
+                parent_service_obj = self._createService(conn, parent_service)
+                parent_hostservice_obj = self._createHostService(conn, host_obj, parent_service_obj, None)
             else:
                 parent_hostservice_obj = None
-            service_obj = self._createService(service)
+            service_obj = self._createService(conn, service)
 
-            hostservice_obj = self._createHostService(host_obj, service_obj, parent_hostservice_obj)
-            plot_obj = self._createPlot(hostservice_obj, plot)
+            hostservice_obj = self._createHostService(conn, host_obj, service_obj, parent_hostservice_obj)
+            plot_obj = self._createPlot(conn, hostservice_obj, plot)
 
-            if tf == None:
-                plot_obj.insertValue(conn, timestamp, unit, value, min, max, lower_limit, upper_limit)
-            else:
-                plot_obj.insertValueRaw(conn, tf, timestamp, unit, value, min, max, lower_limit, upper_limit)
-             
+            queries = plot_obj.buildUpdateQueries(conn, timestamp, unit, value,
+                                 min, max, lower_limit, upper_limit,
+                                 warn_lower, warn_upper, warn_type,
+                                 crit_lower, crit_upper, crit_type)
+            
+            for query in queries:
+                queryqueue.put(query)
+        
+        conn.close()
+
         return True
-    
+
     def getHosts(self):
-        hosts = model.Host.getAll(conn)
+        hosts = model.Host.getAll(engine)
         
         items = []
         
@@ -159,8 +180,8 @@ class BackendRPCMethods:
             
         return items
     
-    def getHostsFiltered(self, pattern, limit, offset):
-        result = model.Host.getByPattern(conn, pattern, limit, offset)
+    def getHostsFiltered(self, pattern, limit=None, offset=None):
+        result = model.Host.getByPattern(engine, pattern.replace('*', '%'), limit, offset)
         
         items = []
         
@@ -169,104 +190,101 @@ class BackendRPCMethods:
             
         return {'total': result['total'], 'hosts': items}
 
-    def getPlots(self, host):
-        items = []
+    def getServices(self, host_pattern, service_pattern=None, limit=None, offset=None):
+	result = model.HostService.getByHostAndServicePattern(engine, host_pattern.replace('*', '%'),
+								service_pattern.replace('*', '%'), limit, offset)
 
-        plots = model.Plot.getByHost(conn, host)
+        items = set()
 
-        for plot in plots:
-            item = {
-                'name': plot.name,
-                'unit': plot.unit,
-                'service': plot.hostservice.service.name
-            }
-            
-            if plot.hostservice.parent_hostservice != None:
-                item['parent_service'] = plot.hostservice.parent_hostservice.service.name
-                
-            items.append(item)
+        for hostservice_obj in result['services']:
+            items.add(hostservice_obj.service.name)
         
-        return items
+        return {'total': result['total'], 'services': list(items)}
     
-    def getPlotValues(self, host, parent_service, service, plot, start_timestamp, end_timestamp, granularity):
-        host_obj = model.Host.getByName(conn, host)
+    def getPlotValues(self, host_pattern, service_pattern, start_timestamp=None, end_timestamp=None, granularity=None, null_tolerance=0):
+        st = time.time()
 
         charts = []
-        result = { 'charts': charts }
+        comments = []
+        result = { 'comments': comments, 'charts': charts }
         
-        if host == None:
-            return result
+        if host_pattern != None:
+            host_pattern = host_pattern.replace('*', '%')
         
-        if parent_service != None and parent_service != '':
-            parent_service_obj = model.Service.getByName(conn, parent_service)
-            
-            if parent_service_obj == None:
-                return result
-            
-            parent_hostservice_obj = model.HostService.getByHostAndService(conn, host_obj, parent_service_obj, None)
-        else:
-            parent_hostservice_obj = None
-            
-        if service != None and service != '':
-            service_obj = model.Service.getByName(conn, service)
-        else:
-            service_obj = None
+        if service_pattern != None:
+            service_pattern = service_pattern.replace('*', '%')
         
-        hostservice_objs = model.HostService.getByHostAndService(conn, host_obj, service_obj, parent_hostservice_obj)
+        if start_timestamp == '':
+            start_timestamp = None
+            
+        if end_timestamp == '':
+            end_timestamp = None
+            
+        if granularity == '':
+            granularity = None
 
-        for hostservice_obj in hostservice_objs:        
-            plot_objs = model.Plot.getByHostServiceAndName(conn, hostservice_obj, plot)
-                  
-            for plot_obj in plot_objs:
-                values = model.DataPoint.getValuesByInterval(conn, plot_obj, start_timestamp,
-                                                             end_timestamp, granularity)
-                current_charts = {}
+        result_services = model.HostService.getByHostAndServicePattern(engine, host_pattern, service_pattern)
 
-                for ts, value in values.items():
-                    for type in ['upper_limit', 'max', 'avg', 'min', 'lower_limit']:
-                        if not type in current_charts:
-                            current_charts[type] = []
-                        
-                        item = {'x': ts}
-                        
-                        if not type in value:
-                            item['y'] = False
-                        else:
-                            item['y'] = value[type]
-                            
-                            current_charts[type].append(item)
+        for hostservice_obj in result_services['services']:        
+            plot_objs = model.Plot.getByHostServiceAndName(engine, hostservice_obj, None)
                 
-                for type, chart in current_charts.items():
+            dps = model.DataPoint.getValuesByInterval(engine, plot_objs, start_timestamp,
+                                                         end_timestamp, granularity, null_tolerance)
+
+            comments.extend(dps['comments'])
+
+            for plot_obj, plot_charts in dps['charts'].iteritems():
+                for type, data in plot_charts.iteritems():
                     label = plot_obj.name + '-' + type
                     
                     if hostservice_obj.parent_hostservice != None:
                         label = hostservice_obj.service.name + '-' + label
                     
-                    charts.append({'label': label,
-                                   'unit': plot_obj.unit, 'values': chart})
-                    
-            
-        return result
-    
-    def sync(self):
-        model.syncModelSession(conn)
+                    charts.append({'host': hostservice_obj.host.name, 'service': hostservice_obj.service.name, 
+                                   'label': label, 'unit': plot_obj.unit, 'data': data})
 
-        return True
-    
+        et = time.time()
+        
+        print "Got plot values in %f seconds" % (et - st)
+        return result
+ 
     def shutdown(self):
         global shutdown_server
-        
-        # make sure everything's synced before returning from
-        # the xmlrpc call
-        self.sync()
         
         shutdown_server = True
         
         return True
+    
+    def addComment(self, host, parent_service, service, timestamp, author, text):
+        host_obj = self._createHost(engine, host)
+        if parent_service != None:
+            parent_service_obj = self._createService(engine, parent_service)
+            parent_hostservice_obj = self._createHostService(engine, host_obj, parent_service_obj, None)
+        else:
+            parent_hostservice_obj = None
+        service_obj = self._createService(engine, service)
+
+        hostservice_obj = self._createHostService(engine, host_obj, service_obj, parent_hostservice_obj)
+
+        comment = model.Comment(hostservice_obj, timestamp, author, text)
+        comment.save(engine)
+
+        return comment.id
+    
+    def deleteComment(self, comment_id):
+        comment = model.Comment.getByID(engine, comment_id)
+        comment.delete(engine)
+    
+    def updateComment(self, comment_id, text):
+        comment = model.Comment.getByID(engine, comment_id)
+        comment.text = text
+        comment.save()
 
 # http://www.acooke.org/cute/BasicHTTPA0.html
-class AuthenticatedXMLRPCServer(SimpleXMLRPCServer):
-    def __init__(self, *args, **kargs):
+class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
+    allow_reuse_address = 1
+
+    def __init__(self, addr, allow_none=False, logRequests=1, encoding='iso-8859-1'):
         class AuthenticatedRequestHandler(SimpleXMLRPCRequestHandler):
             def parse_request(myself):
                 if SimpleXMLRPCRequestHandler.parse_request(myself):
@@ -294,7 +312,14 @@ class AuthenticatedXMLRPCServer(SimpleXMLRPCServer):
                 
                 return False
         
-        SimpleXMLRPCServer.__init__(self, requestHandler=AuthenticatedRequestHandler, *args, **kargs)
+        self.logRequests = logRequests
+        
+        if sys.version_info[:2] < (2, 5):
+            SimpleXMLRPCDispatcher.__init__(self)
+        else:
+            SimpleXMLRPCDispatcher.__init__(self, allow_none=allow_none, encoding=encoding)
+            
+        ThreadingTCPServer.__init__(self, addr, AuthenticatedRequestHandler)
 
         self.required_username = None
         self.required_password = None
@@ -314,15 +339,50 @@ if config['dsn'] == None:
     sys.exit(1)
 
 print('Connecting to the database...')
-conn = model.createModelConnection(config['dsn'])
+engine = model.createModelEngine(config['dsn'])
 
 if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
     print("Error: You need to set a bind address/port for the XML-RPC" + \
           " interface ('xmlrpc_address' and 'xmlrpc_port' settings).")
     sys.exit(1)
-    
+
+queryqueue = Queue.Queue(maxsize=200000)
+
+def flushDBThread(engine):
+    while True:
+        items = []
+
+        print "Queue size: %d" % (queryqueue.qsize())
+
+        while len(items) < 5000:
+            try:
+                item = queryqueue.get(timeout=10)
+            except Queue.Empty:
+                break
+
+            items.append(item)
+
+        st = time.time()
+        try:
+            conn = engine.connect()
+            transaction = conn.begin()
+            model.Plot.executeUpdateQueries(conn, items)
+            transaction.commit()
+            conn.close()
+        except Exception:
+            print "Exception occured while flushing DB updates:"
+            traceback.print_exc()
+
+        et = time.time()
+        
+        print "Flushed %d updates in %f seconds." % (len(items), et - st)
+
+flushthread = Thread(target=flushDBThread, args=(engine,))
+flushthread.daemon = True
+flushthread.start()
+
 print('Starting XML-RPC interface on %s:%d...' % (config['xmlrpc_address'], config['xmlrpc_port']))
-server = AuthenticatedXMLRPCServer((config['xmlrpc_address'], config['xmlrpc_port']))
+server = AuthenticatedXMLRPCServer((config['xmlrpc_address'], config['xmlrpc_port']), allow_none=True)
 server.timeout = 5
 
 if sys.version_info[:2] < (2,6):
@@ -338,25 +398,12 @@ server.required_password = config['xmlrpc_password']
 
 server.register_introspection_functions()
 server.register_multicall_functions()
-backend_obj = BackendRPCMethods()
-server.register_instance(backend_obj)
+server.register_instance(BackendRPCMethods())
 
-last_maintenance = time()
+shutdown_server = False
 
-try:
-    shutdown_server = False
+print("Waiting for XML-RPC requests...")
 
-    print("Waiting for XML-RPC requests...")
-
-    while not shutdown_server:
-        server.handle_request()
-        
-        st = time()
-        model.syncModelSession(conn, partial_sync=True)
-        et = time()
-        print("partial sync took %f seconds" % (et - st))
-        
-        model.runMaintenanceTasks(conn)
-except KeyboardInterrupt:
-    print('Syncing all remaining objects - Please wait...')
-    model.syncModelSession(conn)
+while not shutdown_server:
+    server.handle_request()
+    model.runMaintenanceTasks(engine)

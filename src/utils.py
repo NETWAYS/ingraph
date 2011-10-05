@@ -21,6 +21,8 @@ def get_xmlrpc_url(config):
 class PerfdataParser(object):
     _perfRegex = re.compile('([^= ][^=]*)=([^ ]+)')
     _intRegex = re.compile('^([+-]?[0-9,.]+)[ ]*(.*?)$')
+    _rangeRegex = re.compile('^(@?)([^:]*)(:?)([^:]*)$')
+    _multiRegex = re.compile('^([^:]+::[^:]+::)[^:]+$')
     
     _bytesuffixes = {
         'B': 1024**0,
@@ -30,6 +32,15 @@ class PerfdataParser(object):
         'TB': 1024**4,
         'PB': 1024**5,
         'EB': 1024**6
+    }
+    
+    _brokensuffixes = {
+        'K': 1000**1,
+        'M': 1000**2,
+        'G': 1000**3,
+        'T': 1000**4,
+        'P': 1000**5,
+        'E': 1000**6,
     }
     
     _timesuffixes = {
@@ -65,6 +76,9 @@ class PerfdataParser(object):
         elif unit.upper() in PerfdataParser._bytesuffixes:
             uom = 'byte'
             result_value = value * PerfdataParser._bytesuffixes[unit.upper()]
+        elif unit.upper() in PerfdataParser._brokensuffixes:
+            uom = 'raw'
+            result_value = value * PerfdataParser._brokensuffixes[unit.upper()]
         elif unit in PerfdataParser._timesuffixes:
             uom = 'time'
             result_value = value * PerfdataParser._timesuffixes[unit] 
@@ -96,9 +110,18 @@ class PerfdataParser(object):
         
         plots = {}
         
+        multi_prefix = None
+        
         for match in matches:
             key = match[0]
             values = match[1].split(';')
+            
+            multi_match = PerfdataParser._multiRegex.match(key)
+            
+            if multi_match:
+                multi_prefix = multi_match.group(1)
+            elif multi_prefix != None:
+                key = multi_prefix + key
             
             plot = {}
             
@@ -112,13 +135,13 @@ class PerfdataParser(object):
             unit = raw['input_uom']
             
             if len(values) >= 2:
-                warn = PerfdataParser.parsePerfdataNumber(values[1], unit)
+                warn = PerfdataParser.parseRange(values[1], unit)
                 
                 if warn != None:
                     plot['warn'] = warn
             
             if len(values) >= 3:
-                crit = PerfdataParser.parsePerfdataNumber(values[2], unit)
+                crit = PerfdataParser.parseRange(values[2], unit)
                 
                 if crit != None:
                     plot['crit'] = crit
@@ -151,5 +174,42 @@ class PerfdataParser(object):
             plots[key] = plot
         
         return plots
+    
+    def parseRange(range, unit):
+        match = PerfdataParser._rangeRegex.match(range)
         
+        if not match:
+            print "Failed to parse range: " + range
+            return None
+        
+        if match.group(0) == '@':
+            type = 'inside'
+        else:
+            type = 'outside'
+            
+        lower = match.group(2)
+        upper = match.group(4)
+        
+        if match.group(3) == '':
+            upper = lower
+            lower = '0'
+        
+        lower = PerfdataParser.parsePerfdataNumber(lower, unit)
+
+        if lower == None:
+            lower = { 'value': None }
+            
+        upper = PerfdataParser.parsePerfdataNumber(upper, unit)
+
+        if upper == None:
+            upper = { 'value': None }
+        
+        return {
+            'lower': lower,
+            'upper': upper,
+            'type': type
+        }
+    
+    parseRange = staticmethod(parseRange)
+
     parse = staticmethod(parse)

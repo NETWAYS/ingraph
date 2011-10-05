@@ -1,0 +1,11 @@
+{
+"re": "/^.*$/",
+
+"generic" : {
+    "refreshInterval" : 300
+},
+
+"series": [{
+    "re": "/.*-avg/"
+}]
+}

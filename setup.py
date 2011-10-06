@@ -20,4 +20,4 @@ setup(name="netways_ingraph",
       packages = ["netways_ingraph"],
       package_dir = {"netways_ingraph": "src"},
       scripts = ["ingraph-daemon", "ingraph-file-collector", "ingraph-import-grapherv2", "ingraph-stop"],
-      install_requires = ["sqlalchemy>=0.6.3", "pysqlite"])
+      install_requires = ["sqlalchemy>=0.6.3"])

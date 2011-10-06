@@ -5,18 +5,18 @@ Created on 17.01.2011
 '''
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
-    Boolean, Numeric, String, Sequence, ForeignKey, Index, create_engine, and_
+    Boolean, Numeric, String, Enum, Sequence, ForeignKey, Index, create_engine, \
+    and_, or_
 from sqlalchemy.sql import literal, select, between, func
+from sqlalchemy.interfaces import PoolListener
 from time import time
 from weakref import WeakValueDictionary
-from random import randint
+from OrderedDict import OrderedDict
 
 last_vacuum = time()
 last_cleanup = time()
 last_autocheckpoint = time()
-last_commit = time()
 dbload_max_timestamp = None
-transactions = {}
 
 '''
 Base class for all DB model classes.
@@ -89,7 +89,7 @@ metadata = MetaData()
 
 host = Table('host', metadata,
     Column('id', Integer, Sequence('host_id_seq'), nullable=False, primary_key=True),
-    Column('name', String(512), nullable=False, unique=True),
+    Column('name', String(128), nullable=False, unique=True),
     
     mysql_engine='InnoDB'
 )
@@ -198,7 +198,7 @@ class Host(ModelBase):
 
 service = Table('service', metadata,
     Column('id', Integer, Sequence('service_id_seq'), nullable=False, primary_key=True),
-    Column('name', String(512), nullable=False, unique=True),
+    Column('name', String(128), nullable=False, unique=True),
     
     mysql_engine='InnoDB'
 )
@@ -283,7 +283,7 @@ hostservice = Table('hostservice', metadata,
     Column('service_id', Integer, ForeignKey('service.id'), nullable=False),
     Column('parent_hostservice_id', Integer, ForeignKey('hostservice.id')),
     
-    UniqueConstraint('host_id', 'service_id', name='uc_hs_1'),
+    UniqueConstraint('host_id', 'service_id', 'parent_hostservice_id', name='uc_hs_1'),
     
     mysql_engine='InnoDB'
 )
@@ -471,7 +471,7 @@ class HostService(ModelBase):
 plot = Table('plot', metadata,
     Column('id', Integer, Sequence('plot_id_seq'), nullable=False, primary_key=True),
     Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False),
-    Column('name', String(512), nullable=False),
+    Column('name', String(128), nullable=False),
     Column('unit', String(16)),
     
     UniqueConstraint('hostservice_id', 'name', name='uc_plot_1'),
@@ -487,86 +487,12 @@ class Plot(ModelBase):
         self.unit = None
         
         self.current_timestamp = None
-        self.max_timestamp = None
         self.current_interval = None
         self.cache_tfs = None
         self.cache_dps = None
         
         self.last_value = 0
-        
         self.last_update = None
-        
-        self.has_ignored_missing_tf = False
-
-    def fetchDataPoints(self, conn, timestamp, ignore_missing_tf=False, require_tf=None):
-        if self.has_ignored_missing_tf == ignore_missing_tf and self.current_timestamp != None and \
-                self.current_interval != None and timestamp - timestamp % self.current_interval == self.current_timestamp - \
-                self.current_timestamp % self.current_interval:
-            return (self.cache_tfs, self.cache_dps)
-
-        debug_ts = self.current_timestamp
-
-        tfs = TimeFrame.getAllSorted(conn, active_only=True)
-        self.cache_tfs = tfs                
-        self.current_interval = tfs[0].interval
-
-        dps = dict()
-
-        if self.cache_dps != None:
-            for dp in self.cache_dps.values():
-                if dp.timestamp == timestamp - timestamp % dp.timeframe.interval:
-                    dps[dp.timeframe.interval] = dp
-
-        # if 'timestamp' is older than the newest timestamp when we first accessed the db
-        # or it's older than the newest timestamo for this plot.. we need to query the DB
-        if (dbload_max_timestamp != None and timestamp < dbload_max_timestamp) or \
-                self.max_timestamp == None or timestamp < self.max_timestamp:
-            self.current_timestamp = timestamp
-            
-            old_max_timestamp = self.max_timestamp
-            self.max_timestamp = timestamp
-        
-            for dp in DataPoint.getByTimestamp(conn, self, timestamp, active_tfs_only=True):
-                dps[dp.timeframe.interval] = dp
-
-            # having no dps or just the one for the smallest timeframe is OK because in that
-            # case we can safely create new empty dps for all the missing timeframes
-            if not ignore_missing_tf and not (len(dps) == 0 or (len(dps) == 1 and tfs[0].interval in dps)):
-                print("len(dps) == %d; len(tfs) == %d" % (len(dps), len(tfs)))
-                print("old current_timestamp:", debug_ts, "timestamp:", timestamp)
-
-                if len(dps) != len(tfs):
-                    print("Can't process update due to missing intermediary DPs which were already " \
-                          "cleaned up.")
-                    
-                    # revert change to max_timestamp as we weren't able to load all datapoints
-                    # for the specified timeframe
-                    self.max_timestamp = old_max_timestamp
-                    
-                    return None
-
-                self.cache_dps = dps
-                return (tfs, dps)
-                
-        # BUG: we need to make sure that the number of dps returned
-        # by getByTimestamp is equal to the number of active tfs and
-        # and skip the update when they're not; make sure not to wipe the
-        # cache in this case as this might degrade performance
-
-        self.current_timestamp = timestamp
-        
-        if timestamp > self.max_timestamp:
-            self.max_timestamp = timestamp
-        
-        for tf in tfs:
-            if not tf.interval in dps and (not ignore_missing_tf or require_tf == tf.interval):
-                dp = DataPoint(self, tf,
-                               timestamp - timestamp % tf.interval)
-                dps[tf.interval] = dp
-
-        self.cache_dps = dps
-        
-        return (tfs, dps)
 
     '''
     Calculates the per-second rate for a counter. Rather than storing the raw
@@ -575,7 +501,7 @@ class Plot(ModelBase):
     def _calculateRateHelper(last_timestamp, timestamp, last_value, value):
         if last_timestamp == None or last_timestamp >= timestamp:
             return None
-    
+
         if last_value > value:
             # We're checking for possible overflows by comparing the last raw value with the current
             # raw value. If the last value is greater than 80% of the 32 or 64 bit boundary and the
@@ -599,17 +525,14 @@ class Plot(ModelBase):
 
     _calculateRateHelper = staticmethod(_calculateRateHelper)
 
-    def insertValue(self, conn, timestamp, unit, value, min, max, lower_limit, upper_limit):        
-        result = self.fetchDataPoints(conn, timestamp)
-        
-        if result == None:
-            return
-        
-        (tfs, dps) = result
+    def buildUpdateQueries(self, conn, timestamp, unit, value, min, max, lower_limit, upper_limit,
+                    warn_lower, warn_upper, warn_type, crit_lower, crit_upper, crit_type):
+
+        tfs = TimeFrame.getAll(conn)
         
         # no timeframes -> nothing to do here
         if len(tfs) == 0:
-            return
+            return []
 
         value = float(value)
         
@@ -639,18 +562,7 @@ class Plot(ModelBase):
         
         # _calculateRateHelper returns None if it can't figure out the rate (yet)
         if value == None:
-            return
-
-        prev_dp = None
-        
-        for tf in reversed(tfs):
-            dp = dps[tf.interval]
-            
-            if prev_dp != None:
-                if dp.count > 0:
-                    prev_dp.removeValue(dp.avg)
-            
-            prev_dp = dp
+            return []
 
         if min == None or min > value:
             min = value
@@ -658,57 +570,166 @@ class Plot(ModelBase):
         if max == None or max < value:
             max = value
 
-        prev_min = min
-        prev_max = max
-        prev_avg = value
+        now = time()
 
+        queries = []
         for tf in tfs:
-            dp = dps[tf.interval]
-            
-            dp.insertValue(prev_avg, prev_min, prev_max, lower_limit, upper_limit)
+            if tf.retention_period != None and now - timestamp > tf.retention_period:
+                continue
 
-            prev_min = dp.min
-            prev_max = dp.max
-            prev_avg = dp.avg
+            values = {
+                'plot_id': self.id,
+                'timeframe_id': tf.id,
+                'timestamp': timestamp - timestamp % tf.interval,
+                'min': min,
+                'max': max,
+                'avg': value,
+                'count': 1,
+                'unit': unit,
+                'lower_limit': lower_limit,
+                'upper_limit': upper_limit,
+                'warn_lower': warn_lower,
+                'warn_upper': warn_upper,
+                'warn_type': warn_type,
+                'crit_lower': crit_lower,
+                'crit_upper': crit_upper,
+                'crit_type': crit_type
+            }
             
-        if self.unit != unit:
+            queries.append(values)
+
+        if self.unit == None:
             self.unit = unit
             self.save(conn)
 
-    def insertValueRaw(self, conn, tf_interval, timestamp, unit, value, min, max, lower_limit, upper_limit):
-        result = self.fetchDataPoints(conn, timestamp, ignore_missing_tf=True, require_tf=tf_interval)
-                
-        if result == None:
+        return queries
+
+    def _quoteNumber(value):
+        if value == None:
+            return 'NULL'
+        else:
+            return "'%s'" % (value)
+        
+    _quoteNumber = staticmethod(_quoteNumber)
+
+    def executeUpdateQueries(conn, queries):
+        global dbload_max_timestamp
+
+        if len(queries) == 0:
             return
-        
-        (_, dps) = result
 
-        assert tf_interval in dps
-        assert dbload_max_timestamp == None, 'insertValueRaw may only be used to import data into an empty DB'
+        if conn.dialect.name == 'mysql':
+            sql_values = ', '.join(["""
+(%s, %s, %s,
+ %s, %s, %s, %s,
+ %s, %s,
+ %s, %s, %s,
+ %s, %s, %s)
+""" % (Plot._quoteNumber(query['plot_id']), Plot._quoteNumber(query['timeframe_id']), Plot._quoteNumber(query['timestamp']),
+       Plot._quoteNumber(query['min']), Plot._quoteNumber(query['max']), Plot._quoteNumber(query['avg']), Plot._quoteNumber(query['count']),
+       Plot._quoteNumber(query['lower_limit']), Plot._quoteNumber(query['upper_limit']),
+       Plot._quoteNumber(query['warn_lower']), Plot._quoteNumber(query['warn_upper']), Plot._quoteNumber(query['warn_type']),
+       Plot._quoteNumber(query['crit_lower']), Plot._quoteNumber(query['crit_upper']), Plot._quoteNumber(query['crit_type']))
+                              for query in queries])
+
+            sql_query = """
+INSERT INTO datapoint (plot_id, timeframe_id, timestamp,
+                       min, max, avg, count,
+                       lower_limit, upper_limit,
+                       warn_lower, warn_upper, warn_type,
+                       crit_lower, crit_upper, crit_type)
+VALUES
+%s
+ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count + 1),
+                        count = count + 1,
+                        min = IF(min < VALUES(min), min, VALUES(min)),
+                        max = IF(max > VALUES(max), max, VALUES(max))
+""" % (sql_values)
+
+            conn.execute(sql_query)
+        else:
+            # TODO: fix this mess
+            st = time()
+            dps = {}
+            conds = []
+            for query in queries:
+                dps[(query['plot_id'], query['timeframe_id'], query['timestamp'])] = query
                 
-        value_raw = value
+                if query['timestamp'] > dbload_max_timestamp:
+                    continue
+                
+                cond = and_(datapoint.c.plot_id==query['plot_id'],
+                            datapoint.c.timeframe_id==query['timeframe_id'],
+                            datapoint.c.timestamp==query['timestamp'])
+                conds.append(cond)
 
-        if unit == 'counter':
-            # TODO: We don't support calculating min/max values for counters yet. Not while importing
-            # data anyway.
-            if value == None:
-                return
-
-            min = None
-            max = None
-
-            value = Plot._calculateRateHelper(self.last_update, timestamp, self.last_value, value)
+            dpsdb = {}
             
-        if value_raw != None:
-            self.last_value = value_raw
-            self.last_update = timestamp
+            if len(conds) > 0:
+                result = conn.execute(select(columns=[datapoint.c.plot_id, datapoint.c.timeframe_id,
+                                                        datapoint.c.timestamp, datapoint.c.min,
+                                                        datapoint.c.max, datapoint.c.avg, datapoint.c.count],
+                                             from_obj=[datapoint]).where(or_(*conds)))
+    
+                for row in result:
+                    dp = (row[datapoint.c.plot_id], row[datapoint.c.timeframe_id], row[datapoint.c.timestamp])
+                    dpsdb[dp]= {
+                        'min': row[datapoint.c.min],
+                        'max': row[datapoint.c.max],
+                        'avg': row[datapoint.c.avg],
+                        'count': row[datapoint.c.count],
+                    }
+
+            inserts = []
+            updates = []
+
+            for dp, query in dps.items():
+                row = {}
+
+                if query['timestamp'] > dbload_max_timestamp:
+                    dbload_max_timestamp = query['timestamp']
+
+                if dp in dpsdb:
+                    row = dpsdb[dp]
+                    
+                    # update
+                    if query['min'] < row['min']:
+                        row['min'] = query['min']
+                        
+                    if query['max'] > row['max']:
+                        row['max'] = query['max']
+                        
+                    row['avg'] = row['count'] * (row['avg'] / (row['count'] + 1)) + \
+                                           query['avg'] / (row['count'] + 1)
+                    row['count'] = row['count'] + 1
+                    
+                    updates.append(row)
+                else:
+                    row = {
+                        'min': query['min'],
+                        'max': query['max'],
+                        'avg': query['avg'],
+                        'count': 1
+                    }
+
+                    inserts.append(query)
+                
+                dpsdb[dp] = row
+
+            et = time()
             
-        dps[tf_interval].insertValue(value, min, max, lower_limit, upper_limit)
-        self.last_update = timestamp
-        
-        if self.unit != unit:
-            self.unit = unit
-            self.save(conn)
+            print "(SLOW) update prep: %f" % (et - st)
+
+            if len(inserts) > 0:
+                conn.execute(datapoint.insert(), inserts)
+            
+            for update in updates:
+                cond = and_(datapoint.c.plot_id==query['plot_id'],
+                            datapoint.c.timeframe_id==query['timeframe_id'],
+                            datapoint.c.timestamp==query['timestamp'])
+                conn.execute(datapoint.update().where(cond).values(update))
+    
+    executeUpdateQueries = staticmethod(executeUpdateQueries)
 
     def getByID(conn, id):
         obj = Plot.get(id)
@@ -783,7 +804,7 @@ class Plot(ModelBase):
     def save(self, conn):
         if self.id == None:
             if self.hostservice.id == None:
-                self.hostservice.save()
+                self.hostservice.save(conn)
                 
             assert self.hostservice.id != None
 
@@ -795,6 +816,9 @@ class Plot(ModelBase):
             upd = plot.update().where(plot.c.id==self.id).values(hostservice_id=self.hostservice.id, unit=self.unit)
             conn.execute(upd)
 
+    def activate(self):
+        ModelBase.activate(self)
+        
 timeframe = Table('timeframe', metadata,
     Column('id', Integer, Sequence('timeframe_id_seq'), nullable=False, primary_key=True),
     Column('interval', Integer, nullable=False),
@@ -813,14 +837,9 @@ class TimeFrame(ModelBase):
         self.retention_period = retention_period
         self.active = active
 
-    def getAllSorted(conn, active_only=False):
+    def getAll(conn):
         if TimeFrame.cache_tfs == None:
-            sel = timeframe.select()
-            
-            if active_only:
-                sel = sel.where(timeframe.c.active==True)
-                
-            sel = sel.order_by(timeframe.c.interval.asc())
+            sel = timeframe.select().where(timeframe.c.active==True).order_by(timeframe.c.interval.asc())
             
             objs = []
             
@@ -839,7 +858,7 @@ class TimeFrame(ModelBase):
             
         return TimeFrame.cache_tfs
     
-    getAllSorted = staticmethod(getAllSorted)
+    getAll = staticmethod(getAll)
 
     def getByID(conn, id):
         obj = TimeFrame.get(id)
@@ -883,282 +902,40 @@ class TimeFrame(ModelBase):
         self.invalidateCache()
 
 datapoint = Table('datapoint', metadata,
-    Column('plot_id', Integer, ForeignKey('plot.id'), nullable=False, primary_key=True),
-    Column('timeframe_id', Integer, ForeignKey('timeframe.id'), nullable=False, primary_key=True),
-    Column('timestamp', Integer, nullable=False, primary_key=True),
+    Column('plot_id', Integer, ForeignKey('plot.id'), nullable=False, primary_key=True, autoincrement=False),
+    Column('timeframe_id', Integer, ForeignKey('timeframe.id'), nullable=False, primary_key=True, autoincrement=False),
+    Column('timestamp', Integer, nullable=False, primary_key=True, autoincrement=False),
     Column('min', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('max', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('avg', Numeric(precision=20, scale=5, asdecimal=False), nullable=False),
     Column('lower_limit', Numeric(precision=20, scale=5, asdecimal=False)),
     Column('upper_limit', Numeric(precision=20, scale=5, asdecimal=False)),
+    Column('warn_lower', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
+    Column('warn_upper', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
+    Column('warn_type', Enum('inside', 'outside', name='warn_type_enum'), nullable=True),
+    Column('crit_lower', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
+    Column('crit_upper', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
+    Column('crit_type', Enum('inside', 'outside', name='crit_type_enum'), nullable=True),
     Column('count', Integer, nullable=False),
-    
-    mysql_engine='InnoDB'
 )
 
 Index('idx_dp_1', datapoint.c.timeframe_id, datapoint.c.timestamp)
 Index('idx_dp_2', datapoint.c.timestamp)
 
-class DataPoint(ModelBase):
-    '''
-    A set containing all modified datapoint objects. Some of these objects
-    may not even have an id yet.
-    '''
-    modified_objects = set()
-    
-    '''
-    Contains the number of objects that were left over from the last
-    sync. This is used as a starting point to figure out how many
-    objects the next syncSomeObjects() call is going to sync - rather
-    than wasting CPU time by traversing the whole list.
-    '''
-    last_sync_remaining_count = 0
-    
-    def __init__(self, plot, timeframe, timestamp):
-        self._last_modification = time()
-        self._last_saved = time()
+class DataPoint(object):
+    def getValuesByInterval(conn, plots, start_timestamp=None, end_timestamp=None, granularity=None, null_tolerance=0):
+        if len(plots) == 0:
+            return {}
 
-        self.id = None
-
-        self.plot = plot
-        self.timeframe = timeframe
-        self.timestamp = int(timestamp)
-        
-        self.min = None
-        self.max = None
-        self.avg = 0.0
-        self.count = 0
-        self.lower_limit = None
-        self.upper_limit = None
-        
-        self.saved_min = None
-        self.saved_max = None
-        self.saved_avg = None
-        self.saved_count = None
-        self.saved_lower_limit = None
-        self.saved_upper_limit = None
-                
-        self._inserted = False
-        
-        '''
-        Previous min/max/avg values, these are not stored in the DB
-        and are only kept so we can "remove" the last value from the
-        min/max columns.
-        ''' 
-        self.prev_min = 0
-        self.prev_max = 0
-        self.prev_avg = None
-
-    def identity(self):
-        if self.plot.id == None or self.timeframe.id == None or not self._inserted:
-            return None
-        else:
-            return (self.plot.id, self.timeframe.id, self.timestamp)
-
-    '''
-    value = current value (or avg from a smaller tf)
-    min = minimum value we encountered in smaller tfs)
-    max = maximum value we encountered in smaller tfs)
-    lower_limit = lower limit for the value, as specified in the perfdata
-    upper_limit = upper limit for the value, as specified in the perfdata
-    '''
-    def insertValue(self, value, min, max, lower_limit=None, upper_limit=None):
-        value = float(value)
-        
-        if min == None:
-            min = value
-        else:
-            min = float(min)
-
-        if max == None:
-            max = value
-        else:
-            max = float(max)
-            
-        if lower_limit != None:
-            lower_limit = float(lower_limit)
-            
-        if upper_limit != None:
-            upper_limit = float(upper_limit)
-        
-        if self.max == None or max > self.max:
-            self.max = max
-            
-        if self.min == None or min < self.min:
-            self.min = min
-            
-        if self.lower_limit == None:
-            self.lower_limit = lower_limit
-            
-        if self.upper_limit == None:
-            self.upper_limit = upper_limit
-
-        if value != None:
-            self.prev_min = self.min
-            self.prev_max = self.max
-            self.prev_avg = self.avg
-
-            self.avg = (self.avg * self.count + value) / (self.count + 1)
-            self.count = self.count + 1
-        
-        self.markAsModified()
-
-    def removeValue(self, value):
-        value = float(value)
-        
-        if self.count <= 0:
-            return
-        
-        self.count = self.count - 1
-
-        if self.prev_max != None:        
-            self.max = self.prev_max
-            self.prev_max = None
-
-        if self.prev_min != None:
-            self.min = self.prev_min
-            self.prev_min = None
-        
-        if self.prev_avg != None:
-            self.avg = self.prev_avg
-            self.prev_avg = None
-        else:        
-            if self.count > 0:
-                self.avg = (self.avg * (self.count + 1) - value) / self.count
-            else:
-                self.avg = 0.0
-
-        self.markAsModified()
-
-    def markAsModified(self):
-        if self.modified():
-                DataPoint.modified_objects.add(self)
-
-    def _getDbValues(self, conn):
-        if not self.modified():
-            return
-        
-        self._last_modification = None
-        self._last_saved = time()
-
-        # make sure we're not wasting DB queries for unchanged objects
-        if not self.modified():
-            return
-
-        if self.identity() == None:
-            if self.plot.id == None:
-                self.plot.save(conn)
-                assert self.plot.id != None
-            
-            if self.timeframe.id == None:
-                self.timeframe.save(conn)
-                assert self.timeframe.id != None
-
-            type = 'insert'
-            values = {
-                'plot_id': self.plot.id,
-                'timeframe_id': self.timeframe.id,
-                'timestamp': self.timestamp,
-                'min': self.min,
-                'max': self.max,
-                'avg': self.avg,
-                'count': self.count,
-                'lower_limit': self.lower_limit,
-                'upper_limit': self.upper_limit
-            }
-            
-            self._inserted = True
-            self.activate()
-        else:
-            type = 'update'
-            values = {
-                'min': self.min,
-                'max': self.max,
-                'avg': self.avg,
-                'count': self.count,
-                'lower_limit': self.lower_limit,
-                'upper_limit': self.upper_limit
-            }
-        
-        self.saved_min = self.min
-        self.saved_max = self.max
-        self.saved_avg = self.avg
-        self.saved_count = self.count
-        self.saved_lower_limit = self.lower_limit
-        self.saved_upper_limit = self.upper_limit
-        
-        return {
-            'type': type,
-            'values': values
-        }
-
-    def save(self, conn):
-        DataPoint.saveMany(conn, [self])
-
-    def saveMany(conn, objs):
-        insert_items = []
-
-        for obj in objs:
-            update = obj._getDbValues(conn)
-            
-            if update == None:
-                continue
-
-            type = update['type']
-            values = update['values']
-
-            if type == 'update':
-                upd = datapoint.update().where(and_(datapoint.c.plot_id==obj.plot.id, \
-                                           datapoint.c.timeframe_id==obj.timeframe.id,
-                                           datapoint.c.timestamp==obj.timestamp)) \
-                                           .values(values)
-                conn.execute(upd)
-                
-                continue
-            
-            insert_items.append(values)
-            
-        if len(insert_items) > 0:
-            conn.execute(datapoint.insert(), insert_items)
-    
-    saveMany = staticmethod(saveMany)
-
-    def modified(self):
-        # past retention period, don't save
-        if self.timeframe.retention_period != None and \
-                     self.timestamp < time() - self.timeframe.retention_period:
-            return False
-        
-        # not (yet) a fully populated datapoint
-        if self.min == None or self.max == None or self.avg == None:
-            return False
-        
-        # new object or changed data
-        return not self._inserted or not (self.min == self.saved_min and self.max == self.saved_max and \
-                self.avg == self.saved_avg and self.count == self.saved_count and \
-                self.lower_limit == self.saved_lower_limit and self.upper_limit == self.saved_upper_limit)
-    
-    def shouldSave(self):
-        if not self.modified():
-            return False
-        
-        now = time()
-        
-        assert self.plot.last_update != None
-        
-        return self.timestamp != self.plot.last_update - self.plot.last_update % self.timeframe.interval or self._last_saved + randint(300, 900) < now
-
-    def getValuesByInterval(conn, plot, start_timestamp=None, end_timestamp=None, granularity=None):
         if end_timestamp < start_timestamp:
             tmp = end_timestamp
             end_timestamp = start_timestamp
             start_timestamp = tmp
 
-        tfs = TimeFrame.getAllSorted(conn, active_only=True)
+        tfs = TimeFrame.getAll(conn)
 
         if start_timestamp == None:
-            sel = select([func.min(datapoint.c.timestamp, type_=Integer).label('mintimestamp')]).where(datapoint.c.plot_id==plot.id)
-            start_timestamp = conn.execute(sel).scalar()
+            start_timestamp = 0
             
         if end_timestamp == None:
             end_timestamp = time()
@@ -1173,271 +950,116 @@ class DataPoint(ModelBase):
                 if granularity == None or tf.interval < granularity:
                     granularity = tf.interval
                 
-            granularity = max(granularity, (end_timestamp - start_timestamp) / 500) 
+            granularity = max(granularity, (end_timestamp - start_timestamp) / 125) 
+
+        data_tf = None
+
+        for tf in sorted(tfs, cmp=lambda x,y: cmp(x.interval, y.interval), reverse=True):
+            if tf.interval < granularity and data_tf != None:
+                break
+
+            data_tf = tf
+        
+        granularity = data_tf.interval
+        
+        start_timestamp -= 1.5 * granularity
+        end_timestamp += 1.5 * granularity
 
         assert granularity > 0
         
-        max_tf_interval = 0
-        min_tf_interval = None
-        for tf in tfs:
-            if tf.interval > max_tf_interval:
-                max_tf_interval = tf.interval
+        # properly align interval with the timeframe
+        start_timestamp = start_timestamp - start_timestamp % granularity
+        
+        hostservices = set([plot.hostservice for plot in plots])
+        comment_objs = Comment.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
+        
+        comments = []
+        
+        for comment_obj in comment_objs:
+            if comment_obj.hostservice.parent_hostservice != None:
+                parent_service = comment_obj.hostservice.parent_hostservice.service.name
+            else:
+                parent_service = None
             
-            if min_tf_interval == None or min_tf_interval > tf.interval:
-                min_tf_interval = tf.interval
+            comments.append({ 'id': comment_obj.id, 'host': comment_obj.hostservice.host.name,
+                     'parent_service': parent_service,
+                     'service': comment_obj.hostservice.service.name,
+                     'timestamp': comment_obj.timestamp, 'comment_timestamp': comment_obj.comment_timestamp,
+                      'author': comment_obj.author, 'text': comment_obj.text })
         
-        # properly align interval with the smallest timeframe
-        start_timestamp = start_timestamp - start_timestamp % max(granularity, min_tf_interval)
-        
-        # constrain granularity to the largest tf interval, so we
-        # can at least display one datapoint
-        if granularity > max_tf_interval:
-            granularity = max_tf_interval
-            
-        # also constrain granularity to the time interval
-        if granularity > end_timestamp - start_timestamp:
-            granularity = end_timestamp - start_timestamp
-        
-        sel = select([datapoint, timeframe],
-                     and_(datapoint.c.timeframe_id==timeframe.c.id,
-                          datapoint.c.plot_id==plot.id,
-                          between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % timeframe.c.interval, end_timestamp),
-                          timeframe.c.interval >= granularity))
+        plot_conds = or_(*[datapoint.c.plot_id==plot.id for plot in plots])
+        sel = select([datapoint],
+                     and_(datapoint.c.timeframe_id==data_tf.id,
+                          plot_conds,
+                          between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % data_tf.interval, end_timestamp))) \
+                .order_by(datapoint.c.timestamp.asc())
         result = conn.execute(sel)
 
-        items = dict()
-        
+        charts = OrderedDict()
+        prev_rows = {}
+
+        for plot in plots:
+            chart = {}
+            
+            for type in ['upper_limit', 'max', 'avg', 'min', 'lower_limit',
+                             'warn_lower', 'warn_upper', 'warn_type', 'crit_lower',
+                             'crit_upper', 'crit_type']:
+                chart[type] = []
+                
+            charts[plot] = chart
+            prev_rows[plot] = None
+
         for row in result:
+            plot = Plot.get(row[datapoint.c.plot_id])
+            assert plot != None
+
+            chart = charts[plot]
+            prev_row = prev_rows[plot]
+
             ts = row[datapoint.c.timestamp]
+            
+            if prev_row != None and \
+                    row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > (null_tolerance + 1) * granularity:
+                ts_null = prev_row[datapoint.c.timestamp] + (row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp]) / 2
 
-            if ts in items and row[timeframe.c.interval] > items[ts]['interval']:
-                continue
+                chart['min'].append([ts_null, None])
+                chart['max'].append([ts_null, None])
+                chart['avg'].append([ts_null, None])
 
-            item = {
-                'interval': row[timeframe.c.interval],
-                'min': row[datapoint.c.min],
-                'max': row[datapoint.c.max],
-                'avg': row[datapoint.c.avg],
-                'lower_limit': row[datapoint.c.lower_limit],
-                'upper_limit': row[datapoint.c.upper_limit],
-            }
-            
-            items[ts] = item
-            
-        for obj in DataPoint._getCachedValuesByInterval(plot, start_timestamp, end_timestamp):
-            ts = obj.timestamp
-            
-            if obj.timeframe.interval < granularity:
-                continue
-            
-            if ts in items and obj.timeframe.interval > items[ts]['interval']:
-                continue
-            
-            item = {
-                'interval': obj.timeframe.interval,
-                'min': obj.min,
-                'max': obj.max,
-                'avg': obj.avg,
-                'lower_limit': obj.lower_limit,
-                'upper_limit': obj.upper_limit
-            }
-            
-            items[ts] = item
+                chart['lower_limit'].append([ts_null, None])
+                chart['upper_limit'].append([ts_null, None])
 
-        vt_start = start_timestamp        
-        vt_values = {}
-        vt_keys = sorted(items.keys())
-        vt_min_interval = None
-        vt_start_nan = vt_start
-        
-        while vt_start < end_timestamp:
-            vt_end = min(vt_start + granularity, end_timestamp)
-            
-            vt_value = None
-            vt_covered_time = 0
-            
-            for ts in vt_keys:
-                item = items[ts]
+                chart['warn_lower'].append([ts_null, None])
+                chart['warn_upper'].append([ts_null, None])
+                chart['warn_type'].append([ts_null, None])
 
-                # Ignore dps whose timestamp doesn't fall within
-                # the current vt interval unless this is the first or
-                # last interval
-                if (ts < vt_start and vt_start != start_timestamp) \
-                        or (ts + item['interval'] < vt_start and vt_start != start_timestamp) \
-                        or (ts > vt_end and vt_end <= end_timestamp):
-                    continue
+                chart['crit_lower'].append([ts_null, None])
+                chart['crit_upper'].append([ts_null, None])
+                chart['crit_type'].append([ts_null, None])
+
+            chart['min'].append([ts, row[datapoint.c.min]])
+            chart['max'].append([ts, row[datapoint.c.max]])
+            chart['avg'].append([ts, row[datapoint.c.avg]])
+
+            chart['lower_limit'].append([ts, row[datapoint.c.lower_limit]])
+            chart['upper_limit'].append([ts, row[datapoint.c.upper_limit]])
+
+            chart['warn_lower'].append([ts, row[datapoint.c.warn_lower]])
+            chart['warn_upper'].append([ts, row[datapoint.c.warn_upper]])
+            chart['warn_type'].append([ts, row[datapoint.c.warn_type]])
+
+            chart['crit_lower'].append([ts, row[datapoint.c.crit_lower]])
+            chart['crit_upper'].append([ts, row[datapoint.c.crit_upper]])
+            chart['crit_type'].append([ts, row[datapoint.c.crit_type]])
             
-                # Ignore larger timeframes when we've already seen a dp with a
-                # smaller timeframe
-                if vt_min_interval != None and vt_min_interval < item['interval']:
-                    continue
-                
-                vt_min_interval = item['interval']
-                
-                vt_diff = min(ts + item['interval'], vt_end) - max(ts, vt_start)
-                
-                if vt_diff == 0:
-                    continue
+            prev_rows[plot] = row
 
-                if vt_value == None:
-                    vt_value = {
-                        'min': None,
-                        'max': None,
-                        'avg': 0,
-                    }
-                    
-                if vt_value['min'] == None or item['min'] < vt_value['min']:
-                    vt_value['min'] = item['min']
-                    
-                if vt_value['max'] == None or item['max'] > vt_value['max']:
-                    vt_value['max'] = item['max']
-                
-                if item['lower_limit'] != None:
-                    vt_value['lower_limit'] = item['lower_limit']
-                    
-                if item['upper_limit'] != None:
-                    vt_value['upper_limit'] = item['upper_limit']
-                    
-                vt_value['avg'] += vt_diff * item['avg']
-                
-                vt_covered_time += vt_diff
-
-            if vt_value != None:
-                vt_value['min'] = str(vt_value['min'])
-                vt_value['max'] = str(vt_value['max'])
-                vt_value['avg'] = str(vt_value['avg'] / vt_covered_time)
-                
-                if 'lower_limit' in vt_value:
-                    vt_value['lower_limit'] = str(vt_value['lower_limit'])
-                    
-                if 'upper_limit' in vt_value:
-                    vt_value['upper_limit'] = str(vt_value['upper_limit'])
-            
-                vt_values[str((vt_end + vt_start) / 2)] = vt_value
-                
-                vt_start_nan = None
-            else:
-                if vt_start_nan == None:
-                    vt_start_nan = vt_start
-                elif vt_min_interval != None and vt_start - vt_start_nan > vt_min_interval:
-                    # NaN value if there's a gap larger than vt_min_interval seconds,
-                    # which would indicate that we're missing datapoints (possibly due
-                    # to service downtime).
-                    vt_values[str(vt_start)] = {}
-                    vt_values[str(vt_end - 1)] = {}
-                                        
-            vt_start = vt_end
-
-        return vt_values
+        return { 'comments': comments, 'charts': charts }
 
     getValuesByInterval = staticmethod(getValuesByInterval)
 
-    def _getCachedValuesByInterval(plot, start_timestamp, end_timestamp):
-        objs = []
-        
-        for obj in DataPoint.modified_objects:
-            if obj.plot == plot and obj.timestamp >= start_timestamp - start_timestamp % obj.timeframe.interval and \
-                    obj.timestamp <= end_timestamp:
-                objs.append(obj)
-        
-        return objs
-
-    _getCachedValuesByInterval = staticmethod(_getCachedValuesByInterval)
-
-    def getByTimestamp(conn, plot, timestamp, active_tfs_only=False):
-        timestamp = int(timestamp)
-
-        cond = and_(datapoint.c.timeframe_id==timeframe.c.id, datapoint.c.plot_id==plot.id,
-                    datapoint.c.timestamp==literal(timestamp) - literal(timestamp) % timeframe.c.interval)
-
-        if active_tfs_only:
-            cond = and_(cond, timeframe.c.active==True)
-
-        sel = datapoint.select().where(cond)
-        objs = set()
-        
-        for row in conn.execute(sel):
-            id = (row[datapoint.c.plot_id], row[datapoint.c.timeframe_id], row[datapoint.c.timestamp])
-            obj = DataPoint.get(id)
-            
-            if obj == None:
-                '''
-                lazy-load timeframe rather than using a join, rationale for this
-                is that they're usually cached already anyway
-                '''
-                tf = TimeFrame.getByID(conn, row[datapoint.c.timeframe_id])
-
-                obj = DataPoint(plot, tf, row[datapoint.c.timestamp])
-                obj.saved_min = obj.min = row[datapoint.c.min]
-                obj.saved_max = obj.max = row[datapoint.c.max]
-                obj.saved_avg = obj.avg = row[datapoint.c.avg]
-                obj.saved_count = obj.count = max(0, row[datapoint.c.count])
-                obj.saved_lower_limit = obj.lower_limit = row[datapoint.c.lower_limit]
-                obj.saved_upper_limit = obj.upper_limit = row[datapoint.c.upper_limit]
-
-                obj._inserted = True                                
-                obj.activate()
-
-            objs.add(obj)
-    
-        for obj in DataPoint.modified_objects:
-            if obj.plot == plot and obj.timestamp == timestamp - timestamp % obj.timeframe.interval \
-                    and (not active_tfs_only or obj.timeframe.active):
-                objs.add(obj)
-        
-        return objs
-        
-    getByTimestamp = staticmethod(getByTimestamp)
-    
-    def syncSomeObjects(conn, partial_sync=False):
-        count = 0
-        
-        # the maximum number of objects we are going to save this time (unless partial_sync == False)
-        save_quota = max(500, DataPoint.last_sync_remaining_count / 10)
-
-        remaining_objects = set()
-        left_over_count = 0
-        
-        objs_to_save = []
-    
-        for obj in DataPoint.modified_objects:
-            if not obj.modified() and obj.identity() != None:
-                continue
-            
-            if partial_sync:
-                if not obj.shouldSave():
-                    remaining_objects.add(obj)  
-                    continue
-    
-                if count >= save_quota:
-                    remaining_objects.add(obj)
-                    left_over_count += 1
-                    continue
-    
-            objs_to_save.append(obj)
-            count += 1
-            
-            if len(objs_to_save) > 20000:
-                DataPoint.saveMany(conn, objs_to_save)
-                objs_to_save = []
-
-        if len(objs_to_save) > 0:
-            DataPoint.saveMany(conn, objs_to_save)
-        
-        DataPoint.last_sync_remaining_count = left_over_count
-        
-        print("modified objects: %d -> %d, saved %d, still need to save: %d" %
-              (len(DataPoint.modified_objects), len(remaining_objects), count, left_over_count))
-
-        if not partial_sync:
-            assert len(remaining_objects) == 0
-    
-        DataPoint.modified_objects = remaining_objects
-        
-    syncSomeObjects = staticmethod(syncSomeObjects)
-    
     def cleanupOldData(conn):
-        tfs = TimeFrame.getAllSorted(conn)
+        tfs = TimeFrame.getAll(conn)
 
         for tf in tfs:
             if tf.retention_period == None:
@@ -1448,16 +1070,114 @@ class DataPoint(ModelBase):
             conn.execute(delsql)
     
     cleanupOldData = staticmethod(cleanupOldData)
+    
+comment = Table('comment', metadata,
+    Column('id', Integer, Sequence('comment_id_seq'), nullable=False, primary_key=True),
+    Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False, primary_key=True),
+    Column('timestamp', Integer, nullable=False, primary_key=True),
+    Column('comment_timestamp', Integer, nullable=False),
+    Column('author', String(128), nullable=False),
+    Column('text', String(512), nullable=False)
+)
+
+class Comment(ModelBase):
+    def __init__(self, hostservice, timestamp, author, text):
+        self.id = None
+        self.hostservice = hostservice
+        self.timestamp = timestamp
+        self.comment_timestamp = time()
+        self.author = author
+        self.text = text
+    
+    def getByID(conn, id):
+        obj = Comment.get(id)
+        
+        if obj == None:
+            sel = comment.select().where(comment.c.id==id)
+            res = conn.execute(sel)
+            row = res.fetchone()
+            
+            assert row != None
+
+            hostservice = HostService.getByID(conn, row[comment.c.hostservice_id])
+
+            obj = Comment(hostservice, row[comment.c.timestamp], row[comment.c.author], row[comment.c.text])
+            obj.id = row[host.c.id]
+            obj.comment_timestamp = row[comment.c.comment_timestamp]
+            obj.activate()
+        
+        return obj
+    
+    getByID = staticmethod(getByID) 
+    
+    def getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp):
+        conds = or_(*[comment.c.hostservice_id == hostservice.id for hostservice in hostservices])
+        
+        sel = comment.select().where(and_(conds, comment.c.timestamp.between(start_timestamp, end_timestamp)))
+        result = conn.execute(sel)
+        
+        objs = []
+        
+        for row in result:
+            obj = Comment.get(row[comment.c.id])
+            
+            if obj == None:
+                hostservice = HostService.getByID(conn, row[comment.c.hostservice_id])
+    
+                obj = Comment(hostservice, row[comment.c.timestamp], row[comment.c.author], row[comment.c.text])
+                obj.id = row[host.c.id]
+                obj.comment_timestamp = row[comment.c.comment_timestamp]
+                obj.activate()
+            
+            objs.append(obj)
+            
+        return objs
+                
+    getByHostServicesAndInterval = staticmethod(getByHostServicesAndInterval)
+
+    def save(self, conn):
+        self.comment_timestamp = time()
+
+        if self.id == None:
+            if self.hostservice.id == None:
+                self.hostservice.save(conn)
+                
+            assert self.hostservice.id != None
+
+            ins = comment.insert().values(hostservice_id=self.hostservice.id, timestamp=self.timestamp,
+                                          comment_timestamp=self.comment_timestamp, author=self.author,
+                                          text=self.text)
+
+            result = conn.execute(ins)
+            self.id = result.last_inserted_ids()[0]
+            self.activate()
+        else:
+            upd = comment.update().where(comment.c.id==self.id).values(comment_timestamp=self.comment_timestamp,
+                                                                       text=self.text)
+            conn.execute(upd)
+            
+    def delete(self, conn):
+        if self.id == None:
+            return
+        
+        conn.execute(comment.delete().where(comment.c.id==self.id))
+
+class SetTextFactory(PoolListener):
+    def connect(self, dbapi_con, con_record):
+        try:
+            dbapi_con.text_factory = str
+        except Exception:
+            pass
 
 '''
 creates a DB connection
 '''
-def createModelConnection(dsn):
+def createModelEngine(dsn):
     global dbload_max_timestamp
 
-    engine = create_engine(dsn)
+    engine = create_engine(dsn, listeners=[SetTextFactory()])
 
-    engine.echo = True
+    #engine.echo = True
 
     conn = engine.connect()
 
@@ -1471,23 +1191,16 @@ def createModelConnection(dsn):
         pass
 
     metadata.create_all(engine)
-
+    
     sel = select([func.max(datapoint.c.timestamp, type_=Integer).label('maxtimestamp')])
     dbload_max_timestamp = conn.execute(sel).scalar()
-
-    transactions[conn] = conn.begin()
-
-    return conn
-
-'''
-Syncs (parts of) the session.
-'''
-def syncModelSession(conn, partial_sync=False):
-    DataPoint.syncSomeObjects(conn, partial_sync)
     
-    if not partial_sync:
-        transactions[conn].commit()
-        transactions[conn] = conn.begin()
+    if dbload_max_timestamp == None:
+        dbload_max_timestamp = 0
+
+    conn.close()
+
+    return engine
 
 '''
 Runs regular maintenance tasks:
@@ -1496,7 +1209,7 @@ Runs regular maintenance tasks:
 * Cleaning up old datapoints
 '''
 def runMaintenanceTasks(conn):
-    global last_vacuum, last_cleanup, last_autocheckpoint, last_commit
+    global last_vacuum, last_cleanup, last_autocheckpoint
 
     if last_vacuum + 7 * 24 * 60 * 60 < time():
         try:
@@ -1506,7 +1219,7 @@ def runMaintenanceTasks(conn):
         
         last_vacuum = time()
 
-    if last_cleanup + 30 * 60 < time():
+    if last_cleanup + 24 * 60 * 60 < time():
         DataPoint.cleanupOldData(conn)
         
         last_cleanup = time()
@@ -1518,9 +1231,3 @@ def runMaintenanceTasks(conn):
             pass
         
         last_autocheckpoint = time()
-        
-    if last_commit + 60 < time():
-        transactions[conn].commit()
-        transactions[conn] = conn.begin()
-        
-        last_commit = time()

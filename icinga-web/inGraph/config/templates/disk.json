@@ -1,0 +1,17 @@
+{
+"re": "/disk$/i",
+
+"flot": {
+    "colors": ["#00CC00", "#FF6600"],
+    "series": {
+        "lines": {
+            "fill": true,
+            "show": true
+        }
+    }
+},
+
+"series": [{
+    "re": "/.*-avg/"
+}]
+}

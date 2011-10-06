@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ae:configurations xmlns="http://agavi.org/agavi/config/parts/autoload/1.0" xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0">
+	
+	<ae:configuration>
+		
+		<autoload name="IcingainGraphBaseAction">%core.module_dir%/inGraph/lib/action/IcingainGraphBaseAction.class.php</autoload>
+		<autoload name="IcingainGraphBaseModel">%core.module_dir%/inGraph/lib/model/IcingainGraphBaseModel.class.php</autoload>
+		<autoload name="IcingainGraphBaseView">%core.module_dir%/inGraph/lib/view/IcingainGraphBaseView.class.php</autoload>
+        
+        <autoload name="inGraph_XMLRPCAction">%core.module_dir%/inGraph/lib/action/XMLRPCAction.class.php</autoload>
+        
+        <autoload name="inGraph_XMLRPCSuccessView">%core.module_dir%/inGraph/lib/view/XMLRPCSuccessView.class.php</autoload>
+        <autoload name="inGraph_XMLRPCErrorView">%core.module_dir%/inGraph/lib/view/XMLRPCErrorView.class.php</autoload>
+        
+        <autoload name="XMLRPCException">%core.module_dir%/inGraph/lib/exception/XMLRPCException.class.php</autoload>
+        <autoload name="XMLRPCClientException">%core.module_dir%/inGraph/lib/exception/XMLRPCClientException.class.php</autoload>
+		
+	</ae:configuration>
+	
+</ae:configurations>

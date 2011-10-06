@@ -79,6 +79,32 @@ while  True:
         uom = perfresult['raw']['uom']
         raw_value = str(perfresult['raw']['value'])
         
+        warn_lower = None
+        warn_upper = None
+        warn_type = None            
+
+        if 'warn' in perfresult:
+            if perfresult['warn']['lower']['value'] != None:
+                warn_lower = str(perfresult['warn']['lower']['value'])
+                
+            if perfresult['warn']['upper']['value'] != None:
+                warn_upper = str(perfresult['warn']['upper']['value'])
+
+            warn_type = str(perfresult['warn']['type'])
+        
+        crit_lower = None
+        crit_upper = None
+        crit_type = None
+
+        if 'crit' in perfresult:
+            if perfresult['crit']['lower']['value'] != None:
+                crit_lower = str(perfresult['crit']['lower']['value'])
+                
+            if perfresult['crit']['upper']['value'] != None:
+                crit_upper = str(perfresult['crit']['upper']['value'])
+
+            crit_type = str(perfresult['crit']['type'])
+
         if 'min' in perfresult:
             min_value = str(perfresult['min']['value'])
         else:
@@ -104,9 +130,10 @@ while  True:
             upd_service = multi_service
 
         update = (logdata['host'], upd_parentservice, upd_service, upd_plotname, logdata['timestamp'], \
-                  uom, raw_value, raw_value, raw_value, min_value, max_value)
+                  uom, raw_value, raw_value, raw_value, min_value, max_value, warn_lower, warn_upper, warn_type, \
+                  crit_lower, crit_upper, crit_type)
         updates.append(update)
-        
+
     now = time()
     if last_flush + 30 < now or len(updates) >= 25000:
         updates_pickled = pickle.dumps(updates)
@@ -120,4 +147,10 @@ while  True:
         last_flush = time()
         ts_old = logdata['timestamp']
 
-api.insertValueBulk(pickle.dumps(updates))
+if len(updates) > 0:
+    updates_pickled = pickle.dumps(updates)
+    st = time()
+    api.insertValueBulk(updates_pickled)
+    et = time()
+    print("%d updates (%d lines) took %f seconds (%s -> %s)" % \
+          (len(updates), line_count, et - st, datetime.fromtimestamp(ts_old), datetime.fromtimestamp(logdata['timestamp'])))

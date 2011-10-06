@@ -2,17 +2,17 @@ Ext.ns('Ext.iG');
 
 Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 	
-	loadMask		: true,
+	loadMask: true,
 	
-	overview		: false,
+	overview: false,
 	
-	titleFormat     : String.format('{frame} {0} {host} {service}', _('graph for')),
+	titleFormat: String.format('{frame} {0} {host} {service}', _('graph for')),
 	
-	zoomSteps : 3,
+	zoomSteps: 3,
 	
-	zoomMax : 5*60*1000,
+	zoomMax: 5*60*1000,
 	
-	constructor		: function(cfg) {
+	constructor: function(cfg) {
 		cfg = cfg || {};
 		
 		Ext.apply(cfg, {
@@ -261,22 +261,22 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 		
         this.store = Ext.StoreMgr.lookup(this.store);
         this.store.on({
-        	load	: { 
-        	    fn     : function(store, records) {
+        	load: { 
+        	    fn: function(store, records) {
         	    	if(!records.length) {
 	        			this.collapse.defer(500, this, [true], true);
 	        		}
         	    },
-        	    single : true
+        	    single: true
         	},
-        	beforeautorefresh : {
-        		fn : function() {
+        	beforeautorefresh: {
+        		fn: function() {
         			if(this.ownerCt.hidden) {
         				return false;
         			}
         		}
         	},
-        	scope	: this
+        	scope: this
         });
         this.store.on({
             load    : { 
@@ -480,11 +480,11 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 		
 		if(this.loadMask) {
             this.loadMask = new Ext.LoadMask(this.bwrap,
-                    Ext.apply({
-                        store       : this.store,
-                        removeMask  : true
-                    }, this.loadMask)
-            );			
+                Ext.apply({
+	                store: this.store,
+	                removeMask: true
+	            }, this.loadMask)
+            );
 		}
 	},
 	

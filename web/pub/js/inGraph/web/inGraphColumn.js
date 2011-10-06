@@ -1,19 +1,20 @@
 Ext.ns('Cronk.grid.ColumnRenderer');
 (function() {
+
     var buildLink = function(data, cfg) {
     	var host = data[cfg.host],
     	    service = data[cfg.service],
     	    title = new Ext.XTemplate(cfg.title);
     	    
         var cronk = {
-            id: Ext.id(),
-            title: title.apply(data),
-            crname: 'inGraph',
-            iconCls: 'icinga-cronk-icon-stats2',
-            closable: true,
-            params: {
-                host: host,
-                service: service
+            id : Ext.id(),
+            title : title.apply(data),
+            crname : 'inGraph',
+            iconCls : 'icinga-cronk-icon-stats2',
+            closable : true,
+            params : {
+                host : host,
+                service : service
             }
         };
         

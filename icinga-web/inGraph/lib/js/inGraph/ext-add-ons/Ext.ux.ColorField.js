@@ -1,35 +1,33 @@
 Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField, {
+	triggerClass: 'x-form-arrow-trigger',
+	lazyInit: true,
 	
-	triggerClass : 'x-form-arrow-trigger',
-	
-	lazyInit : true,
-	
-    initComponent : function() {
+    initComponent: function() {
         Ext.ux.ColorField.superclass.initComponent.call(this);
         this.addEvents(
             'select'
         );
     },
     
-    initMenu : function() {
+    initMenu: function() {
     	if(!this.menu) {
     		this.menu = new Ext.menu.ColorMenu({
     			hideOnClick : false
     		});
     		
     		this.mon(this.menu, {
-    			scope : this,
-    			select : this.onSelect,
-    			hide : this.onMenuHide
+    			scope: this,
+    			select: this.onSelect,
+    			hide: this.onMenuHide
     		});
     	}
     },
     
-    isExpanded : function() {
+    isExpanded: function() {
     	return this.menu && this.menu.isVisible();
     },
 	
-    onRender : function(ct, position){
+    onRender: function(ct, position){
     	Ext.ux.ColorField.superclass.onRender.call(this, ct, position);
 
         if(!this.lazyInit) {
@@ -39,7 +37,7 @@ Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField, {
         }
     },
     
-    onTriggerClick : function() {
+    onTriggerClick: function() {
         if(this.readOnly || this.disabled){
             return;
         }
@@ -50,35 +48,34 @@ Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField, {
         //this.onFocus();
     },
     
-    onSelect : function(palette, color) {
+    onSelect: function(palette, color) {
     	this.setValue('#'+color);
     	this.fireEvent('select', this, color)
     	this.menu.hide();
     },
     
-    onMenuHide : function() {
+    onMenuHide: function() {
     },
     
-    validateBlur : function(){
+    validateBlur: function(){
         return !this.menu || !this.menu.isVisible();
     },
 
-    beforeBlur : function() {
+    beforeBlur: function() {
         var v = this.getRawValue();
         if(v) {
             this.setValue(v);
         }
     },
     
-    setValue : function(v) {
+    setValue: function(v) {
     	return Ext.ux.ColorField.superclass.setValue.call(this, v);
     },
     
-    onDestroy : function() {
+    onDestroy: function() {
     	if(this.menu) {
     		this.menu.destroy();
     	}
-    	
         Ext.ux.ColorField.superclass.onDestroy.call(this);
     }
     

@@ -1,6 +1,6 @@
 <?php
 
-class inGraph_Cronk_SingleViewSuccessView extends IcingainGraphBaseView {
+class inGraph_Cronk_ViewSuccessView extends IcingainGraphBaseView {
 	
 	public function executeHtml(AgaviRequestDataHolder $rd) {
 		$this->setupHtml($rd);

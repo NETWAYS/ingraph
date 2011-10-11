@@ -22,7 +22,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             	defaults: {
             		height    : 33
             	},
-                items   : [{
+                items   : [/*{
                     xtype   	: 'timeframebuttongroup',
                     active		: cfg.frame.id,
                     listeners	: {
@@ -57,7 +57,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                     	scope		: this
                     },
                     ref			: '../timeframes'
-                }, {
+                },*/ {
                     xtype   : 'buttongroup',
                     items   : [{
                     	xtype      : 'checkbox',
@@ -123,7 +123,14 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                                 });
                             });
                             
-                            if(!this.templateWindow) {                   	    
+                            if(!this.templateWindow) {
+                            	/*
+                            	this.templateWindow = new Ext.Window({
+                            		items: new Ext.iG.Settings({
+                            			store: this.store
+                            		})
+                            	});*/                 	    
+
 	                            this.templateWindow = new Ext.iG.TemplateWindow({
 	                            	store : this.store,
 	                            	listeners : {
@@ -256,7 +263,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 		this.title = String.format(this.titleFormat, {
             host    : this.host,
             service : this.service,
-            frame   : this.frame.title
+            frame   : this.title
         });
 		
         this.store = Ext.StoreMgr.lookup(this.store);
@@ -285,7 +292,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                         this.setTitle(String.format(this.titleFormat, {
                             host    : this.host,
                             service : this.service,
-                            frame   : this.frame.title
+                            frame   : this.initialConfig.title
                         }));
                             
                         this.datapoints.enable();
@@ -294,7 +301,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                     	this.setTitle(String.format(this.titleFormat + ' ({0})', {
                     		host      : this.host,
                     		service   : this.service,
-                    		frame     : this.frame.title
+                    		frame     : this.initialConfig.title
                     	}, _('No data')));
                     	
                         this.datapoints.disable();

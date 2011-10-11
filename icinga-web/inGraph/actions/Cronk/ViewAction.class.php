@@ -1,6 +1,6 @@
 <?php
 
-class inGraph_Cronk_SingleViewAction extends IcingainGraphBaseAction {
+class inGraph_Cronk_ViewAction extends IcingainGraphBaseAction {
 	
     public function isSecure() {
         return true;

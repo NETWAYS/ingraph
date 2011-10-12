@@ -57,10 +57,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         },
         xaxis : {
             show : true,
-            mode : 'time',
-            tickFormatter : function(time) {
-            	return (new Date(time)).format('M d, Y H:i:s');
-            }
+            mode : 'time'
         },
         series : {
             lines : {

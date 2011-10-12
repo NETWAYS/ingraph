@@ -1,269 +1,36 @@
 Ext.ns('Ext.iG');
-
 Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
-	
 	loadMask: true,
-	
 	overview: false,
-	
-	titleFormat: String.format('{frame} {0} {host} {service}', _('graph for')),
-	
+	titleFormat: '{interval} ' + _('graph for') + ' {host} {service}',
+	collapsible: true,
+	animCollapse: true,
+	layout: 'anchor',
+	defaults: {
+		xtype: 'flot',
+		height: 220,
+		layout: 'fit'
+	},
 	zoomSteps: 3,
-	
 	zoomMax: 5*60*1000,
 	
 	constructor: function(cfg) {
 		cfg = cfg || {};
 		
-		Ext.apply(cfg, {
-			layout      : typeof cfg.overview !== 'undefined' ? (cfg.overview ? 'anchor' : 'fit') : (this.overview ? 'anchor' : 'fit'),
-			animCollapse: true,
-            tbar        : {
-            	defaults: {
-            		height    : 33
-            	},
-                items   : [/*{
-                    xtype   	: 'timeframebuttongroup',
-                    active		: cfg.frame.id,
-                    listeners	: {
-                    	framechange	: function(frame) {
-                    		this.frame = frame;
-                    	
-	                        this.setTitle(String.format(this.titleFormat, {
-	                            host       : this.host,
-	                            service    : this.service,
-	                            frame      : this.frame.title
-	                        }));
-	                        
-	                        Ext.iterate({
-	                        	start : frame.start(),
-	                        	end   : frame.end()
-	                        }, function(k, v) {
-	                        	this.store.setBaseParam(k, v);
-	                        }, this);
-
-                    		this.store.load({
-                    			callback : function() {
-                    				if(this.overview) {
-	                    				this.overview.getFlot().setSelection(
-	                    				    this.flot.getRange(),
-	                    				    true
-	                    				);
-                    				}
-                    			},
-                    			scope : this
-                    		});
-                    	},
-                    	scope		: this
-                    },
-                    ref			: '../timeframes'
-                },*/ {
-                    xtype   : 'buttongroup',
-                    items   : [{
-                    	xtype      : 'checkbox',
-                    	disabled   : true,
-                    	boxLabel   : _('Show datapoints'),
-                    	handler    : function(box, checked) {
-                    		var flot = this.flot;
-                    		iG.merge(true, flot.flotOptions, {
-                    			series: {
-                    				points: {
-                    					show: checked
-                    				}
-                    			}
-                    		});
-                    		flot.refresh();
-                    	},
-                    	scope      : this,
-                    	ref        : '../../datapoints'
-                    }, {
-                        xtype      : 'checkbox',
-                        disabled   : true,
-                        boxLabel   : _('Smooth'),
-                        handler    : function(box, checked) {
-                            var flot = this.flot;
-                            iG.merge(true, flot.flotOptions, {
-                                series: {
-                                    lines: {
-                                        spline: checked
-                                    }
-                                }
-                            });
-                            flot.refresh();
-                        },
-                        scope      : this,
-                        ref        : '../../smooth'
-                    }]
-                }, {
-                	xtype   : 'buttongroup',
-                	items   : [{
-                        text    : 'Template',
-                        handler : function(button, event) {
-                            var c = new Array();
-
-                            var store   = this.flot.getStore(),
-                                ostore  = null;
-
-                            if(this.overview) {
-                                var ostore = this.overview.getStore();
-                            }
-                            
-                            store.each(function(record) {
-                                c.push({
-                                    checked     : !record.get('disabled'),
-                                    name        : record.get('label'),
-                                    fieldLabel  : record.get('label'),
-                                    handler     : function(box, checked) {
-                                        store.getAt(store.find('label', box.name)).set('disabled', !checked);
-                                        
-                                        if(ostore) {
-                                            ostore.getAt(store.find('label', box.name)).set('disabled', !checked);
-                                        }
-                                    }
-                                });
-                            });
-                            
-                            if(!this.templateWindow) {
-                            	/*
-                            	this.templateWindow = new Ext.Window({
-                            		items: new Ext.iG.Settings({
-                            			store: this.store
-                            		})
-                            	});*/                 	    
-
-	                            this.templateWindow = new Ext.iG.TemplateWindow({
-	                            	store : this.store,
-	                            	listeners : {
-	                            		sourcechange : function(w, h, s) {
-                            				this.flot.resetTemplate();
-                          				  
-                            				Ext.apply(this.store.baseParams, {
-                            					host : h,
-                            					service : s
-                            				});
-                            				
-                            				this.store.removeAll(true);
-                            				
-                            				this.host = h;
-                            				this.service = s;
-                            				
-                            				this.store.load();
-                            				
-                            				if(this.overview) {
-                            					var r = this.overview.flot.getSelection();
-                            					
-                            					this.overview.resetTemplate();
-                            					
-                                                Ext.apply(this.overview.store.baseParams, {
-                                                    host : h,
-                                                    service : s
-                                                });
-                                                
-                                                this.overview.store.removeAll(true);
-                                                
-                                                this.overview.host = h;
-                                                this.overview.service = s;
-                                                
-                                                this.overview.store.load(r ? {
-                                                	callback : function() {
-                                                		this.flot.setSelection(r);
-                                                	},
-                                                	scope : this.overview
-                                                } : {});
-                            				}	                            			
-	                            		},
-	                            		scope : this
-	                            	}
-	                            });
-                            }
-
-                            this.templateWindow.show();
-                        },
-                        scope   : this
-	                }, {
-	                	xtype : 'splitbutton',
-	                	text : _('Options'),
-	                   	menu : {
-	                   		layout : 'form',
-	                        items: {
-	                        	xtype : 'slider',
-	                        	fieldLabel : _('Null tolerance'),
-	                        	increment : 5,
-	                        	minValue : 0,
-	                        	maxValue : 100,
-	                        	value : 10,
-	                        	width : 100,
-	                        	plugins : [new Ext.ux.SliderTip()],
-	                        	listeners : {
-	                        		changecomplete : function(slider, v) {
-	                        			this.store.setBaseParam('nullTolerance', v);
-	                        			this.store.load();
-	                        			if(this.overview) {
-		                        			this.overview.getStore().setBaseParam('nullTolerance', v);
-		                        			this.overview.getStore().load();	                        				
-	                        			}
-	                        		},
-	                        		scope : this
-	                        	}
-	                        }
-	                   	}
-	                }]
-                }, {
-                    xtype   : 'buttongroup',
-                    items   : [{
-                    	width : 16,
-                    	iconCls : 'icon-zoom-in',
-                    	handler : function() {
-                    		var r = this.flot.getRange(),
-                    			i = r.xaxis.to - r.xaxis.from,
-                    			s = Math.ceil(i / (this.zoomSteps));
-                    		
-                    		if(i <= this.zoomMax) {
-                    			return;
-                    		}
-                    		
-                    		r.xaxis.from += s;
-                    		r.xaxis.to -= s;
-                    		
-                    		this.flot.select(r);
-                    	},
-                    	scope : this
-                    }, {
-                    	width : 16,
-                    	iconCls : 'icon-zoom-out',
-                    	handler : function() {
-                    		this.flot.unselect();
-                    	},
-                    	scope : this
-                    }]
-                }, '->', {
-                	width : 16,
-                	iconCls : 'icon-print',
-                	handler : function() {
-                		this.preparePrint();
-                		
-                		window.print();
-                	},
-                	scope : this
-                }]
-            },
-            defaults    : {
-                xtype   : 'flot',
-                height  : 300,
-                layout : 'container'
-            }
+		cfg.tbar = new Ext.iG.Toolbar({
+			store: cfg.store
 		});
 		
 		Ext.iG.FlotPanel.superclass.constructor.call(this, cfg);
 	},
 	
-	initComponent	: function() {
+	initComponent: function() {
 		Ext.iG.FlotPanel.superclass.initComponent.call(this);
 		
 		this.title = String.format(this.titleFormat, {
             host    : this.host,
             service : this.service,
-            frame   : this.title
+            interval   : this.title
         });
 		
         this.store = Ext.StoreMgr.lookup(this.store);
@@ -285,7 +52,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
         	},
         	scope: this
         });
-        this.store.on({
+        /*this.store.on({
             load    : { 
                 fn     : function(store, records) {
                     if(records.length) {
@@ -310,7 +77,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                 }
             },
             scope   : this
-        });
+        });*/
         
         this.add({
         	store	: this.store,
@@ -319,7 +86,8 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
         
         if(this.overview) {
         	this.add([{
-        		xtype   : 'component',
+        		xtype   : 'container',
+        		height: 1,
         		autoEl  : {
         			tag : 'hr',
         			cls : 'iG-hs'
@@ -363,7 +131,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
         	            color   : '#FA5C0D'
         	        }
         	    },
-        	    height      : 50,
+        	    height      : 40,
         	    store       : new Ext.iG.FlotJsonStore({
         	    	url			: this.store.url,
         	    	baseParams	: Ext.applyIf({
@@ -391,7 +159,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
         	this.overview.on({
         		plotselected: {
         			fn		: function(flot, event, ranges) {
-        				this.timeframes.noneActive();
+        				//this.timeframes.noneActive();
         				
                         var store = this.flot.getStore();
                         if(ranges) {
@@ -427,7 +195,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 	                    
 	                    flot.getFlot().clearSelection();
 	                    
-	                    this.timeframes.setActive(this.frame.id);
+	                    //this.timeframes.setActive(this.frame.id);
 	
 	                    return false;
                 	}

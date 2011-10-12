@@ -1,7 +1,6 @@
 <?php
 
 class inGraph_Provider_PlotsAction extends inGraph_XMLRPCAction {
-	
     public function isSecure() {
         return true;
     }
@@ -56,5 +55,4 @@ class inGraph_Provider_PlotsAction extends inGraph_XMLRPCAction {
     public function handleError(AgaviRequestDataHolder $rd) {
         return 'Error';
     }
-    
 }

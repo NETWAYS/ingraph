@@ -47,13 +47,11 @@ Ext.iG.Panel = (function() {
 		        });
 		    }
 		    return new Ext.Panel({
-			    layout: 'anchor',
+			    //layout: 'anchor',
 			    header: false,
 			    autoScroll: true,
 			    defaults: {
-			        collapsible: true,
-			        xtype: 'flot',
-			        height: '300px'
+			        xtype: 'flotpanel'
 			    },
 			    items: items
 		    });

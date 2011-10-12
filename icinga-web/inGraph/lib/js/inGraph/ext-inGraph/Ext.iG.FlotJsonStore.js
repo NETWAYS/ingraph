@@ -3,7 +3,7 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     keepModifications: true,
     refreshInterval: 300,
 
-    constructor : function(cfg) {
+    constructor: function(cfg) {
         Ext.applyIf(cfg, {
             autoDestroy : true,
             root: 'results',

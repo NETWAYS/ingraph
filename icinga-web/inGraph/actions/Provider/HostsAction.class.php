@@ -1,7 +1,6 @@
 <?php
 
 class inGraph_Provider_HostsAction extends inGraph_XMLRPCAction {
-	
     public function isSecure() {
         return true;
     }
@@ -19,14 +18,30 @@ class inGraph_Provider_HostsAction extends inGraph_XMLRPCAction {
     }
     
     public function executeWrite(AgaviParameterHolder $rd) {
+        $api = $this->getContext()->getModel('Store.LegacyLayer.IcingaApi',
+            'Api');
+        $search = $api->createSearch()
+        ->setSearchTarget(IcingaApiConstants::TARGET_HOST)
+        ->setResultType(IcingaApiConstants::RESULT_ARRAY)
+        ->setResultColumns(array('HOST_NAME'));
+        $permittedHosts = $api->fetch()->getAll();
+        $i = new RecursiveIteratorIterator(
+            new RecursiveArrayIterator($permittedHosts));
+        $permittedHosts = iterator_to_array($i, false);
     	try {
-			$this->setAttribute('hosts', $this->getClient()->call(
+			$availableHosts = $this->getClient()->call(
 				'getHostsFiltered',
 				array(
 					$rd->getParameter('host', '%'),
 					$rd->getParameter('limit', 10),
 					$rd->getParameter('offset', 0)
 				)
+			);
+			$finalHosts = array_intersect($permittedHosts,
+			    $availableHosts['hosts']);
+			$this->setAttribute('hosts', array(
+			    'total' => count($finalHosts),
+			    'hosts' => $finalHosts
 			));
 		} catch(XMLRPCClientException $e) {
 			$this->setAttribute('exception', $e);
@@ -39,5 +54,4 @@ class inGraph_Provider_HostsAction extends inGraph_XMLRPCAction {
     public function handleError(AgaviRequestDataHolder $rd) {
         return 'Error';
     }
-    
 }

@@ -16,6 +16,7 @@ from OrderedDict import OrderedDict
 last_vacuum = time()
 last_cleanup = time()
 last_autocheckpoint = time()
+dbload_min_timestamp = None
 dbload_max_timestamp = None
 
 '''
@@ -1191,6 +1192,12 @@ def createModelEngine(dsn):
         pass
 
     metadata.create_all(engine)
+
+    sel = select([func.min(datapoint.c.timestamp, type_=Integer).label('mintimestamp')])
+    dbload_min_timestamp = conn.execute(sel).scalar()
+
+    if dbload_min_timestamp == None:
+        dbload_min_timestamp = time()
     
     sel = select([func.max(datapoint.c.timestamp, type_=Integer).label('maxtimestamp')])
     dbload_max_timestamp = conn.execute(sel).scalar()

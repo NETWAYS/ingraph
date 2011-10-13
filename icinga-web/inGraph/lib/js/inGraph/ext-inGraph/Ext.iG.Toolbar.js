@@ -60,7 +60,14 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
     		disabled: true,
     		scope: this,
     		handler: function(box, checked) {
-    			console.log('Show datapoints:', checked);
+    			this.store.each(function(rec) {
+    				pointsCfg = rec.get('points');
+    				iG.merge(true, pointsCfg, {
+    					show: checked
+    				});
+    				rec.set('points', pointsCfg);
+    				rec.commit();
+    			});
     		},
     		style: {
     			marginTop: '0px'
@@ -71,7 +78,14 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             disabled: true,
             scope: this,
             handler: function(box, checked) {
-                console.log('Smooth', checked);
+                this.store.each(function(rec) {
+                    linesCfg = rec.get('lines');
+                    iG.merge(true, linesCfg, {
+                        spline: checked
+                    });
+                    rec.set('lines', linesCfg);
+                    rec.commit();
+                });
             },
             style: {
                 marginTop: '0px'

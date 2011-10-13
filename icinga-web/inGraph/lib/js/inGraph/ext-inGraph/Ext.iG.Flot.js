@@ -94,9 +94,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     
     initComponent : function() {
         Ext.iG.Flot.superclass.initComponent.call(this);
-        
-        this.store = Ext.StoreMgr.lookup(this.store);
-        
         this.addEvents(
             'beforerefresh',
             'refresh',
@@ -108,18 +105,14 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             'zoomin',
             'zoomout'
         );
+        this.bindStore(this.store, true);
     },
     
     onRender : function(ct, position) {  
         Ext.iG.Flot.superclass.onRender.call(this, ct, position);
-        
-        this.width = (this.width || ct.getWidth()) - 20;
+        this.width = this.width || ct.getWidth();
         this.height = this.height || ct.getHeight();
         Ext.fly(this.id).setSize(this.width, this.height);
-        
-        this.bindStore(this.store, true);
-        
-        this.refresh.defer(10, this);
     },
     
     afterRender : function() {

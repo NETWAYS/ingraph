@@ -12,11 +12,10 @@ class inGraph_Provider_PlotsSuccessView extends inGraph_XMLRPCSuccessView {
         	foreach($plots['charts'] as $chart) {
         		array_walk($chart['data'], array($this, 'ensureTypes'));
         		$chart['key'] = $chart['host'] . $chart['service'] . $chart['label'];
-        		$chart['disabled'] = true;
         		
         		foreach($template['series'] as $seriesCfg) {
         			if(preg_match($seriesCfg['re'], $chart['label'])) {
-        				$chart['disabled'] = false;
+        				$chart['enabled'] = true;
         				$chart = array_merge($chart, array_diff_key($seriesCfg, array_fill_keys(array('re'), null)));
         			}
         		}

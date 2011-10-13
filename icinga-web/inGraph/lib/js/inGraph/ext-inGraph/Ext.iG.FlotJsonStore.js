@@ -2,6 +2,11 @@ Ext.ns('Ext.iG');
 Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     keepModifications: true,
     refreshInterval: 300,
+    startProperty: 'start',
+    endPropterty: 'end',
+    optionsProperty: 'options',
+    mintimestampProperty: 'mintimestamp',
+    maxtimestampProperty: 'maxtimestamp',
 
     constructor: function(cfg) {
         Ext.applyIf(cfg, {
@@ -20,7 +25,7 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
                      {name: 'bars', defaultValu : {}},
                      {name: 'shadowSize', defaultValue: 3},
                      {name: 'stack', defaultValue: undefined},
-                     {name: 'disabled', defaultValue: false},
+                     {name: 'enabled', defaultValue: false},
                      {name: 'key', defaultValue: undefined}],
             autoLoad: true,
             idProperty: 'key'
@@ -45,6 +50,26 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
                 scope: this
             });
         }
+    },
+    
+    getStart: function() {
+    	return this.reader.jsonData[this.startProperty];
+    },
+    
+    getEnd: function() {
+        return this.reader.jsonData[this.endProperty];
+    },
+    
+    getMintimestamp: function() {
+    	return this.reader.jsonData[this.mintimestampProperty];
+    },
+    
+    getMaxtimestamp: function() {
+        return this.reader.jsonData[this.maxtimestampProperty];
+    },
+    
+    getOptions: function() {
+    	return this.reader.jsonData[this.optionsProperty];
     }
 });
 

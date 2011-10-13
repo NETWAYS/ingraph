@@ -1,12 +1,5 @@
 Ext.ns('Ext.iG');
 Ext.iG.Panel = (function() {
-	var provider = {
-        hosts: 'http://localhost/inGraph/data/hosts',
-        services: 'http://localhost/inGraph/data/services',
-        views: 'http://localhost/inGraph/data/views',
-        plots: 'http://localhost/inGraph/data/plots',
-        combined: 'http://localhost/inGraph/data/combined'
-    };
 	return {
 		hostService: function(cfg, timeFrames) {
 		    var items = new Array();
@@ -33,12 +26,13 @@ Ext.iG.Panel = (function() {
 		            		host: cfg.host,
 		            		service: cfg.service,
 		            		store: new Ext.iG.FlotJsonStore({
-		                        url: provider.plots,
+		                        url: cfg.provider.plots,
 		                        baseParams: {
 		                            host: cfg.host,
 		                            service: cfg.service,
-		                            start: strtotime(rec.get('start')),
-		                            end: strtotime(rec.get('end'))
+		                            start: Math.ceil(
+		                                strtotime(rec.get('start'))),
+		                            end: Math.ceil(strtotime(rec.get('end')))
 		                        }
 		                    }),
 		                    overview: rec.get('overview')
@@ -47,7 +41,6 @@ Ext.iG.Panel = (function() {
 		        });
 		    }
 		    return new Ext.Panel({
-			    //layout: 'anchor',
 			    header: false,
 			    autoScroll: true,
 			    defaults: {

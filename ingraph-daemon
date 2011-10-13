@@ -206,7 +206,7 @@ class BackendRPCMethods:
 
         charts = []
         comments = []
-        result = { 'comments': comments, 'charts': charts }
+        result = { 'comments': comments, 'charts': charts, 'min_timestamp': model.dbload_min_timestamp, 'max_timestamp': time.time() }
         
         if host_pattern != None:
             host_pattern = host_pattern.replace('*', '%')

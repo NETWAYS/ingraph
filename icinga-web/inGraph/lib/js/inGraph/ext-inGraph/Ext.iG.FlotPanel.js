@@ -104,9 +104,10 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             );
 		}
         if(this.overview) {
-        	this.mon(this.flot, {
+        	/*this.mon(this.flot, {
         		scope: this,
         		zoomin: function(flot, ranges) {
+        			console.log(ranges);
         			this.overview.getFlot().setSelection(ranges, true);
         		},
         		zoomout: function(flot, ranges) {
@@ -115,6 +116,29 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                     } else {
                         this.overview.getFlot().clearSelection();
                     }
+        		}
+        	});*/
+        	this.mon(this.overview.store, {
+        		scope: this,
+        		single: true,
+        		load: function() {
+	                this.overview.getFlot().setSelection({
+	                    xaxis: {
+	                        from: this.store.baseParams.start,
+	                        to: this.store.baseParams.end
+	                    }
+	                }, true);
+	                this.mon(this.flot.store, {
+	                	scope: this,
+	                	load: function(store) {
+		                    this.overview.getFlot().setSelection({
+		                        xaxis: {
+		                            from: store.getStart()*1000,
+		                            to: store.getEnd()*1000
+		                        }
+		                    }, true);
+	                	}
+	                });
         		}
         	});
         	this.mon(this.overview, {

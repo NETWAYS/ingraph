@@ -28,5 +28,3 @@ Ext.iG.TimeFrames = Ext.extend(Ext.data.JsonStore, {
 		Ext.iG.TimeFrames.superclass.constructor.call(this, cfg);
 	}
 });
-var t = new Ext.iG.TimeFrames();
-console.log(t);

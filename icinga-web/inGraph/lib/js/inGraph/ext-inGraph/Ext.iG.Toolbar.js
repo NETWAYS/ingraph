@@ -90,6 +90,15 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             style: {
                 marginTop: '0px'
             }
+    	}), '->',
+    	this.print = new Ext.Toolbar.Button({
+    		iconCls: 'icon-print',
+    		scope: this,
+    		handler: function() {
+    			if(this.fireEvent('beforeprint', this) !== false) {
+    			    window.print();
+    			}
+    		}
     	})];
         
         cfg.items = items;
@@ -99,6 +108,7 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
 	
 	initComponent: function() {
 		Ext.iG.Toolbar.superclass.initComponent.call(this);
+		this.addEvents('beforeprint');
 		this.bindStore(this.store, true);
 	},
 	
@@ -114,15 +124,14 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
                 this.store = null;
             }
         }
-//        if(store){
-//            store = Ext.StoreMgr.lookup(store);
-        store.on({
-            scope: this,
-            beforeload: this.onBeforeLoad,
-            load: this.onLoad
-        });
-//        }
-//        this.store = store;
+        if(store){
+	        store.on({
+	            scope: this,
+	            beforeload: this.onBeforeLoad,
+	            load: this.onLoad
+	        });
+	        this.store = store;
+        }
     },
     
     onBeforeLoad: function() {

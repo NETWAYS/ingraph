@@ -72,7 +72,13 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 		cfg.items = items;
 		Ext.applyIf(cfg, {
 			tbar: new Ext.iG.Toolbar({
-                store: cfg.store
+                store: cfg.store,
+                listeners: {
+                	scope: this,
+                	beforeprint: function() {
+                		this.preparePrint();
+                	}
+                }
             })
 		});
 		Ext.iG.FlotPanel.superclass.constructor.call(this, cfg);
@@ -179,28 +185,26 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
     preparePrint : function() {
 		var id = String.format('{0}-print', this.id),
 			el = Ext.DomHelper.append(Ext.getBody(), {
-			tag : 'div',
-			cls : 'flot-print-container',
-			children : [{
-				tag : 'div',
-				cls : 'flot-print-title',
-				html : this.title,
+			tag: 'div',
+			cls: 'flot-print-container',
+			children: [{
+				tag: 'div',
+				cls: 'flot-print-title',
+				html: this.title,
 			}, {
-				tag : 'div',
-				id : id,
-				cls : 'flot-print-graph',
-				style : {
-					width : '670px',
-					height : '170px'
+				tag: 'div',
+				id: id,
+				cls: 'flot-print-graph',
+				style: {
+					width: '670px',
+					height: '170px'
 				}
 			}]
 		}, true);
-	
-		this.flot.plot(this.flot.getSeries(), id);
-		
-		Ext.EventManager.addListener(window, 'focus', function() {Ext.destroy.defer(1000, this, [el]);}, this, {single : true});  	
+		this.flot.plot({id: id});
+		Ext.EventManager.addListener(window, 'focus', function() {
+			Ext.destroy.defer(1000, this, [el]);
+		}, this, {single: true});  	
     }
-
 });
-
 Ext.reg('flotpanel', Ext.iG.FlotPanel);

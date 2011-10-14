@@ -15,7 +15,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             borderWidth: 1,
             borderColor: 'rgba(255, 255, 255, 0)',
             hoverable: true,
-            
             canvasText: {
                 show: false
             }
@@ -70,10 +69,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     onRender : function(ct, position) {  
         Ext.iG.Flot.superclass.onRender.call(this, ct, position);
         this.width = this.width || ct.getWidth();
-        console.log(this.height);
         this.height = this.height || ct.getHeight();
         Ext.fly(this.id).setSize(this.width, this.height);
-        
         this.initEvents();
     },
     
@@ -312,21 +309,19 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     	this.series = series;
     },
     
-    plot: function(series, id) {
+    buildOptions: function() {
+        var options = this.store.getOptions();
+        iG.merge(true, this.flotOptions, options.flot);
+        if(options.generic.refreshInterval) {
+            this.store.setRefresh(options.generic.refreshInterval, true);
+        }
+    },
+    
+    plot: function(cfg) {
+    	cfg = cfg || {};
         if(this.fireEvent('beforeplot', this) !== false) {
-        	/*
-        	 * @TODO(el): Do not merge options on every load since they change
-        	 * unusually. Flag 'em dirty on change and make use of that here.
-        	 */
-        	var options = this.store.getOptions();
-        	iG.merge(true, this.flotOptions, options.flot);
-        	if(options.generic.refreshInterval) {
-        		this.store.setRefresh(options.generic.refreshInterval, true);
-        	}
-        	
-        	var series = series === undefined ? this.series : series,
-        	    id = id === undefined ? this.id : id;
-        	
+        	var series = cfg.series === undefined ? this.series : cfg.series,
+        	    id = cfg.id === undefined ? this.id : cfg.id;
         	// Sort series by their mean from highest to lowest.
         	// This is nice for filled lines since series will not paint
         	// over each other.
@@ -337,17 +332,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                     return parseFloat(v[1]);
                 }).mean();
             });
-            
-            if(this.absolute) {
-            	// Force full view of timerange even if there's no data.
-                Ext.apply(this.flotOptions.xaxis, {
-                    min: this.store.getStart() ? this.store.getStart()*1000 :
-                                                 null,
-                    max: this.store.getEnd() ? this.store.getEnd()*1000 :
-                                               new Date().getTime()
-                });
-            }
-
 		    this.flot = $.plot($('#' + id), series, this.flotOptions);
 		    //if(this.loadMask) {
 		    //   this.el.setStyle('position', 'relative');
@@ -365,6 +349,20 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     
     onDatachanged: function() {
         this.buildSeries();
+        /*
+         * @TODO(el): Do not merge options on every load since they change
+         * unusually. Flag 'em dirty on change and make use of that.
+         */
+        this.buildOptions();
+        if(this.absolute) {
+            // Force full view of timerange even if there's no data.
+            Ext.apply(this.flotOptions.xaxis, {
+                min: this.store.getStart() ? this.store.getStart()*1000 :
+                                             null,
+                max: this.store.getEnd() ? this.store.getEnd()*1000 :
+                                           new Date().getTime()
+            });
+        }
         this.plot();
     },
     

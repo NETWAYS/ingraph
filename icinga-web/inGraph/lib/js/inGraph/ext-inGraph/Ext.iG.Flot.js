@@ -313,7 +313,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         var options = this.store.getOptions();
         iG.merge(true, this.flotOptions, options.flot);
         if(options.generic.refreshInterval) {
-            this.store.setRefresh(options.generic.refreshInterval, true);
+            this.store.startRefresh(options.generic.refreshInterval);
         }
     },
     

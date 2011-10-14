@@ -1,9 +1,8 @@
 Ext.ns('Ext.iG');
 Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     keepModifications: true,
-    refreshInterval: 300,
     startProperty: 'start',
-    endPropterty: 'end',
+    endProperty: 'end',
     optionsProperty: 'options',
     mintimestampProperty: 'mintimestamp',
     maxtimestampProperty: 'maxtimestamp',
@@ -31,6 +30,16 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
             idProperty: 'key'
         });
         Ext.iG.FlotJsonStore.superclass.constructor.call(this, cfg);
+        this.addEvents('beforeautorefresh');
+        if(Ext.isNumber(this.refreshInterval)) {
+            this.on({
+                scope: this,
+                single: true,
+                load: function() {
+                    this.startRefresh();
+                },
+            });
+        }
         if(this.keepModifications) {
             this.on({
                 load: function(store) {
@@ -49,6 +58,27 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
                 },
                 scope: this
             });
+        }
+    },
+    
+    autorefresh: function() {
+        if(this.fireEvent('beforeautorefresh') !== false) {
+            this.reload();
+        }
+    },
+    
+    startRefresh: function(ms) {
+    	if(ms !== undefined && ms !== this.refreshInterval) {
+    		this.refreshInterval = ms;
+    	}
+        this.stopRefresh();
+        this.refreshId = setInterval(this.autorefresh.createDelegate(this, []),
+            this.refreshInterval*1000);
+    },
+    
+    stopRefresh: function() {
+        if(this.refreshId) {
+            clearInterval(this.refreshId);
         }
     },
     
@@ -72,62 +102,3 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     	return this.reader.jsonData[this.optionsProperty];
     }
 });
-
-(function() {
-	var _constructor = Ext.iG.FlotJsonStore.prototype.constructor;
-	Ext.override(Ext.iG.FlotJsonStore, {
-		refreshInterval : false,
-		
-		constructor: function(cfg) {
-			_constructor.call(this, cfg);
-			this.addEvents(
-			    'beforeautorefresh',
-			    'autorefresh'
-			);
-			this.refreshInterval = typeof cfg.refreshInterval !== 'undefined' ?
-			                       cfg.refreshInterval : this.refreshInterval;
-			if(Ext.isNumber(this.refreshInterval)) {
-				this.on({
-					load: function() {
-						this.startRefresh();
-					},
-					scope: this,
-					single: true
-				});
-			}
-		},
-		
-		refresh: function() {
-			if(this.fireEvent('beforeautorefresh') !== false) {
-				lastOptions = this.lastOptions;
-				this.reload(Ext.apply(lastOptions.options, {
-					callback: function() {
-						this.fireEvent('autorefresh');
-					}
-				}));
-			}
-		},
-		
-		setRefresh: function(ms, start) {
-			start = start || false;
-			if(ms != this.refreshInterval) {
-				this.refreshInterval = ms;
-			}
-			if(start) {
-				this.startRefresh();
-			}
-		},
-		
-		startRefresh: function(ms) {
-			this.stopRefresh();
-			this.refreshId = setInterval(this.refresh.createDelegate(this, []),
-			    ms || this.refreshInterval*1000);
-		},
-		
-		stopRefresh: function() {
-			if(this.refreshId) {
-				clearInterval(this.refreshId);
-			}
-		}
-	});
-})();

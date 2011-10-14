@@ -26,7 +26,7 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             handler: this.movePrevious,
             scope: this
         }), '-', _('Interval'),
-        this.inputItem = new Ext.form.ComboBox({
+        this.input = new Ext.form.ComboBox({
         	width: 100,
         	store: new Ext.iG.TimeFrames(),
         	valueField: 'name',
@@ -144,6 +144,9 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         this.refresh.enable();
         this.datapoints.enable();
         this.smooth.enable();
+        this.prev.enable();
+        this.next.enable();
+        this.last.enable();
     },
     
     onDestroy: function() {
@@ -153,5 +156,67 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
     
     doRefresh: function() {
     	this.store.reload();
+    },
+    
+    changeInput: function(cb, rec) {
+    	console.log(rec.get('interval'));
+    },
+    
+    moveLast: function() {
+        /*
+         * @TODO(el): Review if min_timestamp is properly provided by
+         * backend.
+         */
+    },
+    
+    movePrevious: function() {
+        var rec = this.input.store.getById(this.input.getValue());
+        if(rec) {
+            var e = this.store.getStart()*1000,
+                i = rec.get('interval')*1000,
+                s = e-i;
+            /*
+             * @TODO(el): Review if min_timestamp is properly provided by
+             * backend.
+             */
+            this.store.load({
+                params: {
+                    start: Math.ceil(s/1000),
+                    end: Math.ceil(e/1000)
+                }
+            });
+        }
+    },
+    
+    moveNext: function() {
+        var rec = this.input.store.getById(this.input.getValue());
+        if(rec) {
+        	var s = this.store.getEnd()*1000,
+        	    i = rec.get('interval')*1000,
+        	    e = s+i,
+        	    now = new Date().getTime();
+        	e = e > now ? now : e; // Do not try to plot future values. ;-)
+        	if((e-s) < i) { 
+        		s = e - i; // ALWAYS view full selected range.
+        	}
+            this.store.load({
+                params: {
+                    start: Math.ceil(s/1000),
+                    end: Math.ceil(e/1000)
+                }
+            });
+        }
+    },
+    
+    moveLast: function() {
+    	var rec = this.input.store.getById(this.input.getValue());
+    	if(rec) {
+    		this.store.load({
+    			params: {
+    			    start: Math.ceil(strtotime(rec.get('start'))),
+    			    end: Math.ceil(strtotime(rec.get('end')))
+    			}
+    		});
+    	}
     }
 });

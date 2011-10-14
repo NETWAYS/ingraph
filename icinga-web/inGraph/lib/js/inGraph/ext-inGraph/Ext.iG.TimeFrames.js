@@ -23,6 +23,15 @@ Ext.iG.TimeFrames = Ext.extend(Ext.data.JsonStore, {
 		           {'name': _('One Month'), start: '-1 month'},
 		           {'name': _('One Year'), start: '-1 year'}
 		        ]
+		    },
+		    listeners: {
+		    	scope: this,
+		    	load: function() {
+		    		this.each(function(rec) {
+		    			rec.set('interval', strtotime(rec.get('end')) -
+		    			                    strtotime(rec.get('start')));
+		    		});
+		    	}
 		    }
 		});
 		Ext.iG.TimeFrames.superclass.constructor.call(this, cfg);

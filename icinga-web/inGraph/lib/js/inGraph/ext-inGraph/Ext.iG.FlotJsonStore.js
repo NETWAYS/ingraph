@@ -4,8 +4,8 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     startProperty: 'start',
     endProperty: 'end',
     optionsProperty: 'options',
-    mintimestampProperty: 'mintimestamp',
-    maxtimestampProperty: 'maxtimestamp',
+    mintimestampProperty: 'minTimestamp',
+    maxtimestampProperty: 'maxTimestamp',
 
     constructor: function(cfg) {
         Ext.applyIf(cfg, {
@@ -74,6 +74,9 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
         this.stopRefresh();
         this.refreshId = setInterval(this.autorefresh.createDelegate(this, []),
             this.refreshInterval*1000);
+        /*
+         * TODO(el): Call startRefresh if this.refreshId on every load?
+         */
     },
     
     stopRefresh: function() {

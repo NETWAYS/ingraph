@@ -26,7 +26,8 @@ class inGraph_XMLRPCClientModel extends AppKitBaseModel implements AgaviISinglet
 				CURLOPT_URL => $this->getParameter('uri'),
 				CURLOPT_POSTFIELDS => $this->encode_request($method, $params),
 				CURLOPT_RETURNTRANSFER => true,
-				CURLOPT_TIMEOUT => $this->getParameter('timeout', 30)
+				CURLOPT_TIMEOUT => $this->getParameter('timeout', 30),
+				CURLOPT_PROXY => ''
 			));
 			
 			$response = curl_exec($ch);
@@ -60,7 +61,8 @@ class inGraph_XMLRPCClientModel extends AppKitBaseModel implements AgaviISinglet
 					CURLOPT_URL => $this->getParameter('uri'),
 					CURLOPT_POSTFIELDS => $this->encode_request($method, $params),
 					CURLOPT_RETURNTRANSFER => true,
-					CURLOPT_TIMEOUT => $this->getParameter('timeout', 30)
+					CURLOPT_TIMEOUT => $this->getParameter('timeout', 30),
+				    CURLOPT_PROXY => ''
 				));
 				
 				curl_multi_add_handle($mh, $ch);

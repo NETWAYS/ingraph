@@ -162,6 +162,8 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
         		contextmenu: function(flot, event) {
         			event.stopEvent();
         			if(this.overview.getFlot().getSelection()) {
+        				tbar = this.getTopToolbar();
+        				tbar.input.setValue(tbar.initialConfig.activeFrame);
 	        			this.store.load();
 	        			this.overview.getFlot().clearSelection();
         			}
@@ -197,7 +199,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
         			}
         		}
         	});
-        }
+        } // eof if overview
 	},
 	
     onDestroy: function() {

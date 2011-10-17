@@ -73,6 +73,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 		Ext.applyIf(cfg, {
 			tbar: new Ext.iG.Toolbar({
                 store: cfg.store,
+                activeFrame: cfg.activeFrame,
                 listeners: {
                 	scope: this,
                 	beforeprint: function() {

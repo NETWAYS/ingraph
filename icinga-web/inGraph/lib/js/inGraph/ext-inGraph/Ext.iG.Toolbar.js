@@ -32,7 +32,21 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         	valueField: 'name',
         	displayField: 'name',
         	mode: 'local',
-        	triggerAction: 'all'
+        	triggerAction: 'all',
+        	value: cfg.activeFrame !== undefined ? cfg.activeFrame : '',
+        	listeners: {
+        		scope: this,
+        		select: function(c, rec) {
+        			var lastFrame = this.lastFrame !== undefined ?
+        			                this.lastFrame : this.activeFrame; 
+                    if(rec.get('name') !== lastFrame) {
+                        this.first.enable();
+                    } else if(this.store.getStart() ===
+                              this.store.getMintimestamp()) {
+                    	this.first.disable();
+                    }
+        		}
+        	}
         }),'-', this.next = new Ext.Toolbar.Button({
             tooltip: this.nextText,
             overflowText: this.nextText,
@@ -102,7 +116,6 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
     	})];
         
         cfg.items = items;
-        
         Ext.iG.Toolbar.superclass.constructor.call(this, cfg);
 	},
 	
@@ -138,13 +151,20 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         if(this.rendered && this.refresh){
             this.refresh.disable();
         }
+        this.lastFrame = this.input.getValue();
     },
     
     onLoad: function() {
         this.refresh.enable();
         this.datapoints.enable();
         this.smooth.enable();
-        this.prev.enable();
+        if(this.store.getStart() === this.store.getMintimestamp()) {
+            this.first.disable();
+            this.prev.disable();
+        } else {
+            this.first.enable();
+            this.prev.enable();
+        }
         this.next.enable();
         this.last.enable();
     },
@@ -158,15 +178,19 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
     	this.store.reload();
     },
     
-    changeInput: function(cb, rec) {
-    	console.log(rec.get('interval'));
-    },
-    
-    moveLast: function() {
-        /*
-         * @TODO(el): Review if min_timestamp is properly provided by
-         * backend.
-         */
+    moveFirst: function() {
+        var rec = this.input.store.getById(this.input.getValue());
+        if(rec) {
+            var s = this.store.getMintimestamp()*1000,
+                i = rec.get('interval')*1000,
+                e = s+i;
+            this.store.load({
+                params: {
+                    start: Math.ceil(s/1000),
+                    end: Math.ceil(e/1000)
+                }
+            });
+        }
     },
     
     movePrevious: function() {
@@ -174,11 +198,12 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         if(rec) {
             var e = this.store.getStart()*1000,
                 i = rec.get('interval')*1000,
-                s = e-i;
-            /*
-             * @TODO(el): Review if min_timestamp is properly provided by
-             * backend.
-             */
+                s = e-i,
+                min = this.store.getMintimestamp()*1000;
+            if(s < min) {
+            	s = min;
+            	e = s+i;
+            }
             this.store.load({
                 params: {
                     start: Math.ceil(s/1000),

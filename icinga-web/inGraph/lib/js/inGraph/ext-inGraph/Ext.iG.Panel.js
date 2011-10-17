@@ -23,6 +23,7 @@ Ext.iG.Panel = (function() {
 		            if(rec.get('enabled')) {
 		            	items.push({
 		            		title: rec.get('name'),
+		            		activeFrame: rec.get('name'),
 		            		host: cfg.host,
 		            		service: cfg.service,
 		            		store: new Ext.iG.FlotJsonStore({

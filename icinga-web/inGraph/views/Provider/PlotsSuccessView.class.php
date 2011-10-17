@@ -28,8 +28,10 @@ class inGraph_Provider_PlotsSuccessView extends inGraph_XMLRPCSuccessView {
         	'results' => $data,
         	'total' => count($data),
         	'options' => array_diff_key($template, array_fill_keys(array('re', 'series'), null)),
-        	'start' => $rd->getParameter('start', null),
-        	'end' => $rd->getParameter('end', null)
+        	'start' => $rd->getParameter('start', $plots['min_timestamp']),
+        	'end' => $rd->getParameter('end', $plots['max_timestamp']),
+            'minTimestamp' => $plots['min_timestamp'],
+            'maxTimestamp' => $plots['max_timestamp']
         ));
 	}
 	

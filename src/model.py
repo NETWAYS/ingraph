@@ -1174,7 +1174,7 @@ class SetTextFactory(PoolListener):
 creates a DB connection
 '''
 def createModelEngine(dsn):
-    global dbload_max_timestamp
+    global dbload_min_timestamp, dbload_max_timestamp
 
     engine = create_engine(dsn, listeners=[SetTextFactory()])
 

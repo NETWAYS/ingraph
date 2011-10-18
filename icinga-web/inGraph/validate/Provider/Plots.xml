@@ -15,6 +15,7 @@
         
             <validator name="service" class="string" required="true">
                 <argument>service</argument>
+                <error>Paramer service is mandatory.</error>
             </validator>
             
             <validator name="start" class="number" required="false">

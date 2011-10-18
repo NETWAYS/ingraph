@@ -1,22 +1,6 @@
 <?php
 
 class inGraph_Provider_HostsAction extends inGraph_XMLRPCAction {
-    public function isSecure() {
-        return true;
-    }
-    
-    public function getCredentials() {
-        return array ('icinga.user');
-    }
-    
-    public function getDefaultViewName() {
-        return 'Success';
-    }
-    
-    public function executeRead(AgaviParameterHolder $rd) {
-        return $this->getDefaultViewName();
-    }
-    
     public function executeWrite(AgaviParameterHolder $rd) {
         $api = $this->getContext()->getModel('Store.LegacyLayer.IcingaApi',
             'Api');
@@ -44,14 +28,10 @@ class inGraph_Provider_HostsAction extends inGraph_XMLRPCAction {
 			    'hosts' => $finalHosts
 			));
 		} catch(XMLRPCClientException $e) {
-			$this->setAttribute('exception', $e);
+			$this->setAttribute('message', $e->getMessage());
 			return 'Error';
 		}
 		
         return $this->getDefaultViewName();
-    }
-    
-    public function handleError(AgaviRequestDataHolder $rd) {
-        return 'Error';
     }
 }

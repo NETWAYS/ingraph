@@ -11,6 +11,7 @@
         
             <validator name="host" class="string" required="true">
                 <argument>host</argument>
+                <error>Parameter host is mandatory.</error>
             </validator>
         
             <validator name="service" class="string" required="false">

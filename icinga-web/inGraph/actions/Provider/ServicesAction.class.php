@@ -1,22 +1,6 @@
 <?php
 
 class inGraph_Provider_ServicesAction extends inGraph_XMLRPCAction {
-    public function isSecure() {
-        return true;
-    }
-    
-    public function getCredentials() {
-        return array ('icinga.user');
-    }
-    
-    public function getDefaultViewName() {
-        return 'Success';
-    }
-    
-    public function executeRead(AgaviParameterHolder $rd) {
-        return $this->getDefaultViewName();
-    }
-    
     public function executeWrite(AgaviParameterHolder $rd) {
         $api = $this->getContext()->getModel('Store.LegacyLayer.IcingaApi',
             'Api');

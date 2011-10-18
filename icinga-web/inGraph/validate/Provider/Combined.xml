@@ -11,6 +11,7 @@
         
             <validator name="config" class="string" required="true">
                 <argument>config</argument>
+                <error>Parameter config is mandatory.</error>
             </validator>
             
             <validator name="start" class="number" required="false">

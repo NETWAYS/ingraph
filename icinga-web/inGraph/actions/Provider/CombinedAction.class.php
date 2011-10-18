@@ -1,23 +1,6 @@
 <?php
 
 class inGraph_Provider_CombinedAction extends inGraph_XMLRPCAction {
-	
-    public function isSecure() {
-        return true;
-    }
-    
-    public function getCredentials() {
-        return array ('icinga.user');
-    }
-    
-    public function getDefaultViewName() {
-        return 'Success';
-    }
-    
-    public function executeRead(AgaviParameterHolder $rd) {
-        return $this->getDefaultViewName();
-    }
-    
     public function executeWrite(AgaviParameterHolder $rd) {
         $config = json_decode($rd->getParameter('config'), true);
         $start = $rd->getParameter('start', '');
@@ -44,7 +27,7 @@ class inGraph_Provider_CombinedAction extends inGraph_XMLRPCAction {
                 $mp
             ));
         } catch(XMLRPCClientError $e) {
-			$this->setAttribute('exception', $e);
+			$this->setAttribute('message', $e->getMessage());
 			return 'Error';
         }
         
@@ -52,9 +35,4 @@ class inGraph_Provider_CombinedAction extends inGraph_XMLRPCAction {
     	
     	return $this->getDefaultViewName();
     }
-    
-    public function handleError(AgaviRequestDataHolder $rd) {
-        return 'Error';
-    }
-    
 }

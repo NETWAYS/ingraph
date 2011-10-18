@@ -1,0 +1,24 @@
+{
+"re": "/^disk-io/",
+
+"flot": {
+    "series": {
+        "lines": {
+            "fill": false
+        }
+    }
+},
+
+"series": [{
+    "re": "/TOTAL.*avg/",
+    "color": "#0099CC"
+    },
+           {
+    "re": "/WRITE.*avg/",
+    "color": "#CC0033"
+},
+           {
+    "re": "/READ.*avg/",
+    "color": "#33CC00"
+}]
+}

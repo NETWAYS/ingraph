@@ -1,8 +1,7 @@
 {
-"re": "/load$/i",
+"re": "/^lx-disk/i",
 
 "flot": {
-    "colors": ["#ff0000", "#00cc00", "#ff8000"],
     "series": {
         "lines": {
             "fill": true,
@@ -12,6 +11,11 @@
 },
 
 "series": [{
-    "re": "/.*-avg/"
-}]
+    "re": "/.*-avg/",
+	"color": "#0099CC"
+},
+{
+     "re": "/.*-max/"
+}
+]
 }

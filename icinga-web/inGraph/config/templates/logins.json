@@ -1,0 +1,17 @@
+{
+"re": "/logins$/i",
+
+"flot": {
+    "colors": ["#0099CC"],
+    "series": {
+        "lines": {
+            "fill": true,
+            "show": true
+        }
+    }
+},
+
+"series": [{
+    "re": "/-avg$/"
+}]
+}

@@ -1,0 +1,20 @@
+{
+"re": "/^lx-ipvs/i",
+
+"flot": {
+    "series": {
+        "lines": {
+            "fill": false,
+            "show": true
+        }
+    }
+},
+
+"series": [{
+    "re": "/active.*-avg/",
+	"color": "#33FF66"
+}, {
+    "re": "/inactive.*-avg/",
+	"color": "#3366FF"
+}]
+}

@@ -1,75 +1,63 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <template match-pattern="icinga-service-template">
-     <fields>
+    <option>
+        <parameter name="mode">default</parameter>
+        <parameter name="layout">CronkGridTemplateAjaxGridLayout</parameter>
+        <parameter name="gridEvents">
+            <parameter>
+                <parameter name="type">viewready</parameter>
+                <parameter name="function">Cronk.grid.iGColumnRenderer.init
+                </parameter>
+                <parameter name="arguments">
+                    <parameter name="host">host_name</parameter>
+                    <parameter name="service">service_name</parameter>
+                    <parameter name="title">inGraph: {host_name}
+                        {service_name}</parameter>
+                    <parameter name="previewTimeout">1200</parameter>
+                    <parameter name="height">150</parameter>
+                    <parameter name="width">40%</parameter>
+                </parameter>
+            </parameter>
+        </parameter>
+    </option>
+
+    <fields>
         <field name="ig_service_link">
             <preferPosition>after:comments</preferPosition>
             <datasource>
                 <parameter name="field">SERVICE_NAME</parameter>
             </datasource>
-            
             <display>
-
                 <parameter name="visible">true</parameter>
                 <parameter name="label"></parameter>
-
                 <parameter name="width">22</parameter>
-                
-                <!-- Config for the AJAX grid (see http://www.extjs.com/deploy/dev/docs/?class=Ext.grid.Column) -->
                 <parameter name="Ext.grid.Column">
                     <parameter name="menuDisabled">true</parameter>
                     <parameter name="fixed">true</parameter>
-
                 </parameter>
-
                 <parameter name="jsFunc">
-                
                     <parameter>
-                        <parameter name="namespace">Cronk.grid.ColumnRenderer</parameter>
-                        <parameter name="function">columnImage</parameter>
-                        
-                        <!-- renderer/gridevent[cellclick|celldblclick|...] -->
+                        <parameter name="namespace">Cronk.grid.ColumnRenderer
+                        </parameter>
+                        <parameter name="function">columnImage
+                        </parameter>
                         <parameter name="type">renderer</parameter>
-
-                        
                         <parameter name="arguments">
-                            <parameter name="image">images/icons/chart.png</parameter>
-                            <parameter name="css">x-icinga-grid-link</parameter>
-                        </parameter>
-                    </parameter>
-                    
-                    <parameter>
-                        <parameter name="namespace">Cronk.grid.ColumnRenderer</parameter>
-                        <parameter name="function">iGColumn</parameter>
-                        
-                        <parameter name="type">cellclick</parameter>
-                        
-                        <parameter name="arguments">
-                            <parameter name="host">host_name</parameter>
-                            <parameter name="service">service_name</parameter>
-                            <parameter name="title">inGraph : {host_name} {service_name}</parameter>
-                        </parameter>
-                    </parameter>
-                    
-                    <parameter>
-                        <parameter name="namespace">Cronk.grid.ColumnRenderer</parameter>
-                        <parameter name="function">iGColumnHover</parameter>
-                        
-                        <parameter name="type">cellclick</parameter>
-                        
-                        <parameter name="arguments">
-                            <parameter name="host">host_name</parameter>
-                            <parameter name="service">serivce_name</parameter>
-                            <parameter name="title">inGraph : {host_name} {service_name}</parameter>
+                            <parameter name="image">images/icons/chart.png
+                            </parameter>
+                            <parameter name="css">x-icinga-grid-link
+                            </parameter>
+                            <parameter name="attr">
+                                <parameter name="qtip">Open inGraph</parameter>
+                                <parameter name="class">iGColumn</parameter>
+                            </parameter>
                         </parameter>
                     </parameter>
                 </parameter>
-                
             </display>
-            
             <filter>
                 <parameter name="enabled">false</parameter>
             </filter>
-            
             <order>
                 <parameter name="enabled">false</parameter>
             </order>

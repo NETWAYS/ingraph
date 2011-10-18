@@ -37,7 +37,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
-    constructor : function(cfg) {
+    constructor: function(cfg) {
         cfg = cfg || {};
         Ext.applyIf(cfg, {
             flotOptions: {},
@@ -49,7 +49,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                                     this.flotOptions);
     },
     
-    initComponent : function() {
+    initComponent: function() {
         Ext.iG.Flot.superclass.initComponent.call(this);
         this.addEvents(
             'beforeplot',
@@ -66,7 +66,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         this.bindStore(this.store, true);
     },
     
-    onRender : function(ct, position) {  
+    onRender: function(ct, position) {  
         Ext.iG.Flot.superclass.onRender.call(this, ct, position);
         this.width = this.width || ct.getWidth();
         this.height = this.height || ct.getHeight();
@@ -333,9 +333,9 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 }).mean();
             });
 		    this.flot = $.plot($('#' + id), series, this.flotOptions);
-		    //if(this.loadMask) {
-		    //   this.el.setStyle('position', 'relative');
-		    //}
+		    if(this.loadMask) {
+		       this.el.setStyle('position', 'relative');
+		    }
             this.fireEvent('plot', this);
         }
     },

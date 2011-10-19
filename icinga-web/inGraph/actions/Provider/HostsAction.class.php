@@ -15,16 +15,16 @@ class inGraph_Provider_HostsAction extends inGraph_XMLRPCAction {
     	try {
 			$availableHosts = $this->getClient()->call(
 				'getHostsFiltered',
-				array(
-					$rd->getParameter('host', '%'),
-					$rd->getParameter('limit', 10),
-					$rd->getParameter('offset', 0)
-				)
+				array($rd->getParameter('host', '%'))
 			);
 			$finalHosts = array_intersect($permittedHosts,
 			    $availableHosts['hosts']);
+			$total = count($finalHosts);
+			$finalHosts = array_slice($finalHosts,
+			                          $rd->getParameter('offset', 0),
+			                          $rd->getParameter('limit', 10));
 			$this->setAttribute('hosts', array(
-			    'total' => count($finalHosts),
+			    'total' => $total,
 			    'hosts' => $finalHosts
 			));
 		} catch(XMLRPCClientException $e) {

@@ -2,10 +2,15 @@
 
 class inGraph_Provider_ServicesAction extends inGraph_XMLRPCAction {
     public function executeWrite(AgaviParameterHolder $rd) {
+        $host = $rd->getParameter('host');
+        $service = $rd->getParameter('service', '%');
         $api = $this->getContext()->getModel('Store.LegacyLayer.IcingaApi',
             'Api');
         $search = $api->createSearch()
         ->setSearchTarget(IcingaApiConstants::TARGET_SERVICE)
+        ->setSearchFilter('SERVICE_NAME', $service,
+                          IcingaApiConstants::MATCH_LIKE)
+        ->setSearchFilter('HOST_NAME', $host)
         ->setResultType(IcingaApiConstants::RESULT_ARRAY)
         ->setResultColumns(array('SERVICE_NAME'));
         $permittedServices = $api->fetch()->getAll();
@@ -15,17 +20,17 @@ class inGraph_Provider_ServicesAction extends inGraph_XMLRPCAction {
     	try {
 			$availableServices = $this->getClient()->call(
 				'getServices',
-				array(
-					$rd->getParameter('host'),
-					$rd->getParameter('service', '%'),
-					$rd->getParameter('limit', 10),
-					$rd->getParameter('offset', 0)
-				)
+				array($host,
+				      $rd->getParameter('service', '%'))
 			);
 			$finalServices = array_intersect($permittedServices,
 			    $availableServices['services']);
+			$total = count($finalServices);
+			$finalServices = array_slice($finalServices,
+                                		 $rd->getParameter('offset', 0),
+                                		 $rd->getParameter('limit', 10));
 			$this->setAttribute('services', array(
-			    'total' => count($finalServices),
+			    'total' => $total,
 			    'services' => $finalServices
 			));
 		} catch(XMLRPCClientException $e) {

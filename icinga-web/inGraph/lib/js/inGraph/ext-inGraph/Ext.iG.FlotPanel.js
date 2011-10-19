@@ -67,7 +67,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                         end: ''
                     }, cfg.store.baseParams)
                 })
-			}));
+			})); // eof items.push
 		}
 		cfg.items = items;
 		Ext.applyIf(cfg, {
@@ -105,20 +105,6 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             );
 		}
         if(this.overview) {
-        	/*this.mon(this.flot, {
-        		scope: this,
-        		zoomin: function(flot, ranges) {
-        			console.log(ranges);
-        			this.overview.getFlot().setSelection(ranges, true);
-        		},
-        		zoomout: function(flot, ranges) {
-                    if(ranges) {
-                        this.overview.getFlot().setSelection(ranges, true);
-                    } else {
-                        this.overview.getFlot().clearSelection();
-                    }
-        		}
-        	});*/
         	this.mon(this.overview.store, {
         		scope: this,
         		single: true,

@@ -16,7 +16,7 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
                      {name: 'unit', defaultValue: ''},
                      {name: 'color', defaultValue: null},
                      {name: 'xaxis', defaultValue: 1},
-                     {name: 'yaxis', defaultValue: 1},
+                     {name: 'yaxis', defaultValue: undefined},
                      {name: 'id', defaultValue: undefined},
                      {name: 'fillBetween', defaultValue: undefined},
                      {name: 'lines', defaultValue: {}},

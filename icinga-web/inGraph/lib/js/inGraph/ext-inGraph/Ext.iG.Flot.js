@@ -4,6 +4,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     loadMask: false,
     absolute: true,
     cls: 'flot',
+    autoYAxes: true,
 
     defaultFlotOptions: {
         legend: {
@@ -299,21 +300,68 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
+    yTickFormatter: function(v, axis) {
+    	if(axis.rawTicks === undefined) {
+    		axis.rawTicks = axis.tickGenerator(axis);
+    	}
+    	if(v === axis.rawTicks.last()) {
+    		// If this did not auto add yaxes, unit and label may be undefined
+    		// as its definition is left to the user.
+    		return axis.options.label !== undefined ?
+    		       (axis.options.unit !== undefined ?
+    		        axis.options.label + ' (' + axis.options.unit + ')' :
+    		        axis.options.label) :
+    		       v.toFixed(axis.tickDecimals);
+    	}
+    	return v.toFixed(axis.tickDecimals);
+    },
+    
     buildSeries: function() {
     	var series = new Array();
     	this.store.each(function(rec) {
     		if(rec.get('enabled')) {
-    			series.push(rec.data)
+    			series.push(rec.data);
+	            if(this.autoYAxes) {
+	            	var unit = rec.get('unit');
+	            	Ext.each(this.flotOptions.yaxes, function(yaxis, i) {
+	            		if(yaxis.unit === rec.get('unit')) {
+	            			rec.set('yaxis', i+1); // Flot's axis index starts
+	            			                       // with 1.
+	            		}
+	            	});
+	            	var i = this.flotOptions.yaxes.length;
+	            	// Setting yaxis on series via template, plus if there's no
+	            	// yaxes configuration present breaks this code.
+	            	if(rec.get('yaxis') === undefined) {
+	            		this.flotOptions.yaxes.push({
+	            			position: i % 2 === 0 ? 'left' : 'right',
+	            			unit: unit,
+	            			label: rec.get('label'),
+	            			tickFormatter: this.yTickFormatter
+	            		});
+	            		rec.set('yaxis', i+1);
+	            	}
+	            }
     		};
-    	});
+    	}, this);
     	this.series = series;
     },
     
     buildOptions: function() {
         var options = this.store.getOptions();
         iG.merge(true, this.flotOptions, options.flot);
-        if(options.generic.refreshInterval) {
+        if(options.generic && options.generic.refreshInterval) {
             this.store.startRefresh(options.generic.refreshInterval);
+        }
+        if(this.autoYAxes) {
+        	if(this.flotOptions.yaxes === undefined) {
+        	   this.flotOptions.yaxes = new Array();
+        	} else {
+        		Ext.each(this.flotOptions.yaxes, function(yaxis) {
+        			yaxis.tickFormatter = this.yTickFormatter;
+        		}, this);
+        		this.autoYAxes = false;
+        	}
         }
     },
     
@@ -348,12 +396,12 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     onDatachanged: function() {
-        this.buildSeries();
         /*
          * @TODO(el): Do not merge options on every load since they change
          * unusually. Flag 'em dirty on change and make use of that.
          */
         this.buildOptions();
+        this.buildSeries();
         if(this.absolute) {
             // Force full view of timerange even if there's no data.
             Ext.apply(this.flotOptions.xaxis, {
@@ -370,32 +418,11 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         this.delayPlot();
     },
     
-    getSeries : function() {
-    	return this.series;
-    },
-    
-    resetTemplate : function() {
-        if(typeof this.store.reader.jsonData.options !== 'undefined') {
-        	delete this.store.reader.jsonData.options;
-        }
-        this.flotOptions = this.initialConfig.flotOptions;
-    },
-    
-    getRange : function() {
-    	var x = this.flot.getXAxes()[0];
-    	return {
-    		xaxis : {
-	    		from : x.min,
-	    		to : x.max
-    		}
-    	}
-    },
-    
-    getStore : function() {
+    getStore: function() {
         return this.store;
     },
     
-    getFlot : function() {
+    getFlot: function() {
         return this.flot;
     },
     

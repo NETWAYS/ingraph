@@ -44,7 +44,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             width: 80,
             cls: 'x-btn-text-left',
             handler: function(self, e) {
-            	this.fireEvent('plothostservice', {
+            	this.fireEvent('plot', self, {
             		host: this.hostCmp.getValue(),
             		service: this.serviceCmp.getValue(),
             		start: this.startCmp.getValue(),
@@ -97,9 +97,13 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             text: _('Display View'),
             width: 80,
             cls: 'x-btn-text-left',
+            scope: this,
             handler: function(self, e) {
-            },
-            scope: this
+            	this.fireEvent('plot', self, {
+            		viewConfig: this.viewCmp.store.getById(
+            		                this.viewCmp.getValue()).get('config')
+            	});
+            }
         });
         Ext.apply(cfg, {
             border: true,
@@ -150,9 +154,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
     
     initComponent: function() {
     	this.addEvents(
-    	   'plothost',
-    	   'plotview',
-    	   'plothostservice'
+    	   'plot'
     	);
     	Ext.iG.Menu.superclass.initComponent.call(this);
     }

@@ -2,24 +2,24 @@
 
 @media print {
     body {
-        overflow : visible !important;
+        overflow: visible !important;
     }
     
     * {
-        border : 1px solid transparent;
+        border: 1px solid transparent;
     }
 
     .x-panel, .x-tab-panel, .x-tip {
-        display : none;
+        display: none;
     }
     
     .flot-print-container {
-        visibility : visible;
+        visibility: visible;
     }
     
     .flot-print-title {
-        font-weight : bold;
-        font-size : 11pt;
-        margin : 10px auto;
+        font-weight: bold;
+        font-size: 11pt;
+        margin: 10px auto;
     }
 }

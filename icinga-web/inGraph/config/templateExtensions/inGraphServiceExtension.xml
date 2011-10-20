@@ -6,7 +6,7 @@
         <parameter name="gridEvents">
             <parameter>
                 <parameter name="type">viewready</parameter>
-                <parameter name="function">Cronk.grid.iGColumnRenderer.init
+                <parameter name="function">Ext.iG.Cronk.ColumnRenderer.init
                 </parameter>
                 <parameter name="arguments">
                     <parameter name="host">host_name</parameter>

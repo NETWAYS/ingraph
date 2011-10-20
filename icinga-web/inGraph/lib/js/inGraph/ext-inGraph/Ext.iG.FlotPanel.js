@@ -88,9 +88,9 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 	initComponent: function() {
 		Ext.iG.FlotPanel.superclass.initComponent.call(this);
 		this.title = String.format(this.titleFormat, {
-            host    : this.host,
-            service : this.service,
-            interval   : this.title
+            host: this.host,
+            service: this.service,
+            interval: this.title
         });
 	},
 	

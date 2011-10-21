@@ -8,9 +8,10 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
 	autoScroll: true,
 	stateful: true,
 	stateEvents: [],
+	layout: 'anchor',
 	defaults: {
 		xtype: 'flotpanel',
-		bodyStyle: 'padding: 5px;'
+		bodyStyle: 'padding: 2px;'
 	},
 	
 	initComponent: function() {

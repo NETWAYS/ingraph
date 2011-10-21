@@ -5,27 +5,23 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 	titleFormat: '{interval} ' + _('graph for') + ' {host} {service}',
 	collapsible: true,
 	animCollapse: true,
-	layout: 'anchor',
-	defaults: {
-		layout: 'fit'
+	height: 220,
+	layout:'vbox',
+	layoutConfig: {
+	    align: 'stretch',
+	    pack : 'start'
 	},
 	
 	constructor: function(cfg) {
 		cfg = cfg || {};
 		var items = [this.flot = new Ext.iG.Flot({
 			store: cfg.store,
-			height: 220
+			flex: 1
 		})];
+
 		if(cfg.overview !== undefined ? cfg.overview : this.overview) {
 			delete cfg.overview;
-			items.push({
-				xtype: 'container',
-                height: 1,
-                autoEl: {
-                    tag: 'hr',
-                    cls: 'iG-hs'
-                }
-            });
+			items.push(new Ext.Spacer({height:1, cls: 'iG-spacer'}));
 			items.push(this.overview = new Ext.iG.Flot({
 				flotOptions: {
                     xaxis: {
@@ -52,14 +48,15 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                         show: true,
                         borderWidth: 1,
                         borderColor: 'rgba(255, 255, 255, 0)',
-                        hoverable: false
+                        hoverable: false,
+                        clickable: false
                     },
                     selection: {
                         mode: 'x',
                         color: '#FA5C0D'
                     }
                 },
-                height: 40,
+                height: '25%',
                 store: new Ext.iG.FlotJsonStore({
                     url: cfg.store.url,
                     baseParams: Ext.applyIf({

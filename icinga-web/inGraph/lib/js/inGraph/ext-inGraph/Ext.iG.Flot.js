@@ -16,6 +16,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             borderWidth: 1,
             borderColor: 'rgba(255, 255, 255, 0)',
             hoverable: true,
+            clickable: true,
             canvasText: {
                 show: false
             }
@@ -43,11 +44,12 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         Ext.applyIf(cfg, {
             flotOptions: {},
             id: Ext.id(null, 'flot-container'),
-            zooms: new Array(),
+            zooms: new Array()
         });
         Ext.iG.Flot.superclass.constructor.call(this, cfg);
         this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions,
                                     this.flotOptions);
+    
     },
     
     initComponent: function() {
@@ -67,11 +69,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         this.bindStore(this.store, true);
     },
     
-    onRender: function(ct, position) {  
-        Ext.iG.Flot.superclass.onRender.call(this, ct, position);
-        this.width = this.width || ct.getWidth();
-        this.height = this.height || ct.getHeight();
-        Ext.fly(this.id).setSize(this.width, this.height);
+    onRender: function() {
+        Ext.iG.Flot.superclass.onRender.apply(this, arguments);
         this.initEvents();
     },
     
@@ -85,31 +84,23 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
 
         $('#' + this.id).bind('plothover', function(event, pos, item) {
             var self = Ext.getCmp(event.target.id);
-            self.fireEvent('plothover', self, item, pos);
+            self.onPlotHover(item, pos);
         });
         $('#' + this.id).bind('plotselecting', function(event, ranges, pos) {
             var self = Ext.getCmp(event.target.id);
-            self.fireEvent('plotselecting', self, ranges, pos);
+            self.onPlotSelecting(ranges, pos);
         });
         $('#' + this.id).bind('plotselected', function(event, ranges) {
             var self = Ext.getCmp(event.target.id);
-            self.fireEvent('plotselected', self, ranges);
+            self.onPlotSelected(ranges);
         });
         $('#' + this.id).bind('plotclick', function(event, pos, item) {
             var self = Ext.getCmp(event.target.id);
-            self.fireEvent('plotclick', self, item, pos);
+            self.onPlotClick(item, pos);
         });
-        
         this.mon(this.el, {
-            scope: this,
-            contextmenu: this.onContextmenu
-        });
-        this.on({
         	scope: this,
-        	plothover: this.onPlothover,
-        	plotselecting: this.onPlotselecting,
-        	plotselected: this.onPlotselected,
-        	plotclick: this.onPlotclick
+        	contextmenu: this.onContextMenu
         });
     },
     
@@ -186,13 +177,15 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         this.tooltip.setPagePosition([x,y]);
     },
     
-    onPlothover: function(self, item, pos) {
-    	if(item) {
-    	   this.showTooltip(item, pos);
-    	} else {
-    		if(this.tooltip) {
-    			this.tooltip.hide();
-    		}
+    onPlotHover: function(item, pos) {
+    	if(this.fireEvent('plothover', this, item, pos) !== false) {
+	    	if(item) {
+	    	   this.showTooltip(item, pos);
+	    	} else {
+	    		if(this.tooltip) {
+	    			this.tooltip.hide();
+	    		}
+	    	}
     	}
     },
     
@@ -210,9 +203,11 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         this.shint.showAt([pos.pageX + 10, pos.pageY + 10]);
     },
     
-    onPlotselecting: function(self, ranges, pos) {
-    	if(ranges) {
-            this.showSelectionHint(ranges, pos);
+    onPlotSelecting: function(ranges, pos) {
+    	if(this.fireEvent('plotselecting', this, ranges, pos) !== false) {
+	    	if(ranges) {
+	            this.showSelectionHint(ranges, pos);
+	    	}
     	}
     },
     
@@ -227,13 +222,15 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         this.fireEvent('zoomin', this, ranges);
     },
     
-    onPlotselected: function(self, ranges) {
-    	if(ranges.xaxis) {
-            this.zoomin(ranges);
-    	}
-    	if(this.shint) {
-    		this.shint.hide();
-    	}
+    onPlotSelected: function(ranges) {
+        if(this.fireEvent('plotselected', this, ranges) !== false) {
+	    	if(ranges.xaxis) {
+	            this.zoomin(ranges);
+	    	}
+	    	if(this.shint) {
+	    		this.shint.hide();
+	    	}
+        }
     },
     
     zoomout: function() {  
@@ -252,10 +249,13 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
-    onPlotclick: function() {
+    onPlotClick: function(item) {
+    	if(this.fireEvent('plotclick', this, item) !== false) {
+    	   console.log(item);
+    	}
     },
     
-    onContextmenu: function(event) {
+    onContextMenu: function(event) {
     	if(this.fireEvent('contextmenu', this, event) !== false) {
 	    	// Prevent browser's context menu.
 	    	event.stopEvent();

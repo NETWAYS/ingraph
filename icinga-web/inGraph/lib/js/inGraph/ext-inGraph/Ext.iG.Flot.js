@@ -132,28 +132,33 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 return;
             }
             // Assume equal datapoints.
-            var i = item.dataIndex;
-            if(series.data[i] !== undefined && series.data[i][0] !== x) {
+            var i = item.dataIndex*3;
+            if(series.datapoints.points[i] !== undefined &&
+               series.datapoints.points[i] !== x) {
             	// Or find the x index
-            	i = series.data.map(function(xy) {
-	                return xy[0];
+            	i = series.datapoints.points.map(function(v, i) {
+	                if(i % 3 == 0) {
+	                	return v;
+	                }
 	            }).bsearch(x);
 	            if(i == -1) {
 	            	// Skip series as last resort.
 	            	return;
 	            }
+	            i *= 3;
             }
-            var datapoint = series.data[i];
-            t['x' + series.xaxis.n] = datapoint[0];
-            t['y' + series.yaxis.n] = datapoint[1];
+            var nx = series.datapoints.points[i],
+                ny = series.datapoints.points[i+1];
+            t['x' + series.xaxis.n] = nx;
+            t['y' + series.yaxis.n] = ny;
             var item2coords = this.flot.p2c(t);
             if(Math.pow(Math.abs(itemcoords.left - item2coords.left), 2) +
                Math.pow(Math.abs(itemcoords.top - item2coords.top), 2) <=
                Math.pow(dist, 2)) {
             	html += Ext.iG.Flot.tooltipTemplate.apply({
             		label: series.label,
-            		x: series.xaxis.tickFormatter(datapoint[0], series.xaxis),
-            		y: series.yaxis.tickFormatter(datapoint[1], series.yaxis),
+            		x: series.xaxis.tickFormatter(nx, series.xaxis),
+            		y: series.yaxis.tickFormatter(ny, series.yaxis),
             		unit: series.unit
             	});
             }

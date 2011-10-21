@@ -42,7 +42,7 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
         }
         if(this.keepModifications) {
             this.on({
-                load: function(store) {
+                datachanged: function(store) {
                     Ext.each(store.getModifiedRecords(), function(mr) {
                         var r = store.getById(mr.id) ||
                                 store.getAt(

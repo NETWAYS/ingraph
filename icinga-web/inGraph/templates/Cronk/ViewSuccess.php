@@ -13,7 +13,8 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
     var host = "<?php echo $rd->getParameter('host'); ?>",
         service = "<?php echo $rd->getParameter('service'); ?>",
         view = "<?php echo $rd->getParameter('view'); ?>";
-    if(!Ext.state.Manager.getProvider().get(this.stateuid)) {
+    var state = Ext.state.Manager.getProvider().get(this.stateuid);
+    if(!state) {
         if(!host && !service && !view) {
             var menu = new Ext.iG.Menu({
                 provider: provider
@@ -34,6 +35,7 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                 this.add(p);
                 this.doLayout();
                 w.destroy();
+                Ext.state.Manager.set(this.stateuid, p.getState());
             }, this);
             w.on('close', function() {
                 // Remove cronk
@@ -55,7 +57,17 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                     'span.x-tab-strip-text', true).qtip = p.title;
             this.add(p);
             this.doLayout();
+            Ext.state.Manager.set(this.stateuid, p.getState());
         }
+    } else {
+        var cfg = {
+            timeFrames: new Ext.iG.TimeFrames(),
+            stateId: this.stateuid,
+            stateEvents: []
+        };
+        var p = new Ext.iG.Panel(cfg);
+        this.add(p);
+        this.doLayout();
     }
 });
 </script>

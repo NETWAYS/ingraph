@@ -6,6 +6,8 @@ Ext.ns('Ext.iG');
 Ext.iG.Panel = Ext.extend(Ext.Panel, {
 	header: false,
 	autoScroll: true,
+	stateful: true,
+	stateEvents: [],
 	defaults: {
 		xtype: 'flotpanel',
 		bodyStyle: 'padding: 5px;'
@@ -18,43 +20,59 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
         Ext.iG.Panel.superclass.initComponent.call(this);
 	},
 	
-	buildItems: function(cfg) {
-		var items = new Array();
-		if(this.viewConfig) {
-			var vcfg = this.viewConfig;
-			this.title = vcfg.title || _('View (No Title)');
-            Ext.each(vcfg.panels, function(pcfg) {
+	fromViewConfig: function(cfg) {
+        if(this.viewConfig) {
+        	var items = new Array();
+            cfg.title = this.viewConfig.title || _('View (No Title)');
+            Ext.each(this.viewConfig.panels, function(pcfg) {
                 items.push({
-                	titleFormat: '{interval}',
-                	title: pcfg.title || _('Panel (No Title)'),
-                	store: new Ext.iG.FlotJsonStore({
-                		url: this.provider.combined,
-                		baseParams: {
-                			config: Ext.encode({
-                				data: Ext.isArray(pcfg.data) ?
-                				      pcfg.data : new Array(pcfg.data),
-                				flot: vcfg.flot || {},
-                				generic: vcfg.generic || {}
-                			}),
-                			start: pcfg.start ?
-                			       Math.ceil(strtotime(pcfg.start)) : '',
-                			end: pcfg.end ?
-                			     Math.ceil(strtotime(pcfg.end)) :
-                			     Math.ceil(new Date().getTime()/1000),
-                			interval: pcfg.interval || ''
-                		}
-                	})
+                    titleFormat: '{interval}',
+                    title: pcfg.title || _('Panel (No Title)'),
+                    store: new Ext.iG.FlotJsonStore({
+                        url: this.provider.combined,
+                        baseParams: {
+                            config: Ext.encode({
+                                data: Ext.isArray(pcfg.data) ?
+                                      pcfg.data : new Array(pcfg.data),
+                                flot: this.viewConfig.flot || {},
+                                generic: this.viewConfig.generic || {}
+                            }),
+                            start: pcfg.start ?
+                                   Math.ceil(strtotime(pcfg.start)) : '',
+                            end: pcfg.end ?
+                                 Math.ceil(strtotime(pcfg.end)) :
+                                 Math.ceil(new Date().getTime()/1000),
+                            interval: pcfg.interval || ''
+                        }
+                    })
                 });
             }, this);
-		} else if(this.view) {
-		} else if(!this.service) {
-			this.title = _('Services For') + ' ' + this.host;
-            items.push(new Ext.iG.HostSummary({
+            cfg.items = items;
+            return true;
+        }
+        return false;
+	},
+	
+	fromView: function(cfg) {
+		return false;
+	},
+	
+	fromHost: function(cfg) {
+		if(this.host && !this.service) {
+            cfg.title = _('Services For') + ' ' + this.host;
+            cfg.items = new Ext.iG.HostSummary({
                 provider: this.provider,
                 host: this.host
-            }));
-		} else {
-			this.title = this.host + ' - ' + this.service;
+            });
+            return true;
+		}
+		return false;
+	},
+	
+	fromHostService: function(cfg) {
+		if(this.host && this.service) {
+			var items = new Array();
+			cfg.title = this.host + ' - ' + this.service;
             if(this.start || this.end) {
                 items.push({
                     title: this.start + ' - ' + this.end,
@@ -93,7 +111,36 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
                     }
                 }, this);
             }
-		} // eof host and service
-		cfg.items = items;
+            cfg.items = items;
+            return true;
+		}
+		return false;
 	},
+	
+	buildItems: function(cfg) {
+		var items = new Array();
+		Ext.each([this.fromViewConfig, this.fromView, this.fromHost,
+				  this.fromHostService], function(fn) {
+			return !fn.call(this, cfg);
+		}, this);
+	},
+	
+    getState: function() {
+        var panels = new Array();
+        this.items.each(function(panel) {
+        	panels.push(panel.getState());
+        });
+        return {
+        	panels: panels
+        };
+    },
+	
+    applyState: function(state) {
+    	Ext.each(state.panels, function(panel) {
+    		if(panel.store) {
+    			panel.store = new Ext.iG.FlotJsonStore(panel.store);
+    		}
+    		this.add(panel);
+    	}, this);
+    }
 });

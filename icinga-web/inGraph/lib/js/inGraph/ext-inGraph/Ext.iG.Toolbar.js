@@ -104,7 +104,21 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             style: {
                 marginTop: '0px'
             }
-    	}), '->',
+    	}),
+    	this.settings = new Ext.Toolbar.Button({
+    		iconCls: 'icinga-icon-cog',
+    		scope: this,
+    		handler: function() {
+    			Ext.Msg.alert(_('Settings'), _('Sorry, not yet implemented'));
+    		}
+    	}),
+        this.comments = new Ext.Toolbar.Button({
+            iconCls: 'icinga-icon-comment',
+            scope: this,
+            handler: function() {
+                Ext.Msg.alert(_('Comments'), _('Sorry, not yet implemented'));
+            }
+        }), '->',
     	this.print = new Ext.Toolbar.Button({
     		iconCls: 'icon-print',
     		scope: this,

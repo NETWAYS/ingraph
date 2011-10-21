@@ -218,6 +218,23 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 		Ext.EventManager.addListener(window, 'focus', function() {
 			Ext.destroy.defer(1000, this, [el]);
 		}, this, {single: true});  	
+    },
+    
+    getState: function() {
+    	return {
+    		host: this.host,
+    		service: this.service,
+    		title: this.initialConfig.title,
+    		titleFormat: this.titleFormat,
+    		activeFrame: this.activeFrame,
+    		overview: this.overview !== false ? true : false,
+    		store: {
+    			url: this.store.url,
+    			baseParams: Ext.apply({}, this.store.lastOptions,
+    			                      this.store.baseParams) 
+    		},
+    		xtype: 'flotpanel'
+    	};
     }
 });
 Ext.reg('flotpanel', Ext.iG.FlotPanel);

@@ -10,23 +10,25 @@ Ext.iG.HostSummary = Ext.extend(Ext.Panel, {
 	
 	initComponent: function() {
 		var cfg = {};
-		var store = new Ext.data.JsonStore({
-            autoLoad: true,
-            autoDestroy: true,
-            url: this.provider.services,
-            root: 'results',
-            fields: ['service'],
-            totalProperty: 'total',
-            paramNames: {
-                start: 'offset'
-            },
-            baseParams: {
-                host: this.host,
-                offset: 0,
-                limit: this.limit
-            },
-            idProperty: 'service'
-        });
+		if(!this.store) {
+			this.store = new Ext.data.JsonStore({
+	            autoLoad: true,
+	            autoDestroy: true,
+	            url: this.provider.services,
+	            root: 'results',
+	            fields: ['service'],
+	            totalProperty: 'total',
+	            paramNames: {
+	                start: 'offset'
+	            },
+	            baseParams: {
+	                host: this.host,
+	                offset: 0,
+	                limit: this.limit
+	            },
+	            idProperty: 'service'
+	        });
+		}
         cfg.items = new Ext.DataView({
 		    tpl: new Ext.XTemplate(
 		        '<tpl for=".">',
@@ -42,14 +44,14 @@ Ext.iG.HostSummary = Ext.extend(Ext.Panel, {
 		    overClass: 'x-view-over',
 		    itemSelector: 'div.iG-service-preview',
 		    emptyText: _('No Services.'),
-		    store: store,
+		    store: this.store,
 		    listeners: {
 		    	scope: this,
 		    	click: this.onClick
 		    }
         });
         cfg.bbar = new Ext.PagingToolbar({
-            store: store,
+            store: this.store,
             pageSize: this.limit,
             displayInfo: true
         });
@@ -64,5 +66,16 @@ Ext.iG.HostSummary = Ext.extend(Ext.Panel, {
             host: this.host,
             service: service
         });
+	},
+	
+	getState: function() {
+		return {
+			host: this.host,
+			provider: {
+				services: this.provider.services
+			},
+			xtype: 'hostsummary'
+		}
 	}
 });
+Ext.reg('hostsummary', Ext.iG.HostSummary);

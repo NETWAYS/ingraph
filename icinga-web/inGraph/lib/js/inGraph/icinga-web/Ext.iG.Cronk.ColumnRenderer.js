@@ -8,27 +8,35 @@ Ext.iG.Cronk.ColumnRenderer = function() {
 	    s,
 	    c,
 	    task;
-	var doPreview = function(el) {
+	var Preview = function(e, el) {
 		var row = g.getView().findRowIndex(el);
 		if(row !== false) {
 			var rec = s.getAt(row);
-			Ext.iG.Cronk.preview({
+			Ext.iG.Cronk.Window({
                 title: new Ext.XTemplate(c.title).apply(rec.data),
                 host: rec.get(c.host),
                 service: rec.get(c.service),
-                height: c.height,
-                width: c.width
+                start: c.preview.start ?
+                       Math.ceil(strtotime(c.preview.start)) : '',
+                height: c.preview.height,
+                width: c.preview.width,
+                overview: c.preview.overview
 			});
 		}
 	};
-	var openCronk = function(e, el) {
+	var Popup = function(e, el) {
         var row = g.getView().findRowIndex(el);
         if(row !== false) {
             var rec = s.getAt(row);
-            Ext.iG.Cronk.open({
-            	title: new Ext.XTemplate(c.title).apply(rec.data),
-            	host: rec.get(c.host),
-            	service: rec.get(c.service)
+            Ext.iG.Cronk.Popup({
+                title: new Ext.XTemplate(c.title).apply(rec.data),
+                host: rec.get(c.host),
+                service: rec.get(c.service),
+                start: c.popup.start ?
+                       Math.ceil(strtotime(c.popup.start)) : '',
+                height: c.popup.height,
+                width: c.popup.width,
+                target: e.getTarget()
             });
         }
 	};
@@ -38,9 +46,9 @@ Ext.iG.Cronk.ColumnRenderer = function() {
         	column.on({
         		mouseover: function(e, el) {
         			if(!task) {
-        				task = new Ext.util.DelayedTask(doPreview);
+        				task = new Ext.util.DelayedTask(Popup);
         			}
-        			task.delay(c.previewTimeout, null, null, [el]);
+        			task.delay(c.popup.timeout, null, null, [e, el]);
         		},
         		mouseout: function() {
         			if(task) {
@@ -48,7 +56,7 @@ Ext.iG.Cronk.ColumnRenderer = function() {
         				delete task;
         			}
         		},
-        		click: openCronk
+        		click: Preview
         	});
         });
     };

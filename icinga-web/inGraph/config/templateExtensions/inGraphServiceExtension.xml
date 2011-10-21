@@ -11,11 +11,21 @@
                 <parameter name="arguments">
                     <parameter name="host">host_name</parameter>
                     <parameter name="service">service_name</parameter>
+                    <parameter name="start"></parameter>
                     <parameter name="title">inGraph: {host_name}
                         {service_name}</parameter>
-                    <parameter name="previewTimeout">1200</parameter>
-                    <parameter name="height">150</parameter>
-                    <parameter name="width">40%</parameter>
+                    <parameter name="popup">
+                        <parameter name="timeout">400</parameter>
+                        <parameter name="height">50</parameter>
+                        <parameter name="width">170</parameter>
+                        <parameter name="start">-1 year</parameter>
+                    </parameter>
+                    <parameter name="preview">
+                        <parameter name="height">200</parameter>
+                        <parameter name="width">33%</parameter>
+                        <parameter name="start">-1 year</parameter>
+                        <parameter name="overview">15%</parameter>
+                    </parameter>
                 </parameter>
             </parameter>
         </parameter>
@@ -48,7 +58,6 @@
                             <parameter name="css">x-icinga-grid-link
                             </parameter>
                             <parameter name="attr">
-                                <parameter name="qtip">Open inGraph</parameter>
                                 <parameter name="class">iGColumn</parameter>
                             </parameter>
                         </parameter>

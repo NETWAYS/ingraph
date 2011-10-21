@@ -22,27 +22,71 @@ Ext.iG.Cronk = function() {
             tabs.add(panel);
             tabs.setActiveTab(panel);
 		},
-		preview: function(cfg) {
-			var preview = new Ext.Window({
+		Window: function(cfg) {
+			var win = new Ext.Window({
                 title: cfg.title,
-                layout: 'fit',
                 height: cfg.height,
                 width: cfg.width,
-                items: new Ext.iG.Flot({
-                    loadMask: false,
+                layout: 'fit',
+                items: new Ext.iG.FlotPanel({
+                    header: false,
                     host: cfg.host,
                     service: cfg.service,
+                    overview: cfg.overview,
                     store: new Ext.iG.FlotJsonStore({
                         url: AppKit.util.Config.getBaseUrl() + '/' +
                              'modules/ingraph/provider/plots',
                         baseParams: {
                             host: cfg.host,
-                            service: cfg.service
+                            service: cfg.service,
+                            start: cfg.start
                         }
                     })
                 })
             });
-            preview.show();
+            win.show();
+		},
+		Popup: function(cfg) {
+			var tip = new Ext.ToolTip({
+				title: cfg.title,
+				target: cfg.target,
+				renderTo: Ext.getBody(),
+				anchor: 'left',
+                items: new Ext.iG.Flot({
+	                width: cfg.width,
+	                height: cfg.height,
+                    loadMask: true,
+                    host: cfg.host,
+                    service: cfg.service,
+                    flotOptions: {
+                    	legend: {
+                    		show: false
+                    	},
+                    	yaxis: {
+                    		show: false
+                    	},
+                    	grid: {
+                    		hoverable: false,
+                    		clickable: false
+                    	}
+                    },
+                    store: new Ext.iG.FlotJsonStore({
+                        url: AppKit.util.Config.getBaseUrl() + '/' +
+                             'modules/ingraph/provider/plots',
+                        baseParams: {
+                            host: cfg.host,
+                            service: cfg.service,
+                            start: cfg.start
+                        }
+                    })
+                }),
+                listeners: {
+                	hide: function(self) {
+                		self.destroy();
+                	}
+                }
+			});
+			tip.show();
 		}
 	}
 }();

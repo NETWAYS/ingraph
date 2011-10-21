@@ -20,6 +20,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 		})];
 
 		if(cfg.overview !== undefined ? cfg.overview : this.overview) {
+			var height = cfg.overview !== true ? cfg.overview : '25%';
 			delete cfg.overview;
 			items.push(new Ext.Spacer({height:1, cls: 'iG-spacer'}));
 			items.push(this.overview = new Ext.iG.Flot({
@@ -56,7 +57,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                         color: '#FA5C0D'
                     }
                 },
-                height: '25%',
+                height: height,
                 store: new Ext.iG.FlotJsonStore({
                     url: cfg.store.url,
                     baseParams: Ext.applyIf({
@@ -102,14 +103,14 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             );
 		}
         if(this.overview) {
-        	this.mon(this.overview.store, {
+        	this.mon(this.overview, {
         		scope: this,
         		single: true,
-        		load: function() {
+        		plot: function() {
 	                this.overview.getFlot().setSelection({
 	                    xaxis: {
 	                        from: this.store.baseParams.start,
-	                        to: this.store.baseParams.end
+	                        to: this.store.baseParams.end || new Date().getTime()
 	                    }
 	                }, true);
 	                this.mon(this.flot.store, {

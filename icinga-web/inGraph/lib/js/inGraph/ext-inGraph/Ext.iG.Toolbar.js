@@ -36,16 +36,7 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         	value: cfg.activeFrame !== undefined ? cfg.activeFrame : '',
         	listeners: {
         		scope: this,
-        		select: function(c, rec) {
-        			var lastFrame = this.lastFrame !== undefined ?
-        			                this.lastFrame : this.activeFrame; 
-                    if(rec.get('name') !== lastFrame) {
-                        this.first.enable();
-                    } else if(this.store.getStart() ===
-                              this.store.getMintimestamp()) {
-                    	this.first.disable();
-                    }
-        		}
+        		select: this.inputChange
         	}
         }),'-', this.next = new Ext.Toolbar.Button({
             tooltip: this.nextText,
@@ -227,6 +218,38 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         }
     },
     
+    inputChange: function(c, rec) {
+        var lastFrame = this.lastFrame !== undefined ?
+                        this.lastFrame : this.activeFrame; 
+        if(rec.get('name') !== lastFrame) {
+            this.first.enable();
+        } else if(this.store.getStart() ===
+                  this.store.getMintimestamp()) {
+            this.first.disable();
+        }
+        
+        var s = this.store.getStart()*1000,
+            e = this.store.getEnd()*1000,
+            i = rec.get('interval')/2*1000,
+            m = s+(e-s)/2,
+            min = this.store.getMintimestamp()*1000,
+            max = this.store.getMaxtimestamp()*1000,
+            ns = m - i,
+            ne = m + i;
+       if(ns < min) {
+           ns = min;
+       }
+       if(ne > max) {
+           ne = max;
+       }
+       this.store.load({
+           params: {
+               start: Math.ceil(ns/1000),
+               end: Math.ceil(ne/1000)
+           }
+       });
+    },
+    
     moveNext: function() {
         var rec = this.input.store.getById(this.input.getValue());
         if(rec) {
@@ -234,7 +257,9 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         	    i = rec.get('interval')*1000,
         	    e = s+i,
         	    now = new Date().getTime();
-        	e = e > now ? now : e; // Do not try to plot future values. ;-)
+        	if(e > now) {
+        		e = now; // Do not try to plot future values. ;-)
+        	}
         	if((e-s) < i) { 
         		s = e - i; // ALWAYS view full selected range.
         	}

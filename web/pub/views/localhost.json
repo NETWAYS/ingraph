@@ -1,0 +1,30 @@
+{
+"title" : "Localhost View",
+"panels": [{
+    "title" : "PING -24 hours.",
+    "start": "-24 hours",
+    "data" : [{
+        "host": "localhost",
+        "service": "PING",
+        "series": [{
+            "re": "/pl-avg/",
+            "label": "Packet Loss",
+            "color": "#FF0000"
+        }, {
+            "re": "/rta-avg/",
+            "label": "Round Trip Time",
+            "color": "#00FF00"
+        }]
+    }]
+}, {
+    "title" : "Current Load -24 hours.",
+    "start": "-24 hours",
+    "data" : [{
+        "host": "localhost",
+        "service": "Current Load",
+        "series": [{
+            "re": "/-avg/"
+        }]
+    }]
+}]
+}

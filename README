@@ -2,12 +2,12 @@ Requirements
 ============
 
 * Python version 2.4 or later
-* SQLAlchemy version 0.6 or later (older versions might work but have not been tested)
-* DB-API drivers for whatever DBMS you are going to use (e.g. sqlite)
+* SQLAlchemy version 0.6 or later (older versions are untested)
+* DB-API drivers for whatever DBMS you are going to use (e.g. MySQL, etc.)
 
-CentOS packages: python-sqlite sqlite-devel gcc
-Debian/Ubuntu packages: python-sqlalchemy python-pysqlite2
-SLES 10: python-devel sqlite-devel
+CentOS packages: python-devel gcc
+Debian/Ubuntu packages: python-sqlalchemy
+SLES 10: python-devel
 
 Installation
 ============
@@ -21,25 +21,82 @@ Installation
 Configuration
 =============
 
-1. Create a new directory that is going to hold both the configuration files
-   as well as the database (assuming you're using sqlite).
+1. Copy the example config files and set up the ingraph user:
 
-	$ mkdir /var/lib/netways_grapher
+	# mkdir /etc/ingraph
+	# cp docs/conf/* /etc/ingraph/
 
-2. Copy the example config files:
+	# useradd ingraph
 
-	$ cp docs/conf/* /var/lib/netways_grapher
+Feel free to customize the config files. In particular you might want to change
+the database connection string and the XML-RPC username/password.
 
-Feel free to customize the config files. In particular you will probably want
-to change the XML-RPC username/password.
+Use of MySQL as the database backend is highly recommended although other
+backends should work just fine.
 
-3. Start the grapher daemon (working dir _must_ be the directory you just created):
+2. Copy the init script:
 
-	$ cd /var/lib/netways_grapher
-	$ grapher-daemon
+	# cp docs/init.d/ingraph /etc/init.d/
 
-You might want to do this in a screen session - or using nohup.
+3. Start the grapher daemon:
 
-4. You can now either import an existing Grapher V2 database using 'grapher-importv2'
-   or import raw Nagios/Icinga perfdata logs using the 'grapher-file-collector' script. The
-   file collector script expects its input on stdin.
+	# /etc/init.d/ingraph start
+
+4. Make sure the 'ingraph-daemon' process is running:
+
+	# ps ax | grep ingraph-daemon
+	 1797 ?       S      0:01 /usr/bin/python /usr/local/bin/ingraph-daemon
+
+In case the collector isn't running you can debug this by starting it manually:
+
+	# cd /etc/ingraph
+	# ingraph-daemon
+
+5. You can now either import an existing Grapher V2 database using
+   'ingraph-import-grapherv2' or import raw Nagios/Icinga perfdata logs using
+   the 'ingraph-file-collector' script. The file collector script expects its
+   input on stdin.
+
+   Please note that due to missing features in Grapher V2 imported databases
+   might not contain enough information to properly reconstruct graphs for all
+   services.
+
+Database schema
+===============
+
+inGraph automatically sets up the database schema depending on which database
+backend you have selected. In order for this to work the inGraph database user
+needs appropriate permissions for CREATE TABLE / CREATE INDEX / etc.
+
+Database size
+=============
+
+The database size depends on the number of plots you're collecting data for.
+Using the default aggregates as an example the maximum database size for
+10000 plots can be calculated using the following formula:
+
+aggregates = [
+	{'interval': 5 * 60, 'retention-period': 7 * 24 * 60 * 60},
+	{'interval': 30 * 60, 'retention-period': 7 * 7 * 24 * 60 * 60},
+	{'interval': 60 * 60, 'retention-period': 26 * 7 * 24 * 60 * 60},
+	{'interval': 6 * 60 * 60, 'retention-period': 5 * 52 * 7 * 24 * 60 * 60}
+]
+
+datapoints_per_plot =	(5 * 52 * 7 * 24 * 60 * 60) / (6 * 60 * 60) +
+			(26 * 7 * 24 * 60 * 60) / (60 * 60) +
+			(7 * 7 * 24 * 60 * 60) / (30 * 60) +
+			(7 * 24 * 60 * 60) / (5 * 60) =
+		    =	16016
+
+bytes_per_datapoint =	200 # approximate row size for version 1
+
+bytes_per_plot	    =	datapoints_per_plot * bytes_per_datapoint =
+		    =	16016 * 200 =
+		    =	3203200
+
+plot_count	    = 10000 # assuming we have this many plots                           
+
+database_size	    =	bytes_per_plot * plot_count =
+		    =	32032000000
+
+So, for 10000 plots the maximum database size is about 30GB.

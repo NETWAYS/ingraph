@@ -1,32 +1,26 @@
 @CHARSET "UTF-8";
 
-.iG-search-container input {
-	width: 150px;
+.tickLabel, .legendLabel, .iG-text {
+    font-weight : bold;
 }
 
-.iG-search-container h {
-	padding-bottom: 4px;
+.iG-hs {
+    border : 1px solid #D0D0D0;
+    color : #D0D0D0;
+    background-color : #D0D0D0
 }
 
-.iG-search-container .info {
-	padding-top: 4px;
+.x-btn-text-left .x-btn-mc {
+    text-align : left !important;
 }
 
-.iG-search-container .error {
-    padding-top: 4px;
-    font-weight: bold;
-    color: red;
-}
-
-.iG-search-container label {
-	padding-right: 4px;
-	font-weight: bold;
-}
-
-.iG-tooltip {
-}
-
-#iG-no-data {
-    font-weight: bold;
-    font-size: 2em;
+.iG-service-preview {
+    -moz-border-radius : 5px 5px 5px 5px;
+    border : 1px solid #C0C0C0;
+    cursor : pointer;
+    float : left;
+    margin : 5px;
+    padding : 5px;
+    width : 70px;
+    text-align : center;
 }

@@ -8,6 +8,7 @@ class inGraph_Provider_HostsAction extends inGraph_XMLRPCAction {
         ->setSearchTarget(IcingaApiConstants::TARGET_HOST)
         ->setResultType(IcingaApiConstants::RESULT_ARRAY)
         ->setResultColumns(array('HOST_NAME'));
+        IcingaPrincipalTargetTool::applyApiSecurityPrincipals($search);
         $permittedHosts = $api->fetch()->getAll();
         $i = new RecursiveIteratorIterator(
             new RecursiveArrayIterator($permittedHosts));

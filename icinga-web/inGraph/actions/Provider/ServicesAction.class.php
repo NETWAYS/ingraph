@@ -13,6 +13,7 @@ class inGraph_Provider_ServicesAction extends inGraph_XMLRPCAction {
         ->setSearchFilter('HOST_NAME', $host)
         ->setResultType(IcingaApiConstants::RESULT_ARRAY)
         ->setResultColumns(array('SERVICE_NAME'));
+        IcingaPrincipalTargetTool::applyApiSecurityPrincipals($search);
         $permittedServices = $api->fetch()->getAll();
         $i = new RecursiveIteratorIterator(
             new RecursiveArrayIterator($permittedServices));

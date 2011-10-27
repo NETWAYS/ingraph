@@ -5,7 +5,7 @@ from time import time
 from xmlrpclib import ServerProxy, MultiCall
 import pickle
 from datetime import datetime
-from netways_ingraph import utils
+from ingrah import utils
 
 print("NETWAYS inGraph (file collector)")
 

@@ -13,8 +13,8 @@ import copy
 import pickle
 import xmlrpclib
 
-from netways_ingraph import daemon
-from netways_ingraph import utils
+from ingrah import daemon
+from ingrah import utils
 
 
 class UnsupportedDaemonFunction(Exception):

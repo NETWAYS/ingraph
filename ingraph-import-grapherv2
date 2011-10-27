@@ -10,7 +10,7 @@ import MySQLdb.cursors
 from datetime import datetime
 import math
 import sys
-from netways_ingraph import utils
+from ingrah import utils
 
 print("NETWAYS inGraph (Grapher V2 import)")
 

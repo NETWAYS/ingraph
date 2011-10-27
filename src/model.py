@@ -928,18 +928,18 @@ class DataPoint(object):
         if len(plots) == 0:
             return {}
 
+        if start_timestamp == None:
+            start_timestamp = 0
+
+        if end_timestamp == None:
+            end_timestamp = time()
+
         if end_timestamp < start_timestamp:
             tmp = end_timestamp
             end_timestamp = start_timestamp
             start_timestamp = tmp
 
         tfs = TimeFrame.getAll(conn)
-
-        if start_timestamp == None:
-            start_timestamp = 0
-            
-        if end_timestamp == None:
-            end_timestamp = time()
 
         if granularity == None:
             now = time()

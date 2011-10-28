@@ -154,7 +154,6 @@ def main():
         ingraphd.stderr = options.logfile
     
     getattr(ingraphd, args[0])()
-    
     return 0
 
 if __name__ == '__main__':

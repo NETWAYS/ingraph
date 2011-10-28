@@ -18,8 +18,8 @@ from ingraph import daemon
 from ingraph import utils
 
 
-class UnsupportedDaemonFunction(Exception):
-    pass
+class UnsupportedDaemonFunction(Exception): pass
+
 
 class Collectord(daemon.UnixDaemon):
     name = 'inGraph-collector'
@@ -186,9 +186,9 @@ class Option(optparse.Option):
                 'Option %s: invalid mode. Expected is one of: %s.' %
                 (value, ', '.join(Option.Modes)))
         return value
-
-
-if __name__ == '__main__':
+    
+    
+def main():
     daemon_functions = ['start', 'stop', 'restart', 'status']
     usage = 'Usage: %%prog [options] %s' % '|'.join(daemon_functions)
     parser = optparse.OptionParser(option_class=Option, usage=usage,
@@ -241,5 +241,8 @@ if __name__ == '__main__':
         collectord.stdout = options.logfile
         collectord.stderr = options.logfile
     getattr(collectord, args[0])()
-    
-    sys.exit(0)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

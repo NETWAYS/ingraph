@@ -10,6 +10,9 @@ version = '3.0'
 if sys.version_info[:2] < (2,4):
     print("NETWAYS Grapher requires Python version 2.4 or later.")
     sys.exit(1)
+    
+console_scripts = ('ingraphd = ingraph.bin.ingraphd:main',
+                   'ingraph-collectord = ingraph.bin.ingraph-collectord:main')
 
 setup(name="ingraph",
       version=version,
@@ -23,5 +26,5 @@ setup(name="ingraph",
                  "ingraph-collectord"],
       install_requires = ["sqlalchemy>=0.6.3"],
       entry_points = {
-        'console_scripts': ('ingraphd = ingraph.bin.ingraphd:main',)
+        'console_scripts': console_scripts
     })

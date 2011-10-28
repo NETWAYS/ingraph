@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <template match-pattern="icinga-service-template">
     <option>
-        <parameter name="mode">default</parameter>
-        <parameter name="layout">CronkGridTemplateAjaxGridLayout</parameter>
         <parameter name="gridEvents">
             <parameter>
                 <parameter name="type">viewready</parameter>
@@ -16,14 +14,14 @@
                         {service_name}</parameter>
                     <parameter name="popup">
                         <parameter name="timeout">400</parameter>
-                        <parameter name="height">50</parameter>
-                        <parameter name="width">170</parameter>
-                        <parameter name="start">-1 year</parameter>
+                        <parameter name="height">60</parameter>
+                        <parameter name="width">280</parameter>
+                        <parameter name="start">-1 day</parameter>
                     </parameter>
                     <parameter name="preview">
                         <parameter name="height">200</parameter>
-                        <parameter name="width">33%</parameter>
-                        <parameter name="start">-1 year</parameter>
+                        <parameter name="width">600</parameter>
+                        <parameter name="start">-1 day</parameter>
                         <parameter name="overview">15%</parameter>
                     </parameter>
                 </parameter>

@@ -5,3 +5,4 @@ tmp
 *.pyc
 .buildpath
 .project
+*.egg-info

@@ -132,10 +132,10 @@ def main():
                       action='store_false',
                       help='run in foreground')
     parser.add_option('-d', '--chdir', dest='chdir', metavar='DIR',
-                      default='/',
+                      default='/etc/ingraph',
                       help='change to directory DIR [default: %default]')
     parser.add_option('-p', '--pidfile', dest='pidfile', metavar='FILE',
-                      default='/var/run/ingraphd.pid',
+                      default='/var/run/ingraph/ingraphd.pid',
                       help="pidfile FILE [default: %default]")
     parser.add_option('-o', '--logfile', dest='logfile', metavar='FILE',
                       default=None, help='logfile FILE [default: %default]')

@@ -81,13 +81,19 @@ class UnixDaemon(object):
                              "running?\n" % self.pidfile)
             sys.exit(1)
         
+        pidpath = os.path.split(self.pidfile)[0]
+        try:
+            os.mkdir(pidpath)
+        except OSError, e:
+            if e.errno != errno.EEXIST:
+                raise e
+        os.chown(pidpath, self.uid, -1)
         os.umask(self.umask)
         os.chdir(self.chdir)
         os.setgid(self.gid)
         os.setuid(self.uid)
         
         self.before_daemonize()
-        
         if self.detach:
             self._daemonize()
             self._redirect_stream(sys.stdin, self.stdin)

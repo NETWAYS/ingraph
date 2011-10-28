@@ -1,0 +1,19 @@
+{
+"re": "/^.*$/",
+
+"generic" : {
+    "refreshInterval" : 300
+},
+
+"flot": {
+    "series": {
+        "lines": {
+            "steps": true
+        }
+    }
+},
+
+"series": [{
+    "re": "/.*-avg/"
+}]
+}

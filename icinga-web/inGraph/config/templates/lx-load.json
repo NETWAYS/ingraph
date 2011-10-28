@@ -1,0 +1,33 @@
+{
+"re": "/^lx-load/i",
+
+"flot": {
+    "series": {
+        "lines": {
+            "fill": true,
+            "show": true
+        }
+    }
+},
+
+"series": [{
+    "re": "/load1-avg/",
+	"color": "#0099CC"
+}, {
+    "re": "/load5-avg/",
+        "color": "#66FF33"
+}, {
+    "re": "/load15-avg/",
+        "color": "#CC33FF"
+}, {
+    "re": "/.*15-warn_upper/",
+	"color": "#FF6600",
+   "lines": {
+	"fill": false}
+}, {
+    "re": "/.*15-crit_upper/",
+	"color": "#CC0000",
+   "lines": {
+	"fill": false}
+}]
+}

@@ -1,0 +1,44 @@
+{
+"re": "/memory$/i",
+
+"flot": {
+    "series": {
+        "lines": {
+            "fill": true,
+            "show": true
+        }
+    }
+},
+
+"series": [{
+    "re": "/.*Buffers.*-avg/",
+	"color": "#9933FF",
+	"lines": {
+            "fill": false
+	}
+}, {
+    "re": "/.*Inactive.*-avg/",
+	"color": "#FF3399",
+	"lines": {
+            "fill": false
+	}
+}, {
+    "re": "/.*Active.*-avg/",
+	"color": "#3399FF",
+	"lines": {
+            "fill": false
+	}
+}, {
+    "re": "/.*Cached.*-avg/",
+	"color": "#52A300",
+	"lines": {
+            "fill": false
+	}
+}, {
+   "re": "/.*Free.*-avg/",
+	"color": "#CCFF33",
+        "lines": {
+            "fill": true
+	}
+}]
+}

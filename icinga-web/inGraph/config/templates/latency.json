@@ -1,0 +1,32 @@
+{
+"re": "/latency$/i",
+
+"flot": {
+    "series": {
+        "lines": {
+            "fill": true,
+            "show": true
+        }
+    }
+},
+
+"series": [{
+    "re": "/.*Latency-avg/",
+	"color": "#009900",
+	"lines": {
+            "fill": false
+	}
+}, {
+    "re": "/.*Latency-warn_upper/",
+	"color": "#FFFF00",
+	"lines": {
+            "fill": false
+	}
+}, {
+    "re": "/.*Latency-crit_upper/",
+	"color": "#FF0000",
+	"lines": {
+            "fill": false
+	}
+}]
+}

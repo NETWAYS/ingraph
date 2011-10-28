@@ -13,14 +13,16 @@ import copy
 import pickle
 import xmlrpclib
 
-from ingrah import daemon
-from ingrah import utils
+import ingraph
+from ingraph import daemon
+from ingraph import utils
 
 
 class UnsupportedDaemonFunction(Exception):
     pass
 
 class Collectord(daemon.UnixDaemon):
+    name = 'inGraph-collector'
     check_multi_regex = re.compile('^([^:]+::[^:]+)::([^:]+)$')
     
     def __init__(self, perfdata_dir, pattern, limit, sleeptime, mode,
@@ -109,12 +111,13 @@ class Collectord(daemon.UnixDaemon):
                 upd_parentservice = logdata['service']
                 upd_service = multi_service
     
-            update = (logdata['host'], upd_parentservice, upd_service, upd_plotname, logdata['timestamp'], \
-                      uom, raw_value, raw_value, raw_value, min_value, max_value, warn_lower, warn_upper, warn_type, \
-                      crit_lower, crit_upper, crit_type)
+            update = (logdata['host'], upd_parentservice, upd_service,
+                      upd_plotname, logdata['timestamp'], uom, raw_value,
+                      raw_value, raw_value, min_value, max_value, warn_lower,
+                      warn_upper, warn_type, crit_lower, crit_upper, crit_type)
             return update
     
-    def _run(self):
+    def run(self):
         config = utils.load_config('ingraph-xmlrpc.conf')
         config = utils.load_config('ingraph-aggregates.conf', config)
         url = utils.get_xmlrpc_url(config)
@@ -180,7 +183,7 @@ class Option(optparse.Option):
         value = value.upper()
         if value not in Option.MODES:
             raise optparse.OptionValueError(
-                'Option %s: invalid log level. Expected is one of: %s.' %
+                'Option %s: invalid mode. Expected is one of: %s.' %
                 (value, ', '.join(Option.Modes)))
         return value
 
@@ -188,14 +191,26 @@ class Option(optparse.Option):
 if __name__ == '__main__':
     daemon_functions = ['start', 'stop', 'restart', 'status']
     usage = 'Usage: %%prog [options] %s' % '|'.join(daemon_functions)
-    parser = optparse.OptionParser(option_class=Option,
-                                   usage=usage, version='%prog 1.0');
-    parser.add_option('-D', '--directory', dest='chdir', metavar='DIR',
-                      default=sys.path[0],
-                      help='change to directory DIR [default: %default]'),
-    parser.add_option('-d', '--daemonize', dest='detach', default=False,
-                      action='store_true',
-                      help='daemonize [default: %default]')
+    parser = optparse.OptionParser(option_class=Option, usage=usage,
+                                   version='%%prog %s' % ingraph.__version__)
+    parser.add_option('-f', '--foreground', dest='detach', default=True,
+                      action='store_false',
+                      help='run in foreground')
+    parser.add_option('-d', '--chdir', dest='chdir', metavar='DIR',
+                      default='cwd',
+                      help='change to directory DIR [default: %default]')
+    parser.add_option('-p', '--pidfile', dest='pidfile', metavar='FILE',
+                      default='/var/run/ingraph-collectord.pid',
+                      help="pidfile FILE [default: %default]")
+    parser.add_option('-o', '--logfile', dest='logfile', metavar='FILE',
+                      default=None, help='logfile FILE [default: %default]')
+    parser.add_option('-P', '--perfdata-dir', dest='perfdata_dir',
+                      default='/usr/local/icinga/var/perfdata',
+                      metavar='DIR', help='perfdata directory DIR '
+                      '[default: %default]')
+    parser.add_option('-e', '--pattern', dest='pattern',
+                      help='shell pattern PATTERN [default: %default]',
+                      default='service-perfdata.*[0-9]')
     parser.add_option('-m', '--mode', dest='mode', default='BACKUP',
                       type='mode',
                       help='backup or remove perfdata files '
@@ -205,15 +220,6 @@ if __name__ == '__main__':
     parser.add_option('-s', '--sleeptime', dest='sleeptime', type='int',
                       help='seconds to sleep [default: %default]',
                       default=30)
-    parser.add_option('-P', '--perfdata-dir', dest='perfdata_dir',
-                      default='/usr/local/icinga/var/perfdata',
-                      metavar='DIR', help='perfdata directory DIR '
-                      '[default: %default]')
-    parser.add_option('-p', '--pattern', dest='pattern',
-                      help='shell pattern PATTERN [default: %default]',
-                      default='service-perfdata.*[0-9]')
-    parser.add_option('-L', '--log-file', dest='log', metavar='FILE',
-                      default=None)
     (options, args) = parser.parse_args()
     
     try:
@@ -230,10 +236,10 @@ if __name__ == '__main__':
                             mode=options.mode,
                             chdir=options.chdir,
                             detach=options.detach,
-                            pidfile='ingraph-collectord.pid')
-    if options.log:
-        collectord.stdout = options.log
-        collectord.stderr = options.log
+                            pidfile=options.pidfile)
+    if options.logfile:
+        collectord.stdout = options.logfile
+        collectord.stderr = options.logfile
     getattr(collectord, args[0])()
     
     sys.exit(0)

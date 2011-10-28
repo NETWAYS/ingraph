@@ -71,9 +71,7 @@ class UnsupportedDaemonFunction(Exception): pass
 class InGraphd(ingraph.daemon.UnixDaemon):
     name = 'inGraph'
     
-    def run(self):
-        print("inGraph (backend daemon)")
-        
+    def before_daemonize(self):
         config = ingraph.utils.load_config('ingraph-database.conf')
         config = ingraph.utils.load_config('ingraph-xmlrpc.conf', config)
         if config['dsn'] == None:
@@ -91,9 +89,12 @@ class InGraphd(ingraph.daemon.UnixDaemon):
                   "('xmlrpc_username' and 'xmlrpc_password' settings) in your "
                   "configuration file.")
             sys.exit(1)
-            
-        print('Connecting to the database...')
-        engine = ingraph.model.createModelEngine(config['dsn'])
+        self.config = config
+    
+    def run(self):
+        print("inGraph (backend daemon)")
+        print("Connecting to the database...")
+        engine = ingraph.model.createModelEngine(self.config['dsn'])
         
         queryqueue = Queue.Queue(maxsize=200000)
         
@@ -103,16 +104,17 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         daemonized_thread(pragma, (engine, 'wal_checkpoint'))
         
         print("Starting XML-RPC interface on %s:%d..." %
-              (config['xmlrpc_address'], config['xmlrpc_port']))
+              (self.config['xmlrpc_address'], self.config['xmlrpc_port']))
         server = ingraph.xmlrpc.AuthenticatedXMLRPCServer(
-            (config['xmlrpc_address'], config['xmlrpc_port']), allow_none=True)
+            (self.config['xmlrpc_address'], self.config['xmlrpc_port']),
+            allow_none=True)
         server.timeout = 5
         
         if sys.version_info[:2] < (2,6):
             server.socket.settimeout(server.timeout)
         
-        server.required_username = config['xmlrpc_username']
-        server.required_password = config['xmlrpc_password']
+        server.required_username = self.config['xmlrpc_username']
+        server.required_password = self.config['xmlrpc_password']
         
         server.register_introspection_functions()
         server.register_multicall_functions()

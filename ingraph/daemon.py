@@ -83,8 +83,10 @@ class UnixDaemon(object):
         
         os.umask(self.umask)
         os.chdir(self.chdir)
-        os.setuid(self.uid)
         os.setgid(self.gid)
+        os.setuid(self.uid)
+        
+        self.before_daemonize()
         
         if self.detach:
             self._daemonize()
@@ -127,4 +129,7 @@ class UnixDaemon(object):
                              self.name)
     
     def run(self):
+        pass
+    
+    def before_daemonize(self):
         pass

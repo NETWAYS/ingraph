@@ -3,7 +3,6 @@
 import sys
 import os
 import optparse
-import ConfigParser
 import glob
 import fileinput
 import re
@@ -14,6 +13,7 @@ import pickle
 import xmlrpclib
 
 import ingraph
+import ingraph.api
 from ingraph import daemon
 from ingraph import utils
 
@@ -116,19 +116,20 @@ class Collectord(daemon.UnixDaemon):
                       raw_value, raw_value, min_value, max_value, warn_lower,
                       warn_upper, warn_type, crit_lower, crit_upper, crit_type)
             return update
-    
-    def run(self):
+        
+    def before_daemonize(self):
         config = utils.load_config('ingraph-xmlrpc.conf')
         config = utils.load_config('ingraph-aggregates.conf', config)
-        url = utils.get_xmlrpc_url(config)
+        self.config = config
+    
+    def run(self):
+        url = utils.get_xmlrpc_url(self.config)
         api = xmlrpclib.ServerProxy(url, allow_none=True)
-        
-        intervals = []
         
         tfs = api.getTimeFrames()
         intervals = tfs.keys()
             
-        for aggregate in config['aggregates']:
+        for aggregate in self.config['aggregates']:
             interval = aggregate['interval']
             
             if str(interval) in intervals:
@@ -157,7 +158,7 @@ class Collectord(daemon.UnixDaemon):
             if updates:
                 updates_pickled = pickle.dumps(updates)
                 st = time.time()
-                #api.insertValueBulk(updates_pickled)
+                ingraph.api.insertValueBulk(updates_pickled)
                 et = time.time()
                 print "%d updates (%d lines) took %f seconds" % \
                       (len(updates), input.lineno(), et - st)

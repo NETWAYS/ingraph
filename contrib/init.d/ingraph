@@ -18,12 +18,13 @@
 
 INGRAPH_CHDIR=/etc/ingraph
 INGRAPH_PIDFILE=/var/run/ingraphd.pid
+INGRAPH_USER=ingraph
 
 [ -r /etc/default/ingraph ] && . /etc/default/ingraph
 [ -r /etc/sysconfig/ingraph ] && . /etc/sysconfig/ingraph
 
 BIN="python -m ingraph.bin.ingraphd"
-ARGS="-d $INGRAPH_CHDIR -p $INGRAPH_PIDFILE"
+ARGS="-d $INGRAPH_CHDIR -p $INGRAPH_PIDFILE -u $INGRAPH_USER"
 
 [ -n "$INGRAPH_LOGFILE" ] && ARGS="$ARGS -o $INGRAPH_LOGFILE"
 

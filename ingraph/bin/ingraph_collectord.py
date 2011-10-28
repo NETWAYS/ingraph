@@ -220,6 +220,8 @@ def main():
     parser.add_option('-s', '--sleeptime', dest='sleeptime', type='int',
                       help='seconds to sleep [default: %default]',
                       default=30)
+    parser.add_option('-u', '--user', dest='user', default=None)
+    parser.add_option('-g', '--group', dest='group', default=None)
     (options, args) = parser.parse_args()
     
     try:
@@ -240,6 +242,21 @@ def main():
     if options.logfile:
         collectord.stdout = options.logfile
         collectord.stderr = options.logfile
+    if options.user:
+        from pwd import getpwnam
+        try:
+            collectord.uid = getpwnam(options.user)[2]
+        except KeyError:
+            sys.stderr.write("User %s not found.\n" % options.user)
+            sys.exit(1)
+    if options.group:
+        from grp import getgrnam
+        try:
+            collectord.gid = getgrnam(options.group)[2]
+        except KeyError:
+            sys.stderr.write("Group %s not found.\n" % options.group)
+            sys.exit(1)
+
     getattr(collectord, args[0])()
     return 0
 

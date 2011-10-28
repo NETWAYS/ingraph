@@ -13,9 +13,6 @@ from time import time
 from weakref import WeakValueDictionary
 from OrderedDict import OrderedDict
 
-last_vacuum = time()
-last_cleanup = time()
-last_autocheckpoint = time()
 dbload_min_timestamp = None
 dbload_max_timestamp = None
 
@@ -1209,32 +1206,20 @@ def createModelEngine(dsn):
 
     return engine
 
-'''
-Runs regular maintenance tasks:
 
-* Running VACUUM on the database
-* Cleaning up old datapoints
-'''
-def runMaintenanceTasks(conn):
-    global last_vacuum, last_cleanup, last_autocheckpoint
+def exec_vacuum(conn):
+    try:
+        conn.execute('VAUUM')
+    except:
+        pass
+    
 
-    if last_vacuum + 7 * 24 * 60 * 60 < time():
-        try:
-            conn.execute('VACUUM')
-        except:
-            pass
-        
-        last_vacuum = time()
+def exec_pragma(conn, pragma):
+    try:
+        conn.execute('PRAGMA %s' % pragma)
+    except:
+        pass
+    
 
-    if last_cleanup + 24 * 60 * 60 < time():
-        DataPoint.cleanupOldData(conn)
-        
-        last_cleanup = time()
-
-    if last_autocheckpoint + 5 * 60 < time():
-        try:
-            conn.execute('PRAGMA wal_checkpoint')
-        except:
-            pass
-        
-        last_autocheckpoint = time()
+def cleanup(conn):
+    DataPoint.cleanupOldData(conn)

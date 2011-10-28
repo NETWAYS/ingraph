@@ -17,8 +17,11 @@ setup(name="ingraph",
       author="Gunnar Beutner <gunnar.beutner@netways.de>",
       author_email="gunnar.beutner@netways.de",
       url="N/A",
-      packages = ["ingraph"],
+      packages = ["ingraph.bin", "ingraph"],
       scripts = ["ingraph-daemon", "ingraph-file-collector",
                  "ingraph-import-grapherv2", "ingraph-stop",
                  "ingraph-collectord"],
-      install_requires = ["sqlalchemy>=0.6.3"])
+      install_requires = ["sqlalchemy>=0.6.3"],
+      entry_points = {
+        'console_scripts': ('ingraphd = ingraph.bin.ingraphd:main',)
+    })

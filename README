@@ -37,13 +37,16 @@ backends should work just fine.
 2. Copy the init scripts:
 
     # cp contrib/init.d/* /etc/init.d/
-    # chmod +x /etc/init.d/ingraph*
 
-3. Start the grapher daemon:
+3. Add ingraph directory to /var/run
+
+    # mkdir /var/run/ingraph && chown ingraph /var/run/ingraph
+
+4. Start the grapher daemon:
 
     # /etc/init.d/ingraph start
 
-4. Make sure the 'ingraph-daemon' process is running:
+5. Make sure the 'ingraph-daemon' process is running:
 
     # ps ax | grep ingraph-daemon
      1797 ?       S      0:01 /usr/bin/python /usr/local/bin/ingraphd
@@ -52,7 +55,7 @@ In case the daemon isn't running you can debug this by starting it manually:
 
     # ingraphd -d /etc/ingraph -f
 
-5. You can now either import an existing Grapher V2 database using
+6. You can now either import an existing Grapher V2 database using
    'ingraph-import-grapherv2' or import raw Nagios/Icinga perfdata logs using
    the 'ingraph-collectord' daemon.
 

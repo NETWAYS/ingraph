@@ -17,7 +17,7 @@
 ### END INIT INFO
 
 INGRAPH_COLLECTOR_CHDIR=/etc/ingraph
-INGRAPH_COLLECTOR_PIDFILE=/var/run/ingraph-collectord.pid
+INGRAPH_COLLECTOR_PIDFILE=/var/run/ingraph/ingraph-collectord.pid
 INGRAPH_COLLECTOR_PERFDATA_DIR=/usr/local/icinga
 INGRAPH_COLLECTOR_PERFDATA_PATTERN=service-perfdata.*[0-9]
 INGRAPH_COLLECTOR_FILE_LIMIT=50

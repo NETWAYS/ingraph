@@ -84,10 +84,10 @@ class UnixDaemon(object):
         pidpath = os.path.split(self.pidfile)[0]
         try:
             os.mkdir(pidpath)
+            os.chown(pidpath, self.uid, -1)
         except OSError, e:
             if e.errno != errno.EEXIST:
                 raise e
-        os.chown(pidpath, self.uid, -1)
         os.umask(self.umask)
         os.chdir(self.chdir)
         os.setgid(self.gid)

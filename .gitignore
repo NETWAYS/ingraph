@@ -6,3 +6,4 @@ tmp
 .buildpath
 .project
 *.egg-info
+.pydevproject

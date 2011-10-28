@@ -1,30 +1,22 @@
 #!/usr/bin/env python
+#!/usr/bin/env python
+import sys
 import distribute_setup
 distribute_setup.use_setuptools()
+from setuptools import setup
 
-import sys
-from setuptools import setup, find_packages
+import ingraph
 
-version = '3.0'
-
-if sys.version_info[:2] < (2,4):
-    print("NETWAYS Grapher requires Python version 2.4 or later.")
-    sys.exit(1)
-    
-console_scripts = ('ingraphd = ingraph.bin.ingraphd:main',
-                   'ingraph-collectord = ingraph.bin.ingraph-collectord:main')
-
-setup(name="ingraph",
-      version=version,
+console_scripts = ['ingraphd = ingraph.bin.ingraphd:main',
+                   'ingraph-collectord = ingraph.bin.ingraph_collectord:main']
+setup(name=ingraph.__name__,
+      version=ingraph.__version__,
       description="Data collection and graphing utility for monitoring systems",
-      author="Gunnar Beutner <gunnar.beutner@netways.de>",
-      author_email="gunnar.beutner@netways.de",
-      url="N/A",
-      packages = ["ingraph.bin", "ingraph"],
-      scripts = ["ingraph-daemon", "ingraph-file-collector",
-                 "ingraph-import-grapherv2", "ingraph-stop",
-                 "ingraph-collectord"],
-      install_requires = ["sqlalchemy>=0.6.3"],
-      entry_points = {
+      author=ingraph.__author__,
+      author_email=ingraph.__contact__,
+      url=ingraph.__url__,
+      install_requires=['sqlalchemy>=0.6.3'],
+      packages=['ingraph.bin', 'ingraph'],
+      entry_points={
         'console_scripts': console_scripts
-    })
+      })

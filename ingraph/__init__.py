@@ -1,1 +1,5 @@
+__name__ = 'ingraph'
 __version__ = '1.0 Alpha'
+__author__ = 'NETWAYS GmbH'
+__contact__ = 'info@netways.de'
+__url__ = 'https://www.netways.org'

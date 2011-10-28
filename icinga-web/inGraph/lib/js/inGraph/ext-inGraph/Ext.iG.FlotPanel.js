@@ -9,7 +9,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 	layout:'vbox',
 	layoutConfig: {
 	    align: 'stretch',
-	    pack : 'start'
+	    pack: 'start'
 	},
 	
 	constructor: function(cfg) {

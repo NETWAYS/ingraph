@@ -37,7 +37,7 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
                 single: true,
                 load: function() {
                     this.startRefresh();
-                },
+                }
             });
         }
         if(this.keepModifications) {
@@ -49,9 +49,9 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
                                     store.find('label', mr.get('label')));
                         if(r) {
                             Ext.iterate(mr.getChanges(), function(k, v) {
-                            	if(k != 'data') {
+                                if(k != 'data') {
                                     r.set(k, v);
-                            	}
+                                }
                             });
                         }
                     });
@@ -68,9 +68,9 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     },
     
     startRefresh: function(ms) {
-    	if(ms !== undefined && ms !== this.refreshInterval) {
-    		this.refreshInterval = ms;
-    	}
+        if(ms !== undefined && ms !== this.refreshInterval) {
+            this.refreshInterval = ms;
+        }
         this.stopRefresh();
         this.refreshId = setInterval(this.autorefresh.createDelegate(this, []),
             this.refreshInterval*1000);
@@ -86,7 +86,7 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     },
     
     getStart: function() {
-    	return this.reader.jsonData[this.startProperty];
+        return this.reader.jsonData[this.startProperty];
     },
     
     getEnd: function() {
@@ -94,7 +94,7 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     },
     
     getMintimestamp: function() {
-    	return this.reader.jsonData[this.mintimestampProperty];
+        return this.reader.jsonData[this.mintimestampProperty];
     },
     
     getMaxtimestamp: function() {
@@ -102,6 +102,6 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     },
     
     getOptions: function() {
-    	return this.reader.jsonData[this.optionsProperty];
+        return this.reader.jsonData[this.optionsProperty];
     }
 });

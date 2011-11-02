@@ -4,26 +4,26 @@ Ext.ns('Ext.iG');
  * @extends Ext.Panel
  */
 Ext.iG.Panel = Ext.extend(Ext.Panel, {
-	header: false,
-	autoScroll: true,
-	stateful: true,
-	stateEvents: [],
-	layout: 'anchor',
-	defaults: {
-		xtype: 'flotpanel',
-		bodyStyle: 'padding: 2px;'
-	},
-	
-	initComponent: function() {
+    header: false,
+    autoScroll: true,
+    stateful: true,
+    stateEvents: [],
+    layout: 'anchor',
+    defaults: {
+        xtype: 'flotpanel',
+        bodyStyle: 'padding: 2px;'
+    },
+    
+    initComponent: function() {
         var cfg = {};
         this.buildItems(cfg);
         Ext.apply(this, Ext.apply(this.initialConfig, cfg));
         Ext.iG.Panel.superclass.initComponent.call(this);
-	},
-	
-	fromViewConfig: function(cfg) {
+    },
+    
+    fromViewConfig: function(cfg) {
         if(this.viewConfig) {
-        	var items = new Array();
+            var items = [];
             cfg.title = this.viewConfig.title || _('View (No Title)');
             Ext.each(this.viewConfig.panels, function(pcfg) {
                 items.push({
@@ -52,28 +52,28 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
             return true;
         }
         return false;
-	},
-	
-	fromView: function(cfg) {
-		return false;
-	},
-	
-	fromHost: function(cfg) {
-		if(this.host && !this.service) {
+    },
+    
+    fromView: function(cfg) {
+        return false;
+    },
+    
+    fromHost: function(cfg) {
+        if(this.host && !this.service) {
             cfg.title = _('Services For') + ' ' + this.host;
             cfg.items = new Ext.iG.HostSummary({
                 provider: this.provider,
                 host: this.host
             });
             return true;
-		}
-		return false;
-	},
-	
-	fromHostService: function(cfg) {
-		if(this.host && this.service) {
-			var items = new Array();
-			cfg.title = this.host + ' - ' + this.service;
+        }
+        return false;
+    },
+    
+    fromHostService: function(cfg) {
+        if(this.host && this.service) {
+            var items = [];
+            cfg.title = this.host + ' - ' + this.service;
             if(this.start || this.end) {
                 items.push({
                     title: this.start + ' - ' + this.end,
@@ -114,34 +114,34 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
             }
             cfg.items = items;
             return true;
-		}
-		return false;
-	},
-	
-	buildItems: function(cfg) {
-		var items = new Array();
-		Ext.each([this.fromViewConfig, this.fromView, this.fromHost,
-				  this.fromHostService], function(fn) {
-			return !fn.call(this, cfg);
-		}, this);
-	},
-	
+        }
+        return false;
+    },
+    
+    buildItems: function(cfg) {
+        var items = [];
+        Ext.each([this.fromViewConfig, this.fromView, this.fromHost,
+                  this.fromHostService], function(fn) {
+            return !fn.call(this, cfg);
+        }, this);
+    },
+    
     getState: function() {
-        var panels = new Array();
+        var panels = [];
         this.items.each(function(panel) {
-        	panels.push(panel.getState());
+            panels.push(panel.getState());
         });
         return {
-        	panels: panels
+            panels: panels
         };
     },
-	
+    
     applyState: function(state) {
-    	Ext.each(state.panels, function(panel) {
-    		if(panel.store) {
-    			panel.store = new Ext.iG.FlotJsonStore(panel.store);
-    		}
-    		this.add(panel);
-    	}, this);
+        Ext.each(state.panels, function(panel) {
+            if(panel.store) {
+                panel.store = new Ext.iG.FlotJsonStore(panel.store);
+            }
+            this.add(panel);
+        }, this);
     }
 });

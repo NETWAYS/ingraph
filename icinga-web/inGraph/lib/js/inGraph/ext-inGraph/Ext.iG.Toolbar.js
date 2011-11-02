@@ -4,14 +4,14 @@
  */
 Ext.ns('Ext.iG');
 Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
-	firstText: _(''),
-	prevText: _(''),
-	nextText: _(''),
-	lastText: _(''),
-	refreshText: _(''),
-	
-	constructor: function(cfg) {
-		var items = [this.first = new Ext.Toolbar.Button({
+    firstText: _(''),
+    prevText: _(''),
+    nextText: _(''),
+    lastText: _(''),
+    refreshText: _(''),
+    
+    constructor: function(cfg) {
+        var items = [this.first = new Ext.Toolbar.Button({
             tooltip: this.firstText,
             overflowText: this.firstText,
             iconCls: 'x-tbar-page-first',
@@ -27,17 +27,17 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             scope: this
         }), '-', _('Interval'),
         this.input = new Ext.form.ComboBox({
-        	width: 100,
-        	store: new Ext.iG.TimeFrames(),
-        	valueField: 'name',
-        	displayField: 'name',
-        	mode: 'local',
-        	triggerAction: 'all',
-        	value: cfg.activeFrame !== undefined ? cfg.activeFrame : '',
-        	listeners: {
-        		scope: this,
-        		select: this.inputChange
-        	}
+            width: 100,
+            store: new Ext.iG.TimeFrames(),
+            valueField: 'name',
+            displayField: 'name',
+            mode: 'local',
+            triggerAction: 'all',
+            value: cfg.activeFrame !== undefined ? cfg.activeFrame : '',
+            listeners: {
+                scope: this,
+                select: this.inputChange
+            }
         }),'-', this.next = new Ext.Toolbar.Button({
             tooltip: this.nextText,
             overflowText: this.nextText,
@@ -61,24 +61,24 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             scope: this
         }), '-', 
         this.datapoints = new Ext.form.Checkbox({
-    		boxLabel: _('Show datapoints'),
-    		disabled: true,
-    		scope: this,
-    		handler: function(box, checked) {
-    			this.store.each(function(rec) {
-    				pointsCfg = rec.get('points');
-    				iG.merge(true, pointsCfg, {
-    					show: checked
-    				});
-    				rec.set('points', pointsCfg);
-    				rec.commit();
-    			});
-    		},
-    		style: {
-    			marginTop: '0px'
-    		}
-    	}),
-    	this.smooth = new Ext.form.Checkbox({
+            boxLabel: _('Show datapoints'),
+            disabled: true,
+            scope: this,
+            handler: function(box, checked) {
+                this.store.each(function(rec) {
+                    pointsCfg = rec.get('points');
+                    iG.merge(true, pointsCfg, {
+                        show: checked
+                    });
+                    rec.set('points', pointsCfg);
+                    rec.commit();
+                });
+            },
+            style: {
+                marginTop: '0px'
+            }
+        }),
+        this.smooth = new Ext.form.Checkbox({
             boxLabel: _('Smooth'),
             disabled: true,
             scope: this,
@@ -95,14 +95,24 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             style: {
                 marginTop: '0px'
             }
-    	}),
-    	this.settings = new Ext.Toolbar.Button({
-    		iconCls: 'icinga-icon-cog',
-    		scope: this,
-    		handler: function() {
-    			Ext.Msg.alert(_('Settings'), _('Sorry, not yet implemented'));
-    		}
-    	}),
+        }),
+        this.settings = new Ext.Toolbar.Button({
+            iconCls: 'icinga-icon-cog',
+            scope: this,
+            handler: function() {
+                Ext.Msg.alert(_('Settings'), _('Sorry, not yet implemented'));
+                /*var settings = new Ext.Window({
+                    width: 400,
+                    height: 400,
+                    layout: 'fit',
+                    autoScroll: true,
+                    items: new Ext.iG.PanelSettings({
+                        store: this.store
+                    })
+                });
+                settings.show();*/
+            }
+        }),
         this.comments = new Ext.Toolbar.Button({
             iconCls: 'icinga-icon-comment',
             scope: this,
@@ -110,26 +120,26 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
                 Ext.Msg.alert(_('Comments'), _('Sorry, not yet implemented'));
             }
         }), '->',
-    	this.print = new Ext.Toolbar.Button({
-    		iconCls: 'icon-print',
-    		scope: this,
-    		handler: function() {
-    			if(this.fireEvent('beforeprint', this) !== false) {
-    			    window.print();
-    			}
-    		}
-    	})];
+        this.print = new Ext.Toolbar.Button({
+            iconCls: 'icon-print',
+            scope: this,
+            handler: function() {
+                if(this.fireEvent('beforeprint', this) !== false) {
+                    window.print();
+                }
+            }
+        })];
         
         cfg.items = items;
         Ext.iG.Toolbar.superclass.constructor.call(this, cfg);
-	},
-	
-	initComponent: function() {
-		Ext.iG.Toolbar.superclass.initComponent.call(this);
-		this.addEvents('beforeprint');
-		this.bindStore(this.store, true);
-	},
-	
+    },
+    
+    initComponent: function() {
+        Ext.iG.Toolbar.superclass.initComponent.call(this);
+        this.addEvents('beforeprint');
+        this.bindStore(this.store, true);
+    },
+    
     bindStore: function(store, initial){
         if(!initial && this.store){
             if(store !== this.store && this.store.autoDestroy){
@@ -143,12 +153,12 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             }
         }
         if(store){
-	        store.on({
-	            scope: this,
-	            beforeload: this.onBeforeLoad,
-	            load: this.onLoad
-	        });
-	        this.store = store;
+            store.on({
+                scope: this,
+                beforeload: this.onBeforeLoad,
+                load: this.onLoad
+            });
+            this.store = store;
         }
     },
     
@@ -180,7 +190,7 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
     },
     
     doRefresh: function() {
-    	this.store.reload();
+        this.store.reload();
     },
     
     moveFirst: function() {
@@ -206,8 +216,8 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
                 s = e-i,
                 min = this.store.getMintimestamp()*1000;
             if(s < min) {
-            	s = min;
-            	e = s+i;
+                s = min;
+                e = s+i;
             }
             this.store.load({
                 params: {
@@ -253,16 +263,16 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
     moveNext: function() {
         var rec = this.input.store.getById(this.input.getValue());
         if(rec) {
-        	var s = this.store.getEnd()*1000,
-        	    i = rec.get('interval')*1000,
-        	    e = s+i,
-        	    now = new Date().getTime();
-        	if(e > now) {
-        		e = now; // Do not try to plot future values. ;-)
-        	}
-        	if((e-s) < i) { 
-        		s = e - i; // ALWAYS view full selected range.
-        	}
+            var s = this.store.getEnd()*1000,
+                i = rec.get('interval')*1000,
+                e = s+i,
+                now = new Date().getTime();
+            if(e > now) {
+                e = now; // Do not try to plot future values. ;-)
+            }
+            if((e-s) < i) { 
+                s = e - i; // ALWAYS view full selected range.
+            }
             this.store.load({
                 params: {
                     start: Math.ceil(s/1000),
@@ -273,14 +283,14 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
     },
     
     moveLast: function() {
-    	var rec = this.input.store.getById(this.input.getValue());
-    	if(rec) {
-    		this.store.load({
-    			params: {
-    			    start: Math.ceil(strtotime(rec.get('start'))),
-    			    end: Math.ceil(strtotime(rec.get('end')))
-    			}
-    		});
-    	}
+        var rec = this.input.store.getById(this.input.getValue());
+        if(rec) {
+            this.store.load({
+                params: {
+                    start: Math.ceil(strtotime(rec.get('start'))),
+                    end: Math.ceil(strtotime(rec.get('end')))
+                }
+            });
+        }
     }
 });

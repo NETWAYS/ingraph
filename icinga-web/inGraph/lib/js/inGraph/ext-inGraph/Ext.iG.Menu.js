@@ -1,23 +1,23 @@
 Ext.ns('Ext.iG');
 Ext.iG.Menu = Ext.extend(Ext.Panel, {
     constructor: function(cfg) {
-    	this.hostCmp = new Ext.ux.AutoComboBox({
+        this.hostCmp = new Ext.ux.AutoComboBox({
             name: 'host',
             url: cfg.provider.hosts,
             plugins: [new Ext.ux.ComboController(
                 {control: {scope: this, cmp: 'serviceCmp'}})],
-            emptyText: _('Choose Host'),
-    	});
-    	this.serviceCmp = new Ext.ux.AutoComboBox({
+            emptyText: _('Choose Host')
+        });
+        this.serviceCmp = new Ext.ux.AutoComboBox({
             name: 'service',
             url: cfg.provider.services,
             plugins: [new Ext.ux.ComboDependency(
                 {depends: {scope: this, param: 'host',
                            cmp: 'hostCmp'}})],
             disabled: true,
-            emptyText: _('Choose Service'),
-    	});
-    	this.viewCmp = new Ext.ux.AutoComboBox({
+            emptyText: _('Choose Service')
+        });
+        this.viewCmp = new Ext.ux.AutoComboBox({
             name: 'view',
             url: cfg.provider.views,
             emptyText: _('Choose View'),
@@ -25,18 +25,18 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
                 fields: ['view', 'config']
             },
             width: 490
-    	});
-    	this.startCmp = new Ext.form.DateField({
+        });
+        this.startCmp = new Ext.form.DateField({
             format: 'Y-m-d H:i:s',
             fieldLabel: _('Start'),
             width: 150,
-            emptyText: _('Starttime'),
-    	});
+            emptyText: _('Starttime')
+        });
         this.endCmp = new Ext.form.DateField({
             format: 'Y-m-d H:i:s',
             fieldLabel: _('End'),
             width: 150,
-            emptyText: _('Endtime'),
+            emptyText: _('Endtime')
         });
         this.timeFrames = new Ext.iG.TimeFrames();
         var dispGraphBtn = new Ext.SplitButton({
@@ -44,12 +44,12 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             width: 80,
             cls: 'x-btn-text-left',
             handler: function(self, e) {
-            	this.fireEvent('plot', self, {
-            		host: this.hostCmp.getValue(),
-            		service: this.serviceCmp.getValue(),
-            		start: this.startCmp.getValue(),
-            		end: this.endCmp.getValue()
-            	}, this.timeFrames);
+                this.fireEvent('plot', self, {
+                    host: this.hostCmp.getValue(),
+                    service: this.serviceCmp.getValue(),
+                    start: this.startCmp.getValue(),
+                    end: this.endCmp.getValue()
+                }, this.timeFrames);
             },
             scope: this,
             menu: {
@@ -68,28 +68,28 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
                         'text-align': 'center'
                     }
                 }, new Ext.form.CheckboxGroup({
-                	fireChecked: function(item, checked) {
-				    	this.fireEvent('change', this, item, checked)
-				    },
-                	columns: 1,
-                	items: (function(scope) {
-                		items = new Array();
-                		scope.timeFrames.each(function(rec) {
-                			items.push({
-                				boxLabel: rec.get('name'),
-                				name: rec.get('name'),
-                				checked: rec.get('enabled')
-                			});
-                		});
-                		return items;
-                	})(this),
-                	listeners: {
-                		change: function(bg, item, checked) {
-                			rec = this.timeFrames.getById(item.name);
-                			rec.set('enabled', checked);
-                		},
-                		scope: this
-                	}
+                    fireChecked: function(item, checked) {
+                        this.fireEvent('change', this, item, checked);
+                    },
+                    columns: 1,
+                    items: (function(scope) {
+                        items = [];
+                        scope.timeFrames.each(function(rec) {
+                            items.push({
+                                boxLabel: rec.get('name'),
+                                name: rec.get('name'),
+                                checked: rec.get('enabled')
+                            });
+                        });
+                        return items;
+                    })(this),
+                    listeners: {
+                        change: function(bg, item, checked) {
+                            rec = this.timeFrames.getById(item.name);
+                            rec.set('enabled', checked);
+                        },
+                        scope: this
+                    }
                 })]
             }
         });
@@ -99,10 +99,10 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             cls: 'x-btn-text-left',
             scope: this,
             handler: function(self, e) {
-            	this.fireEvent('plot', self, {
-            		viewConfig: this.viewCmp.store.getById(
-            		                this.viewCmp.getValue()).get('config')
-            	});
+                this.fireEvent('plot', self, {
+                    viewConfig: this.viewCmp.store.getById(
+                                    this.viewCmp.getValue()).get('config')
+                });
             }
         });
         Ext.apply(cfg, {
@@ -148,14 +148,12 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             }]
         });
         Ext.iG.Menu.superclass.constructor.call(this, cfg);
-        delete dispGraphBtn;
-        delete dispViewBtn;
     },
     
     initComponent: function() {
-    	this.addEvents(
-    	   'plot'
-    	);
-    	Ext.iG.Menu.superclass.initComponent.call(this);
+        this.addEvents(
+           'plot'
+        );
+        Ext.iG.Menu.superclass.initComponent.call(this);
     }
 });

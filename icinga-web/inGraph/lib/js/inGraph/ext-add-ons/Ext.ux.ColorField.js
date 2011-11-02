@@ -1,7 +1,7 @@
 Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField, {
-	triggerClass: 'x-form-arrow-trigger',
-	lazyInit: true,
-	
+    triggerClass: 'x-form-arrow-trigger',
+    lazyInit: true,
+    
     initComponent: function() {
         Ext.ux.ColorField.superclass.initComponent.call(this);
         this.addEvents(
@@ -10,25 +10,25 @@ Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField, {
     },
     
     initMenu: function() {
-    	if(!this.menu) {
-    		this.menu = new Ext.menu.ColorMenu({
-    			hideOnClick : false
-    		});
-    		
-    		this.mon(this.menu, {
-    			scope: this,
-    			select: this.onSelect,
-    			hide: this.onMenuHide
-    		});
-    	}
+        if(!this.menu) {
+            this.menu = new Ext.menu.ColorMenu({
+                hideOnClick : false
+            });
+            
+            this.mon(this.menu, {
+                scope: this,
+                select: this.onSelect,
+                hide: this.onMenuHide
+            });
+        }
     },
     
     isExpanded: function() {
-    	return this.menu && this.menu.isVisible();
+        return this.menu && this.menu.isVisible();
     },
-	
+    
     onRender: function(ct, position){
-    	Ext.ux.ColorField.superclass.onRender.call(this, ct, position);
+        Ext.ux.ColorField.superclass.onRender.call(this, ct, position);
 
         if(!this.lazyInit) {
             this.initMenu();
@@ -49,9 +49,9 @@ Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField, {
     },
     
     onSelect: function(palette, color) {
-    	this.setValue('#'+color);
-    	this.fireEvent('select', this, color)
-    	this.menu.hide();
+        this.setValue('#'+color);
+        this.fireEvent('select', this, color);
+        this.menu.hide();
     },
     
     onMenuHide: function() {
@@ -69,16 +69,14 @@ Ext.ux.ColorField = Ext.extend(Ext.form.TriggerField, {
     },
     
     setValue: function(v) {
-    	return Ext.ux.ColorField.superclass.setValue.call(this, v);
+        return Ext.ux.ColorField.superclass.setValue.call(this, v);
     },
     
     onDestroy: function() {
-    	if(this.menu) {
-    		this.menu.destroy();
-    	}
+        if(this.menu) {
+            this.menu.destroy();
+        }
         Ext.ux.ColorField.superclass.onDestroy.call(this);
     }
-    
 });
-
 Ext.reg('colorfield', Ext.ux.ColorField);

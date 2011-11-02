@@ -44,7 +44,7 @@ class Collectord(daemon.UnixDaemon):
         logdata = {
             'host': data[0],
             'service': data[1],
-            'text': data[2],
+            'status': data[2],
             'perf': data[3],
             'timestamp': int(data[4])
         }
@@ -110,11 +110,14 @@ class Collectord(daemon.UnixDaemon):
             if is_multidata:
                 upd_parentservice = logdata['service']
                 upd_service = multi_service
-    
+
+            pluginstatus = logdata['status'].lower()    
+
             update = (logdata['host'], upd_parentservice, upd_service,
                       upd_plotname, logdata['timestamp'], uom, raw_value,
                       raw_value, raw_value, min_value, max_value, warn_lower,
-                      warn_upper, warn_type, crit_lower, crit_upper, crit_type)
+                      warn_upper, warn_type, crit_lower, crit_upper, crit_type,
+                      pluginstatus)
             return update
         
     def before_daemonize(self):

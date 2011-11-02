@@ -120,7 +120,7 @@ class BackendRPCMethods(object):
         for update in updates:
             (host, parent_service, service, plot, timestamp, unit, value, min,
              max, lower_limit, upper_limit, warn_lower, warn_upper, warn_type,
-             crit_lower, crit_upper, crit_type) = update
+             crit_lower, crit_upper, crit_type, pluginstatus) = update
             
             host_obj = self._createHost(conn, host)
             if parent_service != None:
@@ -143,6 +143,10 @@ class BackendRPCMethods(object):
             
             for query in queries:
                 self.queryqueue.put(query)
+
+            if pluginstatus in ['warning', 'critical']:
+                status_obj = model.PluginStatus(hostservice_obj, timestamp, pluginstatus)
+                status_obj.save(conn)
         
         conn.close()
 

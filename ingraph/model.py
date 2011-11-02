@@ -983,7 +983,23 @@ class DataPoint(object):
                      'parent_service': parent_service,
                      'service': comment_obj.hostservice.service.name,
                      'timestamp': comment_obj.timestamp, 'comment_timestamp': comment_obj.comment_timestamp,
-                      'author': comment_obj.author, 'text': comment_obj.text })
+                     'author': comment_obj.author, 'text': comment_obj.text })
+
+        status_objs = PluginStatus.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
+
+        statusdata = []
+
+        for status_obj in status_objs:
+            if status_obj.hostservice.parent_hostservice != None:
+                parent_service = status_obj.hostservice.parent_hostservice.service_name,
+
+            else:
+                parent_service = None
+
+            statusdata.append({ 'id': status_obj.id, 'host': status_obj.hostservice.host.name,
+                     'parent_service': parent_service,
+                     'service': status_obj.hostservice.service.name,
+                     'timestamp': status_obj.timestamp, 'status': status_obj.status })
         
         plot_conds = or_(*[datapoint.c.plot_id==plot.id for plot in plots])
         sel = select([datapoint],
@@ -1160,6 +1176,106 @@ class Comment(ModelBase):
         
         conn.execute(comment.delete().where(comment.c.id==self.id))
 
+pluginstatus = Table('pluginstatus', metadata,
+    Column('id', Integer, Sequence('pluginstatus_id_seq'), nullable=False, primary_key=True),
+    Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False, primary_key=True),
+    Column('timestamp', Integer, nullable=False, primary_key=True),
+    Column('status', Enum('warning', 'critical', name='status_enum'), nullable=False)
+)
+
+class PluginStatus(ModelBase):
+    def __init__(self, hostservice, timestamp, status):
+        self.id = None
+        self.hostservice = hostservice
+        self.timestamp = timestamp
+        self.status = status
+    
+    def getByID(conn, id):
+        obj = PluginStatus.get(id)
+        
+        if obj == None:
+            sel = pluginstatus.select().where(pluginstatus.c.id==id)
+            res = conn.execute(sel)
+            row = res.fetchone()
+            
+            assert row != None
+
+            hostservice = HostService.getByID(conn, row[pluginstatus.c.hostservice_id])
+
+            obj = PluginStatus(hostservice, row[pluginstatus.c.timestamp], row[pluginstatus.c.status])
+            obj.id = row[host.c.id]
+            obj.activate()
+        
+        return obj
+    
+    getByID = staticmethod(getByID) 
+    
+    def getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp):
+        conds = or_(*[pluginstatus.c.hostservice_id == hostservice.id for hostservice in hostservices])
+        
+        sel = pluginstatus.select().where(and_(conds, pluginstatus.c.timestamp.between(start_timestamp, end_timestamp)))
+        result = conn.execute(sel)
+        
+        objs = []
+        
+        for row in result:
+            obj = PluginStatus.get(row[pluginstatus.c.id])
+            
+            if obj == None:
+                hostservice = HostService.getByID(conn, row[pluginstatus.c.hostservice_id])
+    
+                obj = PluginStatus(hostservice, row[pluginstatus.c.timestamp], row[pluginstatus.c.status])
+                obj.id = row[host.c.id]
+                obj.activate()
+            
+            objs.append(obj)
+            
+        return objs
+                
+    getByHostServicesAndInterval = staticmethod(getByHostServicesAndInterval)
+
+    def save(self, conn):
+        if self.id == None:
+            if self.hostservice.id == None:
+                self.hostservice.save(conn)
+                
+            assert self.hostservice.id != None
+
+            ins = pluginstatus.insert().values(hostservice_id=self.hostservice.id, timestamp=self.timestamp,
+                                          status=self.status)
+
+            result = conn.execute(ins)
+            self.id = result.last_inserted_ids()[0]
+            self.activate()
+        else:
+            upd = pluginstatus.update().where(pluginstatus.c.id==self.id).values(status=self.status)
+            conn.execute(upd)
+            
+    def delete(self, conn):
+        if self.id == None:
+            return
+        
+        conn.execute(pluginstatus.delete().where(pluginstatus.c.id==self.id))
+
+    def cleanupOldData(conn):
+        retention_period = None
+
+        tfs = TimeFrame.getAll(conn)
+
+        for tf in tfs:
+            if tf.retention_period == None:
+                continue
+
+            if retention_period == None or tf.retention_period > retention_period:
+                retention_period = tf.retention_period
+
+        if retention_period != None:
+            delsql = datapoint.delete(pluginstatus.c.timestamp < time() - retention_period)
+            
+            conn.execute(delsql)
+    
+    cleanupOldData = staticmethod(cleanupOldData)
+
 class SetTextFactory(PoolListener):
     def connect(self, dbapi_con, con_record):
         try:
@@ -1223,3 +1339,4 @@ def exec_pragma(conn, pragma):
 
 def cleanup(conn):
     DataPoint.cleanupOldData(conn)
+    PluginStatus.cleanupOldData(conn)

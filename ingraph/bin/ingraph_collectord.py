@@ -13,7 +13,6 @@ import pickle
 import xmlrpclib
 
 import ingraph
-import ingraph.api
 from ingraph import daemon
 from ingraph import utils
 
@@ -161,7 +160,7 @@ class Collectord(daemon.UnixDaemon):
             if updates:
                 updates_pickled = pickle.dumps(updates)
                 st = time.time()
-                ingraph.api.insertValueBulk(updates_pickled)
+                api.insertValueBulk(updates_pickled)
                 et = time.time()
                 print "%d updates (%d lines) took %f seconds" % \
                       (len(updates), input.lineno(), et - st)

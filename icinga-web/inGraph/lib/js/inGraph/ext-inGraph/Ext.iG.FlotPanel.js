@@ -6,7 +6,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
     collapsible: true,
     animCollapse: true,
     height: 220,
-    layout:'vbox',
+    layout: 'vbox',
     layoutConfig: {
         align: 'stretch',
         pack: 'start'
@@ -102,6 +102,18 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                 }, this.loadMask)
             );
         }
+        this.flot.store.on({
+            single: true,
+            scope: this,
+            load: function(store) {
+                var o = store.getOptions();
+                if(o.panel !== undefined && o.panel.toolbar !== undefined &&
+                   o.panel.toolbar === false) {
+                    this.tbar.setSize(undefined, 0);
+                    this.tbar.hide();
+                }
+            }
+        });
         if(this.overview) {
             this.mon(this.overview, {
                 scope: this,

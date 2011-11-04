@@ -193,7 +193,8 @@ class BackendRPCMethods(object):
 
         charts = []
         comments = []
-        result = {'comments': comments, 'charts': charts,
+        statusdata = []
+        result = {'comments': comments, 'charts': charts, 'statusdata': statusdata,
                   'min_timestamp': model.dbload_min_timestamp,
                   'max_timestamp': time.time()}
         
@@ -224,6 +225,7 @@ class BackendRPCMethods(object):
                 granularity, null_tolerance)
 
             comments.extend(dps['comments'])
+            statusdata.extend(dps['statusdata'])
 
             for plot_obj, plot_charts in dps['charts'].iteritems():
                 for type, data in plot_charts.iteritems():

@@ -1068,7 +1068,7 @@ class DataPoint(object):
             
             prev_rows[plot] = row
 
-        return { 'comments': comments, 'charts': charts }
+        return { 'comments': comments, 'charts': charts, 'statusdata': statusdata }
 
     getValuesByInterval = staticmethod(getValuesByInterval)
 

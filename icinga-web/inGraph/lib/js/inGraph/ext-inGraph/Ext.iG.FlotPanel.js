@@ -115,10 +115,13 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             }
         });
         if(this.overview) {
-            this.mon(this.overview, {
+            this.overview.on({
                 scope: this,
                 single: true,
                 plot: function() {
+                    /*
+                     * TODO(el): Initial selection disappears.
+                     */
                     this.overview.getFlot().setSelection({
                         xaxis: {
                             from: this.store.baseParams.start,
@@ -138,7 +141,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                     });
                 }
             });
-            this.mon(this.overview, {
+            this.overview.on({
                 scope: this,
                 plotselected: function(flot, ranges) {
                     if(this.overview.shint) {

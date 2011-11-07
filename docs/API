@@ -75,6 +75,25 @@ specifies how fine-grained the data should be (ideally only one datapoint per
 many missing consecutive datapoints are ignored before inserting None values
 in the output.
 
+getPlotValues2(query, start_timestamp=None, end_timestamp=None,
+    granularity=None, null_tolerance=0)
+---------------------------------------------------------------
+
+Similar to getPlotValues() except for the fact that this API allows fine-grained
+filtering of the results. 'query' is a dictionary with the following structure:
+
+{
+  'host1': {
+    'service1': {
+      'plot1': [ 'avg' ],
+      'plot2': [ 'min', 'max', 'avg' ]
+    },
+    'service2': {
+      ...
+    }
+  }
+}
+
 shutdown()
 ----------
 

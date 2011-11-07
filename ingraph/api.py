@@ -235,13 +235,47 @@ class BackendRPCMethods(object):
                         label = hostservice_obj.service.name + '-' + label
                     
                     charts.append({'host': hostservice_obj.host.name,
-                                   'service': hostservice_obj.service.name, 
+                                   'service': hostservice_obj.service.name,
+                                   'plot': plot_obj.name, 'type': type,
                                    'label': label, 'unit': plot_obj.unit,
                                    'data': data})
 
         et = time.time()
         
         print "Got plot values in %f seconds" % (et - st)
+        return result
+
+    def getPlotValues2(self, query,
+                      start_timestamp=None, end_timestamp=None,
+                      granularity=None, null_tolerance=0):
+        st = time.time()
+
+        charts = []
+        comments = []
+        statusdata = []
+        result = {'comments': comments, 'charts': charts, 'statusdata': statusdata,
+                  'min_timestamp': model.dbload_min_timestamp,
+                  'max_timestamp': time.time()}
+
+        for host, host_specification in query.iteritems():
+            for service, service_specification in host_specification.iteritems():
+                svc_data = self.getPlotValues(host, service, start_timestamp, end_timestamp, granularity, null_tolerance)
+
+                comments.extend(svc_data['comments'])
+                statusdata.extend(svc_data['statusdata'])
+
+                for chart in svc_data['charts']:
+                    if not chart['plot'] in plot_specification:
+                        continue
+
+                    if not chart['type'] in plot_specification[chart['plot']]:
+                        continue
+
+                    charts.append(chart)
+
+        et = time.time()
+        
+        print "Got filtered plot values in %f seconds" % (et - st)
         return result
  
     def shutdown(self):

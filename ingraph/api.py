@@ -265,10 +265,10 @@ class BackendRPCMethods(object):
                 statusdata.extend(svc_data['statusdata'])
 
                 for chart in svc_data['charts']:
-                    if not chart['plot'] in plot_specification:
+                    if not chart['plot'] in service_specification:
                         continue
 
-                    if not chart['type'] in plot_specification[chart['plot']]:
+                    if not chart['type'] in service_specification[chart['plot']]:
                         continue
 
                     charts.append(chart)

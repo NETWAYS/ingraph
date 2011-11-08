@@ -1,12 +1,15 @@
 <?php
 
-class IcingainGraphBaseAction extends IcingaBaseAction {
+class inGraphBaseAction extends IcingaBaseAction {
+    protected $requires_auth = true;
+    protected $credentials = array('icinga.user');
+    
     public function isSecure() {
-        return true;
+        return $this->requires_auth;
     }
     
     public function getCredentials() {
-        return array ('icinga.user');
+        return $this->credentials;
     }
     
     public function getDefaultViewName() {
@@ -14,6 +17,10 @@ class IcingainGraphBaseAction extends IcingaBaseAction {
     }
     
     public function executeRead(AgaviParameterHolder $rd) {
+        return $this->getDefaultViewName();
+    }
+    
+    public function executeWrite(AgaviParameterHolder $rd) {
         return $this->getDefaultViewName();
     }
     

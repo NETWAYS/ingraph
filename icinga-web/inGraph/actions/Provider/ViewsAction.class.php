@@ -1,6 +1,6 @@
 <?php
 
-class inGraph_Provider_ViewsAction extends IcingainGraphBaseAction {
+class inGraph_Provider_ViewsAction extends inGraphBaseAction {
     public function executeWrite(AgaviParameterHolder $rd) {
         $views = $this->context->getModel('View', 'inGraph',
             AgaviConfig::get('modules.ingraph.views'));

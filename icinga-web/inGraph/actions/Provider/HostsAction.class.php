@@ -22,8 +22,7 @@ class inGraph_Provider_HostsAction extends inGraphBaseAction {
             $availableHosts = $ingraphapi->getHosts(
                 $rd->getParameter('host', '%'));
 		} catch(XMLRPCClientException $e) {
-			$this->setAttribute('message', $e->getMessage());
-			return 'Error';
+		    $this->setError($e->getMessage());
 		}
 		
 		$finalHosts = array_intersect($permittedHosts,

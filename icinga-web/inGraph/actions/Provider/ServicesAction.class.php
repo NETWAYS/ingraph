@@ -27,8 +27,7 @@ class inGraph_Provider_ServicesAction extends inGraphBaseAction {
         try {
             $availableServices = $ingraphapi->getServices($host, $service);
 		} catch(XMLRPCClientException $e) {
-			$this->setAttribute('exception', $e);
-			return 'Error';
+		    $this->setError($e->getMessage());
 		}
 		$finalServices = array_intersect($permittedServices,
 		    $availableServices['services']);

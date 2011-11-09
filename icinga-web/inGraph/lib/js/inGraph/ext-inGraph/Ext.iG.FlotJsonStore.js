@@ -1,16 +1,30 @@
 Ext.ns('Ext.iG');
+/**
+ * @class Ext.iG.FlotJsonReader
+ * @extends Ext.data.JsonReader
+ */
+Ext.iG.FlotJsonReader = Ext.extend(Ext.data.JsonReader, {
+    buildExtractors: function() {
+        Ext.iG.FlotJsonReader.superclass.buildExtractors.apply(this, arguments);
+        this.getId = function(rec) {
+             return rec.host + rec.service + rec.plot +
+                    rec.type;
+        };
+    }
+});
+/**
+ * @class Ext.iG.FlotJsonStore
+ * @extends Ext.data.JsonStore
+ */
 Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     keepModifications: true,
-    startProperty: 'start',
-    endProperty: 'end',
-    optionsProperty: 'options',
-    mintimestampProperty: 'minTimestamp',
-    maxtimestampProperty: 'maxTimestamp',
+    mintimestampProperty: 'min_timestamp',
+    maxtimestampProperty: 'max_timestamp',
 
     constructor: function(cfg) {
         Ext.applyIf(cfg, {
             autoDestroy : true,
-            root: 'results',
+            root: 'charts',
             fields: [{name: 'data', defaultValue: []},
                      {name: 'label', defaultValue: ''},
                      {name: 'unit', defaultValue: ''},
@@ -24,12 +38,19 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
                      {name: 'bars', defaultValu : {}},
                      {name: 'shadowSize', defaultValue: 3},
                      {name: 'stack', defaultValue: undefined},
-                     {name: 'enabled', defaultValue: false},
-                     {name: 'key', defaultValue: undefined}],
+                     {name: 'enabled', defaultValue: true},
+                     {name: 'host'},
+                     {name: 'service'},
+                     {name: 'plot'},
+                     {name: 'type'},
+                     {name: 'key', convert: function(v, rec) {
+                         return rec.host + rec.service + rec.plot +
+                                rec.type;}}],
             autoLoad: true,
             idProperty: 'key'
         });
         Ext.iG.FlotJsonStore.superclass.constructor.call(this, cfg);
+        this.reader = new Ext.iG.FlotJsonReader(cfg);
         this.addEvents('beforeautorefresh');
         if(Ext.isNumber(this.refreshInterval)) {
             this.on({
@@ -86,11 +107,21 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
     },
     
     getStart: function() {
-        return this.reader.jsonData[this.startProperty];
+        if(this.lastOptions.params !== undefined) {
+            if(this.lastOptions.params.start !== undefined) {
+                return this.lastOptions.params.start;
+            }
+        }
+        return this.baseParams.start;
     },
     
     getEnd: function() {
-        return this.reader.jsonData[this.endProperty];
+        if(this.lastOptions.params !== undefined) {
+            if(this.lastOptions.params.end !== undefined) {
+                return this.lastOptions.params.end;
+            }
+        }
+        return this.baseParams.end;
     },
     
     getMintimestamp: function() {

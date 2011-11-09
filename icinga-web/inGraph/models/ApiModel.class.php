@@ -16,4 +16,12 @@ class inGraph_ApiModel extends AppKitBaseModel implements AgaviISingletonModel {
     public function getValues() {
         return $this->client->call('getPlotValues2', func_get_args());
     }
+    
+    public function getHosts() {
+        return $this->client->call('getHostsFiltered', func_get_args());
+    }
+    
+    public function getServices() {
+        return $this->client->call('getServices', func_get_args());
+    }
 }

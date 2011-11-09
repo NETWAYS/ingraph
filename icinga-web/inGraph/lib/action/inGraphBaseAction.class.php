@@ -3,6 +3,7 @@
 class inGraphBaseAction extends IcingaBaseAction {
     protected $requires_auth = true;
     protected $credentials = array('icinga.user');
+    protected static $api = null;
     
     public function isSecure() {
         return $this->requires_auth;
@@ -36,5 +37,13 @@ class inGraphBaseAction extends IcingaBaseAction {
         }
         $this->setAttribute('message', $m);
         return 'Error';
+    }
+    
+    public function getApi() {
+        if(self::$api == null) {
+            self::$api = $this->getContext()->getModel(
+                'Api', 'inGraph', AgaviConfig::get('modules.ingraph.xmlrpc'));
+        }
+        return self::$api;
     }
 }

@@ -2,8 +2,7 @@
 // TODO(el): Caching.
 class inGraph_Provider_TemplateAction extends inGraphBaseAction {
     public function executeWrite(AgaviRequestDataHolder $rd) {
-        $api = $this->getContext()->getModel(
-            'Api', 'inGraph', AgaviConfig::get('modules.ingraph.xmlrpc'));
+        $api = $this->getApi();
         $plots = $api->getPlots(($host = $rd->getParameter('host')),
 	                            ($service = $rd->getParameter('service')));
 	    $template = $this->context->getModel(

@@ -1,38 +1,41 @@
 <?php
 
-class inGraph_Provider_HostsAction extends inGraph_XMLRPCAction {
+class inGraph_Provider_HostsAction extends inGraphBaseAction {
     public function executeWrite(AgaviRequestDataHolder $rd) {
-        $api = $this->getContext()->getModel('Store.LegacyLayer.IcingaApi',
-            'Api');
-        $search = $api->createSearch()
-        ->setSearchTarget(IcingaApiConstants::TARGET_HOST)
-        ->setResultType(IcingaApiConstants::RESULT_ARRAY)
-        ->setResultColumns(array('HOST_NAME'));
+        $icingaapi = $this->getContext()->getModel(
+        	'Store.LegacyLayer.IcingaApi', 'Api');
+        
+        $search = $icingaapi->createSearch();
+        $search->setSearchTarget(IcingaApiConstants::TARGET_HOST);
+        $search->setResultType(IcingaApiConstants::RESULT_ARRAY);
+        $search->setResultColumns(array('HOST_NAME'));
+        
         IcingaPrincipalTargetTool::applyApiSecurityPrincipals($search);
-        $permittedHosts = $api->fetch()->getAll();
+        
+        $permittedHosts = $icingaapi->fetch()->getAll();
         $i = new RecursiveIteratorIterator(
             new RecursiveArrayIterator($permittedHosts));
         $permittedHosts = iterator_to_array($i, false);
-    	try {
-			$availableHosts = $this->getClient()->call(
-				'getHostsFiltered',
-				array($rd->getParameter('host', '%'))
-			);
-			$finalHosts = array_intersect($permittedHosts,
-			    $availableHosts['hosts']);
-			$total = count($finalHosts);
-			$finalHosts = array_slice($finalHosts,
-			                          $rd->getParameter('offset', 0),
-			                          $rd->getParameter('limit', 10));
-			$this->setAttribute('hosts', array(
-			    'total' => $total,
-			    'hosts' => $finalHosts
-			));
+    	
+        $ingraphapi = $this->getApi();
+        try {
+            $availableHosts = $ingraphapi->getHosts(
+                $rd->getParameter('host', '%'));
 		} catch(XMLRPCClientException $e) {
 			$this->setAttribute('message', $e->getMessage());
 			return 'Error';
 		}
 		
+		$finalHosts = array_intersect($permittedHosts,
+		    $availableHosts['hosts']);
+		$total = count($finalHosts);
+		$finalHosts = array_slice($finalHosts,
+		                          $rd->getParameter('offset', 0),
+		                          $rd->getParameter('limit', 10));
+		$this->setAttribute('hosts', array(
+		    'total' => $total,
+		    'hosts' => $finalHosts
+		));
         return $this->getDefaultViewName();
     }
 }

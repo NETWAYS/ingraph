@@ -12,7 +12,8 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
         template: "<?php echo $ro->gen(
             'modules.ingraph.provider.template'); ?>",
         values: "<?php echo $ro->gen(
-            'modules.ingraph.provider.values'); ?>"
+            'modules.ingraph.provider.values'); ?>",
+        view: "<?php echo $ro->gen('modules.ingraph.provider.view'); ?>"
     };
     var host = "<?php echo $rd->getParameter('host'); ?>",
         service = "<?php echo $rd->getParameter('service'); ?>",
@@ -33,13 +34,17 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                 cfg.timeFrames = timeFrames;
                 cfg.stateId = this.stateuid;
                 var p = new Ext.iG.Panel(cfg);
-                this.getParent().setTitle(p.title);
-                Ext.fly(this.getParent().tabEl).child(
-                    'span.x-tab-strip-text', true).qtip = p.title;
+                p.on({
+                    scope: this,
+                    single: true,
+                    __igpanel__complete: function(p) {
+                    	Ext.iG.Cronk.setTitle.call(this, p.title);
+                    	Ext.state.Manager.set(p.stateId, p.getState());
+                    }
+                })
                 this.add(p);
                 this.doLayout();
                 w.destroy();
-                Ext.state.Manager.set(this.stateuid, p.getState());
             }, this);
             w.on('close', function() {
                 // Remove cronk
@@ -56,12 +61,16 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                 stateId: this.stateuid
             };
             var p = new Ext.iG.Panel(cfg);
-            this.getParent().setTitle(p.title);
-            Ext.fly(this.getParent().tabEl).child(
-                    'span.x-tab-strip-text', true).qtip = p.title;
+            p.on({
+                scope: this,
+                single: true,
+                __igpanel__complete: function(p) {
+                	Ext.iG.Cronk.setTitle.call(this, p.title);
+                	Ext.state.Manager.set(p.stateId, p.getState());
+                }
+            })
             this.add(p);
             this.doLayout();
-            Ext.state.Manager.set(this.stateuid, p.getState());
         }
     } else {
         var cfg = {

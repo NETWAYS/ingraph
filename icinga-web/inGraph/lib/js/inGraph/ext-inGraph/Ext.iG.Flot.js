@@ -102,6 +102,12 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             scope: this,
             contextmenu: this.onContextMenu
         });
+        this.on({
+            scope: this,
+            beforeplot: function() {
+                this.applyTemplate();
+            }
+        });
     },
     
     showTooltip: function(item, pos) {
@@ -287,7 +293,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 this.store.un({
                     scope: this,
                     datachanged: this.onDatachanged,
-                    update: this.onUpdate
+                    update: this.onUpdate,
+                    beforeautorefresh: this.onBeforeautorefresh
                 });
             }
             if(!store) {
@@ -322,41 +329,22 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     buildSeries: function() {
-        var series = [];
         this.store.each(function(rec) {
             if(rec.get('enabled')) {
-                series.push(rec.data);
-                if(this.autoYAxes) {
-                    var unit = rec.get('unit');
-                    Ext.each(this.flotOptions.yaxes, function(yaxis, i) {
-                        if(yaxis.unit === rec.get('unit')) {
-                            rec.set('yaxis', i+1); // Flot's axis index starts
-                                                   // with 1.
-                        }
-                    });
-                    var i = this.flotOptions.yaxes.length;
-                    // Setting yaxis on series via template, plus if there's no
-                    // yaxes configuration present breaks this code.
-                    if(rec.get('yaxis') === undefined) {
-                        this.flotOptions.yaxes.push({
-                            position: i % 2 === 0 ? 'left' : 'right',
-                            unit: unit,
-                            label: rec.get('label'),
-                            tickFormatter: this.yTickFormatter
-                        });
-                        rec.set('yaxis', i+1);
-                    }
-                }
+                Ext.each(rec.data.data, function(xy) {
+                    xy[0] *= 1000;
+                });
             }
         }, this);
-        this.series = series;
     },
     
-    buildOptions: function() {
-        var options = this.store.getOptions();
-        iG.merge(true, this.flotOptions, options.flot);
-        if(options.generic && options.generic.refreshInterval) {
-            this.store.startRefresh(options.generic.refreshInterval);
+    applyTemplate: function() {
+        if(Ext.isObject(this.template.flot)) {
+            iG.merge(true, this.flotOptions, this.template.flot);
+        }
+        if(this.template.generic !== undefined &&
+           Ext.isNumber(this.template.generic.refreshInterval)) {
+            this.store.startRefresh(this.template.generic.refreshInterval);
         }
         if(this.autoYAxes) {
             if(this.flotOptions.yaxes === undefined) {
@@ -367,14 +355,48 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 }, this);
                 this.autoYAxes = false;
             }
+            this.store.query('enabled', true).each(function(rec) {
+                var unit = rec.get('unit');
+                Ext.each(this.flotOptions.yaxes, function(yaxis, i) {
+                    if(yaxis.unit === rec.get('unit')) {
+                        rec.set('yaxis', i+1); // Flot's axis index starts
+                                               // with 1.
+                    }
+                });
+                var i = this.flotOptions.yaxes.length;
+                // Setting yaxis on series via template, plus if there's no
+                // yaxes configuration present breaks this code.
+                if(rec.get('yaxis') === undefined) {
+                    this.flotOptions.yaxes.push({
+                        position: i % 2 === 0 ? 'left' : 'right',
+                        unit: unit,
+                        label: rec.get('label'),
+                        tickFormatter: this.yTickFormatter
+                    });
+                    rec.set('yaxis', i+1);
+                }
+            }, this);
+        }
+        if(Ext.isArray(this.template.series)) {
+            Ext.each(this.template.series, function(series) {
+                var id = series.host + series.service + series.plot +
+                         series.type,
+                rec = this.store.getById(id);
+                Ext.apply(rec.data, series);
+            }, this);
         }
     },
     
-    plot: function(cfg) {
-        cfg = cfg || {};
+    plot: function(id, series) {
         if(this.fireEvent('beforeplot', this) !== false) {
-            var series = cfg.series === undefined ? this.series : cfg.series,
-                id = cfg.id === undefined ? this.id : cfg.id;
+            if(series === undefined) {
+                series = this.store.query(
+                    'enabled', true).getRange().map(function(rec) {
+                        return rec.data;});
+            }
+            if(id === undefined) {
+                id = this.id;
+            }
             // Sort series by their mean from highest to lowest.
             // This is nice for filled lines since series will not paint
             // over each other.
@@ -401,11 +423,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     onDatachanged: function() {
-        /*
-         * @TODO(el): Do not merge options on every load since they change
-         * unusually. Flag 'em dirty on change and make use of that.
-         */
-        this.buildOptions();
         this.buildSeries();
         if(this.absolute) {
             // Force full view of timerange even if there's no data.

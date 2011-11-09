@@ -16,6 +16,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
         cfg = cfg || {};
         var items = [this.flot = new Ext.iG.Flot({
             store: cfg.store,
+            template: cfg.template,
             flex: 1
         })];
 
@@ -24,6 +25,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             delete cfg.overview;
             items.push(new Ext.Spacer({height:1, cls: 'iG-spacer'}));
             items.push(this.overview = new Ext.iG.Flot({
+                template: cfg.template,
                 flotOptions: {
                     xaxis: {
                         ticks: function(axis) {
@@ -72,6 +74,9 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             tbar: new Ext.iG.Toolbar({
                 store: cfg.store,
                 activeFrame: cfg.activeFrame,
+                hidden: (cfg.template.panel !== undefined &&
+                         cfg.template.panel.toolbar !== undefined &&
+                         cfg.template.panel.toolbar === false) ? true : false,
                 listeners: {
                     scope: this,
                     beforeprint: function() {
@@ -102,18 +107,6 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                 }, this.loadMask)
             );
         }
-        this.flot.store.on({
-            single: true,
-            scope: this,
-            load: function(store) {
-                var o = store.getOptions();
-                if(o.panel !== undefined && o.panel.toolbar !== undefined &&
-                   o.panel.toolbar === false) {
-                    this.tbar.setSize(undefined, 0);
-                    this.tbar.hide();
-                }
-            }
-        });
         if(this.overview) {
             this.overview.on({
                 scope: this,
@@ -227,7 +220,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                 }
             }]
         }, true);
-        this.flot.plot({id: id});
+        this.flot.plot(id);
         Ext.EventManager.addListener(window, 'focus', function() {
             Ext.destroy.defer(1000, this, [el]);
         }, this, {single: true});   
@@ -246,7 +239,8 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                 baseParams: Ext.apply({}, this.store.lastOptions,
                                       this.store.baseParams) 
             },
-            xtype: 'flotpanel'
+            xtype: 'flotpanel',
+            template: this.template
         };
     }
 });

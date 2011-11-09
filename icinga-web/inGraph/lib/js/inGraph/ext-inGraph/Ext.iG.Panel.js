@@ -74,16 +74,24 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
         if(this.host && this.service) {
             var items = [];
             cfg.title = this.host + ' - ' + this.service;
+            var query = {}
+            query[this.host] = {};
+            query[this.host][this.service] = {};
+            Ext.each(this.template.series, function(series) {
+                query[this.host][this.service][series.plot] = Ext.isArray(
+                    series.type) ? series.type : [series.type];
+            }, this);
+            query = Ext.encode(query);
             if(this.start || this.end) {
                 items.push({
                     title: this.start + ' - ' + this.end,
                     host: this.host,
                     service: this.service,
+                    template: this.template,
                     store: new Ext.iG.FlotJsonStore({
-                        url: this.provider.plots,
+                        url: this.provider.values,
                         baseParams: {
-                            host: this.host,
-                            service: this.service,
+                            query: query,
                             start: this.start,
                             end: this.end
                         }
@@ -97,11 +105,11 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
                             activeFrame: rec.get('name'),
                             host: this.host,
                             service: this.service,
+                            template: this.template,
                             store: new Ext.iG.FlotJsonStore({
-                                url: this.provider.plots,
+                                url: this.provider.values,
                                 baseParams: {
-                                    host: this.host,
-                                    service: this.service,
+                                    query: query,
                                     start: Math.ceil(
                                         strtotime(rec.get('start'))),
                                     end: Math.ceil(strtotime(rec.get('end')))

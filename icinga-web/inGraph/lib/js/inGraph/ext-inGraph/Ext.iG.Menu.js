@@ -44,12 +44,35 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             width: 80,
             cls: 'x-btn-text-left',
             handler: function(self, e) {
-                this.fireEvent('plot', self, {
-                    host: this.hostCmp.getValue(),
-                    service: this.serviceCmp.getValue(),
-                    start: this.startCmp.getValue(),
-                    end: this.endCmp.getValue()
-                }, this.timeFrames);
+                var host = this.hostCmp.getValue(),
+                    service = this.serviceCmp.getValue();
+                if(host && service) {
+                    Ext.Ajax.request({
+                       url: this.provider.template,
+                       scope: this,
+                       success: function(res) {
+                           var template = null;
+                           if(res.responseText) {
+                               template = Ext.decode(res.responseText);
+                           }
+                           this.fireEvent('plot', self, {
+                               host: this.hostCmp.getValue(),
+                               service: this.serviceCmp.getValue(),
+                               start: this.startCmp.getValue(),
+                               end: this.endCmp.getValue(),
+                               template: template
+                           }, this.timeFrames);
+                       },
+                       params: {host: host, service: service}
+                    });
+                } else {
+                    this.fireEvent('plot', self, {
+                        host: this.hostCmp.getValue(),
+                        service: this.serviceCmp.getValue(),
+                        start: this.startCmp.getValue(),
+                        end: this.endCmp.getValue()
+                    }, this.timeFrames);
+                }
             },
             scope: this,
             menu: {

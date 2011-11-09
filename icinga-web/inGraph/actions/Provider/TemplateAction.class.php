@@ -1,7 +1,7 @@
 <?php
 // TODO(el): Caching.
 class inGraph_Provider_TemplateAction extends inGraphBaseAction {
-    public function executeWrite(AgaviParameterHolder $rd) {
+    public function executeWrite(AgaviRequestDataHolder $rd) {
         $api = $this->getContext()->getModel(
             'Api', 'inGraph', AgaviConfig::get('modules.ingraph.xmlrpc'));
         $plots = $api->getPlots(($host = $rd->getParameter('host')),
@@ -17,6 +17,8 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction {
                     // and is properly esacped?
                     if(preg_match($series['re'], $plot)) {
                         unset($series['re']);
+                        $series['host'] = $host;
+                        $series['service'] = $service;
                         $series['plot'] = $plot;
                         break;
                     }
@@ -24,10 +26,7 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction {
             }
         }
         unset($template['re']);
+        $this->setAttribute('template', $template);
         return $this->getDefaultViewName();
-    }
-    
-    public function executeRead(AgaviParameterHolder $rd) {
-        return $this->executeWrite($rd);
     }
 }

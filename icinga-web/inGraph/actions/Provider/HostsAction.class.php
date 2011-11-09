@@ -1,7 +1,7 @@
 <?php
 
 class inGraph_Provider_HostsAction extends inGraph_XMLRPCAction {
-    public function executeWrite(AgaviParameterHolder $rd) {
+    public function executeWrite(AgaviRequestDataHolder $rd) {
         $api = $this->getContext()->getModel('Store.LegacyLayer.IcingaApi',
             'Api');
         $search = $api->createSearch()

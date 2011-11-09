@@ -1,7 +1,7 @@
 <?php
 
 class inGraph_Provider_ServicesAction extends inGraph_XMLRPCAction {
-    public function executeWrite(AgaviParameterHolder $rd) {
+    public function executeWrite(AgaviRequestDataHolder $rd) {
         $host = $rd->getParameter('host');
         $service = $rd->getParameter('service', '%');
         $api = $this->getContext()->getModel('Store.LegacyLayer.IcingaApi',

@@ -1,6 +1,6 @@
 <?php 
 
-class inGraph_XMLRPCAction extends IcingainGraphBaseAction {
+class inGraph_XMLRPCAction extends inGraphBaseAction {
 	public function getClient() {
 		return $this->getContext()->getModel(
 			'XMLRPCClient',

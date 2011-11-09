@@ -16,11 +16,11 @@ class inGraphBaseAction extends IcingaBaseAction {
         return 'Success';
     }
     
-    public function executeRead(AgaviParameterHolder $rd) {
+    public function executeRead(AgaviRequestDataHolder $rd) {
         return $this->getDefaultViewName();
     }
     
-    public function executeWrite(AgaviParameterHolder $rd) {
+    public function executeWrite(AgaviRequestDataHolder $rd) {
         return $this->getDefaultViewName();
     }
     

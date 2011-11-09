@@ -1,6 +1,6 @@
 <?php 
 
-class inGraph_XMLRPCSuccessView extends IcingainGraphBaseView {
+class inGraph_XMLRPCSuccessView extends inGraphBaseView {
 	
     protected function ensureTypes(&$xy) {
         $xy = array(

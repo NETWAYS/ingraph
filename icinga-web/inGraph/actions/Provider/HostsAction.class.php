@@ -33,7 +33,7 @@ class inGraph_Provider_HostsAction extends inGraphBaseAction {
 		                          $rd->getParameter('limit', 10));
 		$this->setAttribute('hosts', array(
 		    'total' => $total,
-		    'hosts' => $finalHosts
+		    'results' => $finalHosts
 		));
         return $this->getDefaultViewName();
     }

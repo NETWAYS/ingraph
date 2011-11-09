@@ -37,7 +37,7 @@ class inGraph_Provider_ServicesAction extends inGraphBaseAction {
                             		 $rd->getParameter('limit', 10));
 		$this->setAttribute('services', array(
 		    'total' => $total,
-		    'services' => $finalServices
+		    'results' => $finalServices
 		));
 		return $this->getDefaultViewName();
     }

@@ -10,19 +10,22 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction {
 	         AgaviConfig::get('modules.ingraph.templates'))->getTemplate(
                 $service);
         if(array_key_exists('series', $template)) {
-            foreach($template['series'] as &$series) {
+            $compiled = array();
+            foreach($template['series'] as $series) {
                 foreach($plots as $plot) {
                     // TODO(el): Validate that re exists
                     // and is properly esacped?
                     if(preg_match($series['re'], $plot)) {
-                        unset($series['re']);
-                        $series['host'] = $host;
-                        $series['service'] = $service;
-                        $series['plot'] = $plot;
-                        break;
+                        $compiled[] = array_merge(
+                            $series, array(
+                                'host' => $host,
+                                'service' => $service,
+                                'plot' => $plot,
+                            ));
                     }
                 }
             }
+            $template['series'] = $compiled;
         }
         unset($template['re']);
         $this->setAttribute('template', $template);

@@ -11,7 +11,7 @@ Ext.iG.HostSummary = Ext.extend(Ext.Panel, {
     initComponent: function() {
         var cfg = {};
         if(!this.store) {
-            this.store = new Ext.data.JsonStore({
+            this.store = new Ext.data.ArrayStore({
                 autoLoad: true,
                 autoDestroy: true,
                 url: this.provider.services,

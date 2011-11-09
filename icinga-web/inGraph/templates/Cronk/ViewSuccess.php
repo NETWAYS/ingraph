@@ -4,11 +4,15 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
     var provider = {
         hosts: "<?php echo $ro->gen('modules.ingraph.provider.hosts'); ?>",
         services: "<?php echo $ro->gen(
-                             'modules.ingraph.provider.services'); ?>",
+            'modules.ingraph.provider.services'); ?>",
         views: "<?php echo $ro->gen('modules.ingraph.provider.views'); ?>",
         plots: "<?php echo $ro->gen('modules.ingraph.provider.plots'); ?>",
         combined: "<?php echo $ro->gen(
-                             'modules.ingraph.provider.combined'); ?>"
+            'modules.ingraph.provider.combined'); ?>",
+        template: "<?php echo $ro->gen(
+            'modules.ingraph.provider.template'); ?>",
+        values: "<?php echo $ro->gen(
+            'modules.ingraph.provider.values'); ?>"
     };
     var host = "<?php echo $rd->getParameter('host'); ?>",
         service = "<?php echo $rd->getParameter('service'); ?>",

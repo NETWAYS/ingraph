@@ -3,14 +3,14 @@
 	<ae:configuration context="web">
 		<routes>
 			<route name=".ingraph" pattern="^/ingraph" stop="false" module="inGraph">
-            
 				<route name=".provider" pattern="^/provider" stop="false" action="Provider" output_type="json">
-                
                     <route name=".hosts" pattern="^/hosts$" action=".Hosts" />
                     <route name=".services" pattern="^/services$" action=".Services" />
                     <route name=".views" pattern="^/views$" action=".Views" />
                     <route name=".plots" pattern="^/plots$" action=".Plots" />
                     <route name=".combined" pattern="^/combined$" action=".Combined" />
+                    <route name=".values" pattern="^/values$" action=".Values" />
+                    <route name=".template" pattern="^/template$" action=".Template" />
                 </route>	
 			</route>
 		</routes>

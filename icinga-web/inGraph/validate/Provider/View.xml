@@ -6,6 +6,10 @@
 >
 	<ae:configuration>
 		<validators>
+            <validator name="view" class="string" required="true">
+                <argument>view</argument>
+                <error>Parameter view is mandatory.</error>
+            </validator>
 		</validators>
 	</ae:configuration>
 </ae:configurations>

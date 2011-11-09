@@ -4,13 +4,8 @@
 	<ae:configuration>
 		
 		<autoload name="inGraphBaseAction">%core.module_dir%/inGraph/lib/action/inGraphBaseAction.class.php</autoload>
-		<autoload name="IcingainGraphBaseModel">%core.module_dir%/inGraph/lib/model/IcingainGraphBaseModel.class.php</autoload>
+        <autoload name="inGraphBaseModel">%core.module_dir%/inGraph/lib/model/inGraphBaseModel.class.php</autoload>
 		<autoload name="inGraphBaseView">%core.module_dir%/inGraph/lib/view/inGraphBaseView.class.php</autoload>
-        
-        <autoload name="inGraph_XMLRPCAction">%core.module_dir%/inGraph/lib/action/XMLRPCAction.class.php</autoload>
-        
-        <autoload name="inGraph_XMLRPCSuccessView">%core.module_dir%/inGraph/lib/view/XMLRPCSuccessView.class.php</autoload>
-        <autoload name="inGraph_XMLRPCErrorView">%core.module_dir%/inGraph/lib/view/XMLRPCErrorView.class.php</autoload>
         
         <autoload name="XMLRPCException">%core.module_dir%/inGraph/lib/exception/XMLRPCException.class.php</autoload>
         <autoload name="XMLRPCClientException">%core.module_dir%/inGraph/lib/exception/XMLRPCClientException.class.php</autoload>

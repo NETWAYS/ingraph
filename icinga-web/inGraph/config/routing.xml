@@ -11,6 +11,7 @@
                     <route name=".combined" pattern="^/combined$" action=".Combined" />
                     <route name=".values" pattern="^/values$" action=".Values" />
                     <route name=".template" pattern="^/template$" action=".Template" />
+                    <route name=".view" pattern="^/view$" action=".View" />
                 </route>	
 			</route>
 		</routes>

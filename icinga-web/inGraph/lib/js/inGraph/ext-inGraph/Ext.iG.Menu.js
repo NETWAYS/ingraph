@@ -1,29 +1,32 @@
 Ext.ns('Ext.iG');
 Ext.iG.Menu = Ext.extend(Ext.Panel, {
     constructor: function(cfg) {
-        this.hostCmp = new Ext.ux.AutoComboBox({
+        this.hostCmp = new Ext.iG.AutoComboBox({
             name: 'host',
-            url: cfg.provider.hosts,
+            store: {
+                url: cfg.provider.hosts
+            },
             plugins: [new Ext.ux.ComboController(
                 {control: {scope: this, cmp: 'serviceCmp'}})],
             emptyText: _('Choose Host')
         });
-        this.serviceCmp = new Ext.ux.AutoComboBox({
+        this.serviceCmp = new Ext.iG.AutoComboBox({
             name: 'service',
-            url: cfg.provider.services,
+            store: {
+                url: cfg.provider.services
+            },
             plugins: [new Ext.ux.ComboDependency(
                 {depends: {scope: this, param: 'host',
                            cmp: 'hostCmp'}})],
             disabled: true,
             emptyText: _('Choose Service')
         });
-        this.viewCmp = new Ext.ux.AutoComboBox({
+        this.viewCmp = new Ext.iG.AutoComboBox({
             name: 'view',
-            url: cfg.provider.views,
-            emptyText: _('Choose View'),
-            storeCfg: {
-                fields: ['view', 'config']
+            store: {
+                url: cfg.provider.views
             },
+            emptyText: _('Choose View'),
             width: 490
         });
         this.startCmp = new Ext.form.DateField({
@@ -44,35 +47,12 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             width: 80,
             cls: 'x-btn-text-left',
             handler: function(self, e) {
-                var host = this.hostCmp.getValue(),
-                    service = this.serviceCmp.getValue();
-                if(host && service) {
-                    Ext.Ajax.request({
-                       url: this.provider.template,
-                       scope: this,
-                       success: function(res) {
-                           var template = null;
-                           if(res.responseText) {
-                               template = Ext.decode(res.responseText);
-                           }
-                           this.fireEvent('plot', self, {
-                               host: this.hostCmp.getValue(),
-                               service: this.serviceCmp.getValue(),
-                               start: this.startCmp.getValue(),
-                               end: this.endCmp.getValue(),
-                               template: template
-                           }, this.timeFrames);
-                       },
-                       params: {host: host, service: service}
-                    });
-                } else {
-                    this.fireEvent('plot', self, {
-                        host: this.hostCmp.getValue(),
-                        service: this.serviceCmp.getValue(),
-                        start: this.startCmp.getValue(),
-                        end: this.endCmp.getValue()
-                    }, this.timeFrames);
-                }
+                this.fireEvent('plot', self, {
+                    host: this.hostCmp.getValue(),
+                    service: this.serviceCmp.getValue(),
+                    start: this.startCmp.getValue(),
+                    end: this.endCmp.getValue()
+                }, this.timeFrames);
             },
             scope: this,
             menu: {
@@ -123,8 +103,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             scope: this,
             handler: function(self, e) {
                 this.fireEvent('plot', self, {
-                    viewConfig: this.viewCmp.store.getById(
-                                    this.viewCmp.getValue()).get('config')
+                    view: this.viewCmp.getValue()
                 });
             }
         });

@@ -14,9 +14,9 @@ Ext.iG.FlotJsonReader = Ext.extend(Ext.data.JsonReader, {
 });
 /**
  * @class Ext.iG.FlotJsonStore
- * @extends Ext.data.JsonStore
+ * @extends Ext.data.Store
  */
-Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
+Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
     keepModifications: true,
     mintimestampProperty: 'min_timestamp',
     maxtimestampProperty: 'max_timestamp',
@@ -49,8 +49,9 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.JsonStore, {
             autoLoad: true,
             idProperty: 'key'
         });
+        cfg.reader = new Ext.iG.FlotJsonReader(cfg);
         Ext.iG.FlotJsonStore.superclass.constructor.call(this, cfg);
-        this.reader = new Ext.iG.FlotJsonReader(cfg);
+        
         this.addEvents('beforeautorefresh');
         if(Ext.isNumber(this.refreshInterval)) {
             this.on({

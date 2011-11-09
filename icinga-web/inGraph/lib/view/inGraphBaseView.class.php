@@ -11,4 +11,12 @@ class inGraphBaseView extends IcingaBaseView {
         	));
         }
     }
+    
+    protected function json_encode($attr) {
+        $attr = $this->getAttribute($attr);
+	    foreach($attr['results'] as &$val) {
+	        $val = array($val);
+	    }
+		return json_encode($attr);
+    }
 }

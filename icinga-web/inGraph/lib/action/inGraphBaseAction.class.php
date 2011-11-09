@@ -25,8 +25,13 @@ class inGraphBaseAction extends IcingaBaseAction {
         return $this->getDefaultViewName();
     }
     
+    public function setError($err) {
+        $this->setAttribute('errorMessage', $err);
+        return 'Error';
+    }
+    
     public function handleError(AgaviRequestDataHolder $rd) {
-        $m = $this->getAttribute('message', false);
+        $m = $this->getAttribute('errorMessage', false);
         if($m === false) {
             $m = array();
             foreach($this->container->getValidationManager()
@@ -35,7 +40,7 @@ class inGraphBaseAction extends IcingaBaseAction {
             }
             $m = implode(' ', $m);
         }
-        $this->setAttribute('message', $m);
+        $this->setAttribute('errorMessage', $m);
         return 'Error';
     }
     

@@ -1,6 +1,6 @@
 <?php 
 
-class inGraph_XMLRPCClientModel extends AppKitBaseModel implements AgaviISingletonModel {
+class inGraph_XMLRPCClientModel extends inGraphBaseModel implements AgaviISingletonModel {
     protected $uriFormat = 'http://%s:%s@%s:%u/';
     
     public function initialize(AgaviContext $ctx, array $params = array()) {

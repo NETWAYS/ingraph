@@ -1,26 +1,35 @@
 <?php 
 
-class inGraph_TemplateModel extends AppKitBaseModel implements AgaviISingletonModel {
+class inGraph_TemplateModel extends inGraphBaseModel implements AgaviISingletonModel {
     
     public function initialize(AgaviContext $ctx, array $params = array()) {
         parent::initialize($ctx, $params);
         
-        $this->readTemplates();
+        $this->read();
     }
     
-	protected function readTemplates() {
-		$it = iterator_to_array(self::RegexRecursiveDirectoryIterator($this->getParameter('dir'), '/\.json$/i'), true);
+    /**
+     * 
+     * TODO(el): Cache content.
+     */
+	protected function read() {
+        $it = iterator_to_array(
+            AppKitIteratorUtil::RegexRecursiveDirectoryIterator(
+                $this->getParameter('dir'), '/\.json$/i'), true);
 		
 		$templates = array();
 		
-		foreach($it as $path => $template) {
-			$content = json_decode(file_get_contents($template->getRealPath()), true);
+		foreach($it as $template) {
+			$content = json_decode(file_get_contents($template->getRealPath()),
+			                       true);
 			if(!$content) {
-				//_MVC_Logger::warn(sprintf('Template %s not readable. Maybe the JSON format is wrong.', $template->getRealPath()));
+                AppKitAgaviUtil::log(
+                    sprintf($this->tm->_('Template %s not readable. Maybe the JSON format is wrong.'),
+                    $template->getRealPath()), AgaviLogger::ERROR);
 				continue;
 			}
 			
-			if($template->getFilename() == $this->getParameter('default')) {
+			if($template->getFilename() === $this->getParameter('default')) {
 				$this->setParameter('defaultContent', $content);
 			} else {
 				$templates[] = ($d = $this->getParameter('defaultContent', false)) ? array_merge($d, $content) : $content;
@@ -45,15 +54,4 @@ class inGraph_TemplateModel extends AppKitBaseModel implements AgaviISingletonMo
 		
 		return $serviceTemplate;
 	}
-	
-	public static function RegexRecursiveDirectoryIterator($dir, $re, $mode=RecursiveRegexIterator::MATCH) {
-		return new RegexIterator(
-			new RecursiveIteratorIterator(
-				new RecursiveDirectoryIterator($dir)
-			),
-			$re,
-			$mode
-		);
-	}
-	
 }

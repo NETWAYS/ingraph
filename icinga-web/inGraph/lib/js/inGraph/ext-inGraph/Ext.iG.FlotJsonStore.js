@@ -113,7 +113,9 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
                 return this.lastOptions.params.start;
             }
         }
-        return this.baseParams.start;
+        return this.baseParams.start !== undefined ?
+               this.baseParams.start :
+               this.getMintimestamp();
     },
     
     getEnd: function() {
@@ -122,7 +124,9 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
                 return this.lastOptions.params.end;
             }
         }
-        return this.baseParams.end;
+        return this.baseParams.end !== undefined ?
+               this.baseParams.end :
+               this.getMaxtimestamp();
     },
     
     getMintimestamp: function() {

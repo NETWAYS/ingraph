@@ -9,8 +9,12 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction {
         foreach($view['panels'] as &$panel) {
             $compiled = array();
             foreach($panel['data'] as &$data) {
-                $plots = $api->getPlots(($host = $data['host']),
-        	                            ($service = $data['service']));
+                try {
+                    $plots = $api->getPlots(($host = $data['host']),
+            	                            ($service = $data['service']));
+                } catch(XMLRPCClientException $e) {
+		            return $this->setError($e->getMessage());
+		        }
                 foreach($data['series'] as $series) {
                     foreach($plots as $plot) {
                         // TODO(el): Validate that re exists
@@ -31,9 +35,5 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction {
         }
         $this->setAttribute('template', $view);
         return $this->getDefaultViewName();
-    }
-    
-    public function executeRead(AgaviRequestDataHolder $rd) {
-        return $this->executeWrite($rd);
     }
 }

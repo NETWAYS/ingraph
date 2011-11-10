@@ -89,17 +89,6 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
         Ext.iG.FlotPanel.superclass.constructor.call(this, cfg);
     },
     
-    initComponent: function() {
-        var cfg = {};
-        cfg.title = String.format(this.titleFormat, {
-            host: this.host,
-            service: this.service,
-            interval: this.title
-        });
-        Ext.apply(this, Ext.apply(this.initialConfig, cfg));
-        Ext.iG.FlotPanel.superclass.initComponent.call(this, cfg);
-    },
-    
     initEvents: function() {
         Ext.iG.FlotPanel.superclass.initEvents.call(this);
         if(this.loadMask) {
@@ -115,18 +104,16 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             single: true,
             load: function(store) {
                 if(store.isEmpty()) {
-                    this.setTitle(this.initialConfig.title + ' (' +
-                                  this.emptyText + ')');
+                    this.setTitle(undefined, true);
                     this.collapse();
                 }
                 store.on({
                     scope: this,
                     load: function(store) {
                         if(store.isEmpty()) {
-                            this.setTitle(this.initialConfig.title + ' (' +
-                                          this.emptyText + ')');
+                            this.setTitle(undefined, true);
                         } else {
-                            this.setTitle(this.initialConfig.title);
+                            this.setTitle();
                         }
                     }
                 });
@@ -267,6 +254,19 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             xtype: 'flotpanel',
             template: this.template
         };
+    },
+    
+    setTitle: function(title, empty) {
+        var titleFormat = this.titleFormat;
+        if(empty === true) {
+            titleFormat += ' (' + this.emptyText + ')';
+        }
+        title = String.format(titleFormat, {
+            host: this.host,
+            service: this.service,
+            interval: this.initialConfig.title
+        });
+        Ext.iG.FlotPanel.superclass.setTitle.call(this, title);
     }
 });
 Ext.reg('flotpanel', Ext.iG.FlotPanel);

@@ -3,11 +3,12 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
     loadMask: true,
     overview: false,
     titleFormat: _('{interval} graph for {host} {service}'),
+    emptyText: _('No Data'),
+    showEmpty: false,
     collapsible: true,
     animCollapse: true,
     height: 220,
     layout: 'vbox',
-    emptyText: _('No Data'),
     layoutConfig: {
         align: 'stretch',
         pack: 'start'
@@ -15,11 +16,11 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
     
     constructor: function(cfg) {
         cfg = cfg || {};
-        var items = [this.flot = new Ext.iG.Flot({
+        var items = [this.flot = new Ext.iG.Flot(Ext.apply({}, {
             store: cfg.store,
             template: cfg.template,
             flex: 1
-        })];
+        }, cfg.flotCfg))];
 
         if(cfg.overview !== undefined ? cfg.overview : this.overview) {
             var height = cfg.overview !== true ? cfg.overview : '25%';
@@ -75,9 +76,12 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             tbar: new Ext.iG.Toolbar({
                 store: cfg.store,
                 activeFrame: cfg.activeFrame,
-                hidden: (cfg.template.panel !== undefined &&
-                         cfg.template.panel.toolbar !== undefined &&
-                         cfg.template.panel.toolbar === false) ? true : false,
+                hidden: (cfg.hideToolbar !== undefined ?
+                         cfg.hideToolbar :
+                         (cfg.template.panel !== undefined &&
+                          cfg.template.panel.toolbar !== undefined &&
+                          cfg.template.panel.toolbar === false) ?
+                          true : false),
                 listeners: {
                     scope: this,
                     beforeprint: function() {
@@ -103,9 +107,11 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             scope: this,
             single: true,
             load: function(store) {
-                if(store.isEmpty()) {
-                    this.setTitle(undefined, true);
-                    this.collapse();
+                if(this.showEmpty === false) {
+                    if(store.isEmpty()) {
+                        this.setTitle(undefined, true);
+                        this.collapse();
+                    }
                 }
                 store.on({
                     scope: this,

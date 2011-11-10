@@ -68,7 +68,7 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                 	Ext.iG.Cronk.setTitle.call(this, p.title);
                 	Ext.state.Manager.set(p.stateId, p.getState());
                 }
-            })
+            });
             this.add(p);
             this.doLayout();
         }

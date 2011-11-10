@@ -111,7 +111,7 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
                 }, this);
                 query = Ext.encode(query);
                 if(this.start || this.end) {
-                    items.push({
+                    items.push(Ext.apply({}, {
                         title: this.start + ' - ' + this.end,
                         host: this.host,
                         service: this.service,
@@ -124,7 +124,7 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
                                 end: this.end
                             }
                         })
-                    });
+                    }, this.panelsCfg));
                 } else {
                     this.timeFrames.each(function(rec) {
                         if(rec.get('enabled')) {

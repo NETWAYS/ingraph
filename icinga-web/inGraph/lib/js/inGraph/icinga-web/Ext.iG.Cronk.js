@@ -4,6 +4,13 @@ Ext.ns('Ext.iG.Cronk');
  * @singleton
  */
 Ext.iG.Cronk = function() {
+    var urlBase = AppKit.util.Config.getBaseUrl() +
+                  '/modules/ingraph/provider/',
+    provider = {
+        template: urlBase + 'template',
+        values: urlBase + 'values'
+    };
+    
     return {
         open: function(cfg) {
             var cronk = {
@@ -22,63 +29,80 @@ Ext.iG.Cronk = function() {
             tabs.add(panel);
             tabs.setActiveTab(panel);
         },
+        
         Window: function(cfg) {
             var win = new Ext.Window({
                 title: cfg.title,
-                height: cfg.height,
                 width: cfg.width,
                 layout: 'fit',
-                items: new Ext.iG.FlotPanel({
-                    header: false,
+                items: new Ext.iG.Panel({
+                    border: false,
+                    panelsCfg: {
+                        height: cfg.height,
+                        header: false,
+                        showEmpty: true,
+                        border: false,
+                        overview: cfg.overview
+                    },
                     host: cfg.host,
                     service: cfg.service,
-                    overview: cfg.overview,
-                    store: new Ext.iG.FlotJsonStore({
-                        url: AppKit.util.Config.getBaseUrl() + '/' +
-                             'modules/ingraph/provider/plots',
-                        baseParams: {
-                            host: cfg.host,
-                            service: cfg.service,
-                            start: cfg.start
-                        }
-                    })
-                })
+                    start: cfg.start,
+                    end: cfg.end,
+                    provider: provider
+                }),
+                tools: [{
+                    id: 'pin',
+                    qtip: _('Open Cronk'),
+                    scope: this,
+                    handler: function(event, toolEl, panel) {
+                        this.open(cfg);
+                    }
+                }]
             });
             win.show();
         },
+        
         Popup: function(cfg) {
             var tip = new Ext.ToolTip({
                 title: cfg.title,
                 target: cfg.target,
                 renderTo: Ext.getBody(),
                 anchor: 'left',
-                items: new Ext.iG.Flot({
-                    width: cfg.width,
-                    height: cfg.height,
-                    loadMask: true,
-                    host: cfg.host,
-                    service: cfg.service,
-                    flotOptions: {
-                        legend: {
-                            show: false
-                        },
-                        yaxis: {
-                            show: false
-                        },
-                        grid: {
-                            hoverable: false,
-                            clickable: false
+                dismissDelay: 0,
+                width: cfg.width,
+                items: new Ext.iG.Panel({
+                    autoScroll: false,
+                    border: false,
+                    panelsCfg: {
+                        header: false,
+                        showEmpty: true,
+                        hideToolbar: true,
+                        height: cfg.height,
+                        flotCfg: {
+                            flotOptions: {
+                                legend: {
+                                    show: false
+                                },
+                                yaxis: {
+                                    show: false
+                                },
+                                grid: {
+                                    hoverable: false,
+                                    clickable: false
+                                }
+                            }
                         }
                     },
-                    store: new Ext.iG.FlotJsonStore({
-                        url: AppKit.util.Config.getBaseUrl() + '/' +
-                             'modules/ingraph/provider/plots',
-                        baseParams: {
-                            host: cfg.host,
-                            service: cfg.service,
-                            start: cfg.start
+                    host: cfg.host,
+                    service: cfg.service,
+                    start: cfg.start,
+                    end: cfg.end,
+                    provider: provider,
+                    listeners: {
+                        __igpanel__complete: function() {
+                            this.ownerCt.doLayout();
                         }
-                    })
+                    }
                 }),
                 listeners: {
                     hide: function(self) {
@@ -87,6 +111,12 @@ Ext.iG.Cronk = function() {
                 }
             });
             tip.show();
+        },
+        
+        setTitle: function(title) {
+            this.getParent().setTitle(title);
+            Ext.fly(this.getParent().tabEl).child(
+                    'span.x-tab-strip-text', true).qtip = title;
         }
     };
 }();

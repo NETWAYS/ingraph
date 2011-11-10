@@ -355,7 +355,10 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 }, this);
                 this.autoYAxes = false;
             }
-            this.store.query('enabled', true).each(function(rec) {
+            this.store.each(function(rec) {
+                if(rec.get('enabled') !== true) {
+                    return;
+                }
                 var unit = rec.get('unit');
                 Ext.each(this.flotOptions.yaxes, function(yaxis, i) {
                     if(yaxis.unit === rec.get('unit')) {
@@ -364,7 +367,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                     }
                 });
                 var i = this.flotOptions.yaxes.length;
-                // Setting yaxis on series via template, plus if there's no
+                // Setting yaxis on series via template plus if there's no
                 // yaxes configuration present breaks this code.
                 if(rec.get('yaxis') === undefined) {
                     this.flotOptions.yaxes.push({
@@ -382,17 +385,53 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 var id = series.host + series.service + series.plot +
                          series.type,
                 rec = this.store.getById(id);
+                if(series.convert !== undefined) {
+                    try {
+                        var convert = Ext.decode(series.convert, true);
+                        if(Ext.isFunction(convert)) {
+                            var scope = {};
+                            if(this.snapshot === undefined) {
+                                this.snapshot = this.store.data.getRange().map(
+                                    function(rec) {
+                                        return {
+                                            host: rec.data.host,
+                                            service: rec.data.service,
+                                            plot: rec.data.plot,
+                                            type: rec.data.type,
+                                            data: rec.data.data
+                                        };
+                                    });
+                            }
+                            Ext.each(rec.data.data, function(xy) {
+                                y = convert.call(scope, xy[1], xy[0],
+                                                this.snapshot);
+                                if(y !== xy[1] && (Ext.isNumber(y) ||
+                                   y === null)) {
+                                    xy[1] = y;
+                                }
+                            }, this);
+                        }
+                    } catch(e) {
+                        console.log(e);
+                    }
+                }
                 Ext.apply(rec.data, series);
             }, this);
+            if(this.snapshot !== undefined) {
+                delete this.snapshot;
+            }
         }
     },
     
     plot: function(id, series) {
         if(this.fireEvent('beforeplot', this) !== false) {
             if(series === undefined) {
-                series = this.store.query(
-                    'enabled', true).getRange().map(function(rec) {
-                        return rec.data;});
+                series = [];
+                this.store.each(function(rec) {
+                    if(rec.get('enabled') === true) {
+                        series.push(rec.data);
+                    }
+                });
             }
             if(id === undefined) {
                 id = this.id;

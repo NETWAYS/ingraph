@@ -135,5 +135,17 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
     
     getOptions: function() {
         return this.reader.jsonData[this.optionsProperty];
+    },
+    
+    isEmpty: function() {
+        if(this.reader.jsonData.charts.length === 0) {
+            return true;
+        }
+        var empty = Ext.each(this.reader.jsonData.charts, function(chart) {
+            if(chart.data.length === 0) {
+                return false;
+            }
+        });
+        return empty !== undefined ? true : false;
     }
 });

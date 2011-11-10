@@ -2,11 +2,12 @@ Ext.ns('Ext.iG');
 Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
     loadMask: true,
     overview: false,
-    titleFormat: '{interval} ' + _('graph for') + ' {host} {service}',
+    titleFormat: _('{interval} graph for {host} {service}'),
     collapsible: true,
     animCollapse: true,
     height: 220,
     layout: 'vbox',
+    emptyText: _('No Data'),
     layoutConfig: {
         align: 'stretch',
         pack: 'start'
@@ -89,12 +90,14 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
     },
     
     initComponent: function() {
-        Ext.iG.FlotPanel.superclass.initComponent.call(this);
-        this.title = String.format(this.titleFormat, {
+        var cfg = {};
+        cfg.title = String.format(this.titleFormat, {
             host: this.host,
             service: this.service,
             interval: this.title
         });
+        Ext.apply(this, Ext.apply(this.initialConfig, cfg));
+        Ext.iG.FlotPanel.superclass.initComponent.call(this, cfg);
     },
     
     initEvents: function() {
@@ -107,6 +110,28 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                 }, this.loadMask)
             );
         }
+        this.store.on({
+            scope: this,
+            single: true,
+            load: function(store) {
+                if(store.isEmpty()) {
+                    this.setTitle(this.initialConfig.title + ' (' +
+                                  this.emptyText + ')');
+                    this.collapse();
+                }
+                store.on({
+                    scope: this,
+                    load: function(store) {
+                        if(store.isEmpty()) {
+                            this.setTitle(this.initialConfig.title + ' (' +
+                                          this.emptyText + ')');
+                        } else {
+                            this.setTitle(this.initialConfig.title);
+                        }
+                    }
+                });
+            }
+        });
         if(this.overview) {
             this.overview.on({
                 scope: this,

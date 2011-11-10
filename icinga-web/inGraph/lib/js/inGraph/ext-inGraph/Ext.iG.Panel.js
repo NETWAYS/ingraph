@@ -102,7 +102,7 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
             var items = [];
             cfg.title = this.host + ' - ' + this.service;
             var callback = function(template) {
-                var query = {}
+                var query = {};
                 query[this.host] = {};
                 query[this.host][this.service] = {};
                 Ext.each(template.series, function(series) {

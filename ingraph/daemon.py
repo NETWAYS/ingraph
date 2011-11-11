@@ -3,6 +3,7 @@ import os
 import signal
 import atexit
 import errno
+import fcntl
 
 
 __all__ = ['UnixDaemon']
@@ -16,6 +17,8 @@ class UnixDaemon(object):
         self.stdout = stdout
         self.stderr = stderr
         self.pidfile = pidfile
+        self.pidfp = None
+        self.pidlocked = False
         self.chdir = chdir
         self.detach = detach
         self.uid = uid
@@ -53,19 +56,49 @@ class UnixDaemon(object):
         pass
 
     def _delpid(self):
+        if not self.pidlocked:
+            raise Exception('Trying to unlink PID file while not holding lock.')
+
         try:
-            os.remove(self.pidfile)
+            os.unlink(self.pidfile)
         except OSError:
             pass
 
-    def _getpid(self):
+    def _openpidfile(self):
         try:
-            pf = open(self.pidfile, 'rb')
-            pid = int(pf.readline().strip())
-            pf.close()
+            self.pidfp = open(self.pidfile, 'r+')
         except IOError:
-            pid = None
-        return pid
+            self.pidfp = open(self.pidfile, 'w+')
+
+        try:
+            fcntl.flock(self.pidfp.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.pidlocked = True
+        except:
+            pass
+
+    def _getpid(self):
+        if self.pidlocked:
+            return None
+
+        try:
+            self.pidfp.seek(0, os.SEEK_SET)
+            pidstr = self.pidfp.readline()
+        except IOError:
+            return True
+
+        try:
+            return int(pidstr.strip())
+        except ValueError:
+            return True
+
+    def _writepid(self):
+        if not self.pidlocked:
+            raise Exception('Trying to write PID file while not holding lock.')
+
+        self.pidfp.seek(0, os.SEEK_SET)
+        self.pidfp.truncate()
+        self.pidfp.write(str(os.getpid()))
+        self.pidfp.flush()
     
     def _redirect_stream(self, source, target):
         try:
@@ -75,6 +108,8 @@ class UnixDaemon(object):
         os.dup2(targetfd, source.fileno())
 
     def start(self):
+        self._openpidfile()
+
         pid = self._getpid()
         if pid:
             sys.stderr.write("pidfile %s already exists. Daemon already "
@@ -102,10 +137,8 @@ class UnixDaemon(object):
         
         signal.signal(signal.SIGTERM, self._SIGTERM)
         atexit.register(self._atexit)
-        
-        pf = open(self.pidfile, 'w+b')
-        pf.write(str(os.getpid()))
-        pf.close()
+ 
+        self._writepid()       
         
         self.run()
 

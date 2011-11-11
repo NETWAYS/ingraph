@@ -5,7 +5,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     absolute: true,
     cls: 'flot',
     autoYAxes: true,
-
     defaultFlotOptions: {
         legend: {
             show: true,
@@ -38,19 +37,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             mode: 'x'
         }
     },
-    
-    constructor: function(cfg) {
-        cfg = cfg || {};
-        Ext.applyIf(cfg, {
-            flotOptions: {},
-            id: Ext.id(null, 'flot-container'),
-            zooms: []
-        });
-        Ext.iG.Flot.superclass.constructor.call(this, cfg);
-        this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions,
-                                    this.flotOptions);
-    
-    },
+    flotOptions: {},
+    zooms: [],
     
     initComponent: function() {
         Ext.iG.Flot.superclass.initComponent.call(this);
@@ -66,6 +54,17 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             'zoomout',
             'contextmenu'
         );
+        this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions,
+                                    this.flotOptions);
+        if(Ext.isObject(this.template)) {
+            if(Ext.isObject(this.template.flot)) {
+                iG.merge(true, this.flotOptions, this.template.flot);
+            }
+            if(this.template.generic !== undefined &&
+               Ext.isNumber(this.template.generic.refreshInterval)) {
+                this.store.startRefresh(this.template.generic.refreshInterval);
+            }
+        }
         this.bindStore(this.store, true);
     },
     
@@ -81,7 +80,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 removeMask: true
             }, this.loadMask));
         }
-
         $('#' + this.id).bind('plothover', function(event, pos, item) {
             var self = Ext.getCmp(event.target.id);
             self.onPlotHover(item, pos);
@@ -339,13 +337,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     applyTemplate: function() {
-        if(Ext.isObject(this.template.flot)) {
-            iG.merge(true, this.flotOptions, this.template.flot);
-        }
-        if(this.template.generic !== undefined &&
-           Ext.isNumber(this.template.generic.refreshInterval)) {
-            this.store.startRefresh(this.template.generic.refreshInterval);
-        }
         if(this.autoYAxes) {
             if(this.flotOptions.yaxes === undefined) {
                this.flotOptions.yaxes = [];

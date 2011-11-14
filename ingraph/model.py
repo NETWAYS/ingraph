@@ -915,6 +915,8 @@ datapoint = Table('datapoint', metadata,
     Column('crit_upper', Numeric(precision=20, scale=5, asdecimal=False), nullable=True),
     Column('crit_type', Enum('inside', 'outside', name='crit_type_enum'), nullable=True),
     Column('count', Integer, nullable=False),
+
+    mysql_engine='InnoDB'
 )
 
 Index('idx_dp_1', datapoint.c.timeframe_id, datapoint.c.timestamp)
@@ -1091,7 +1093,9 @@ comment = Table('comment', metadata,
     Column('timestamp', Integer, nullable=False, primary_key=True),
     Column('comment_timestamp', Integer, nullable=False),
     Column('author', String(128), nullable=False),
-    Column('text', String(512), nullable=False)
+    Column('text', String(512), nullable=False),
+
+    mysql_engine='InnoDB'
 )
 
 class Comment(ModelBase):
@@ -1180,7 +1184,9 @@ pluginstatus = Table('pluginstatus', metadata,
     Column('id', Integer, Sequence('pluginstatus_id_seq'), nullable=False, primary_key=True),
     Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False, primary_key=True),
     Column('timestamp', Integer, nullable=False, primary_key=True),
-    Column('status', Enum('warning', 'critical', name='status_enum'), nullable=False)
+    Column('status', Enum('warning', 'critical', name='status_enum'), nullable=False),
+
+    mysql_engine='InnoDB'
 )
 
 class PluginStatus(ModelBase):

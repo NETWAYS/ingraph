@@ -58,7 +58,7 @@ def plugin_result(status, message, perfdata=[]):
     sys.exit(exitstatus[status])
 
 def main():
-    usage = "Usage: %%prog [options]"
+    usage = "Usage: %prog [options]"
     parser = optparse.OptionParser(usage=usage,
                                    version='%%prog %s' % ingraph.__version__)
     parser.add_option('-d', '--chdir', dest='chdir', metavar='DIR',
@@ -85,9 +85,9 @@ def main():
                       metavar='SECOND_END', help='end of the second interval ' +
                       '(relative to the current time, in hours)')
     parser.add_option('-w', '--warning', dest='warning', default=10,
-                      metavar='WARNING', help='warning threshold (default: 10%)')
+                      metavar='WARNING', help='warning threshold, in % (default: 10)')
     parser.add_option('-c', '--critical', dest='critical', default=20,
-                      metavar='CRITICAL', help='critical threshold (default: 20%)')
+                      metavar='CRITICAL', help='critical threshold, in % (default: 20)')
     (options, args) = parser.parse_args()
 
     if options.chdir:

@@ -70,13 +70,32 @@ class UnixDaemon(object):
         except IOError:
             self.pidfp = open(self.pidfile, 'w+')
 
-        try:
-            fcntl.flock(self.pidfp.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-            self.pidlocked = True
-        except:
-            pass
+        self._waitpidfile(False)
+
+    def _waitpidfile(self, blocking=True):
+        if not self.pidlocked:
+            try:
+                flags = fcntl.LOCK_EX
+
+                if not blocking:
+                    flags |= fcntl.LOCK_NB
+
+                fcntl.flock(self.pidfp.fileno(), flags)
+                self.pidlocked = True
+            except:
+                pass
+
+    def _closepidfile(self):
+        if self.pidfp != None:
+            self.pidfp.close()
+
+        self.pidfp = None
+        self.pidlocked = False
 
     def _getpid(self):
+        if self.pidfp == None:
+            self._openpidfile()
+
         if self.pidlocked:
             return None
 
@@ -108,8 +127,6 @@ class UnixDaemon(object):
         os.dup2(targetfd, source.fileno())
 
     def start(self):
-        self._openpidfile()
-
         pid = self._getpid()
         if pid:
             sys.stderr.write("pidfile %s already exists. Daemon already "
@@ -142,20 +159,24 @@ class UnixDaemon(object):
         
         self.run()
 
-    def stop(self):
+    def stop(self, ignore_error=False):
         pid = self._getpid()
-        if not pid:
+        if not pid and not ignore_error:
             sys.stderr.write("pidfile %s does not exist. Daemon not running?\n"
                              % self.pidfile)
             sys.exit(1)
+
         try:
-            os.kill(pid, signal.SIGTERM)
+            if pid and pid != True:
+                os.kill(pid, signal.SIGTERM)
+                self._waitpidfile()
         except OSError, e:
             if e.errno != errno.ESRCH:
                 raise e
 
     def restart(self):
-        self.stop()
+        self.stop(True)
+        self._closepidfile()
         self.start()
 
     def status(self):

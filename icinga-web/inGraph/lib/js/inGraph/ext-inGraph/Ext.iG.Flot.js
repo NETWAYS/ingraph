@@ -337,42 +337,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     applyTemplate: function() {
-        if(this.autoYAxes) {
-            if(this.flotOptions.yaxes === undefined) {
-               this.flotOptions.yaxes = [];
-            } else {
-                Ext.each(this.flotOptions.yaxes, function(yaxis) {
-                    yaxis.tickFormatter = this.yTickFormatter;
-                }, this);
-                this.autoYAxes = false;
-            }
-            this.store.each(function(rec) {
-                if(rec.get('enabled') !== true) {
-                    return;
-                }
-                var unit = rec.get('unit');
-                Ext.each(this.flotOptions.yaxes, function(yaxis, i) {
-                    if(yaxis.unit === rec.get('unit')) {
-                        rec.set('yaxis', i+1); // Flot's axis index starts
-                                               // with 1.
-                    }
-                });
-                var i = this.flotOptions.yaxes.length;
-                // Setting yaxis on series via template plus if there's no
-                // yaxes configuration present breaks this code.
-                if(rec.get('yaxis') === undefined) {
-                    this.flotOptions.yaxes.push({
-                        position: i % 2 === 0 ? 'left' : 'right',
-                        unit: unit,
-                        label: rec.get('label'),
-                        tickFormatter: this.yTickFormatter,
-                        min: unit === 'percent' ? 0 : null,
-                        max: unit === 'percent' ? 100 : null
-                    });
-                    rec.set('yaxis', i+1);
-                }
-            }, this);
-        }
         if(Ext.isArray(this.template.series)) {
             Ext.each(this.template.series, function(series) {
                 var id = series.host + series.service + series.plot +
@@ -413,6 +377,56 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             if(this.snapshot !== undefined) {
                 delete this.snapshot;
             }
+        }
+        if(this.autoYAxes) {
+            if(this.flotOptions.yaxes === undefined) {
+               this.flotOptions.yaxes = [];
+            } else {
+                Ext.each(this.flotOptions.yaxes, function(yaxis) {
+                    yaxis.tickFormatter = this.yTickFormatter;
+                }, this);
+                this.autoYAxes = false;
+            }
+            var min = 0;
+            this.store.each(function(rec) {
+                if(rec.get('enabled') !== true) {
+                    return;
+                }
+                // TODO(el): Process on server-side?
+                var yvalues = [];
+                Ext.each(rec.data.data, function(xy) {
+                    if((y = xy[1]) !== null) {
+                        yvalues.push(y);
+                    }
+                });
+                var seriesmin = yvalues.length ?
+                                Math.min.apply(Math, yvalues) :
+                                null;
+                if(seriesmin !== null && seriesmin < min) {
+                    min = seriesmin;
+                }
+                var unit = rec.get('unit');
+                Ext.each(this.flotOptions.yaxes, function(yaxis, i) {
+                    if(yaxis.unit === rec.get('unit')) {
+                        rec.set('yaxis', i+1); // Flot's axis index starts
+                                               // with 1.
+                    }
+                });
+                var i = this.flotOptions.yaxes.length;
+                // Setting yaxis on series via template plus if there's no
+                // yaxes configuration present breaks this code.
+                if(rec.get('yaxis') === undefined) {
+                    this.flotOptions.yaxes.push({
+                        position: i % 2 === 0 ? 'left' : 'right',
+                        unit: unit,
+                        label: rec.get('label'),
+                        tickFormatter: this.yTickFormatter,
+                        min: unit === 'percent' ? 0 : min,
+                        max: unit === 'percent' ? 100 : null
+                    });
+                    rec.set('yaxis', i+1);
+                }
+            }, this);
         }
     },
     

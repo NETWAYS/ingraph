@@ -290,9 +290,9 @@ class BackendRPCMethods(object):
                 same = True
             elif prev == None or same:
                 same = False
-                result.append(nvpair)
+                result.append({'x': nvpair[0], 'y': nvpair[1]})
             else:
-                result.append(nvpair[1])
+                result.append({'y': nvpair[1]})
 
             prev = nvpair
 

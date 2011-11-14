@@ -365,7 +365,9 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                         position: i % 2 === 0 ? 'left' : 'right',
                         unit: unit,
                         label: rec.get('label'),
-                        tickFormatter: this.yTickFormatter
+                        tickFormatter: this.yTickFormatter,
+                        min: unit === 'percent' ? 0 : null,
+                        max: unit === 'percent' ? 100 : null
                     });
                     rec.set('yaxis', i+1);
                 }

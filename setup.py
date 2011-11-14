@@ -8,7 +8,8 @@ from setuptools import setup
 import ingraph
 
 console_scripts = ['ingraphd = ingraph.bin.ingraphd:main',
-                   'ingraph-collectord = ingraph.bin.ingraph_collectord:main']
+                   'ingraph-collectord = ingraph.bin.ingraph_collectord:main',
+                   'check_ingraph = ingraph.bin.check_ingraph:main']
 setup(name=ingraph.__name__,
       version=ingraph.__version__,
       description="Data collection and graphing utility for monitoring systems",

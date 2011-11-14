@@ -238,6 +238,9 @@ class BackendRPCMethods(object):
                                    'service': hostservice_obj.service.name,
                                    'plot': plot_obj.name, 'type': type,
                                    'label': label, 'unit': plot_obj.unit,
+                                   'start_timestamp': dps['start_timestamp'],
+                                   'end_timestamp': dps['end_timestamp'],
+                                   'granularity': dps['granularity'],
                                    'data': data})
 
         et = time.time()
@@ -245,9 +248,8 @@ class BackendRPCMethods(object):
         print "Got plot values in %f seconds" % (et - st)
         return result
 
-    def getPlotValues2(self, query,
-                      start_timestamp=None, end_timestamp=None,
-                      granularity=None, null_tolerance=0):
+    def getPlotValues2(self, query, start_timestamp=None, end_timestamp=None,
+                       granularity=None, null_tolerance=0):
         st = time.time()
 
         charts = []
@@ -277,7 +279,35 @@ class BackendRPCMethods(object):
         
         print "Got filtered plot values in %f seconds" % (et - st)
         return result
+
+    def _optimizePlot(self, plot):
+        prev = None
+        same = False
+        result = []
+
+        for nvpair in plot:
+            if prev != None and prev[1] == nvpair[1]:
+                same = True
+            elif prev == None or same:
+                same = False
+                result.append(nvpair)
+            else:
+                result.append(nvpair[1])
+
+            prev = nvpair
+
+        return result
+
+    def getPlotValues3(self, query, start_timestamp=None, end_timestamp=None,
+                       granularity=None, null_tolerance=0):
+        data = self.getPlotValues2(query, start_timestamp, end_timestamp,
+                                   granularity, null_tolerance)
+
+        for chart in data['charts']:
+            chart['data'] = self._optimizePlot(chart['data'])
  
+        return data
+
     def shutdown(self):
         global shutdown_server
         

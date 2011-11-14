@@ -129,6 +129,13 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
                this.getMaxtimestamp();
     },
     
+    getQuery: function() {
+        if(this.lastOptions.query !== undefined) {
+            return this.lastOptions.query;
+        }
+        return this.baseParams.query;
+    },
+    
     getMintimestamp: function() {
         return this.reader.jsonData[this.mintimestampProperty];
     },

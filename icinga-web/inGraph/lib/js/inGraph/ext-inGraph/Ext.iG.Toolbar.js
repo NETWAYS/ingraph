@@ -1,14 +1,16 @@
+Ext.ns('Ext.iG');
 /**
  * @class Ext.iG.Toolbar
  * @extends Ext.Toolbar
  */
-Ext.ns('Ext.iG');
 Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
     firstText: _(''),
     prevText: _(''),
     nextText: _(''),
     lastText: _(''),
     refreshText: _(''),
+    downloadText: _(''),
+    printText: _(''),
     
     constructor: function(cfg) {
         var items = [this.first = new Ext.Toolbar.Button({
@@ -101,16 +103,6 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             scope: this,
             handler: function() {
                 Ext.Msg.alert(_('Settings'), _('Sorry, not yet implemented'));
-                /*var settings = new Ext.Window({
-                    width: 400,
-                    height: 400,
-                    layout: 'fit',
-                    autoScroll: true,
-                    items: new Ext.iG.PanelSettings({
-                        store: this.store
-                    })
-                });
-                settings.show();*/
             }
         }),
         this.comments = new Ext.Toolbar.Button({
@@ -120,9 +112,30 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
                 Ext.Msg.alert(_('Comments'), _('Sorry, not yet implemented'));
             }
         }), '->',
+        this.download = new Ext.Toolbar.Button({
+            iconCls: 'ingraph-icon-document-export',
+            tooltip: this.downloadText,
+            menu: {
+                defaults: {
+                    scope: this
+                },
+                items: [{
+                    text: 'XML',
+                    handler: function() {
+                        this.doDownload('xml');
+                    }
+                }, {
+                   text: 'CSV',
+                   handler: function() {
+                       this.doDownload('csv');
+                   }
+                }]
+            },
+        }),
         this.print = new Ext.Toolbar.Button({
             iconCls: 'icon-print',
             scope: this,
+            tooltip: this.printText,
             handler: function() {
                 if(this.fireEvent('beforeprint', this) !== false) {
                     window.print();
@@ -292,5 +305,41 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
                 }
             });
         }
+    },
+    
+    doDownload: function(ot) {
+        var body = Ext.getBody();
+        var frame = body.createChild({
+            tag: 'iframe',
+            cls: 'x-hidden'
+        });
+        var form = body.createChild({
+            tag: 'form',
+            cls: 'x-hidden',
+            action: this.store.url + '.' + ot,
+            method: 'POST',
+            children: [{
+                type: 'text',
+                tag: 'input',
+                cls: 'x-hidden',
+                name: 'start',
+                value: this.store.getStart()
+            }, {
+                type: 'text',
+                tag: 'input',
+                cls: 'x-hidden',
+                name: 'end',
+                value: this.store.getEnd()
+            }, {
+                type: 'text',
+                tag: 'input',
+                cls: 'x-hidden',
+                name: 'query',
+                value: Ext.util.Format.htmlEncode(this.store.getQuery())
+            }]
+        });
+        frame.appendChild(form);
+        form.dom.submit();
+        Ext.destroy(form, frame);
     }
 });

@@ -11,3 +11,9 @@
 .icon-zoom-out {
     background-image: url(../images/icons/magnifier-zoom-out.png) !important;
 }
+
+.ingraph-icon-document-export {
+    background-image: url(../images/icons/document-export.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}

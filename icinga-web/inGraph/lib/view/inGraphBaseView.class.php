@@ -19,4 +19,16 @@ class inGraphBaseView extends IcingaBaseView {
 	    }
 		return json_encode($attr);
     }
+    
+    public function executeCsv(AgaviRequestDataHolder $rd) {
+        if(null !== ($err = $this->getAttribute('errorMessage', null))) {
+            $this->getContainer()->getResponse()->setHttpStatusCode(500);
+        }
+    }
+    
+    public function executeXml(AgaviRequestDataHolder $rd) {
+        if(null !== ($err = $this->getAttribute('errorMessage', null))) {
+            $this->getContainer()->getResponse()->setHttpStatusCode(500);
+        }
+    }
 }

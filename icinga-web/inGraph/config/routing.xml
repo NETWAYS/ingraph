@@ -4,13 +4,13 @@
 		<routes>
 			<route name=".ingraph" pattern="^/ingraph" stop="false" module="inGraph">
 				<route name=".provider" pattern="^/provider" stop="false" action="Provider" output_type="json">
+                    <route name="ot_xml" pattern=".xml$" cut="true" stop="false" output_type="xml" />
+                    <route name="ot_rss" pattern=".csv$" cut="true" stop="false" output_type="csv" />
                     <route name=".hosts" pattern="^/hosts$" action=".Hosts" />
                     <route name=".services" pattern="^/services$" action=".Services" />
-                    <route name=".views" pattern="^/views$" action=".Views" />
-                    <route name=".plots" pattern="^/plots$" action=".Plots" />
-                    <route name=".combined" pattern="^/combined$" action=".Combined" />
-                    <route name=".values" pattern="^/values$" action=".Values" />
                     <route name=".template" pattern="^/template$" action=".Template" />
+                    <route name=".views" pattern="^/views$" action=".Views" />
+                    <route name=".values" pattern="^/values$" action=".Values" />
                     <route name=".view" pattern="^/view$" action=".View" />
                 </route>	
 			</route>

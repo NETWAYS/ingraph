@@ -29,20 +29,6 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             items.push(this.overview = new Ext.iG.Flot({
                 template: cfg.template,
                 flotOptions: {
-                    xaxis: {
-                        ticks: function(axis) {
-                            var ticks = [],
-                                c = 4;
-                            if(c) {
-                                var range = axis.max - axis.min,
-                                    delta = range / (c-1);
-                                for(var i=0; i <= c; ++i) {
-                                    ticks.push(axis.min + delta*i);
-                                }
-                            }
-                            return ticks;
-                        }
-                    },
                     yaxis: {
                         show: false
                     },

@@ -56,6 +56,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         );
         this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions,
                                     this.flotOptions);
+        this.flotOptions.xaxis.tickFormatter = this.xTickFormatter;
         if(Ext.isObject(this.template)) {
             if(Ext.isObject(this.template.flot)) {
                 iG.merge(true, this.flotOptions, this.template.flot);
@@ -309,9 +310,30 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
+    xTickFormatter: function(v, axis) {
+        if(axis.ticks.length === 0) {
+            this.lastDate = null;
+        }
+        if(v < this.min || v > this.max) {
+            // Flot skips them too.
+            return v;
+        }
+        var d = new Date(v);
+        var fmt = '%b %d %y %h:%M';
+        if(this.lastDate !== null) {
+            if(this.lastDate.getFullYear() === d.getFullYear() &&
+               this.lastDate.getMonth() === d.getMonth() &&
+               this.lastDate.getDate() === d.getDate()) {
+                fmt = '%h:%M';
+            }
+        }
+        this.lastDate = d;
+        return $.plot.formatDate(d, fmt, this.monthNames);
+    },
+    
     yTickFormatter: function(v, axis) {
-        if(axis.rawTicks === undefined) {
-            axis.rawTicks = axis.tickGenerator(axis);
+        if(axis.ticks.length === 0) {
+            this.rawTicks = axis.tickGenerator(axis);
         }
         if(this.units === undefined) {
             this.units = {
@@ -321,7 +343,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 c: Ext.iG.Util.formatCounter
             };
         }
-        if(v === axis.rawTicks.last()  && this.label !== undefined) {
+        if(v === this.rawTicks.last()  && this.label !== undefined) {
             return this.label;
         }
         if(v > 0 && this.units[this.unit] !== undefined) {

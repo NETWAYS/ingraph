@@ -162,8 +162,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 html += Ext.iG.Flot.tooltipTemplate.apply({
                     label: series.label,
                     x: series.xaxis.tickFormatter(nx, series.xaxis),
-                    y: series.yaxis.tickFormatter(ny, series.yaxis),
-                    unit: series.unit
+                    y: series.yaxis.tickFormatter(ny, series.yaxis)
                 });
             }
         }, this);
@@ -314,14 +313,21 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         if(axis.rawTicks === undefined) {
             axis.rawTicks = axis.tickGenerator(axis);
         }
-        if(v === axis.rawTicks.last()) {
-            // If this did not auto add yaxes, unit and label may be undefined
-            // as its definition is left to the user.
-            return axis.options.label !== undefined ?
-                   (axis.options.unit !== undefined ?
-                    axis.options.label + ' (' + axis.options.unit + ')' :
-                    axis.options.label) :
-                   v.toFixed(axis.tickDecimals);
+        if(this.units === undefined) {
+            this.units = {
+                byte: Ext.iG.Util.formatByte,
+                time: Ext.iG.Util.formatTime,
+                percent: Ext.iG.Util.formatPercent,
+                c: Ext.iG.Util.formatCounter
+            };
+        }
+        if(v === axis.rawTicks.last()  && this.label !== undefined) {
+            return this.label;
+        }
+        if(v > 0 && this.units[this.unit] !== undefined) {
+            var callback = this.units[this.unit],
+                format = callback.call(this, v);
+            return format.value.toFixed(axis.tickDecimals) + ' ' + format.unit;
         }
         return v.toFixed(axis.tickDecimals);
     },
@@ -513,7 +519,7 @@ Ext.reg('flot', Ext.iG.Flot);
 Ext.iG.Flot.tooltipTemplate = new Ext.Template(
         '<div class = "iG-tooltip">',
         '<h3>{label}</h3>',
-        '<div>{x} : {y} {unit}</div>',
+        '<div>{x} : {y}</div>',
         '</div>', {
         compiled: true,
         disableFormats: true

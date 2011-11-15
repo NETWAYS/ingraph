@@ -321,6 +321,9 @@ class BackendRPCMethods(object):
     def addComment(self, host, parent_service, service, timestamp, author,
                    text):
         host_obj = self._createHost(self.engine, host)
+
+        if parent_service == '':
+            parent_service = None
         
         if parent_service != None:
             parent_service_obj = self._createService(self.engine,

@@ -224,6 +224,9 @@ class BackendRPCMethods(object):
                 self.engine, plot_objs, start_timestamp,end_timestamp,
                 granularity, null_tolerance)
 
+            if not dps:
+                continue
+
             comments.extend(dps['comments'])
             statusdata.extend(dps['statusdata'])
 

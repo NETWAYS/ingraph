@@ -22,7 +22,7 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
     },
     
     initEvents: function() {
-        Ext.iG.Panel.superclass.initEvents.apply(this, arguments);
+        Ext.iG.Panel.superclass.initEvents.call(this);
         this.addEvents(
             '__igpanel__complete',
             '__igpanel__fail'

@@ -66,6 +66,7 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
         }, {
             text: _('Cancel'),
             iconCls: 'icinga-icon-cancel',
+            scope: this,
             handler: this.cancel
         }];
         if(this.comment_id !== undefined) {

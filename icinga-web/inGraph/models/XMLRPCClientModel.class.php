@@ -35,7 +35,7 @@ class inGraph_XMLRPCClientModel extends inGraphBaseModel implements AgaviISingle
                curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200) {
                 $e = $response === false ? curl_error($ch) : $response;
                 curl_close($ch);
-                throw new XMLRPCClientException(sprintf('cURL: %s.', $e));
+                throw new XMLRPCClientException('cURL: ' . $e);
             }
             curl_close($ch);
             $response = $this->decode_response($response);
@@ -57,12 +57,11 @@ class inGraph_XMLRPCClientModel extends inGraphBaseModel implements AgaviISingle
             $dr = xmlrpc_decode($dr, 'utf-8');
         }
         if(!is_array($dr)) {
-            throw new XMLRPCClientException(
-                'XMLRPC response: Unabled to read, expected array: ' . $response);
+            $dr = array($dr);
         }
         if(xmlrpc_is_fault($dr)) {
             throw new XMLRPCClientException(
-                "XMLRPC response: ${dr['faultCode']}: ${dr['faultString']}.");
+                "XMLRPC response: ${dr['faultCode']}: ${dr['faultString']}");
         }
         return $dr;
     }

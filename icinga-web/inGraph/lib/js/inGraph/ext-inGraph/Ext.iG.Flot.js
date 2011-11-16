@@ -355,11 +355,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         if(axis.ticks.length === 0) {
             this.lastDate = null;
         }
-        if(v < this.min || v > this.max) {
-            // Flot skips them too.
-            return v;
-        }
         var d = new Date(v);
+        d = new Date(v - d.getTimezoneOffset()*60*1000);
         var fmt = '%b %d %y %h:%M';
         if(this.lastDate !== null) {
             if(this.lastDate.getFullYear() === d.getFullYear() &&

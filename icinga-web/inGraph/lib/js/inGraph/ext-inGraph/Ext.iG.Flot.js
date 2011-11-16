@@ -39,6 +39,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     },
     flotOptions: {},
     zooms: [],
+    commentCtxEnabled: false,
     
     initComponent: function() {
         Ext.iG.Flot.superclass.initComponent.call(this);
@@ -258,9 +259,49 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
-    onPlotClick: function(item) {
+    enableCommentCtx: function() {
+        this.commentCtxEnabled = true;
+        this.el.setStyle('cursor', 'pointer');
+    },
+    
+    disableCommentCtx: function() {
+        this.commentCtxEnabled = false;
+        this.el.setStyle('cursor', 'default');
+    },
+    
+    onPlotClick: function(item, pos) {
         if(this.fireEvent('plotclick', this, item) !== false) {
-           console.log(item);
+            if(this.commentCtxEnabled === true) {
+                var hosts = [], services = [];
+                this.store.getHostsAndServices(hosts, services);
+                var cfg = {
+                    minDate: new Date(this.store.getStart()*1000),
+                    maxDate: new Date(this.store.getEnd()*1000),
+                    hosts: hosts,
+                    services: services,
+                    listeners: {
+                        scope: this,
+                        __igcomment__: function() {
+                            this.store.load();
+                        }
+                    }
+                };
+                if(item) {
+                    Ext.apply(cfg, {
+                        comment_host: item.series.host,
+                        comment_service: item.series.service,
+                        comment_timestamp: item.datapoint[0]
+                    });
+                } else {
+                    Ext.apply(cfg, {
+                        comment_host: hosts[0],
+                        comment_service: services[0],
+                        comment_timestamp: pos.x
+                    });
+                }
+                new Ext.iG.CommentForm(cfg).windowed().show();
+                this.disableCommentCtx();
+            }
         }
     },
     
@@ -458,6 +499,69 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
+    annotate: function() {
+        var yaxis = this.flot.getYAxes()[0],
+            y = Math.floor((yaxis.min + yaxis.max)*0.75);
+        Ext.each(this.store.getComments(), function(comment) {
+            var o = this.flot.pointOffset({
+                x: comment.timestamp*1000,
+                y: y
+            });
+            var el = this.el.createChild({
+                tag: 'img',
+                src: 'images/icons/balloon-ellipsis.png',
+                style: {
+                    position: 'absolute',
+                    left: o.left + 'px',
+                    top: o.top + 'px',
+                    cursor: 'pointer'
+                }
+            });
+            el.on({
+                scope: this,
+                click: function(e) {
+                    var hosts = [], services = [];
+                    this.store.getHostsAndServices(hosts, services);
+                    var cfg = {
+                        minDate: new Date(this.store.getStart()*1000),
+                        maxDate: new Date(this.store.getEnd()*1000),
+                        hosts: hosts,
+                        services : services,
+                        comment_id: comment.id,
+                        comment_host: comment.host,
+                        comment_service: comment.service,
+                        comment_timestamp: comment.timestamp*1000,
+                        comment_text: comment.text,
+                        listeners: {
+                            scope: this,
+                            __igcomment__: function() {
+                                this.store.load();
+                            }
+                        }
+                    };
+                    new Ext.iG.CommentForm(cfg).windowed().show();
+                },
+                mouseover: function(e) {
+                    new Ext.ToolTip({
+                        title: comment.host + ' - ' + comment.service + ' (' +
+                               Ext.util.Format.date(
+                                   new Date(comment.timestamp*1000),
+                                   'Y-m-d H:i:s') + '):',
+                        renderTo: Ext.getBody(),
+                        anchor: 'left',
+                        target: e.target,
+                        html: comment.author + ': ' + comment.text,
+                        listeners: {
+                            hide: function(self) {
+                                self.destroy();
+                            }
+                        }
+                    }).show();
+                }
+            });
+        }, this);
+    },
+    
     plot: function(id, series) {
         if(this.fireEvent('beforeplot', this) !== false) {
             if(series === undefined) {
@@ -485,6 +589,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             if(this.loadMask) {
                this.el.setStyle('position', 'relative');
             }
+            this.annotate();
             this.fireEvent('plot', this);
         }
     },

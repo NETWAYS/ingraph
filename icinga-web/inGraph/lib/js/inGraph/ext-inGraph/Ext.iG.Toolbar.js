@@ -108,8 +108,20 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         this.comments = new Ext.Toolbar.Button({
             iconCls: 'icinga-icon-comment',
             scope: this,
-            handler: function() {
-                Ext.Msg.alert(_('Comments'), _('Sorry, not yet implemented'));
+            handler: function(btn, e) {
+                new Ext.ToolTip({
+                    title: _('Comments'),
+                    renderTo: Ext.getBody(),
+                    anchor: 'left',
+                    target: btn.el,
+                    html: _('Trigger comment dialogue by clicking the plot.'),
+                    listeners: {
+                        hide: function(self) {
+                            self.destroy();
+                        }
+                    }
+                }).show();
+                this.ownerCt.flot.enableCommentCtx();
             }
         }), '->',
         this.download = new Ext.Toolbar.Button({

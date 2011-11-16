@@ -148,6 +148,26 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
         return this.reader.jsonData[this.optionsProperty];
     },
     
+    getComments: function() {
+        return this.reader.jsonData.comments;
+    },
+    
+    getHostsAndServices: function(hosts, services) {
+        this.each(function(rec) {
+            if(rec.get('enabled') !== true) {
+                return;
+            }
+            var host = rec.get('host'),
+                service = rec.get('service');
+            if(hosts.indexOf(host) === -1) {
+                hosts.push(host);
+            }
+            if(services.indexOf(service) === -1) {
+                services.push(service);
+            }
+        });
+    },
+    
     isEmpty: function() {
         if(this.reader.jsonData.charts.length === 0) {
             return true;

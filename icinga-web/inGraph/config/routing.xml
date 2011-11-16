@@ -12,7 +12,12 @@
                     <route name=".views" pattern="^/views$" action=".Views" />
                     <route name=".values" pattern="^/values$" action=".Values" />
                     <route name=".view" pattern="^/view$" action=".View" />
-                </route>	
+                </route>
+                <route name=".comments" pattern="^/comments" stop="false" action="Comments" output_type="json">
+                    <route name=".add" pattern="^/add$" action=".Add" />
+                    <route name=".edit" pattern="^/edit$" action=".Edit" />
+                    <route name=".delete" pattern="^/delete$" action=".Delete" />
+                </route>
 			</route>
 		</routes>
 	</ae:configuration>

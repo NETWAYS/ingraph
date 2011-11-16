@@ -36,4 +36,16 @@ class inGraph_ApiModel extends inGraphBaseModel implements AgaviISingletonModel 
     public function getServices() {
         return $this->client->call('getServices', func_get_args());
     }
+    
+    public function addComment() {
+        return $this->client->call('addComment', func_get_args());
+    }
+    
+    public function editComment() {
+        return $this->client->call('updateComment', func_get_args());
+    }
+    
+    public function deleteComment() {
+        return $this->client->call('deleteComment', func_get_args());
+    }
 }

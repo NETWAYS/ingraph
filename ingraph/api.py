@@ -322,6 +322,9 @@ class BackendRPCMethods(object):
                            timestamp, author, text):
         host_obj = self._createHost(self.engine, host)
 
+        if comment_id ==  '':
+            comment_id = None
+
         if parent_service == '':
             parent_service = None
         

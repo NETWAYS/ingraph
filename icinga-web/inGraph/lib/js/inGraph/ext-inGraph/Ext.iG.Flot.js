@@ -572,16 +572,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             if(id === undefined) {
                 id = this.id;
             }
-            // Sort series by their mean from highest to lowest.
-            // This is nice for filled lines since series will not paint
-            // over each other.
-            series.sort(function(a, b) {
-                return a.data.map(function(v) {
-                    return parseFloat(v[1]);
-                }).mean() - b.data.map(function(v) {
-                    return parseFloat(v[1]);
-                }).mean();
-            });
             this.flot = $.plot($('#' + id), series, this.flotOptions);
             if(this.loadMask) {
                this.el.setStyle('position', 'relative');

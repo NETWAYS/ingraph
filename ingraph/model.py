@@ -1172,7 +1172,8 @@ class Comment(ModelBase):
             self.id = result.last_inserted_ids()[0]
             self.activate()
         else:
-            upd = comment.update().where(comment.c.id==self.id).values(comment_timestamp=self.comment_timestamp,
+            upd = comment.update().where(comment.c.id==self.id).values(hostservice_id=self.hostservice.id, timestamp=self.timestamp,
+                                                                       comment_timestamp=self.comment_timestamp, author=self.author,
                                                                        text=self.text)
             conn.execute(upd)
             

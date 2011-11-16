@@ -317,9 +317,9 @@ class BackendRPCMethods(object):
         shutdown_server = True
         
         return True
-    
-    def addComment(self, host, parent_service, service, timestamp, author,
-                   text):
+
+    def addOrUpdateComment(self, comment_id, host, parent_service, service,
+                           timestamp, author, text):
         host_obj = self._createHost(self.engine, host)
 
         if parent_service == '':
@@ -337,16 +337,30 @@ class BackendRPCMethods(object):
         hostservice_obj = self._createHostService(self.engine, host_obj,
                                                   service_obj,
                                                   parent_hostservice_obj)
-        comment = model.Comment(hostservice_obj, timestamp, author, text)
+
+        if comment_id == None:
+            comment = model.Comment(hostservice_obj, timestamp, author, text)
+        else:
+            comment = model.Comment.getByID(self.engine, comment_id)
+            comment.hostservice = hostservice_obj
+            comment.timestamp = timestamp
+            comment.author = author
+            comment.text = text
+
         comment.save(self.engine)
 
         return comment.id
+
+    def addComment(self, host, parent_service, service, timestamp, author,
+                   text):
+        return self.addOrUpdateComment(None, host, parent_service, service, timestamp,
+            author, text)
     
     def deleteComment(self, comment_id):
         comment = model.Comment.getByID(self.engine, comment_id)
         comment.delete(self.engine)
     
-    def updateComment(self, comment_id, text):
-        comment = model.Comment.getByID(self.engine, comment_id)
-        comment.text = text
-        comment.save()
+    def updateComment(self, comment_id, host, parent_service, service,
+                      timestamp, author, text):
+        return self.addOrUpdateComment(comment_id, host, parent_service,
+            service, timestamp, author, text)

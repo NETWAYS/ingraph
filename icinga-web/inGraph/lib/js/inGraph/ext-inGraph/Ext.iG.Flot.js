@@ -409,6 +409,9 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 var id = series.host + series.service + series.plot +
                          series.type,
                 rec = this.store.getById(id);
+                if(!Ext.isObject(rec.data)) {
+                    return;
+                }
                 if(series.convert !== undefined) {
                     try {
                         var convert = Ext.decode(series.convert, true);
@@ -456,7 +459,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             }
             var min = 0;
             this.store.each(function(rec) {
-                if(rec.get('enabled') !== true) {
+                if(!Ext.isObject(rec.data) || rec.get('enabled') !== true) {
                     return;
                 }
                 // TODO(el): Process on server-side?

@@ -10,7 +10,7 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
         add: AppKit.util.Config.getBaseUrl() + '/modules/ingraph/comments/add',
         edit: AppKit.util.Config.getBaseUrl() +
               '/modules/ingraph/comments/edit',
-        delete: AppKit.util.Config.getBaseUrl() +
+        remove: AppKit.util.Config.getBaseUrl() +
                 '/modules/ingraph/comments/delete'
     },
     layout: 'form',
@@ -131,7 +131,7 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
     
     doDelete: function() {
         Ext.Ajax.request({
-             url: this.urls.delete,
+             url: this.urls.remove,
              scope: this,
              success: this.onSuccess,
              failure: this.onFailure,

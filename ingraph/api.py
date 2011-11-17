@@ -314,3 +314,16 @@ class BackendRPCMethods(object):
         comment = model.Comment.getByID(self.engine, comment_id)
         comment.text = text
         comment.save()
+        
+    def getPlots(self, host, service):
+        hose = model.HostService.getByHostAndServicePattern(
+            self.engine, host, service)
+        plots = []
+        try:
+            res = model.Plot.getByHostServiceAndName(
+                self.engine, hose['services'][0], None)
+        except KeyError:
+            pass
+        for plot in res:
+            plots.append(plot.name)
+        return plots

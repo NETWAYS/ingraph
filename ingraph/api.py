@@ -371,13 +371,29 @@ class BackendRPCMethods(object):
     def getPlots(self, host, service):
         hose = model.HostService.getByHostAndServicePattern(
             self.engine, host, service)
-        plots = []
+        res = []
         try:
-            res = model.Plot.getByHostServiceAndName(
-                self.engine, hose['services'][0], None)
+            hose = hose['services'][0]
         except IndexError:
             pass
         else:
-            for plot in res:
-                plots.append(plot.name)
-        return plots
+            children = model.HostService.getByHostAndService(
+                self.engine, hose.host, None, hose)
+            if children:
+                for child in children:
+                    plots = model.Plot.getByHostServiceAndName(
+                        self.engine, child, None)
+                    for plot in plots:
+                        res.append({
+                            'service': child.service.name,
+                            'plot': plot.name
+                        })
+            else:
+                plots = model.Plot.getByHostServiceAndName(
+                    self.engine, hose, None)
+                for plot in plots:
+                    res.append({
+                        'service': hose.service.name,
+                        'plot': plot.name
+                    })
+        return res

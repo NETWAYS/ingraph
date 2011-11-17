@@ -104,9 +104,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         });
         this.on({
             scope: this,
-            beforeplot: function() {
-                this.applyTemplate();
-            }
+            beforeplot: this.onBeforePlot,
+            plot: this.onPlot
         });
     },
     
@@ -121,7 +120,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             y = xy[1],
             html = Ext.iG.Flot.tooltipTemplate.apply({
                 label: item.series.label,
-                x: item.series.xaxis.tickFormatter(x, item.series.xaxis),
+                x: this.xTickFormatter.call(item.series.xaxis, x,
+                                            item.series.xaxis, true),
                 y: item.series.yaxis.tickFormatter(y, item.series.yaxis),
                 unit: item.series.unit
             }),
@@ -163,7 +163,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                Math.pow(dist, 2)) {
                 html += Ext.iG.Flot.tooltipTemplate.apply({
                     label: series.label,
-                    x: series.xaxis.tickFormatter(nx, series.xaxis),
+                    x: this.xTickFormatter.call(series.xaxis, nx,
+                                                series.xaxis, true),
                     y: series.yaxis.tickFormatter(ny, series.yaxis)
                 });
             }
@@ -351,14 +352,14 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
-    xTickFormatter: function(v, axis) {
+    xTickFormatter: function(v, axis, dtrack) {
         if(axis.ticks.length === 0) {
             this.lastDate = null;
         }
         var d = new Date(v);
         d = new Date(v - d.getTimezoneOffset()*60*1000);
         var fmt = '%b %d %y %h:%M';
-        if(this.lastDate !== null) {
+        if(this.lastDate !== null && dtrack === undefined) {
             if(this.lastDate.getFullYear() === d.getFullYear() &&
                this.lastDate.getMonth() === d.getMonth() &&
                this.lastDate.getDate() === d.getDate()) {
@@ -559,6 +560,14 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }, this);
     },
     
+    onBeforePlot: function() {
+        this.applyTemplate();
+    },
+    
+    onPlot: function() {
+        this.annotate();
+    },
+    
     plot: function(id, series) {
         if(this.fireEvent('beforeplot', this) !== false) {
             if(series === undefined) {
@@ -576,7 +585,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             if(this.loadMask) {
                this.el.setStyle('position', 'relative');
             }
-            this.annotate();
             this.fireEvent('plot', this);
         }
     },

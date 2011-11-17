@@ -142,7 +142,7 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
                        this.doDownload('csv');
                    }
                 }]
-            },
+            }
         }),
         this.print = new Ext.Toolbar.Button({
             iconCls: 'icon-print',

@@ -6,7 +6,7 @@ Ext.ns('Ext.iG');
 Ext.iG.Util = function() {
     var byteSpec = {
         base: 1024,
-        units: ['B', 'KB', 'MB', 'GB', 'TB', 'PB'],
+        units: ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
     };
     var timeSpec = {
         base: 1000,
@@ -56,14 +56,14 @@ Ext.iG.Util = function() {
             return {
                 value: v,
                 unit: '%'
-            }
+            };
         },
         
         formatCounter: function(v) {
             return {
                 value: v,
                 unit: 'c'
-            }
+            };
         }
-    }
+    };
 }();

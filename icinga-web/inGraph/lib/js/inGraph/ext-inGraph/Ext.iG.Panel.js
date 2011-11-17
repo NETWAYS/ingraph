@@ -103,11 +103,22 @@ Ext.iG.Panel = Ext.extend(Ext.Panel, {
             cfg.title = this.host + ' - ' + this.service;
             var callback = function(template) {
                 var query = {};
-                query[this.host] = {};
-                query[this.host][this.service] = {};
                 Ext.each(template.series, function(series) {
-                    query[this.host][this.service][series.plot] = Ext.isArray(
-                        series.type) ? series.type : [series.type];
+                    var qpart = query;
+                    Ext.iterate([series.host, series.service],
+                        function(v) {
+                         if(!Ext.isObject(qpart[v])) {
+                             qpart[v] = {};
+                         }
+                         qpart = qpart[v];
+                    }, this);
+                    if(!Ext.isArray(qpart[series.plot])) {
+                        qpart[series.plot] = [];
+                    }
+                    qpart = qpart[series.plot];
+                    if(qpart.indexOf(series.type) === -1) {
+                        qpart.push(series.type);
+                    }
                 }, this);
                 query = Ext.encode(query);
                 if(this.start || this.end) {

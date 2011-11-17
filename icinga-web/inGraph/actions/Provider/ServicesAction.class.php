@@ -29,8 +29,14 @@ class inGraph_Provider_ServicesAction extends inGraphBaseAction {
 		} catch(XMLRPCClientException $e) {
 		    return $this->setError($e->getMessage());
 		}
-		$finalServices = array_intersect($permittedServices,
-		    $availableServices['services']);
+		$finalServices = array();
+		foreach($availableServices['services'] as $service) {
+		    if($service['parent_service'] !== null &&
+		       in_array($service['parent_service'], $permittedServices) ||
+		       in_array($service['service'], $permittedServices)) {
+		        $finalServices[] = $service['service'];
+		       }
+		}
 		$total = count($finalServices);
 		$finalServices = array_slice($finalServices,
                             		 $rd->getParameter('offset', 0),

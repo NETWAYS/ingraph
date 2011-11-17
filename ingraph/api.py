@@ -179,12 +179,19 @@ class BackendRPCMethods(object):
             self.engine, host_pattern.replace('*', '%'),
             service_pattern.replace('*', '%'), limit, offset)
 
-        items = set()
+        items = []
 
         for hostservice_obj in result['services']:
-            items.add(hostservice_obj.service.name)
+            if hostservice_obj.parent_hostservice == None:
+                parentservice = None
+            else:
+                parentservice = hostservice_obj.parent_hostservice.service_name
+
+            item = { 'service': hostservice_obj.service.name,
+                     'parent_service': parentservice }
+            items.append(hostservice_obj.service.name)
         
-        return {'total': result['total'], 'services': list(items)}
+        return {'total': result['total'], 'services': items}
     
     def getPlotValues(self, host_pattern, service_pattern,
                       start_timestamp=None, end_timestamp=None,

@@ -375,8 +375,9 @@ class BackendRPCMethods(object):
         try:
             res = model.Plot.getByHostServiceAndName(
                 self.engine, hose['services'][0], None)
-        except KeyError:
+        except IndexError:
             pass
-        for plot in res:
-            plots.append(plot.name)
+        else:
+            for plot in res:
+                plots.append(plot.name)
         return plots

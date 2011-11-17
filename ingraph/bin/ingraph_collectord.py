@@ -52,6 +52,7 @@ class Collectord(daemon.UnixDaemon):
         
         is_multidata = False
         
+        updates = []
         for plotname in perfresults:
             match = Collectord.check_multi_regex.match(plotname)
                     
@@ -62,7 +63,7 @@ class Collectord(daemon.UnixDaemon):
             
             warn_lower = None
             warn_upper = None
-            warn_type = None            
+            warn_type = None
     
             if 'warn' in perfresult:
                 if perfresult['warn']['lower']['value'] != None:
@@ -110,14 +111,15 @@ class Collectord(daemon.UnixDaemon):
                 upd_parentservice = logdata['service']
                 upd_service = multi_service
 
-            pluginstatus = logdata['status'].lower()    
+            pluginstatus = logdata['status'].lower()
 
             update = (logdata['host'], upd_parentservice, upd_service,
                       upd_plotname, logdata['timestamp'], uom, raw_value,
                       raw_value, raw_value, min_value, max_value, warn_lower,
                       warn_upper, warn_type, crit_lower, crit_upper, crit_type,
                       pluginstatus)
-            return update
+            updates.append(update)
+        return updates
         
     def before_daemonize(self):
         config = utils.load_config('ingraph-xmlrpc.conf')
@@ -154,9 +156,8 @@ class Collectord(daemon.UnixDaemon):
             input = fileinput.input(files[:self.limit])
             for line in input:
                 update = self._prepare_update(line)
-                if update == False:
-                    continue
-                updates.append(update)
+                if update:
+                    updates.extend(update)
             if updates:
                 updates_pickled = pickle.dumps(updates)
                 st = time.time()

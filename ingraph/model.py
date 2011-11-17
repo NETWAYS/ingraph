@@ -924,6 +924,8 @@ Index('idx_dp_2', datapoint.c.timestamp)
 
 class DataPoint(object):
     def getValuesByInterval(conn, plots, start_timestamp=None, end_timestamp=None, granularity=None, null_tolerance=0):
+        global dbload_min_timestamp
+
         if len(plots) == 0:
             return {}
 
@@ -937,6 +939,8 @@ class DataPoint(object):
             tmp = end_timestamp
             end_timestamp = start_timestamp
             start_timestamp = tmp
+
+        start_timestamp = max(start_timestamp, dbload_min_timestamp)
 
         tfs = TimeFrame.getAll(conn)
 

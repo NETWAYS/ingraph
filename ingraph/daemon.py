@@ -16,7 +16,8 @@ class UnixDaemon(object):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
-        self.pidfile = pidfile
+        self.pidfile = os.path.realpath(
+            os.path.expanduser(pidfile))
         self.pidfp = None
         self.pidlocked = False
         self.chdir = chdir

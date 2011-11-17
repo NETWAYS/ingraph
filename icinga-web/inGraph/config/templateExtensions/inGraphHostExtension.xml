@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <template match-pattern="icinga-host-template">
     <option>
-        <parameter name="mode">default</parameter>
-        <parameter name="layout">CronkGridTemplateAjaxGridLayout</parameter>
         <parameter name="gridEvents">
             <parameter>
                 <parameter name="type">viewready</parameter>
@@ -10,11 +8,20 @@
                 </parameter>
                 <parameter name="arguments">
                     <parameter name="host">host_name</parameter>
-                    <parameter name="service">service_name</parameter>
+                    <parameter name="start"></parameter>
                     <parameter name="title">inGraph: {host_name}</parameter>
-                    <parameter name="previewTimeout">1200</parameter>
-                    <parameter name="height">150</parameter>
-                    <parameter name="width">40%</parameter>
+                    <parameter name="popup">
+                        <parameter name="timeout">400</parameter>
+                        <parameter name="height">60</parameter>
+                        <parameter name="width">300</parameter>
+                        <parameter name="start">-1 day</parameter>
+                    </parameter>
+                    <parameter name="preview">
+                        <parameter name="height">200</parameter>
+                        <parameter name="width">600</parameter>
+                        <parameter name="start">-1 day</parameter>
+                        <parameter name="overview">20%</parameter>
+                    </parameter>
                 </parameter>
             </parameter>
         </parameter>

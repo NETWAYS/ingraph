@@ -8,7 +8,8 @@ Ext.iG.Cronk = function() {
                   '/modules/ingraph/provider/',
     provider = {
         template: urlBase + 'template',
-        values: urlBase + 'values'
+        values: urlBase + 'values',
+        services: urlBase + 'services'
     };
     
     return {

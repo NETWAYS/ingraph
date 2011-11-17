@@ -185,11 +185,11 @@ class BackendRPCMethods(object):
             if hostservice_obj.parent_hostservice == None:
                 parentservice = None
             else:
-                parentservice = hostservice_obj.parent_hostservice.service_name
+                parentservice = hostservice_obj.parent_hostservice.service.name
 
             item = { 'service': hostservice_obj.service.name,
                      'parent_service': parentservice }
-            items.append(hostservice_obj.service.name)
+            items.append(item)
         
         return {'total': result['total'], 'services': items}
     

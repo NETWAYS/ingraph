@@ -60,7 +60,7 @@ class Collectord(daemon.UnixDaemon):
             logdata['timestamp'] = time()
 
         if 'service' not in logdata:
-            logdata['service'] = None
+            logdata['service'] = ''
 
         return logdata
 

@@ -382,9 +382,14 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 c: Ext.iG.Util.formatCounter
             };
         }
-        if(v === this.rawTicks.last()  && this.label !== undefined) {
-            return this.label;
-        }
+        if(v === this.rawTicks.last() && Ext.isArray(this.label)) {
+            var s = Ext.iG.Util.lcs.apply(Ext.iG.Util, this.label);
+            if(s.length === 0) {
+                s = this.label[0];
+            }
+            return '<div ext:qtip="' + this.label.join('<br />') + '">' +
+                   Ext.util.Format.ellipsis(s, 15) + '</div>';
+       }
         if(v > 0 && this.units[this.unit] !== undefined) {
             var callback = this.units[this.unit],
                 format = callback.call(this, v);
@@ -480,6 +485,11 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                     if(yaxis.unit === rec.get('unit')) {
                         rec.set('yaxis', i+1); // Flot's axis index starts
                                                // with 1.
+                        // TODO(el)
+                        var label = rec.get('label');
+                        if(yaxis.label.indexOf(label) === -1) {
+                            yaxis.label.push(label);
+                        }
                     }
                 });
                 var i = this.flotOptions.yaxes.length;
@@ -489,7 +499,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                     this.flotOptions.yaxes.push({
                         position: i % 2 === 0 ? 'left' : 'right',
                         unit: unit,
-                        label: rec.get('label'),
+                        label: [rec.get('label')],
                         tickFormatter: this.yTickFormatter,
                         min: unit === 'percent' ? 0 : min,
                         max: unit === 'percent' ? 100 : null

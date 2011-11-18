@@ -64,6 +64,33 @@ Ext.iG.Util = function() {
                 value: v,
                 unit: 'c'
             };
+        },
+        
+        lcs: function() {
+            var s = [],
+                strings = [],
+                c;
+            for(var t = 0; t < arguments.length; ++t) {
+                strings.push(arguments[t]);
+            }
+            strings.sort(function(a, b) {
+                return a.label === b.label ? 0 : (a.label < b.label ? -1 : 1);
+            });
+            for(var i = 0; i < strings[0].length; ++i) {
+                c = strings[0][i];
+                e = (function() {
+                    for(var j = 1; j < strings.length; ++j) {
+                        if(c !== strings[j][i]) {
+                            return false;
+                        }
+                    }
+                })();
+                if(e === false) {
+                    break;
+                }
+                s.push(c);
+            }
+            return s.join('').replace(/[^A-Za-z0-9]$/, '');
         }
     };
 }();

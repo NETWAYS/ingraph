@@ -37,7 +37,7 @@ class Collectord(daemon.UnixDaemon):
         logdata = {}
 
         for nvpair in tokens:
-            (key, value) = nvpair.split('::')
+            (key, value) = nvpair.split('::', 1)
 
             if key == 'TIMET':
                 key = 'timestamp'
@@ -46,7 +46,7 @@ class Collectord(daemon.UnixDaemon):
                 key = 'host'
             elif key == 'SERVICEDESC':
                 key = 'service'
-            elif key == 'SERVICESTATE' or key == 'HOSTSERVICESTATE':
+            elif key == 'SERVICESTATE' or key == 'HOSTSTATE':
                 key = 'status'
             elif key == 'SERVICEPERFDATA' or key == 'HOSTPERFDATA':
                 key = 'perf'
@@ -254,7 +254,7 @@ def main():
                       '[default: %default]')
     parser.add_option('-e', '--pattern', dest='pattern',
                       help='shell pattern PATTERN [default: %default]',
-                      default='perfdata.*[0-9]')
+                      default='*-perfdata.*[0-9]')
     parser.add_option('-m', '--mode', dest='mode', default='BACKUP',
                       type='mode',
                       help='backup or remove perfdata files '

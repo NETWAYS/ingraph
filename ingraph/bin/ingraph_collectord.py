@@ -24,29 +24,69 @@ class Collectord(daemon.UnixDaemon):
     name = 'inGraph-collector'
     check_multi_regex = re.compile('^([^:]+::[^:]+)::([^:]+)$')
     
-    def __init__(self, perfdata_dir, pattern, limit, sleeptime, mode,
+    def __init__(self, perfdata_dir, pattern, limit, sleeptime, mode, format,
                  **kwargs):
         self.perfpattern = perfdata_dir + '/' + pattern
         self.sleeptime = sleeptime
         self.limit = limit
         self.mode = mode
+        self.format = format
         super(Collectord, self).__init__(**kwargs)
-        
-    def _prepare_update(self, line):
-        data = line.strip().split('\t')
-        
-        if len(data) < 4:
+
+    def _parse_update_pnp(self, tokens):
+        logdata = {}
+
+        for nvpair in tokens:
+            (key, value) = nvpair.split('::')
+
+            if key == 'TIMET':
+                key = 'timestamp'
+                value = float(value)
+            elif key == 'HOSTNAME':
+                key = 'host'
+            elif key == 'SERVICEDESC':
+                key = 'service'
+            elif key == 'SERVICESTATE' or key == 'HOSTSERVICESTATE':
+                key = 'status'
+            elif key == 'SERVICEPERFDATA' or key == 'HOSTPERFDATA':
+                key = 'perf'
+
+            logdata[key] = value
+
+        if 'perf' not in logdata or 'host' not in logdata or 'status' not in logdata:
             return False
-        elif len(data) < 5:
-            data.append(time())
+
+        if 'timestamp' not in logdata:
+            logdata['timestamp'] = time()
+
+        if 'service' not in logdata:
+            logdata['service'] = None
+
+        return logdata
+
+    def _parse_update_ingraph(self, tokens):
+        if len(tokens) < 4:
+            return False
+        elif len(tokens) < 5:
+            tokens.append(time())
         
         logdata = {
-            'host': data[0],
-            'service': data[1],
-            'status': data[2],
-            'perf': data[3],
-            'timestamp': int(data[4])
+            'host': tokens[0],
+            'service': tokens[1],
+            'status': tokens[2],
+            'perf': tokens[3],
+            'timestamp': int(tokens[4])
         }
+
+        return logdata
+
+    def _prepare_update(self, line):
+        tokens = line.strip().split('\t')
+
+        if self.format == 'ingraph':
+            logdata = self._parse_update_ingraph(tokens)
+        else:
+            logdata = self._parse_update_pnp(tokens)
         
         perfresults = utils.PerfdataParser.parse(logdata['perf'])
         
@@ -214,7 +254,7 @@ def main():
                       '[default: %default]')
     parser.add_option('-e', '--pattern', dest='pattern',
                       help='shell pattern PATTERN [default: %default]',
-                      default='service-perfdata.*[0-9]')
+                      default='perfdata.*[0-9]')
     parser.add_option('-m', '--mode', dest='mode', default='BACKUP',
                       type='mode',
                       help='backup or remove perfdata files '
@@ -226,6 +266,9 @@ def main():
                       default=30)
     parser.add_option('-u', '--user', dest='user', default=None)
     parser.add_option('-g', '--group', dest='group', default=None)
+    parser.add_option('-F', '--format', dest='format', default='pnp',
+                      metavar='FORMAT', help='perfdata format, "ingraph" '
+                      'or "pnp" [default: %default]')
     (options, args) = parser.parse_args()
     
     try:
@@ -242,7 +285,8 @@ def main():
                             mode=options.mode,
                             chdir=options.chdir,
                             detach=options.detach,
-                            pidfile=options.pidfile)
+                            pidfile=options.pidfile,
+                            format=options.format)
     if options.logfile:
         collectord.stdout = options.logfile
         collectord.stderr = options.logfile

@@ -69,6 +69,13 @@ class UnixDaemon(object):
         try:
             self.pidfp = open(self.pidfile, 'r+')
         except IOError:
+            pidpath = os.path.split(self.pidfile)[0]
+            try:
+                os.mkdir(pidpath)
+                os.chown(pidpath, self.uid, -1)
+            except OSError, e:
+                if e.errno != errno.EEXIST:
+                    raise e
             self.pidfp = open(self.pidfile, 'w+')
 
         self._waitpidfile(False)
@@ -133,14 +140,7 @@ class UnixDaemon(object):
             sys.stderr.write("pidfile %s already exists. Daemon already "
                              "running?\n" % self.pidfile)
             sys.exit(1)
-        
-        pidpath = os.path.split(self.pidfile)[0]
-        try:
-            os.mkdir(pidpath)
-            os.chown(pidpath, self.uid, -1)
-        except OSError, e:
-            if e.errno != errno.EEXIST:
-                raise e
+
         os.umask(self.umask)
         os.chdir(self.chdir)
         os.setgid(self.gid)

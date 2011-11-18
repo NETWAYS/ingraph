@@ -19,12 +19,12 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction {
                     foreach($plots as $plot) {
                         // TODO(el): Validate that re exists
                         // and is properly esacped?
-                        if(preg_match($series['re'], $plot)) {
+                        if(preg_match($series['re'], $plot['plot'])) {
                             $compiled[] = array_merge(
                                 $series, array(
                                     'host' => $host,
                                     'service' => $service,
-                                    'plot' => $plot,
+                                    'plot' => $plot['plot'],
                                 ));
                         }
                     }

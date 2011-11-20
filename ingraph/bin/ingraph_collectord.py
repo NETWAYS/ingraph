@@ -193,24 +193,25 @@ class Collectord(daemon.UnixDaemon):
         while True:
             updates = []
             files = glob.glob(self.perfpattern)
-            input = fileinput.input(files[:self.limit])
-            for line in input:
-                update = self._prepare_update(line)
-                if update:
-                    updates.extend(update)
-            if updates:
-                updates_pickled = pickle.dumps(updates)
-                st = time.time()
-                api.insertValueBulk(updates_pickled)
-                et = time.time()
-                print "%d updates (%d lines) took %f seconds" % \
-                      (len(updates), input.lineno(), et - st)
-            if self.mode == 'BACKUP':
-                for file in files:
-                    shutil.move(file, file + '.bak')
-            elif self.mode == 'REMOVE':
-                for file in files:
-                    os.remove(file)
+            if files:
+                input = fileinput.input(files[:self.limit])
+                for line in input:
+                    update = self._prepare_update(line)
+                    if update:
+                        updates.extend(update)
+                if updates:
+                    updates_pickled = pickle.dumps(updates)
+                    st = time.time()
+                    api.insertValueBulk(updates_pickled)
+                    et = time.time()
+                    print "%d updates (%d lines) took %f seconds" % \
+                          (len(updates), input.lineno(), et - st)
+                if self.mode == 'BACKUP':
+                    for file in files:
+                        shutil.move(file, file + '.bak')
+                elif self.mode == 'REMOVE':
+                    for file in files:
+                        os.remove(file)
             time.sleep(self.sleeptime)
             
             

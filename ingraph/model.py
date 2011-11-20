@@ -997,7 +997,7 @@ class DataPoint(object):
 
         for status_obj in status_objs:
             if status_obj.hostservice.parent_hostservice != None:
-                parent_service = status_obj.hostservice.parent_hostservice.service_name,
+                parent_service = status_obj.hostservice.parent_hostservice.service.name,
 
             else:
                 parent_service = None

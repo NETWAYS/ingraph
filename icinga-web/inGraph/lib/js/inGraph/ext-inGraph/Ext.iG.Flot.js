@@ -366,7 +366,9 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 fmt = '%h:%M';
             }
         }
-        this.lastDate = d;
+        if(v > axis.min) {
+            this.lastDate = d;
+        }
         return $.plot.formatDate(d, fmt, this.monthNames);
     },
     

@@ -1,11 +1,12 @@
 Ext.ns('Ext.iG');
 /**
- * @class Ext.iG.CommentForm
+ * @class Ext.iG.Comment
  * @extends Ext.form.FormPanel
  */
-Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
+Ext.iG.Comment = Ext.extend(Ext.form.FormPanel, {
     baseCls: 'x-plain',
     labelWidth: 55,
+    waitMsg: _('Saving...'),
     urls: {
         add: AppKit.util.Config.getBaseUrl() + '/modules/ingraph/comments/add',
         edit: AppKit.util.Config.getBaseUrl() +
@@ -21,7 +22,20 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
     },
     
     initComponent: function() {
-        var items = [{
+        var cfg = {};
+        this.buildItems(cfg);
+        this.buildButtons(cfg);
+        Ext.apply(this, Ext.apply(this.initialConfig, cfg));
+        Ext.iG.Comment.superclass.initComponent.call(this);
+    },
+    
+    initEvents: function() {
+        Ext.iG.Comment.superclass.initEvents.call(this);
+        this.addEvents('addcomment', 'editcomment', 'deletecomment', 'cancel');
+    },
+    
+    buildItems: function(cfg) {
+        cfg.items = [{
             xtype: 'xdatetime',
             fieldLabel: _('Date'),
             dateConfig: {
@@ -57,7 +71,10 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
             height: 70,
             ref: 'commentCmp'
         }];
-        var buttons = [{
+    },
+    
+    buildButtons: function(cfg) {
+        cfg.buttons = [{
             text: _('Save'),
             iconCls: 'icinga-icon-accept',
             formBind: true,
@@ -67,11 +84,11 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
             text: _('Cancel'),
             iconCls: 'icinga-icon-cancel',
             scope: this,
-            handler: this.cancel
+            handler: this.doCancel
         }];
         if(this.comment_id !== undefined) {
-            buttons[0].handler = this.doEdit;
-            buttons.splice(1, 0, {
+            cfg.buttons[0].handler = this.doEdit;
+            cfg.buttons.splice(1, 0, {
                 text: _('Delete'),
                 iconCls: 'icinga-icon-delete',
                 scope: this,
@@ -79,18 +96,10 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
                 
             });
         }
-        Ext.apply(this, Ext.apply(this.initialConfig,
-                                  { items: items, buttons: buttons}));
-        Ext.iG.CommentForm.superclass.initComponent.call(this);
-    },
-    
-    initEvents: function() {
-        Ext.iG.CommentForm.superclass.initEvents.call(this);
-        this.addEvents('__igcomment__');
     },
     
     onLayout: function() {
-        Ext.iG.CommentForm.superclass.onLayout.apply(this, arguments);
+        Ext.iG.Comment.superclass.onLayout.apply(this, arguments);
         // Fix missing 'submitValue' config option
         // of saki's DateTime extension.
         if(this.dateCmp.submitValue === false) {
@@ -104,12 +113,12 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
         this.getForm().submit({
              url: this.urls.add,
              scope: this,
-             success: this.onSuccess,
+             success: this.onAddSuccess,
              failure: this.onFailure,
              params: {
                  timestamp: Math.floor(this.dateCmp.getValue().getTime()/1000)
              },
-             waitMsg: 'Saving...'
+             waitMsg: this.waitMsg
         });
     },
     
@@ -119,13 +128,13 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
         this.getForm().submit({
              url: this.urls.edit,
              scope: this,
-             success: this.onSuccess,
+             success: this.onEditSuccess,
              failure: this.onFailure,
              params: {
                  id: this.comment_id,
                  timestamp: Math.floor(this.dateCmp.getValue().getTime()/1000)
              },
-             waitMsg: 'Saving...'
+             waitMsg: this.waitMsg
         });
     },
     
@@ -133,7 +142,7 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
         Ext.Ajax.request({
              url: this.urls.remove,
              scope: this,
-             success: this.onSuccess,
+             success: this.onDeleteSuccess,
              failure: this.onFailure,
              params: {
                  id: this.comment_id
@@ -141,16 +150,16 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
         });
     },
     
-    onSuccess: function(self, action) {
-        this.fireEvent('__igcomment__', this);
-        this.destroy();
-//        Ext.Msg.show({
-//             title: _('Success'),
-//             msg: _('Success'),
-//             modal: true,
-//             icon: Ext.Msg.INFO,
-//             buttons: Ext.Msg.OK
-//        });
+    onAddSuccess: function(self, action) {
+        this.fireEvent('addcomment', this);
+    },
+    
+    onEditSuccess: function(self, action) {
+        this.fireEvent('editcomment', this);
+    },
+    
+    onDeleteSuccess: function(self, action) {
+        this.fireEvent('deletecomment', this);
     },
 
     onFailure: function(self, action) {
@@ -165,38 +174,9 @@ Ext.iG.CommentForm = Ext.extend(Ext.form.FormPanel, {
         });
     },
     
-    cancel: function() {
-        this.destroy();
-    },
-    
-    windowed: function() {
-        if(!this.window) {
-            this.window = new Ext.Window({
-                title: _('Comment'),
-                collapsible: true,
-                width: 300,
-                height: 255,
-                layout: 'fit',
-                plain: true,
-                bodyStyle: 'padding:5px;',
-                buttonAlign: 'center',
-                items: this,
-                listeners: {
-                    scope: this,
-                    close: function() {
-                        this.destroy();
-                    }
-                }
-            });
-        }
-        return this.window;
-    },
-    
-    onDestroy: function() {
-        if(this.window) {
-            this.window.destroy();
-            this.window = null;
-        }
-        Ext.iG.CommentForm.superclass.onDestroy.call(this);
+    doCancel: function() {
+        this.getForm().reset();
+        this.fireEvent('cancel', this);
     }
 });
+Ext.reg('igcomment', Ext.iG.Comment);

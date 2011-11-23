@@ -12,7 +12,7 @@ Ext.iG.AutoComboBox = Ext.extend(Ext.ux.AutoComboBox, {
     constructor: function(cfg) {
         cfg.name = cfg.name.toLowerCase();
         
-        Ext.apply(cfg, {
+        Ext.applyIf(cfg, {
             tpl: String.format('<tpl for="."><div ext:qtip="{{0}}" class="x-combo-list-item">{{0}}</div></tpl>', cfg.name),
             id: Ext.id(null, 'ext-ig-'),
             hiddenName: cfg.name,
@@ -21,23 +21,25 @@ Ext.iG.AutoComboBox = Ext.extend(Ext.ux.AutoComboBox, {
             valueField: cfg.name,
             displayField: cfg.name
         });
-            
-        Ext.applyIf(cfg.store, {
-            autoDestroy: true,
-            root: 'results',
-            fields: [cfg.name],
-            totalProperty: 'total',
-            paramNames: {
-                start: 'offset'
-            },
-            baseParams: {
-                offset: 0,
-                limit: cfg.pageSize || this.pageSize
-            },
-            idProperty : cfg.name
-        });
-        cfg.store = new Ext.data.ArrayStore(cfg.store);
+        
+        if(!Ext.isArray(cfg.store)) {
+            Ext.applyIf(cfg.store, {
+                xtype: 'arraystore',
+                autoDestroy: true,
+                root: 'results',
+                fields: [cfg.name],
+                paramNames: {
+                    start: 'offset'
+                },
+                baseParams: {
+                    offset: 0,
+                    limit: cfg.pageSize || this.pageSize
+                },
+                idProperty: cfg.name
+            });
+        }
         
         Ext.iG.AutoComboBox.superclass.constructor.call(this, cfg);
     }
 });
+Ext.reg('igcombo', Ext.iG.AutoComboBox);

@@ -22,4 +22,8 @@ class inGraph_Provider_ValuesAction extends inGraphBaseAction {
         $this->setAttribute('values', $values);
         return $this->getDefaultViewName();
     }
+    
+    public function executeRead(AgaviRequestDataHolder $rd) {
+        return $this->executeWrite($rd);
+    }
 }

@@ -1,4 +1,8 @@
 Ext.ns('Ext.iG');
+/**
+ * @class Ext.iG.Flot
+ * @extends Ext.BoxComponent
+ */
 Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     refreshBuffer: 200,
     loadMask: false,
@@ -40,8 +44,13 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     flotOptions: {},
     zooms: [],
     commentCtxEnabled: false,
+    template: {},
     
     initComponent: function() {
+        this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions,
+                                    this.flotOptions);
+        this.flotOptions.xaxis.tickFormatter = Ext.iG.Util.xTickFormatter;
+        
         Ext.iG.Flot.superclass.initComponent.call(this);
         this.addEvents(
             'beforeplot',
@@ -55,18 +64,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             'zoomout',
             'contextmenu'
         );
-        this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions,
-                                    this.flotOptions);
-        this.flotOptions.xaxis.tickFormatter = this.xTickFormatter;
-        if(Ext.isObject(this.template)) {
-            if(Ext.isObject(this.template.flot)) {
-                iG.merge(true, this.flotOptions, this.template.flot);
-            }
-            if(this.template.generic !== undefined &&
-               Ext.isNumber(this.template.generic.refreshInterval)) {
-                this.store.startRefresh(this.template.generic.refreshInterval);
-            }
-        }
         this.bindStore(this.store, true);
     },
     
@@ -104,8 +101,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         });
         this.on({
             scope: this,
-            beforeplot: this.onBeforePlot,
-            plot: this.onPlot
+            single: true,
+            beforeplot: this.applyTemplate
         });
     },
     
@@ -120,8 +117,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             y = xy[1],
             html = Ext.iG.Flot.tooltipTemplate.apply({
                 label: item.series.label,
-                x: this.xTickFormatter.call(item.series.xaxis, x,
-                                            item.series.xaxis, true),
+                x: Ext.iG.Util.xTickFormatter.call(
+                       item.series.xaxis, x,item.series.xaxis, true),
                 y: item.series.yaxis.tickFormatter(y, item.series.yaxis),
                 unit: item.series.unit
             }),
@@ -129,10 +126,10 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         var t = {};
         t['x' + item.series.xaxis.n] = x;
         t['y' + item.series.yaxis.n] = y;
-        var itemcoords = this.flot.p2c(t);
+        var itemcoords = this.$plot.p2c(t);
         
         // Find nearby points from other series.
-        Ext.each(this.flot.getData(), function(series) {
+        Ext.each(this.$plot.getData(), function(series) {
             if(series.index == item.seriesIndex) {
                 // Exclude series of current item.
                 return;
@@ -157,14 +154,14 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 ny = series.datapoints.points[i+1];
             t['x' + series.xaxis.n] = nx;
             t['y' + series.yaxis.n] = ny;
-            var item2coords = this.flot.p2c(t);
+            var item2coords = this.$plot.p2c(t);
             if(Math.pow(Math.abs(itemcoords.left - item2coords.left), 2) +
                Math.pow(Math.abs(itemcoords.top - item2coords.top), 2) <=
                Math.pow(dist, 2)) {
                 html += Ext.iG.Flot.tooltipTemplate.apply({
                     label: series.label,
-                    x: this.xTickFormatter.call(series.xaxis, nx,
-                                                series.xaxis, true),
+                    x: Ext.iG.Util.xTickFormatter.call(
+                           series.xaxis, nx, series.xaxis, true),
                     y: series.yaxis.tickFormatter(ny, series.yaxis)
                 });
             }
@@ -206,7 +203,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                 renderTo: Ext.getBody()
             });
         }
-        var axes = this.flot.getAxes();
+        var axes = this.$plot.getAxes();
         this.shint.update(Ext.iG.Flot.sHintTpl.apply({
             from: axes.xaxis.tickFormatter(ranges.xaxis.from, axes.xaxis),
             to: axes.xaxis.tickFormatter(ranges.xaxis.to, axes.xaxis)
@@ -260,52 +257,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
-    enableCommentCtx: function() {
-        this.commentCtxEnabled = true;
-        this.el.setStyle('cursor', 'pointer');
-    },
-    
-    disableCommentCtx: function() {
-        this.commentCtxEnabled = false;
-        this.el.setStyle('cursor', 'default');
-    },
-    
-    onPlotClick: function(item, pos) {
-        if(this.fireEvent('plotclick', this, item) !== false) {
-            if(this.commentCtxEnabled === true) {
-                var hosts = [], services = [];
-                this.store.getHostsAndServices(hosts, services);
-                var cfg = {
-                    minDate: new Date(this.store.getStart()*1000),
-                    maxDate: new Date(this.store.getEnd()*1000),
-                    hosts: hosts,
-                    services: services,
-                    listeners: {
-                        scope: this,
-                        __igcomment__: function() {
-                            this.store.load();
-                        }
-                    }
-                };
-                if(item) {
-                    Ext.apply(cfg, {
-                        comment_host: item.series.host,
-                        comment_service: item.series.service,
-                        comment_timestamp: item.datapoint[0]
-                    });
-                } else {
-                    Ext.apply(cfg, {
-                        comment_host: hosts[0],
-                        comment_service: services[0],
-                        comment_timestamp: pos.x
-                    });
-                }
-                new Ext.iG.CommentForm(cfg).windowed().show();
-                this.disableCommentCtx();
-            }
-        }
-    },
-    
     onContextMenu: function(event) {
         if(this.fireEvent('contextmenu', this, event) !== false) {
             // Prevent browser's context menu.
@@ -314,7 +265,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
-    onBeforeautorefresh: function() {
+    onBeforeAutorefresh: function() {
         // Prevent autorefresh if hidden.
         var ownerCt = this;
         do {
@@ -332,9 +283,9 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             } else {
                 this.store.un({
                     scope: this,
-                    datachanged: this.onDatachanged,
+                    datachanged: this.onDataChanged,
                     update: this.onUpdate,
-                    beforeautorefresh: this.onBeforeautorefresh
+                    beforeautorefresh: this.onBeforeAutorefresh
                 });
             }
             if(!store) {
@@ -344,179 +295,162 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         if(store) {
             store.on({
                 scope: this,
-                datachanged: this.onDatachanged,
+                datachanged: this.onDataChanged,
                 update: this.onUpdate,
-                beforeautorefresh: this.onBeforeautorefresh
+                beforeautorefresh: this.onBeforeAutorefresh
             });
             this.store = store;
         }
     },
     
-    xTickFormatter: function(v, axis, dtrack) {
-        if(axis.ticks.length === 0) {
-            this.lastDate = null;
-        }
-        var d = new Date(v);
-        d = new Date(v - d.getTimezoneOffset()*60*1000);
-        var fmt = '%b %d %y %h:%M';
-        if(this.lastDate !== null && dtrack === undefined) {
-            if(this.lastDate.getFullYear() === d.getFullYear() &&
-               this.lastDate.getMonth() === d.getMonth() &&
-               this.lastDate.getDate() === d.getDate()) {
-                fmt = '%h:%M';
-            }
-        }
-        if(v > axis.min) {
-            this.lastDate = d;
-        }
-        return $.plot.formatDate(d, fmt, this.monthNames);
-    },
-    
-    yTickFormatter: function(v, axis) {
-        if(axis.ticks.length === 0) {
-            this.rawTicks = axis.tickGenerator(axis);
-        }
-        if(this.units === undefined) {
-            this.units = {
-                byte: Ext.iG.Util.formatByte,
-                time: Ext.iG.Util.formatTime,
-                percent: Ext.iG.Util.formatPercent,
-                c: Ext.iG.Util.formatCounter
-            };
-        }
-        if(v === this.rawTicks.last() && Ext.isArray(this.label)) {
-            var s = Ext.iG.Util.lcs.apply(Ext.iG.Util, this.label);
-            if(s.length === 0) {
-                s = this.label[0];
-            }
-            return '<div ext:qtip="' + this.label.join('<br />') + '">' +
-                   Ext.util.Format.ellipsis(s, 15) + '</div>';
-       }
-        if(v > 0 && this.units[this.unit] !== undefined) {
-            var callback = this.units[this.unit],
-                format = callback.call(this, v);
-            return format.value.toFixed(axis.tickDecimals) + ' ' + format.unit;
-        }
-        return v.toFixed(axis.tickDecimals);
-    },
-    
-    buildSeries: function() {
-        this.store.each(function(rec) {
-            if(rec.get('enabled')) {
-                Ext.each(rec.data.data, function(xy) {
-                    xy[0] *= 1000;
-                });
-            }
-        }, this);
-    },
-    
     applyTemplate: function() {
+        if(Ext.isObject(this.template.flot)) {
+            iG.merge(true, this.flotOptions, this.template.flot);
+        }
+        if(Ext.isObject(this.template.generic) &&
+           Ext.isNumber(this.template.generic.refreshInterval)) {
+            this.store.startRefresh(this.template.generic.refreshInterval);
+        }
         if(Ext.isArray(this.template.series)) {
             Ext.each(this.template.series, function(series) {
                 var id = series.host + series.service + series.plot +
                          series.type,
-                rec = this.store.getById(id);
+                    rec = this.store.getById(id);
                 if(!Ext.isObject(rec.data)) {
                     return;
                 }
-                if(series.convert !== undefined) {
-                    try {
-                        var convert = Ext.decode(series.convert, true);
-                        if(Ext.isFunction(convert)) {
-                            var scope = {};
-                            if(this.snapshot === undefined) {
-                                this.snapshot = this.store.data.getRange().map(
-                                    function(rec) {
-                                        return {
-                                            host: rec.data.host,
-                                            service: rec.data.service,
-                                            plot: rec.data.plot,
-                                            type: rec.data.type,
-                                            data: rec.data.data
-                                        };
-                                    });
-                            }
-                            Ext.each(rec.data.data, function(xy) {
-                                y = convert.call(scope, xy[1], xy[0],
-                                                this.snapshot);
-                                if(y !== xy[1] && (Ext.isNumber(y) ||
-                                   y === null)) {
-                                    xy[1] = y;
-                                }
-                            }, this);
-                        }
-                    } catch(e) {
-                        console.log(e);
+                var map = rec.fields.map;
+                Ext.iterate(series, function(key, value) {
+                    if((m = map[key]) && m.isFlotOption) {
+                        rec.set(m.mapping || m.name, value);
                     }
-                }
-                Ext.apply(rec.data, series);
+                });
             }, this);
-            if(this.snapshot !== undefined) {
-                delete this.snapshot;
-            }
         }
         if(this.autoYAxes) {
+            // Kicks in if yaxes are not defined via template.
             if(this.flotOptions.yaxes === undefined) {
-               this.flotOptions.yaxes = [];
-            } else {
-                Ext.each(this.flotOptions.yaxes, function(yaxis) {
-                    yaxis.tickFormatter = this.yTickFormatter;
-                }, this);
-                this.autoYAxes = false;
-            }
-            var min = 0;
-            this.store.each(function(rec) {
-                if(!Ext.isObject(rec.data) || rec.get('enabled') !== true) {
-                    return;
-                }
-                // TODO(el): Process on server-side?
-                var yvalues = [];
-                Ext.each(rec.data.data, function(xy) {
-                    if((y = xy[1]) !== null) {
-                        yvalues.push(y);
+                this.flotOptions.yaxes = [];
+                // All yaxes should share the same baseline.
+                var ymin = 0;
+                this.store.each(function(rec) {
+                    if(rec.get('enabled') !== true) {
+                        return;
                     }
-                });
-                var seriesmin = yvalues.length ?
-                                Math.min.apply(Math, yvalues) :
-                                null;
-                if(seriesmin !== null && seriesmin < min) {
-                    min = seriesmin;
-                }
-                var unit = rec.get('unit');
-                Ext.each(this.flotOptions.yaxes, function(yaxis, i) {
-                    if(yaxis.unit === rec.get('unit')) {
-                        rec.set('yaxis', i+1); // Flot's axis index starts
-                                               // with 1.
-                        // TODO(el)
-                        var label = rec.get('label');
-                        if(yaxis.label.indexOf(label) === -1) {
-                            yaxis.label.push(label);
+                    var yvalues = [];
+                    Ext.each(rec.get('data'), function(xy) {
+                        if((y = xy[1]) !== null) {
+                            yvalues.push(y);
                         }
-                    }
-                });
-                var i = this.flotOptions.yaxes.length;
-                // Setting yaxis on series via template plus if there's no
-                // yaxes configuration present breaks this code.
-                if(rec.get('yaxis') === undefined) {
-                    this.flotOptions.yaxes.push({
-                        position: i % 2 === 0 ? 'left' : 'right',
-                        unit: unit,
-                        label: [rec.get('label')],
-                        tickFormatter: this.yTickFormatter,
-                        min: unit === 'percent' ? 0 : min,
-                        max: unit === 'percent' ? 100 : null
                     });
-                    rec.set('yaxis', i+1);
-                }
+                    var seriesmin = yvalues.length > 0 ?
+                                    Math.min.apply(Math, yvalues) :
+                                    null;
+                    if(seriesmin !== null && seriesmin < ymin) {
+                        ymin = seriesmin;
+                    }
+                    var unit = rec.get('unit'),
+                        yaxis;
+                    Ext.each(this.flotOptions.yaxes, function(axis, i) {
+                        if(axis.unit === unit) {
+                            yaxis = {
+                                index: i,
+                                config: axis
+                            };
+                        }
+                    });
+                    if(yaxis) {
+                        yaxis.config.label.push(rec.get('label'));
+                        // Flot's axis index starts with 1.
+                        rec.set('yaxis', yaxis.index + 1);
+                    } else {
+                        var i = this.flotOptions.yaxes.length;
+                        this.flotOptions.yaxes.push({
+                            position: i % 2 === 0 ? 'left' : 'right',
+                            unit: unit,
+                            label: [rec.get('label')],
+                            min: unit === 'percent' ? 0 : ymin,
+                            max: unit === 'percent' ? 100 : null
+                        });
+                        rec.set('yaxis', i + 1);
+                    }
+                }, this);
+            }
+            Ext.each(this.flotOptions.yaxes, function(yaxis) {
+                yaxis.tickFormatter = Ext.iG.Util.yTickFormatter;
             }, this);
         }
     },
     
+    enableCommentCtx: function() {
+        this.commentCtxEnabled = true;
+        this.el.setStyle('cursor', 'pointer');
+    },
+    
+    disableCommentCtx: function() {
+        this.commentCtxEnabled = false;
+        this.el.setStyle('cursor', 'default');
+    },
+    
+    onPlotClick: function(item, pos) {
+        // TODO(el): Redundant code, see annotate.
+        if(this.fireEvent('plotclick', this, item) !== false) {
+            if(this.commentCtxEnabled === true) {
+                var hosts = [], services = [];
+                this.store.getHostsAndServices(hosts, services);
+                var cfg = {
+                    xtype: 'igcomment',
+                    minDate: new Date(this.store.getStart()*1000),
+                    maxDate: new Date(this.store.getEnd()*1000),
+                    hosts: hosts,
+                    services: services,
+                    listeners: {
+                        scope: this,
+                        addcomment: function(form) {
+                            this.store.reload();
+                            form.ownerCt.destroy();
+                        },
+                        cancel: function(form) {
+                            form.ownerCt.destroy();
+                        }
+                    }
+                };
+                if(item) {
+                    Ext.apply(cfg, {
+                        comment_host: item.series.host,
+                        comment_service: item.series.service,
+                        comment_timestamp: item.datapoint[0]
+                    });
+                } else {
+                    Ext.apply(cfg, {
+                        comment_host: hosts[0],
+                        comment_service: services[0],
+                        comment_timestamp: pos.x
+                    });
+                }
+                new Ext.Window({
+                    title: _('Comment'),
+                    collapsible: true,
+                    width: 300,
+                    height: 255,
+                    layout: 'fit',
+                    plain: true,
+                    modal: true,
+                    bodyStyle: 'padding:5px;',
+                    buttonAlign: 'center',
+                    items: cfg
+                }).show();
+                this.disableCommentCtx();
+            }
+        }
+    },
+    
     annotate: function() {
-        var yaxis = this.flot.getYAxes()[0],
+        // TODO(el): Redundant code, see onPlotClick.
+        var yaxis = this.$plot.getYAxes()[0],
             y = Math.floor((yaxis.min + yaxis.max)*0.75);
         Ext.each(this.store.getComments(), function(comment) {
-            var o = this.flot.pointOffset({
+            var o = this.$plot.pointOffset({
                 x: comment.timestamp*1000,
                 y: y
             });
@@ -530,12 +464,14 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                     cursor: 'pointer'
                 }
             });
+            Ext.iG.CommentMgr.register(comment.id, el);
             el.on({
                 scope: this,
                 click: function(e) {
                     var hosts = [], services = [];
                     this.store.getHostsAndServices(hosts, services);
                     var cfg = {
+                        xtype: 'igcomment',
                         minDate: new Date(this.store.getStart()*1000),
                         maxDate: new Date(this.store.getEnd()*1000),
                         hosts: hosts,
@@ -547,12 +483,31 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                         comment_text: comment.text,
                         listeners: {
                             scope: this,
-                            __igcomment__: function() {
-                                this.store.load();
+                            editcomment: function(form) {
+                                this.store.reload();
+                                form.ownerCt.destroy();
+                            },
+                            deletecomment: function(form) {
+                                Ext.iG.CommentMgr.unregister(form.comment_id);
+                                form.ownerCt.destroy();
+                            },
+                            cancel: function(form) {
+                                form.ownerCt.destroy();
                             }
                         }
                     };
-                    new Ext.iG.CommentForm(cfg).windowed().show();
+                    new Ext.Window({
+                        title: _('Comment'),
+                        collapsible: true,
+                        width: 300,
+                        height: 255,
+                        layout: 'fit',
+                        plain: true,
+                        modal: true,
+                        bodyStyle: 'padding:5px;',
+                        buttonAlign: 'center',
+                        items: cfg
+                    }).show();
                 },
                 mouseover: function(e) {
                     new Ext.ToolTip({
@@ -575,14 +530,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }, this);
     },
     
-    onBeforePlot: function() {
-        this.applyTemplate();
-    },
-    
-    onPlot: function() {
-        this.annotate();
-    },
-    
     plot: function(id, series) {
         if(this.fireEvent('beforeplot', this) !== false) {
             if(series === undefined) {
@@ -596,10 +543,18 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             if(id === undefined) {
                 id = this.id;
             }
-            this.flot = $.plot($('#' + id), series, this.flotOptions);
+            if(this.absolute) {
+                // Force full view of timerange even if there's no data.
+                Ext.apply(this.flotOptions.xaxis, {
+                    min: this.store.getStart()*1000,
+                    max: this.store.getEnd()*1000
+                });
+            }
+            this.$plot = $.plot($('#' + id), series, this.flotOptions);
             if(this.loadMask) {
                this.el.setStyle('position', 'relative');
             }
+            this.annotate();
             this.fireEvent('plot', this);
         }
     },
@@ -611,30 +566,12 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         this.refreshTask.delay(this.refreshBuffer);
     },
     
-    onDatachanged: function() {
-        this.buildSeries();
-        if(this.absolute) {
-            // Force full view of timerange even if there's no data.
-            Ext.apply(this.flotOptions.xaxis, {
-                min: this.store.getStart() ? this.store.getStart()*1000 :
-                                             null,
-                max: this.store.getEnd() ? this.store.getEnd()*1000 :
-                                           new Date().getTime()
-            });
-        }
+    onDataChanged: function() {
         this.plot();
     },
     
     onUpdate: function() {
         this.delayPlot();
-    },
-    
-    getStore: function() {
-        return this.store;
-    },
-    
-    getFlot: function() {
-        return this.flot;
     },
     
     onDestroy: function() {
@@ -645,10 +582,27 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         this.bindStore(null);
         if(this.tooltip) {
             this.tooltip.destroy();
+            this.tooltip = null;
         }
         if(this.shint) {
             this.shint.destroy();
+            this.shint = null;
         }
+    },
+    
+    setTemplate: function(template) {
+        // Reset flotOptions
+        this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions,
+                                    this.initialConfig.flotOptions);
+        this.template.series = template.series;
+        this.on({
+            scope: this,
+            single: true,
+            beforeplot: this.applyTemplate
+        });
+        this.store.baseParams.query = Ext.encode(
+            Ext.iG.Util.buildQuery(series));
+        this.store.load();
     }
 });
 Ext.reg('flot', Ext.iG.Flot);

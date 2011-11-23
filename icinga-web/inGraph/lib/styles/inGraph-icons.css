@@ -17,3 +17,27 @@
     background-repeat: no-repeat;
     background-position: center center;
 }
+
+.ingraph-icon-add {
+    background-image: url(../images/icons/add.gif) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-save {
+    background-image: url(../images/icons/disk.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-accept {
+    background-image: url(../images/icons/tick-circle-frame.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-cancel {
+    background-image: url(../images/icons/cross-circle-frame.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}

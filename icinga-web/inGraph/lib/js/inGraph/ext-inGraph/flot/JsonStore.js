@@ -1,17 +1,3 @@
-Ext.ns('Ext.iG');
-/**
- * @class Ext.iG.FlotJsonReader
- * @extends Ext.data.JsonReader
- */
-Ext.iG.FlotJsonReader = Ext.extend(Ext.data.JsonReader, {
-    buildExtractors: function() {
-        Ext.iG.FlotJsonReader.superclass.buildExtractors.apply(this, arguments);
-        this.getId = function(rec) {
-             return rec.host + rec.service + rec.plot +
-                    rec.type;
-        };
-    }
-});
 /**
  * @class Ext.iG.FlotJsonStore
  * @extends Ext.data.Store
@@ -20,15 +6,23 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
     keepModifications: true,
     mintimestampProperty: 'min_timestamp',
     maxtimestampProperty: 'max_timestamp',
+    commentsProperty: 'comments',
 
     constructor: function(cfg) {
         Ext.applyIf(cfg, {
             autoDestroy : true,
             root: 'charts',
-            fields: [{name: 'data', defaultValue: []},
-                     {name: 'label', defaultValue: ''},
+            fields: Ext.iG.flot.Fields.series,
+            
+            /*[{name: 'data', defaultValue: [], convert: function(v, rec) {
+                Ext.each(v, function(xy) {
+                    xy[0] *= 1000;
+                });
+                return v;
+            }},
+                     {name: 'label', defaultValue: '', isFlotOption: true},
                      {name: 'unit', defaultValue: ''},
-                     {name: 'color', defaultValue: null},
+                     {name: 'color', defaultValue: null, isFlotOption: true},
                      {name: 'xaxis', defaultValue: 1},
                      {name: 'yaxis', defaultValue: undefined},
                      {name: 'id', defaultValue: undefined},
@@ -43,11 +37,16 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
                      {name: 'service'},
                      {name: 'plot'},
                      {name: 'type'},
+                     {name: 'convert'},
                      {name: 'key', convert: function(v, rec) {
                          return rec.host + rec.service + rec.plot +
-                                rec.type;}}],
+                                rec.type;}}],*/
             autoLoad: true,
-            idProperty: 'key'
+            idProperty: 'key',
+            listeners: {
+                scope: this,
+                beforeload: this.onBeforeLoad
+            }
         });
         cfg.reader = new Ext.iG.FlotJsonReader(cfg);
         Ext.iG.FlotJsonStore.superclass.constructor.call(this, cfg);
@@ -107,26 +106,17 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
         }
     },
     
+    destroy: function() {
+        this.stopRefresh();
+        Ext.iG.FlotJsonStore.superclass.destroy.call(this);
+    },
+    
     getStart: function() {
-        if(this.lastOptions.params !== undefined) {
-            if(this.lastOptions.params.start !== undefined) {
-                return this.lastOptions.params.start;
-            }
-        }
-        return this.baseParams.start !== undefined ?
-               this.baseParams.start :
-               this.getMintimestamp();
+        return this.lastStart || this.getMintimestamp();
     },
     
     getEnd: function() {
-        if(this.lastOptions.params !== undefined) {
-            if(this.lastOptions.params.end !== undefined) {
-                return this.lastOptions.params.end;
-            }
-        }
-        return this.baseParams.end !== undefined ?
-               this.baseParams.end :
-               this.getMaxtimestamp();
+        return this.lastEnd || this.getMaxtimestamp();
     },
     
     getQuery: function() {
@@ -144,12 +134,8 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
         return this.reader.jsonData[this.maxtimestampProperty];
     },
     
-    getOptions: function() {
-        return this.reader.jsonData[this.optionsProperty];
-    },
-    
     getComments: function() {
-        return this.reader.jsonData.comments;
+        return this.reader.jsonData[this.commentsProperty];
     },
     
     getHostsAndServices: function(hosts, services) {
@@ -178,5 +164,37 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
             }
         });
         return empty !== undefined ? true : false;
+    },
+    
+    onBeforeLoad: function(self, options) {
+        if(options.params.start === undefined &&
+           Ext.isString(self.baseParams.start)) {
+            options.params.start = Math.ceil(strtotime(self.baseParams.start));
+        } else if(Ext.isString(options.params.start)) {
+            options.params.start = Math.ceil(strtotime(options.params.start));
+        }
+        
+        if(options.params.end === undefined &&
+           Ext.isString(self.baseParams.end)) {
+            options.params.end = Math.ceil(strtotime(self.baseParams.end));
+        } else if(Ext.isString(options.params.end)) {
+            options.params.end = Math.ceil(strtotime(options.params.end));
+        }
+        
+        this.lastStart = options.params.start || self.baseParams.start;
+        this.lastEnd = options.params.end || self.baseParams.end;
     }
 });
+
+Ext.iG.FlotJsonStore.Util = function() {
+    return {
+        convertData: function(v, rec) {
+            console.log("call convert data", rec);
+            var tf = rec.convert;
+            console.log("tf", tf);
+            if(Ext.isFunction(tf)) {
+            };
+            return v;
+        }
+    };
+}();

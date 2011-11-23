@@ -4,24 +4,28 @@
 "flot": {
     "series": {
         "lines": {
-            "fill": true,
-            "show": true
+            "fill": true
         }
     }
 },
 
 "series": [{
-    "re": "/.*-avg/",
-	"color": "#66FF33"
+    "re": "//",
+    "type": "avg",
+    "color": "#66FF33"
 }, {
-    "re": "/.*-warn_upper/",
-	"color": "#FF6600",
-   "lines": {
-	"fill": false}
+    "re": "//",
+    "type": "warn_upper",
+    "color": "#FF6600",
+    "lines": {
+        "fill": false
+    }
 }, {
-    "re": "/.*-crit_upper/",
-	"color": "#CC0000",
-   "lines": {
-	"fill": false}
+    "re": "//",
+    "type": "crit_upper",
+    "color": "#CC0000",
+    "lines": {
+        "fill": false
+    }
 }]
 }

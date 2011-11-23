@@ -66,4 +66,20 @@ class inGraph_Provider_ValuesSuccessView extends inGraphBaseView {
         $response->setHttpHeader('Content-Disposition', 'attachment');
         return $handle;
     }
+    
+    
+    public function executeImage(AgaviRequestDataHolder $rd) {
+        $values = $this->getAttribute('values');
+        $params = array(
+            'series' => $values['charts'],
+            'options' => array(
+                'width' => 400,
+                'height' => 200,
+                'yaxis' => array()
+            )
+        );
+        $node = NodeJs::getInstance();
+        $res = $node->renderImage($params);
+        return $res;
+    }
 }

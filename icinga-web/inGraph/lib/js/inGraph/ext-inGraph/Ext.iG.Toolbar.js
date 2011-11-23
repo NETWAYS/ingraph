@@ -27,7 +27,7 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             disabled: true,
             handler: this.movePrevious,
             scope: this
-        }), '-', _('Interval'),
+        }), '-', _('Select last'),
         this.input = new Ext.form.ComboBox({
             width: 100,
             store: new Ext.iG.TimeFrames(),
@@ -36,6 +36,9 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             mode: 'local',
             triggerAction: 'all',
             value: cfg.activeFrame !== undefined ? cfg.activeFrame : '',
+            style: {
+                paddingTop: '1px'
+            },
             listeners: {
                 scope: this,
                 select: this.inputChange
@@ -102,7 +105,16 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             iconCls: 'icinga-icon-cog',
             scope: this,
             handler: function() {
-                Ext.Msg.alert(_('Settings'), _('Sorry, not yet implemented'));
+//                Ext.Msg.alert(_('Settings'), _('Sorry, not yet implemented'));
+                new Ext.iG.Settings({
+                    template: new Ext.iG.Template(this.ownerCt.flot.template),
+                    listeners: {
+                        scope: this,
+                        applysettings: function(win, settings) {
+                            this.ownerCt.flot.setTemplate(settings);
+                        }
+                    }
+                }).show();
             }
         }),
         this.comments = new Ext.Toolbar.Button({
@@ -198,7 +210,7 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         this.refresh.enable();
         this.datapoints.enable();
         this.smooth.enable();
-        if(this.store.getStart() === this.store.getMintimestamp()) {
+        if(this.store.getStart() <= this.store.getMintimestamp()) {
             this.first.disable();
             this.prev.disable();
         } else {
@@ -258,30 +270,15 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
                         this.lastFrame : this.activeFrame; 
         if(rec.get('name') !== lastFrame) {
             this.first.enable();
-        } else if(this.store.getStart() ===
+        } else if(this.store.getStart() <=
                   this.store.getMintimestamp()) {
             this.first.disable();
         }
-        
-        var s = this.store.getStart()*1000,
-            e = this.store.getEnd()*1000,
-            i = rec.get('interval')/2*1000,
-            m = s+(e-s)/2,
-            min = this.store.getMintimestamp()*1000,
-            max = this.store.getMaxtimestamp()*1000,
-            ns = m - i,
-            ne = m + i;
-       if(ns < min) {
-           ns = min;
-       }
-       if(ne > max) {
-           ne = max;
-       }
-       this.store.load({
-           params: {
-               start: Math.ceil(ns/1000),
-               end: Math.ceil(ne/1000)
-           }
+        this.store.load({
+            params: {
+                start: Math.ceil(strtotime(rec.get('start'))),
+                end: Math.ceil(strtotime('now'))
+            }
        });
     },
     

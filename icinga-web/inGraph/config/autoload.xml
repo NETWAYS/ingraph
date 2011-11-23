@@ -9,6 +9,9 @@
         
         <autoload name="XMLRPCException">%core.module_dir%/inGraph/lib/exception/XMLRPCException.class.php</autoload>
         <autoload name="XMLRPCClientException">%core.module_dir%/inGraph/lib/exception/XMLRPCClientException.class.php</autoload>
+        
+        <autoload name="NodeJs">%core.module_dir%/inGraph/lib/php/NodeJs.php</autoload>
+        <autoload name="Benchmark">%core.module_dir%/inGraph/lib/php/Benchmark.php</autoload>
 		
 	</ae:configuration>
 	

@@ -1,13 +1,16 @@
 {
-"re": "/ping/i",
+"re": "/ping$/i",
 
 "series": [{
-    "re": "/pl-avg/",
+    "re": "/^pl$/",
+    "type": "avg",
     "label": "Packet Loss",
     "color": "#FF0000"
 }, {
-    "re": "/rta-avg/",
+    "re": "/^rta$/",
+    "type": "avg",
     "label": "Round Trip Time",
-    "color": "#00FF00"
+    "color": "#00FF00",
+    "convert": "function() { console.log(arguments);}"
 }]
 }

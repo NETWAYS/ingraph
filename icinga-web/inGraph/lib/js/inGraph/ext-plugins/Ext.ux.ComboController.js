@@ -9,7 +9,7 @@ Ext.ux.ComboController = Ext.extend(Object, {
         }
         
         combo.on({
-            select: function() {                
+            select: function() {
                 Ext.each(this.control, function(cfg) {
                     var cmp = cfg.scope[cfg.cmp];
                     cmp.enable();

@@ -8,7 +8,7 @@
 		<validators>
             <validator name="query" class="string" required="true">
                 <argument>query</argument>
-                <error>Check query.</error>
+                <error>Parameter query is mandatory.</error>
             </validator>
             <validator name="start" class="number" required="false">
                 <argument>start</argument>

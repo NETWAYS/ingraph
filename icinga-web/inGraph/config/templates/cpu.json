@@ -3,15 +3,20 @@
 
 "flot": {
     "lines": {
-        "fill": true
+        "fill": false
     }
 },
 
 "series": [{
-    "re": "/.*-avg/",
+    "re": "//",
+    "type": "avg",
     "stack" : "idle"
 },{
-    "re": "/.*Idle-avg$/i",
-    "id": "idle"
+    "re": "/Idle/i",
+    "type": "avg",
+    "id": "idle",
+    "lines": {
+        "show": false
+    }
 }]
 }

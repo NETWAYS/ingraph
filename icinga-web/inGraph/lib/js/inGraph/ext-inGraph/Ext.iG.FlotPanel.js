@@ -14,6 +14,20 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
         pack: 'start'
     },
     
+    initComponent: function() {
+//        var cfg = {
+//            items: []
+//        };
+//        this.template = new Ext.iG.Template(this.template);
+//        cfg.items.push(this.flot = new Ext.iG.Flot(Ext.apply({
+//            store: this.store,
+//            template: this.template,
+//            flex: 1
+//        }, this.flotCfg)));
+//        Ext.apply(this, Ext.apply(this.initialConfig, cfg));
+        Ext.iG.FlotPanel.superclass.initComponent.call(this);
+    },
+    
     constructor: function(cfg) {
         cfg = cfg || {};
         var items = [this.flot = new Ext.iG.Flot(Ext.apply({}, {
@@ -50,10 +64,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                 height: height,
                 store: new Ext.iG.FlotJsonStore({
                     url: cfg.store.url,
-                    baseParams: Ext.applyIf({
-                        start: '',
-                        end: ''
-                    }, cfg.store.baseParams)
+                    baseParams: { query: cfg.store.baseParams.query}
                 })
             })); // eof items.push
         }
@@ -119,16 +130,16 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                     /*
                      * TODO(el): Initial selection disappears.
                      */
-                    this.overview.getFlot().setSelection({
+                    this.overview.$plot.setSelection({
                         xaxis: {
-                            from: this.store.baseParams.start,
-                            to: this.store.baseParams.end || new Date().getTime()
+                            from: this.store.getStart()*1000,
+                            to: this.store.getEnd()*1000
                         }
                     }, true);
                     this.mon(this.flot.store, {
                         scope: this,
                         load: function(store) {
-                            this.overview.getFlot().setSelection({
+                            this.overview.$plot.setSelection({
                                 xaxis: {
                                     from: store.getStart()*1000,
                                     to: store.getEnd()*1000
@@ -157,11 +168,11 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                 },
                 contextmenu: function(flot, event) {
                     event.stopEvent();
-                    if(this.overview.getFlot().getSelection()) {
+                    if(this.overview.$plot.getSelection()) {
                         tbar = this.getTopToolbar();
                         tbar.input.setValue(tbar.initialConfig.activeFrame);
                         this.store.load();
-                        this.overview.getFlot().clearSelection();
+                        this.overview.$plot.clearSelection();
                     }
                     // Do NOT zoom out.
                     return false;
@@ -170,7 +181,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                     if(ranges) {
                         this.flot.store.stopRefresh();
                         var clipped = [];
-                        Ext.each(this.overview.flot.getData(),
+                        Ext.each(this.overview.$plot.getData(),
                                  function(series) {
                             var data = series.data.filter(function(xy) {
                                 if(xy[0] >= ranges.xaxis.from &&
@@ -190,7 +201,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                             min: ranges.xaxis.from,
                             max: ranges.xaxis.to
                         });
-                        this.flot.flot = $.plot($('#' + this.flot.id),
+                        this.flot.$plot = $.plot($('#' + this.flot.id),
                                                 clipped, flotOptions);
                     }
                 }

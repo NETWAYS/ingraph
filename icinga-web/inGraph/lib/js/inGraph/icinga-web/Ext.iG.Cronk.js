@@ -36,7 +36,7 @@ Ext.iG.Cronk = function() {
                 title: cfg.title,
                 width: cfg.width,
                 layout: 'fit',
-                items: new Ext.iG.Panel({
+                items: new Ext.iG.View({
                     border: false,
                     panelsCfg: {
                         height: cfg.height,
@@ -71,9 +71,8 @@ Ext.iG.Cronk = function() {
                 anchor: 'left',
                 dismissDelay: 0,
                 width: cfg.width,
-                items: new Ext.iG.Panel({
+                items: new Ext.iG.View({
                     autoScroll: false,
-                    border: false,
                     panelsCfg: {
                         header: false,
                         showEmpty: true,

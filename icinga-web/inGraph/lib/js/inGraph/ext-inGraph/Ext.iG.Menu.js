@@ -41,8 +41,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             width: 150,
             emptyText: _('Endtime')
         });
-        this.timeFrames = new Ext.iG.TimeFrames();
-        var dispGraphBtn = new Ext.SplitButton({
+        var dispGraphBtn = new Ext.Button({
             text: _('Display Graph'),
             width: 80,
             cls: 'x-btn-text-left',
@@ -52,49 +51,9 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
                     service: this.serviceCmp.getValue(),
                     start: this.startCmp.getValue(),
                     end: this.endCmp.getValue()
-                }, this.timeFrames);
+                });
             },
-            scope: this,
-            menu: {
-                ignoreParentClicks: true,
-                items: [{
-                    xtype: 'menutextitem',
-                    text: _('Choose frames to plot'),
-                    style: {
-                        'border': '1px solid #999999',
-                        'background-color': '#D6E3F2',
-                        'margin': '0px 0px 1px 0px',
-                        'display': 'block',
-                        'padding': '3px',
-                        'font-weight': 'bold',
-                        'font-size': '12px',
-                        'text-align': 'center'
-                    }
-                }, new Ext.form.CheckboxGroup({
-                    fireChecked: function(item, checked) {
-                        this.fireEvent('change', this, item, checked);
-                    },
-                    columns: 1,
-                    items: (function(scope) {
-                        items = [];
-                        scope.timeFrames.each(function(rec) {
-                            items.push({
-                                boxLabel: rec.get('name'),
-                                name: rec.get('name'),
-                                checked: rec.get('enabled')
-                            });
-                        });
-                        return items;
-                    })(this),
-                    listeners: {
-                        change: function(bg, item, checked) {
-                            rec = this.timeFrames.getById(item.name);
-                            rec.set('enabled', checked);
-                        },
-                        scope: this
-                    }
-                })]
-            }
+            scope: this
         });
         var dispViewBtn = new Ext.Button({
             text: _('Display View'),
@@ -153,9 +112,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
     },
     
     initComponent: function() {
-        this.addEvents(
-           'plot'
-        );
         Ext.iG.Menu.superclass.initComponent.call(this);
+        this.addEvents('plot');
     }
 });

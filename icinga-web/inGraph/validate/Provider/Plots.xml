@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ae:configurations
+    xmlns="http://agavi.org/agavi/config/parts/validators/1.0"
+    xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0"
+    parent="%core.module_dir%/inGraph/config/validators.xml"
+>
+    <ae:configuration>
+        <validators>
+            <validator name="host" class="string" required="true">
+                <argument>host</argument>
+                <error>Parameter host is mandatory.</error>
+            </validator>
+            <validator name="service" class="string" required="true">
+                <argument>service</argument>
+                <error>Parameter service is mandatory.</error>
+            </validator>
+        </validators>
+    </ae:configuration>
+</ae:configurations>

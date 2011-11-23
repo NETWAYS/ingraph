@@ -1,5 +1,5 @@
 {
-"re": "/disk$/i",
+"re": "/partition$/i",
 
 "flot": {
     "colors": ["#00CC00", "#FF6600"],
@@ -12,6 +12,7 @@
 },
 
 "series": [{
-    "re": "/.*-avg/"
+    "re": "//",
+    "type": ["avg", "upper_limit", "crit_upper"]
 }]
 }

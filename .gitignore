@@ -1,5 +1,2 @@
-attic
-build
-dist
-tmp
-*.pyc
+*
+!/icinga-web/

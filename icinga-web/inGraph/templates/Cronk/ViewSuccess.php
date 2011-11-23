@@ -29,11 +29,10 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                 modal: true,
                 items: menu
             });
-            menu.on('plot', function(cb, cfg, timeFrames) {
+            menu.on('plot', function(cb, cfg) {
                 cfg.provider = provider;
-                cfg.timeFrames = timeFrames;
                 cfg.stateId = this.stateuid;
-                var p = new Ext.iG.Panel(cfg);
+                var p = new Ext.iG.View(cfg);
                 p.on({
                     scope: this,
                     single: true,
@@ -60,7 +59,7 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                 view: view,
                 stateId: this.stateuid
             };
-            var p = new Ext.iG.Panel(cfg);
+            var p = new Ext.iG.View(cfg);
             p.on({
                 scope: this,
                 single: true,
@@ -78,7 +77,7 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
             stateId: this.stateuid,
             stateEvents: []
         };
-        var p = new Ext.iG.Panel(cfg);
+        var p = new Ext.iG.View(cfg);
         this.add(p);
         this.doLayout();
     }

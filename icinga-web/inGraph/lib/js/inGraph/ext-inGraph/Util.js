@@ -90,7 +90,82 @@ Ext.iG.Util = function() {
                 }
                 s.push(c);
             }
-            return s.join('').replace(/[^A-Za-z0-9]$/, '');
+            return s.join('').replace(/[^A-Za-z0-9]+$/, '');
+        },
+        
+        buildQuery: function(series) {
+            var query = {};
+            Ext.each(series, function(item) {
+                var qpart = query;
+                Ext.each([item.host, item.service],
+                    function(v) {
+                     if(!Ext.isObject(qpart[v])) {
+                         qpart[v] = {};
+                     }
+                     qpart = qpart[v];
+                }, this);
+                if(!Ext.isArray(qpart[item.plot])) {
+                    qpart[item.plot] = [];
+                }
+                qpart = qpart[item.plot];
+                if(!Ext.isArray(item.type)) {
+                    item.type = [item.type];
+                }
+                Ext.each(item.type, function(type) {
+                    if(qpart.indexOf(type) === -1) {
+                        qpart.push(type);
+                    }
+                });
+            }, this);
+            return query;
+        },
+        
+        xTickFormatter: function(v, axis, dtrack) {
+            if(axis.ticks.length === 0) {
+                this.lastDate = null;
+            }
+            var d = new Date(v);
+            d = new Date(v - d.getTimezoneOffset()*60*1000);
+            var fmt = '%b %d %y %h:%M';
+            if(Ext.isDate(this.lastDate)) {
+                if(this.lastDate.getFullYear() === d.getFullYear() &&
+                   this.lastDate.getMonth() === d.getMonth() &&
+                   this.lastDate.getDate() === d.getDate()) {
+                    fmt = '%h:%M';
+                }
+            }
+            if(dtrack === undefined && v > axis.min) {
+                this.lastDate = d;
+            }
+            return $.plot.formatDate(d, fmt, this.monthNames);
+        },
+        
+        yTickFormatter: function(v, axis) {
+            if(axis.ticks.length === 0) {
+                this.rawTicks = axis.tickGenerator(axis);
+            }
+            if(this.units === undefined) {
+                this.units = {
+                    byte: Ext.iG.Util.formatByte,
+                    time: Ext.iG.Util.formatTime,
+                    percent: Ext.iG.Util.formatPercent,
+                    c: Ext.iG.Util.formatCounter
+                };
+            }
+            if(v === this.rawTicks.last() && Ext.isArray(this.label)) {
+                var s = Ext.iG.Util.lcs.apply(Ext.iG.Util, this.label);
+                if(s.length === 0) {
+                    s = this.label[0];
+                }
+                return '<div ext:qtip="' + this.label.join('<br />') + '">' +
+                       Ext.util.Format.ellipsis(s, 15) + '</div>';
+            }
+            if(v > 0 && this.units[this.unit] !== undefined) {
+                var callback = this.units[this.unit],
+                    format = callback.call(this, v);
+                return format.value.toFixed(axis.tickDecimals) + ' ' + format.unit;
+            }
+            return v.toFixed(axis.tickDecimals);
         }
     };
 }();

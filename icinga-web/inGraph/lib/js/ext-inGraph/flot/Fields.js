@@ -38,6 +38,7 @@ Ext.iG.flot.Fields = function() {
         isFlotOption: true
     }, {
         name: 'unit',
+        defaultValue: undefined,
         isFlotOption: true
     }, {
         name: 'color',

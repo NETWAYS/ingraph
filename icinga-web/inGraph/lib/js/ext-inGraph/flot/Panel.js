@@ -1,5 +1,5 @@
-Ext.ns('Ext.iG');
-Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
+Ext.ns('Ext.iG.flot');
+Ext.iG.flot.Panel = Ext.extend(Ext.Panel, {
     loadMask: true,
     overview: false,
     titleFormat: _('{interval} graph for {host} {service}'),
@@ -25,10 +25,11 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
 //            flex: 1
 //        }, this.flotCfg)));
 //        Ext.apply(this, Ext.apply(this.initialConfig, cfg));
-        Ext.iG.FlotPanel.superclass.initComponent.call(this);
+        Ext.iG.flot.Panel.superclass.initComponent.call(this);
     },
     
     constructor: function(cfg) {
+        console.log("template", cfg.template);
         cfg = cfg || {};
         var items = [this.flot = new Ext.iG.Flot(Ext.apply({}, {
             store: cfg.store,
@@ -70,7 +71,8 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
         }
         cfg.items = items;
         Ext.applyIf(cfg, {
-            tbar: new Ext.iG.Toolbar({
+            tbar: {
+                xtype: 'flottbar',
                 store: cfg.store,
                 activeFrame: cfg.activeFrame,
                 hidden: (cfg.hideToolbar !== undefined ?
@@ -85,13 +87,13 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                         this.preparePrint();
                     }
                 }
-            })
+            }
         });
-        Ext.iG.FlotPanel.superclass.constructor.call(this, cfg);
+        Ext.iG.flot.Panel.superclass.constructor.call(this, cfg);
     },
     
     initEvents: function() {
-        Ext.iG.FlotPanel.superclass.initEvents.call(this);
+        Ext.iG.flot.Panel.superclass.initEvents.call(this);
         if(this.loadMask) {
             this.loadMask = new Ext.LoadMask(this.bwrap,
                 Ext.apply({
@@ -210,7 +212,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
     },
     
     onDestroy: function() {
-        Ext.iG.FlotPanel.superclass.onDestroy.call(this);
+        Ext.iG.flot.Panel.superclass.onDestroy.call(this);
         if(this.templateWindow) {
             this.templateWindow.destroy();
         }
@@ -255,7 +257,7 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
                                       this.store.baseParams) 
             },
             xtype: 'flotpanel',
-            template: this.template
+            template: this.template.reader.jsonData
         };
     },
     
@@ -269,7 +271,14 @@ Ext.iG.FlotPanel = Ext.extend(Ext.Panel, {
             service: this.service,
             interval: this.initialConfig.title
         });
-        Ext.iG.FlotPanel.superclass.setTitle.call(this, title);
+        Ext.iG.flot.Panel.superclass.setTitle.call(this, title);
+    },
+    
+    applyTemplate: function() {
+        this.flot.applyTemplate();
+        if(this.overview) {
+            this.overview.applyTemplate();
+        }
     }
 });
-Ext.reg('flotpanel', Ext.iG.FlotPanel);
+Ext.reg('flotpanel', Ext.iG.flot.Panel);

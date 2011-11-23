@@ -38,7 +38,7 @@ Ext.iG.Settings = Ext.extend(Ext.Window, {
             }),
             clicksToEdit: 1,
             plugins: [new Ext.ux.grid.CheckColumn()],
-            store: this.template,
+            store: this.store,
             cm: new Ext.grid.ColumnModel({
                 defaults: {
                     sortable: true
@@ -98,20 +98,7 @@ Ext.iG.Settings = Ext.extend(Ext.Window, {
     },
     
     doApply: function() {
-        var series = [];
-        this.template.each(function(rec) {
-            var map = rec.fields.map,
-                raw = rec.data,
-                data = {},
-                m;
-            Ext.iterate(raw, function(key, value){
-                if((m = map[key]) && (m.isFlotOption || m.isTemplateOption)){
-                    data[m.mapping ? m.mapping : m.name] = value;
-                }
-            });
-            series.push(data);
-        });
-        this.fireEvent('applysettings', this, series);
+        this.fireEvent('applysettings', this);
     },
     
     doCancel: function() {

@@ -1,9 +1,9 @@
-Ext.ns('Ext.iG');
+Ext.ns('Ext.iG.flot');
 /**
- * @class Ext.iG.Toolbar
+ * @class Ext.iG.flot.Toolbar
  * @extends Ext.Toolbar
  */
-Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
+Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
     firstText: _(''),
     prevText: _(''),
     nextText: _(''),
@@ -107,11 +107,11 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
             handler: function() {
 //                Ext.Msg.alert(_('Settings'), _('Sorry, not yet implemented'));
                 new Ext.iG.Settings({
-                    template: new Ext.iG.Template(this.ownerCt.flot.template),
+                    store: this.ownerCt.template,
                     listeners: {
                         scope: this,
                         applysettings: function(win, settings) {
-                            this.ownerCt.flot.setTemplate(settings);
+                            this.ownerCt.applyTemplate();
                         }
                     }
                 }).show();
@@ -168,11 +168,11 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         })];
         
         cfg.items = items;
-        Ext.iG.Toolbar.superclass.constructor.call(this, cfg);
+        Ext.iG.flot.Toolbar.superclass.constructor.call(this, cfg);
     },
     
     initComponent: function() {
-        Ext.iG.Toolbar.superclass.initComponent.call(this);
+        Ext.iG.flot.Toolbar.superclass.initComponent.call(this);
         this.addEvents('beforeprint');
         this.bindStore(this.store, true);
     },
@@ -223,7 +223,7 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
     
     onDestroy: function() {
         this.bindStore(null);
-        Ext.iG.Toolbar.superclass.onDestroy.call(this);
+        Ext.iG.flot.Toolbar.superclass.onDestroy.call(this);
     },
     
     doRefresh: function() {
@@ -352,3 +352,4 @@ Ext.iG.Toolbar = Ext.extend(Ext.Toolbar, {
         Ext.destroy(form, frame);
     }
 });
+Ext.reg('flottbar', Ext.iG.flot.Toolbar);

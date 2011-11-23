@@ -44,13 +44,11 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     flotOptions: {},
     zooms: [],
     commentCtxEnabled: false,
-    template: {},
     
     initComponent: function() {
         this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions,
                                     this.flotOptions);
         this.flotOptions.xaxis.tickFormatter = Ext.iG.Util.xTickFormatter;
-        
         Ext.iG.Flot.superclass.initComponent.call(this);
         this.addEvents(
             'beforeplot',
@@ -304,29 +302,28 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     applyTemplate: function() {
-        if(Ext.isObject(this.template.flot)) {
-            iG.merge(true, this.flotOptions, this.template.flot);
-        }
-        if(Ext.isObject(this.template.generic) &&
-           Ext.isNumber(this.template.generic.refreshInterval)) {
-            this.store.startRefresh(this.template.generic.refreshInterval);
-        }
-        if(Ext.isArray(this.template.series)) {
-            Ext.each(this.template.series, function(series) {
-                var id = series.host + series.service + series.plot +
-                         series.type,
-                    rec = this.store.getById(id);
-                if(!Ext.isObject(rec.data)) {
-                    return;
+        console.log(this.template);
+        if(Ext.isObject(this.template.reader.jsonData.flot)) {
+            iG.merge(true, this.flotOptions,
+                     this.template.reader.jsonData.flot);
+        } // TODO
+        if(Ext.isObject(this.template.reader.jsonData.generic) &&
+           Ext.isNumber(this.template.reader.jsonData.generic.refreshInterval)) {
+            this.store.startRefresh(this.template.reader.jsonData.generic.refreshInterval);
+        } // TODO
+        this.template.each(function(series) {
+            var rec = this.store.getById(series.id);
+            if(!Ext.isObject(rec.data)) {
+                return;
+            }
+            var map = rec.fields.map;
+            Ext.iterate(series.data, function(key, value) {
+                if((m = map[key]) && m.isFlotOption && value !== undefined) {
+                    console.log(key, value);
+                    rec.set(m.mapping || m.name, value);
                 }
-                var map = rec.fields.map;
-                Ext.iterate(series, function(key, value) {
-                    if((m = map[key]) && m.isFlotOption) {
-                        rec.set(m.mapping || m.name, value);
-                    }
-                });
-            }, this);
-        }
+            }); // TODO
+        }, this);
         if(this.autoYAxes) {
             // Kicks in if yaxes are not defined via template.
             if(this.flotOptions.yaxes === undefined) {
@@ -590,18 +587,17 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
-    setTemplate: function(template) {
+    setTemplate: function() {
         // Reset flotOptions
         this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions,
                                     this.initialConfig.flotOptions);
-        this.template.series = template.series;
         this.on({
             scope: this,
             single: true,
             beforeplot: this.applyTemplate
         });
         this.store.baseParams.query = Ext.encode(
-            Ext.iG.Util.buildQuery(series));
+            Ext.iG.Util.buildQuery(this.template.reader.jsonData.series));
         this.store.load();
     }
 });

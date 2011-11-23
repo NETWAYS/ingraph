@@ -109,7 +109,8 @@ Ext.iG.View = Ext.extend(Ext.Container, {
                         title: panel.get('title') || _('No Title'),
                         host: this.host,
                         service: this.service,
-                        template: template,
+                        template: new Ext.iG.Template(
+                                      { data: template}),
                         overview: panel.get('overview'),
                         store: new Ext.iG.FlotJsonStore({
                             url: this.provider.values,
@@ -155,6 +156,8 @@ Ext.iG.View = Ext.extend(Ext.Container, {
             if(panel.store) {
                 panel.store = new Ext.iG.FlotJsonStore(panel.store);
             }
+            panel.template = new Ext.iG.Template(
+                                 { data: panel.template}); // TODO
             this.add(panel);
         }, this);
     },

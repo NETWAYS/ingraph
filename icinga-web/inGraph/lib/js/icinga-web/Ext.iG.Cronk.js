@@ -4,15 +4,11 @@ Ext.ns('Ext.iG.Cronk');
  * @singleton
  */
 Ext.iG.Cronk = function() {
-    var urlBase = AppKit.util.Config.getBaseUrl() +
-                  '/modules/ingraph/provider/',
-    provider = {
-        template: urlBase + 'template',
-        values: urlBase + 'values',
-        services: urlBase + 'services'
-    };
     var titleTpl = new Ext.XTemplate(
-        'iG: {host}', '<tpl if="values.service"> - {service}</tpl>',
+        '<tpl if="values.view">iG: {view}</tpl>',
+        '<tpl if="!values.view">',
+            'iG: {host}', '<tpl if="values.service"> - {service}</tpl>',
+        '</tpl>',
         {compiled: true});
     
     return {

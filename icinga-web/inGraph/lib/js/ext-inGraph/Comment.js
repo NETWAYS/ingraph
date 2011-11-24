@@ -7,13 +7,6 @@ Ext.iG.Comment = Ext.extend(Ext.form.FormPanel, {
     baseCls: 'x-plain',
     labelWidth: 55,
     waitMsg: _('Saving...'),
-    urls: {
-        add: AppKit.util.Config.getBaseUrl() + '/modules/ingraph/comments/add',
-        edit: AppKit.util.Config.getBaseUrl() +
-              '/modules/ingraph/comments/edit',
-        remove: AppKit.util.Config.getBaseUrl() +
-                '/modules/ingraph/comments/delete'
-    },
     layout: 'form',
     monitorValid: true,
     defaults: {
@@ -111,7 +104,7 @@ Ext.iG.Comment = Ext.extend(Ext.form.FormPanel, {
         this.dateCmp.updateDate();
         this.dateCmp.updateTime();
         this.getForm().submit({
-             url: this.urls.add,
+             url: Ext.iG.Urls.comments.add,
              scope: this,
              success: this.onAddSuccess,
              failure: this.onFailure,
@@ -126,7 +119,7 @@ Ext.iG.Comment = Ext.extend(Ext.form.FormPanel, {
         this.dateCmp.updateDate();
         this.dateCmp.updateTime();
         this.getForm().submit({
-             url: this.urls.edit,
+             url: Ext.iG.Urls.comments.edit,
              scope: this,
              success: this.onEditSuccess,
              failure: this.onFailure,
@@ -140,7 +133,7 @@ Ext.iG.Comment = Ext.extend(Ext.form.FormPanel, {
     
     doDelete: function() {
         Ext.Ajax.request({
-             url: this.urls.remove,
+             url: Ext.iG.Urls.comments.remove,
              scope: this,
              success: this.onDeleteSuccess,
              failure: this.onFailure,

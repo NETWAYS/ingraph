@@ -14,7 +14,7 @@ Ext.iG.HostSummary = Ext.extend(Ext.Panel, {
             this.store = new Ext.data.ArrayStore({
                 autoLoad: true,
                 autoDestroy: true,
-                url: this.provider.services,
+                url: Ext.iG.Urls.provider.services,
                 root: 'results',
                 fields: ['service'],
                 totalProperty: 'total',

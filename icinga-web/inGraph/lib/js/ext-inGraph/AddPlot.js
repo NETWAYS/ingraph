@@ -11,14 +11,6 @@ Ext.iG.AddPlot = Ext.extend(Ext.Window, {
     bodyStyle: 'padding: 5px;',
     width: 280,
     height: 180,
-    provider: {
-        hosts: AppKit.util.Config.getBaseUrl() +
-               '/modules/ingraph/provider/hosts',
-        services: AppKit.util.Config.getBaseUrl() +
-                  '/modules/ingraph/provider/services',
-        plots: AppKit.util.Config.getBaseUrl() +
-                '/modules/ingraph/provider/plots'
-    },
     
     initComponent: function() {
         var cfg = {};
@@ -46,7 +38,7 @@ Ext.iG.AddPlot = Ext.extend(Ext.Window, {
                 fieldLabel: _('Host'),
                 emptyText: _('Choose Host'),
                 store: {
-                    url: this.provider.hosts
+                    url: Ext.iG.Urls.provider.hosts
                 },
                 plugins: [new Ext.ux.ComboController(
                               { control: { scope: this, cmp: 'serviceCmp'}})]
@@ -57,7 +49,7 @@ Ext.iG.AddPlot = Ext.extend(Ext.Window, {
                 emptyText: _('Choose Service'),
                 disabled: true,
                 store: {
-                    url: this.provider.services
+                    url: Ext.iG.Urls.provider.services
                 },
                 plugins: [new Ext.ux.ComboDependency(
                               { depends: { scope: this, param: 'host',
@@ -82,7 +74,7 @@ Ext.iG.AddPlot = Ext.extend(Ext.Window, {
                         offset: 0,
                         limit: Ext.iG.AutoComboBox.pageSize // TODO(el): Valid?
                     },
-                    url: this.provider.plots
+                    url: Ext.iG.Urls.provider.plots
                 },
                 plugins: [new Ext.ux.ComboDependency(
                               { depends: [{ scope: this, param: 'host',

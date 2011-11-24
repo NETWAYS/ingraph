@@ -1,10 +1,11 @@
 Ext.ns('Ext.iG');
 Ext.iG.Menu = Ext.extend(Ext.Panel, {
     constructor: function(cfg) {
+        cfg = cfg || {};
         this.hostCmp = new Ext.iG.AutoComboBox({
             name: 'host',
             store: {
-                url: cfg.provider.hosts
+                url: Ext.iG.Urls.provider.hosts
             },
             plugins: [new Ext.ux.ComboController(
                 {control: {scope: this, cmp: 'serviceCmp'}})],
@@ -13,7 +14,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
         this.serviceCmp = new Ext.iG.AutoComboBox({
             name: 'service',
             store: {
-                url: cfg.provider.services
+                url: Ext.iG.Urls.provider.services
             },
             plugins: [new Ext.ux.ComboDependency(
                 {depends: {scope: this, param: 'host',
@@ -24,7 +25,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
         this.viewCmp = new Ext.iG.AutoComboBox({
             name: 'view',
             store: {
-                url: cfg.provider.views
+                url: Ext.iG.Urls.provider.views
             },
             emptyText: _('Choose View'),
             width: 490

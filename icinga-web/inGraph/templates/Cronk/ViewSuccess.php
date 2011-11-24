@@ -1,36 +1,43 @@
 <script type="text/javascript">
 
 Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, function() {
-    var provider = {
-        hosts: "<?php echo $ro->gen('modules.ingraph.provider.hosts'); ?>",
-        services: "<?php echo $ro->gen(
-            'modules.ingraph.provider.services'); ?>",
-        views: "<?php echo $ro->gen('modules.ingraph.provider.views'); ?>",
-        plots: "<?php echo $ro->gen('modules.ingraph.provider.plots'); ?>",
-        combined: "<?php echo $ro->gen(
-            'modules.ingraph.provider.combined'); ?>",
-        template: "<?php echo $ro->gen(
-            'modules.ingraph.provider.template'); ?>",
-        values: "<?php echo $ro->gen(
-            'modules.ingraph.provider.values'); ?>",
-        view: "<?php echo $ro->gen('modules.ingraph.provider.view'); ?>"
-    };
+    if(!Ext.iG.Urls.available) {
+        var urls = {
+            provider: {
+                hosts: "<?php echo $ro->gen('modules.ingraph.provider.hosts'); ?>",
+                services: "<?php echo $ro->gen(
+                    'modules.ingraph.provider.services'); ?>",
+                views: "<?php echo $ro->gen('modules.ingraph.provider.views'); ?>",
+                plots: "<?php echo $ro->gen('modules.ingraph.provider.plots'); ?>",
+                template: "<?php echo $ro->gen(
+                    'modules.ingraph.provider.template'); ?>",
+                values: "<?php echo $ro->gen(
+                    'modules.ingraph.provider.values'); ?>",
+                view: "<?php echo $ro->gen('modules.ingraph.provider.view'); ?>"
+            },
+            comments: {
+                add: "<?php echo $ro->gen('modules.ingraph.comments.add'); ?>",
+                edit: "<?php echo $ro->gen('modules.ingraph.comments.edit'); ?>",
+                delete: "<?php echo $ro->gen(
+                    'modules.ingraph.comments.delete'); ?>"
+            }
+        };
+        Ext.iG.Urls.overwrite(urls);
+    }
+
     var host = "<?php echo $rd->getParameter('host'); ?>",
         service = "<?php echo $rd->getParameter('service'); ?>",
         view = "<?php echo $rd->getParameter('view'); ?>";
     var state = Ext.state.Manager.getProvider().get(this.stateuid);
     if(!state) {
         if(!host && !service && !view) {
-            var menu = new Ext.iG.Menu({
-                provider: provider
-            });
+            var menu = new Ext.iG.Menu();
             var w = new Ext.Window({
                 title: 'inGraph',
                 modal: true,
                 items: menu
             });
             menu.on('plot', function(cb, cfg) {
-                cfg.provider = provider;
                 cfg.stateId = this.stateuid;
                 var p = new Ext.iG.View(cfg);
                 p.on({
@@ -52,8 +59,6 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
             w.show();
         } else {
             var cfg = {
-                provider: provider,
-                timeFrames: new Ext.iG.TimeFrames(),
                 host: host,
                 service: service,
                 view: view,
@@ -73,7 +78,6 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
         }
     } else {
         var cfg = {
-            timeFrames: new Ext.iG.TimeFrames(),
             stateId: this.stateuid,
             stateEvents: []
         };

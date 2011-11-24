@@ -193,9 +193,8 @@ class BackendRPCMethods(object):
         
         return {'total': result['total'], 'services': items}
     
-    def getPlotValues(self, host_pattern, service_pattern,
-                      start_timestamp=None, end_timestamp=None,
-                      granularity=None, null_tolerance=0):
+    def getPlotValues(self, host, service, start_timestamp=None,
+                      end_timestamp=None, granularity=None, null_tolerance=0):
         st = time.time()
 
         charts = []
@@ -204,12 +203,6 @@ class BackendRPCMethods(object):
         result = {'comments': comments, 'charts': charts, 'statusdata': statusdata,
                   'min_timestamp': model.dbload_min_timestamp,
                   'max_timestamp': time.time()}
-        
-        if host_pattern != None:
-            host_pattern = host_pattern.replace('*', '%')
-        
-        if service_pattern != None:
-            service_pattern = service_pattern.replace('*', '%')
         
         if start_timestamp == '':
             start_timestamp = None
@@ -220,10 +213,13 @@ class BackendRPCMethods(object):
         if granularity == '':
             granularity = None
 
-        result_services = model.HostService.getByHostAndServicePattern(
-            self.engine, host_pattern, service_pattern)
+        host_obj = model.Host.getByName(self.engine, host)
+        service_obj = model.Service.getByName(self.engine, service)
 
-        for hostservice_obj in result_services['services']:        
+        result_services = model.HostService.getByHostAndService(
+            self.engine, host_obj, service_obj, None)
+
+        for hostservice_obj in result_services:
             plot_objs = model.Plot.getByHostServiceAndName(self.engine,
                                                            hostservice_obj,
                                                            None)

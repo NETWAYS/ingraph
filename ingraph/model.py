@@ -280,6 +280,7 @@ hostservice = Table('hostservice', metadata,
     Column('host_id', Integer, ForeignKey('host.id'), nullable=False),
     Column('service_id', Integer, ForeignKey('service.id'), nullable=False),
     Column('parent_hostservice_id', Integer, ForeignKey('hostservice.id')),
+    Column('check_command', String(128), nullable=True),
     
     UniqueConstraint('host_id', 'service_id', 'parent_hostservice_id', name='uc_hs_1'),
     

@@ -65,6 +65,14 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             handler: this.doRefresh,
             scope: this
         }), '-', 
+        this.sync = new Ext.Toolbar.Button({
+            tooltip: this.syncText,
+            overflowText: this.syncText,
+            iconCls: 'ingraph-icon-sync',
+            disabled: true,
+            handler: this.doSync,
+            scope: this
+        }), '-',
         this.datapoints = new Ext.form.Checkbox({
             boxLabel: _('Show datapoints'),
             disabled: true,
@@ -173,7 +181,7 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
     
     initComponent: function() {
         Ext.iG.flot.Toolbar.superclass.initComponent.call(this);
-        this.addEvents('beforeprint');
+        this.addEvents('beforeprint', 'syncframe');
         this.bindStore(this.store, true);
     },
     
@@ -208,6 +216,7 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
     
     onLoad: function() {
         this.refresh.enable();
+        this.sync.enable();
         this.datapoints.enable();
         this.smooth.enable();
         if(this.store.getStart() <= this.store.getMintimestamp()) {
@@ -350,6 +359,16 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
         frame.appendChild(form);
         form.dom.submit();
         Ext.destroy(form, frame);
+    },
+    
+    doSync: function() {
+        var start = this.store.lastOptions.params &&
+                    this.store.lastOptions.params.start ||
+                    this.store.baseParams.start,
+            end = this.store.lastOptions.params &&
+                  this.store.lastOptions.params.end ||
+                  this.store.baseParams.end;
+        this.fireEvent('syncframe', this, start, end);
     }
 });
 Ext.reg('flottbar', Ext.iG.flot.Toolbar);

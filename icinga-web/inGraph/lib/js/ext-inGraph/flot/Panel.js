@@ -14,6 +14,9 @@ Ext.iG.flot.Panel = Ext.extend(Ext.Panel, {
     },
     
     initComponent: function() {
+        var cfg = {};
+        this.buildItems(cfg);
+        this.buildTbar(cfg);
 //        var cfg = {
 //            items: []
 //        };
@@ -23,70 +26,82 @@ Ext.iG.flot.Panel = Ext.extend(Ext.Panel, {
 //            template: this.template,
 //            flex: 1
 //        }, this.flotCfg)));
-//        Ext.apply(this, Ext.apply(this.initialConfig, cfg));
+        Ext.apply(this, Ext.apply(this.initialConfig, cfg));
         Ext.iG.flot.Panel.superclass.initComponent.call(this);
     },
     
-    constructor: function(cfg) {
-        console.log("template", cfg.template);
-        cfg = cfg || {};
+    buildItems: function(cfg) {
         var items = [this.flot = new Ext.iG.Flot(Ext.apply({}, {
-            store: cfg.store,
-            template: cfg.template,
+            store: this.store,
+            template: this.template,
             flex: 1
-        }, cfg.flotCfg))];
-
-        if(cfg.overview !== undefined ? cfg.overview : this.overview) {
-            var height = cfg.overview !== true ? cfg.overview : '25%';
-            delete cfg.overview;
-            items.push(new Ext.Spacer({height:1, cls: 'iG-spacer'}));
-            items.push(this.overview = new Ext.iG.Flot({
-                template: cfg.template,
-                flotOptions: {
-                    yaxis: {
-                        show: false
-                    },
-                    legend: {
-                        show: false
-                    },
-                    grid: {
-                        show: true,
-                        borderWidth: 1,
-                        borderColor: 'rgba(255, 255, 255, 0)',
-                        hoverable: false,
-                        clickable: false
-                    },
-                    selection: {
-                        mode: 'x',
-                        color: '#FA5C0D'
-                    }
-                },
-                height: height,
-                store: new Ext.iG.FlotJsonStore({
-                    url: cfg.store.url,
-                    baseParams: { query: cfg.store.baseParams.query}
-                })
-            })); // eof items.push
+        }, this.flotCfg))];
+        if(this.overview !== false) {
+            
         }
         cfg.items = items;
-//        Ext.applyIf(cfg, {
-//            tbar: {
-//                xtype: 'flottbar',
-//                store: cfg.store,
-//                activeFrame: cfg.activeFrame,
-//                hidden: (cfg.hideToolbar !== undefined ?
-//                         cfg.hideToolbar :
-//                         (cfg.template.panel !== undefined &&
-//                          cfg.template.panel.toolbar !== undefined &&
-//                          cfg.template.panel.toolbar === false) ?
-//                          true : false),
-//                listeners: {
-//                    scope: this,
-//                    beforeprint: function() {
-//                        this.preparePrint();
+        cfg.overview = null;
+    },
+    
+    buildTbar: function(cfg) {
+        cfg.tbar = {
+            xtype: 'flottbar',
+            store: this.store,
+            hidden: false, // TODO
+            bubbleEvents: ['add', 'remove', 'syncframe'],
+            listeners: {
+                scope: this,
+                beforeprint: function() {
+                    this.preparePrint();
+                }
+            }
+        };
+    },
+    
+    constructor: function(cfg) {
+//        console.log("template", cfg.template);
+//        cfg = cfg || {};
+//        var items = [this.flot = new Ext.iG.Flot(Ext.apply({}, {
+//            store: cfg.store,
+//            template: cfg.template,
+//            flex: 1
+//        }, cfg.flotCfg))];
+//
+//        if(cfg.overview !== undefined ? cfg.overview : this.overview) {
+//            var height = cfg.overview !== true ? cfg.overview : '25%';
+//            delete cfg.overview;
+//            items.push(new Ext.Spacer({height:1, cls: 'iG-spacer'}));
+//            items.push(this.overview = new Ext.iG.Flot({
+//                template: cfg.template,
+//                flotOptions: {
+//                    yaxis: {
+//                        show: false
+//                    },
+//                    legend: {
+//                        show: false
+//                    },
+//                    grid: {
+//                        show: true,
+//                        borderWidth: 1,
+//                        borderColor: 'rgba(255, 255, 255, 0)',
+//                        hoverable: false,
+//                        clickable: false
+//                    },
+//                    selection: {
+//                        mode: 'x',
+//                        color: '#FA5C0D'
 //                    }
-//                }
-//            }
+//                },
+//                height: height,
+//                store: new Ext.iG.FlotJsonStore({
+//                    url: cfg.store.url,
+//                    baseParams: { query: cfg.store.baseParams.query}
+//                })
+//            })); // eof items.push
+//        }
+//        cfg.items = items;
+//        Ext.applyIf(cfg, {
+//
 //        });
         Ext.iG.flot.Panel.superclass.constructor.call(this, cfg);
     },

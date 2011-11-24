@@ -41,3 +41,9 @@
     background-repeat: no-repeat;
     background-position: center center;
 }
+
+.ingraph-icon-sync {
+    background-image: url(../images/icons/chart--arrow.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}

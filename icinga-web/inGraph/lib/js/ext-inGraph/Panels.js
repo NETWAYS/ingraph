@@ -9,6 +9,7 @@ Ext.iG.Panels = Ext.extend(Ext.data.JsonStore, {
             fields: [{name: 'title', defaultValue: _('No Title')},
                      {name: 'titleFormat',
                       defaultValue: _('{title} graph for {host} {service}')},
+                     'start',
                      {name: 'end', defaultValue: 'now'},
                      {name: 'overview', defaultValue: false}]
         });

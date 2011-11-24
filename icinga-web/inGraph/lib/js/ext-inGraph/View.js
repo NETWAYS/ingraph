@@ -20,14 +20,24 @@ Ext.iG.View = Ext.extend(Ext.Container, {
         this.buildItems(cfg);
         Ext.apply(this, Ext.apply(this.initialConfig, cfg));
         Ext.iG.View.superclass.initComponent.call(this);
+        this.addEvents(
+            '__igpanel__complete',
+            '__igpanel__fail',
+            'syncframe'
+        );
         this.initEvents();
     },
     
     initEvents: function() {
-        this.addEvents(
-            '__igpanel__complete',
-            '__igpanel__fail'
-        );
+        this.on({
+            scope: this,
+            syncframe: function(tbar, start, end) {
+                this.items.each(function(panel) {
+                    // TODO
+                    panel.store.load({params: {start: start, end: end}});
+                });
+            }
+        });
     },
     
     fromView: function(cfg) {

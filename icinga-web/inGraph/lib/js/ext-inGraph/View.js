@@ -64,33 +64,36 @@ Ext.iG.View = Ext.extend(Ext.Container, {
     },
     
     fromHost: function(cfg) {
+        return false;
         if(this.host && !this.service) {
-            cfg.title = _('Services For') + ' ' + this.host;
-            cfg.items = new Ext.iG.HostSummary({
-                provider: this.provider,
-                host: this.host
-            });
+//            cfg.title = _('Services For') + ' ' + this.host;
+//            cfg.items = new Ext.iG.HostSummary({
+//                provider: this.provider,
+//                host: this.host
+//            });
+//            return true;
+            cfg.title = this.host;
+            cfg.items = [Ext.apply({}, {
+                title: this.host,
+                host: this.host,
+                service: this.service,
+                store: new Ext.iG.FlotJsonStore({
+                    url: this.provider.values,
+                    template: {},
+                    baseParams: {
+                        query: '{"' + this.host + '":{"":["avg"]}}',
+                        start: '-24 hours',
+                        end: 'now'
+                    }
+                })
+            }, this.panelsCfg)];
             return true;
-//            cfg.title = this.host;
-//            cfg.items = [Ext.apply({}, {
-//                title: this.host,
-//                host: this.host,
-//                service: this.service,
-//                store: new Ext.iG.FlotJsonStore({
-//                    url: this.provider.values,
-//                    baseParams: {
-//                        query: '{"' + this.host + '":{"":[]}}',
-//                        start: '-24 hours',
-//                        end: 'now'
-//                    }
-//                })
-//            }, this.panelsCfg)];
         }
         return false;
     },
     
     fromHostService: function(cfg) {
-        if(this.host && this.service) {
+        if(this.host) {
             cfg.title = this.host + ' - ' + this.service;
             var callback = function(template) {
                 var items = [];

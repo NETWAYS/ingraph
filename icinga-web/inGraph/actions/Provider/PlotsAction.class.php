@@ -5,7 +5,7 @@ class inGraph_Provider_PlotsAction extends inGraphBaseAction {
         $api = $this->getApi();
         try {
             $plots = $api->getPlots($rd->getParameter('host'),
-                                    $rd->getParameter('service'));
+                                    $rd->getParameter('service', ''));
         } catch(XMLRPCClientException $e) {
             return $this->setError($e->getMessage());
         }

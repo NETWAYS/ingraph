@@ -216,7 +216,7 @@ Ext.iG.Settings = Ext.extend(Ext.Window, {
                             series: [spec]
                         };
                         // TODO(el): Do NOT override.
-                        this.template.loadData(data, true);
+                        this.store.loadData(data, true);
                         win.doCancel();
                     }
                 }

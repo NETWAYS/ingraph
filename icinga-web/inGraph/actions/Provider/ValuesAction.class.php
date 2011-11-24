@@ -12,7 +12,7 @@ class inGraph_Provider_ValuesAction extends inGraphBaseAction {
             }
         }
         try {
-            $values = $api->getValues(json_decode($rd->getParameter('query')),
+            $values = $api->getValues(json_decode($rd->getParameter('query'), true),
                                       $rd->getParameter('start', null),
                                       $rd->getParameter('end', null),
                                       $interval);

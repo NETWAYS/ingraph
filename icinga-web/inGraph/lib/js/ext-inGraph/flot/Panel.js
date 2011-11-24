@@ -70,25 +70,25 @@ Ext.iG.flot.Panel = Ext.extend(Ext.Panel, {
             })); // eof items.push
         }
         cfg.items = items;
-        Ext.applyIf(cfg, {
-            tbar: {
-                xtype: 'flottbar',
-                store: cfg.store,
-                activeFrame: cfg.activeFrame,
-                hidden: (cfg.hideToolbar !== undefined ?
-                         cfg.hideToolbar :
-                         (cfg.template.panel !== undefined &&
-                          cfg.template.panel.toolbar !== undefined &&
-                          cfg.template.panel.toolbar === false) ?
-                          true : false),
-                listeners: {
-                    scope: this,
-                    beforeprint: function() {
-                        this.preparePrint();
-                    }
-                }
-            }
-        });
+//        Ext.applyIf(cfg, {
+//            tbar: {
+//                xtype: 'flottbar',
+//                store: cfg.store,
+//                activeFrame: cfg.activeFrame,
+//                hidden: (cfg.hideToolbar !== undefined ?
+//                         cfg.hideToolbar :
+//                         (cfg.template.panel !== undefined &&
+//                          cfg.template.panel.toolbar !== undefined &&
+//                          cfg.template.panel.toolbar === false) ?
+//                          true : false),
+//                listeners: {
+//                    scope: this,
+//                    beforeprint: function() {
+//                        this.preparePrint();
+//                    }
+//                }
+//            }
+//        });
         Ext.iG.flot.Panel.superclass.constructor.call(this, cfg);
     },
     
@@ -275,9 +275,9 @@ Ext.iG.flot.Panel = Ext.extend(Ext.Panel, {
     },
     
     applyTemplate: function() {
-        this.flot.applyTemplate();
+        this.flot.reset();
         if(this.overview) {
-            this.overview.applyTemplate();
+            this.overview.reset();
         }
     }
 });

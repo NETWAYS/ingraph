@@ -313,12 +313,13 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         } // TODO
         this.template.each(function(series) {
             var rec = this.store.getById(series.id);
-            if(!Ext.isObject(rec.data)) {
+            if(!rec || !Ext.isObject(rec.data)) {
                 return;
             }
             var map = rec.fields.map;
             Ext.iterate(series.data, function(key, value) {
-                if((m = map[key]) && m.isFlotOption && value !== undefined) {
+                if((m = map[key]) && m.isFlotOption && value !== undefined &&
+                   value !== rec.get(m.mapping || m.name)) {
                     console.log(key, value);
                     rec.set(m.mapping || m.name, value);
                 }
@@ -587,17 +588,22 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
     },
     
-    setTemplate: function() {
+    reset: function() {
         // Reset flotOptions
         this.flotOptions = iG.merge(true, {}, this.defaultFlotOptions,
                                     this.initialConfig.flotOptions);
+        this.flotOptions.xaxis.tickFormatter = Ext.iG.Util.xTickFormatter;
         this.on({
             scope: this,
             single: true,
             beforeplot: this.applyTemplate
         });
+        var series = [];
+        this.template.each(function(rec) {
+            series.push(rec.data);
+        });
         this.store.baseParams.query = Ext.encode(
-            Ext.iG.Util.buildQuery(this.template.reader.jsonData.series));
+            Ext.iG.Util.buildQuery(series));
         this.store.load();
     }
 });

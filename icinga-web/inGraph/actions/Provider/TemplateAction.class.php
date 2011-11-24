@@ -9,7 +9,7 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction {
         try {
             $this->plots = $api->getPlots(
                 ($this->host = $rd->getParameter('host')),
-                ($service = $rd->getParameter('service')));
+                ($service = $rd->getParameter('service', '')));
         } catch(XMLRPCClientException $e) {
             return $this->setError($e->getMessage());
         }

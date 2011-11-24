@@ -608,20 +608,19 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     }
 });
 Ext.reg('flot', Ext.iG.Flot);
-
 Ext.iG.Flot.tooltipTemplate = new Ext.Template(
-        '<div class = "iG-tooltip">',
-        '<h3>{label}</h3>',
-        '<div>{x} : {y}</div>',
-        '</div>', {
+    '<div class = "iG-tooltip">',
+    '<h3>{label}</h3>',
+    '<div>{x} : {y}</div>',
+    '</div>', {
         compiled: true,
         disableFormats: true
 });
 Ext.iG.Flot.sHintTpl = new Ext.Template(
-        '<div class = "iG-tooltip">',
-        String.format('<div><p><b>{0} : </b> {from}</p></div>', _('Start')),
-        String.format('<div><p><b>{0} : </b> {to}</p></div>', _('End')),
-        '</div>', {
+    '<div class = "iG-tooltip">',
+    '<div><p><b>' + _('Start') + ' : </b> {from}</p></div>',
+    '<div><p><b>' + _('End') + ' : </b> {to}</p></div>',
+    '</div>', {
         compiled: true,
         disableFormats: true
 });

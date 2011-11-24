@@ -37,10 +37,10 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                     scope: this,
                     single: true,
                     __igpanel__complete: function(p) {
-                    	Ext.iG.Cronk.setTitle.call(this, p.title);
+                    	Ext.iG.Cronk.setTitle.call(this, cfg);
                     	Ext.state.Manager.set(p.stateId, p.getState());
                     }
-                })
+                });
                 this.add(p);
                 this.doLayout();
                 w.destroy();

@@ -34,11 +34,10 @@ Ext.iG.View = Ext.extend(Ext.Container, {
         if(this.view) {
             var items = [];
             var callback = function(template) {
-                this.setTitle(template.title || _('View (No Title)'));
                 Ext.each(template.panels, function(panel) {
                     var query = Ext.encode(Ext.iG.Util.buildQuery(panel.series));
                     items.push(Ext.apply({}, {
-                        titleFormat: '{interval}',
+                        titleFormat: '{title}',
                         title: panel.title || _('Panel (No Title)'),
                         template: panel,
                         store: new Ext.iG.FlotJsonStore({
@@ -63,38 +62,8 @@ Ext.iG.View = Ext.extend(Ext.Container, {
         return false;
     },
     
-    fromHost: function(cfg) {
-        return false;
-        if(this.host && !this.service) {
-//            cfg.title = _('Services For') + ' ' + this.host;
-//            cfg.items = new Ext.iG.HostSummary({
-//                provider: this.provider,
-//                host: this.host
-//            });
-//            return true;
-            cfg.title = this.host;
-            cfg.items = [Ext.apply({}, {
-                title: this.host,
-                host: this.host,
-                service: this.service,
-                store: new Ext.iG.FlotJsonStore({
-                    url: this.provider.values,
-                    template: {},
-                    baseParams: {
-                        query: '{"' + this.host + '":{"":["avg"]}}',
-                        start: '-24 hours',
-                        end: 'now'
-                    }
-                })
-            }, this.panelsCfg)];
-            return true;
-        }
-        return false;
-    },
-    
     fromHostService: function(cfg) {
         if(this.host) {
-            cfg.title = this.host + ' - ' + this.service;
             var callback = function(template) {
                 var items = [];
                 var query = Ext.encode(
@@ -109,7 +78,8 @@ Ext.iG.View = Ext.extend(Ext.Container, {
                 }
                 this.panels.each(function(panel) {
                     items.push(Ext.apply({}, {
-                        title: panel.get('title') || _('No Title'),
+                        title: panel.get('title'),
+                        titleFormat: panel.get('titleFormat'),
                         host: this.host,
                         service: this.service,
                         template: new Ext.iG.Template(
@@ -138,10 +108,8 @@ Ext.iG.View = Ext.extend(Ext.Container, {
     },
     
     buildItems: function(cfg) {
-        Ext.each([this.fromHostService, this.fromView, this.fromHost],
-                 function(fn) {
-            return !fn.call(this, cfg);
-        }, this);
+        Ext.each([this.fromHostService, this.fromView],
+                 function(fn) { return !fn.call(this, cfg);}, this);
     },
     
     getState: function() {
@@ -160,7 +128,7 @@ Ext.iG.View = Ext.extend(Ext.Container, {
                 panel.store = new Ext.iG.FlotJsonStore(panel.store);
             }
             panel.template = new Ext.iG.Template(
-                                 { data: panel.template}); // TODO
+                {data: panel.template}); // TODO
             this.add(panel);
         }, this);
     },

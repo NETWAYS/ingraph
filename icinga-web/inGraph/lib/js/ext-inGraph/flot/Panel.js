@@ -2,7 +2,6 @@ Ext.ns('Ext.iG.flot');
 Ext.iG.flot.Panel = Ext.extend(Ext.Panel, {
     loadMask: true,
     overview: false,
-    titleFormat: _('{interval} graph for {host} {service}'),
     emptyText: _('No Data'),
     showEmpty: false,
     collapsible: true,
@@ -269,7 +268,7 @@ Ext.iG.flot.Panel = Ext.extend(Ext.Panel, {
         title = String.format(titleFormat, {
             host: this.host,
             service: this.service,
-            interval: this.initialConfig.title
+            title: this.initialConfig.title
         });
         Ext.iG.flot.Panel.superclass.setTitle.call(this, title);
     },

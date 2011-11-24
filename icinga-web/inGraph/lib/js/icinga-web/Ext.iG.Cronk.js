@@ -11,6 +11,9 @@ Ext.iG.Cronk = function() {
         values: urlBase + 'values',
         services: urlBase + 'services'
     };
+    var titleTpl = new Ext.XTemplate(
+        'iG: {host}', '<tpl if="values.service"> - {service}</tpl>',
+        {compiled: true});
     
     return {
         open: function(cfg) {
@@ -113,7 +116,8 @@ Ext.iG.Cronk = function() {
             tip.show();
         },
         
-        setTitle: function(title) {
+        setTitle: function(cfg) {
+            var title = titleTpl.apply(cfg);
             this.getParent().setTitle(title);
             Ext.fly(this.getParent().tabEl).child(
                     'span.x-tab-strip-text', true).qtip = title;

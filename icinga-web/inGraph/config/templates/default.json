@@ -20,11 +20,11 @@
 
 "panel": {
     "toolbar": true,
-    "titleFormat": "{frame} graph for {host} - {service}"
+    "titleFormat": "{title} graph for {host} - {service}"
 },
 
 "panels": [{
-    "frame": "Four Hours",
+    "title": "Four Hours",
     "overview": true,
     "start": "-4 hours"
 }, {

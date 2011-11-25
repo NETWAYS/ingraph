@@ -162,18 +162,17 @@ class Collectord(daemon.UnixDaemon):
         return updates
         
     def before_daemonize(self):
+        print "Starting %s..." % self.name
         config = utils.load_config('ingraph-xmlrpc.conf')
         config = utils.load_config('ingraph-aggregates.conf', config)
-        self.config = config
-    
-    def run(self):
-        url = utils.get_xmlrpc_url(self.config)
+        
+        url = utils.get_xmlrpc_url(config)
         api = xmlrpclib.ServerProxy(url, allow_none=True)
         
         tfs = api.getTimeFrames()
         intervals = tfs.keys()
             
-        for aggregate in self.config['aggregates']:
+        for aggregate in config['aggregates']:
             interval = aggregate['interval']
             
             if str(interval) in intervals:
@@ -186,15 +185,18 @@ class Collectord(daemon.UnixDaemon):
             
             api.setupTimeFrame(interval, retention_period)
         
-        for interval in intervals:
-            tf = tfs[interval]
-            print tf
-        
+#        for interval in intervals:
+#            tf = tfs[interval]
+#            print tf
+            
+        self.api = api
+    
+    def run(self):
         while True:
             updates = []
-            files = glob.glob(self.perfpattern)
+            files = glob.glob(self.perfpattern)[:self.limit]
             if files:
-                input = fileinput.input(files[:self.limit])
+                input = fileinput.input(files)
                 for line in input:
                     update = self._prepare_update(line)
                     if update:
@@ -202,7 +204,7 @@ class Collectord(daemon.UnixDaemon):
                 if updates:
                     updates_pickled = pickle.dumps(updates)
                     st = time.time()
-                    api.insertValueBulk(updates_pickled)
+                    self.api.insertValueBulk(updates_pickled)
                     et = time.time()
                     print "%d updates (%d lines) took %f seconds" % \
                           (len(updates), input.lineno(), et - st)
@@ -261,7 +263,7 @@ def main():
                       help='backup or remove perfdata files '
                       'after processing [default: %default]')
     parser.add_option('-l', '--limit', dest='limit', type='int',
-                      help='limit files [default: %default]', default=1)
+                      help='limit files [default: %default]', default=50)
     parser.add_option('-s', '--sleeptime', dest='sleeptime', type='int',
                       help='seconds to sleep [default: %default]',
                       default=30)

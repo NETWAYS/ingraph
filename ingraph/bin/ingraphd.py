@@ -72,6 +72,7 @@ class InGraphd(ingraph.daemon.UnixDaemon):
     name = 'inGraph'
     
     def before_daemonize(self):
+        print "Starting %s..." % self.name
         config = ingraph.utils.load_config('ingraph-database.conf')
         config = ingraph.utils.load_config('ingraph-xmlrpc.conf', config)
         if config['dsn'] == None:
@@ -89,39 +90,38 @@ class InGraphd(ingraph.daemon.UnixDaemon):
                   "('xmlrpc_username' and 'xmlrpc_password' settings) in your "
                   "configuration file.")
             sys.exit(1)
-        self.config = config
-    
-    def run(self):
-        print("inGraph (backend daemon)")
+            
         print("Connecting to the database...")
-        engine = ingraph.model.createModelEngine(self.config['dsn'])
+        engine = ingraph.model.createModelEngine(config['dsn'])
         
         queryqueue = Queue.Queue(maxsize=200000)
-        
-        daemonized_thread(flush, (engine, queryqueue))
-        daemonized_thread(cleanup, (engine,))
-        daemonized_thread(vacuum, (engine,))
-        daemonized_thread(pragma, (engine, 'wal_checkpoint'))
-        
+
         print("Starting XML-RPC interface on %s:%d..." %
-              (self.config['xmlrpc_address'], self.config['xmlrpc_port']))
+              (config['xmlrpc_address'], config['xmlrpc_port']))
         server = ingraph.xmlrpc.AuthenticatedXMLRPCServer(
-            (self.config['xmlrpc_address'], self.config['xmlrpc_port']),
-            allow_none=True)
+            (config['xmlrpc_address'], config['xmlrpc_port']),
+             allow_none=True)
         server.timeout = 5
-        
         if sys.version_info[:2] < (2,6):
             server.socket.settimeout(server.timeout)
-        
-        server.required_username = self.config['xmlrpc_username']
-        server.required_password = self.config['xmlrpc_password']
-        
+        server.required_username = config['xmlrpc_username']
+        server.required_password = config['xmlrpc_password']
         server.register_introspection_functions()
         server.register_multicall_functions()
         server.register_instance(ingraph.api.BackendRPCMethods(engine,
                                                                queryqueue))
-        server.serve_forever()
+        
+        self.engine = engine
+        self.queryqueue = queryqueue
+        self.server = server
+        
+    def run(self):
+        daemonized_thread(flush, (self.engine, self.queryqueue))
+        daemonized_thread(cleanup, (self.engine,))
+        daemonized_thread(vacuum, (self.engine,))
+        daemonized_thread(pragma, (self.engine, 'wal_checkpoint'))
 
+        self.server.serve_forever()
 
 def main():
     daemon_functions = ('start', 'stop', 'restart', 'status')

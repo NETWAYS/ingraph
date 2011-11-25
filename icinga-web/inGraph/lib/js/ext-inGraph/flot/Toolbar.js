@@ -4,32 +4,42 @@ Ext.ns('Ext.iG.flot');
  * @extends Ext.Toolbar
  */
 Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
-    firstText: _(''),
-    prevText: _(''),
-    nextText: _(''),
-    lastText: _(''),
-    refreshText: _(''),
-    downloadText: _(''),
-    printText: _(''),
+    pageTextIfDisabled: _('Please choose data view first'),
+    prevTextIfMin: _('Older data not available'),
+    firstText: new Ext.XTemplate(
+        _('Start of available {adv} data'), {compiled: true}),
+    prevText: new Ext.XTemplate(
+        _('Back {[values.name.toLowerCase()]}'), {compiled: true}),
+    inputText: _('Choose data view'),
+    nextText: new Ext.XTemplate(
+        _('Forward {[values.name.toLowerCase()]}'), {compiled: true}),
+    lastText: new Ext.XTemplate(
+        _('Latest available {adv} data'), {compiled: true}),
+    refreshText: _('Reload chart'),
+    syncText: _('Synchronize start and end points of all charts with this ' + 
+                'chart'),
+    settingsText: _('Change settings of this chart'),
+    commentsText: _('Add comment to this chart'),
+    downloadText: _('Export data'),
+    printText: _('Print chart(s)'),
     
     constructor: function(cfg) {
         var items = [this.first = new Ext.Toolbar.Button({
-            tooltip: this.firstText,
-            overflowText: this.firstText,
+            tooltip: this.pageTextIfDisabled,
             iconCls: 'x-tbar-page-first',
             disabled: true,
             handler: this.moveFirst,
             scope: this
         }), this.prev = new Ext.Toolbar.Button({
-            tooltip: this.prevText,
-            overflowText: this.prevText,
+            tooltip: this.pageTextIfDisabled,
             iconCls: 'x-tbar-page-prev',
             disabled: true,
             handler: this.movePrevious,
             scope: this
-        }), '-', _('Select last'),
+        }), '-',
         this.input = new Ext.form.ComboBox({
-            width: 100,
+            emptyText: _('Choose data view'),
+            width: 130,
             store: new Ext.iG.TimeFrames(),
             valueField: 'name',
             displayField: 'name',
@@ -39,27 +49,32 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             style: {
                 paddingTop: '1px'
             },
+            qtip: this.inputText,
             listeners: {
                 scope: this,
-                select: this.inputChange
+                select: this.onSelectDataView,
+                render: function(combo) {
+                    new Ext.ToolTip({
+                        dismissDelay: 0,
+                        target: combo.el,
+                        html: combo.qtip
+                    });
+                }
             }
         }),'-', this.next = new Ext.Toolbar.Button({
-            tooltip: this.nextText,
-            overflowText: this.nextText,
+            tooltip: this.pageTextIfDisabled,
             iconCls: 'x-tbar-page-next',
             disabled: true,
             handler: this.moveNext,
             scope: this
         }), this.last = new Ext.Toolbar.Button({
-            tooltip: this.lastText,
-            overflowText: this.lastText,
+            tooltip: this.pageTextIfDisabled,
             iconCls: 'x-tbar-page-last',
             disabled: true,
             handler: this.moveLast,
             scope: this
         }), '-', this.refresh = new Ext.Toolbar.Button({
             tooltip: this.refreshText,
-            overflowText: this.refreshText,
             iconCls: 'x-tbar-loading',
             disabled: true,
             handler: this.doRefresh,
@@ -67,7 +82,6 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
         }), '-', 
         this.sync = new Ext.Toolbar.Button({
             tooltip: this.syncText,
-            overflowText: this.syncText,
             iconCls: 'ingraph-icon-sync',
             disabled: true,
             handler: this.doSync,
@@ -110,10 +124,10 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             }
         }),
         this.settings = new Ext.Toolbar.Button({
+            tooltip: this.settingsText,
             iconCls: 'icinga-icon-cog',
             scope: this,
             handler: function() {
-//                Ext.Msg.alert(_('Settings'), _('Sorry, not yet implemented'));
                 new Ext.iG.Settings({
                     store: this.ownerCt.template,
                     listeners: {
@@ -126,7 +140,8 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             }
         }),
         this.comments = new Ext.Toolbar.Button({
-            iconCls: 'icinga-icon-comment',
+            tooltip: this.commentsText,
+            iconCls: 'ingraph-icon-comment',
             scope: this,
             handler: function(btn, e) {
                 new Ext.ToolTip({
@@ -145,8 +160,8 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             }
         }), '->',
         this.download = new Ext.Toolbar.Button({
-            iconCls: 'ingraph-icon-document-export',
             tooltip: this.downloadText,
+            iconCls: 'ingraph-icon-document-export',
             menu: {
                 defaults: {
                     scope: this
@@ -167,9 +182,10 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             }
         }),
         this.print = new Ext.Toolbar.Button({
-            iconCls: 'icon-print',
-            scope: this,
             tooltip: this.printText,
+            overflowText: this.printText,
+            iconCls: 'ingraph-icon-print',
+            scope: this,
             handler: function() {
                 if(this.fireEvent('beforeprint', this) !== false) {
                     window.print();
@@ -221,15 +237,20 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
         this.sync.enable();
         this.datapoints.enable();
         this.smooth.enable();
-        if(this.store.getStart() <= this.store.getMintimestamp()) {
-            this.first.disable();
-            this.prev.disable();
-        } else {
-            this.first.enable();
-            this.prev.enable();
+        if(this.input.getValue()) {
+            if(this.store.getStart() <= this.store.getMintimestamp()) {
+                this.first.disable();
+                this.prev.disable();
+                this.first.setTooltip(this.prevTextIfMin);
+                this.prev.setTooltip(this.prevTextIfMin);
+            } else {
+                this.first.enable();
+                this.prev.enable();
+            }
+            
+            this.next.enable();
+            this.last.enable();
         }
-        this.next.enable();
-        this.last.enable();
     },
     
     onDestroy: function() {
@@ -276,14 +297,12 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
         }
     },
     
-    inputChange: function(c, rec) {
-        var lastFrame = this.lastFrame !== undefined ?
-                        this.lastFrame : this.activeFrame; 
-        if(rec.get('name') !== lastFrame) {
-            this.first.enable();
-        } else if(this.store.getStart() <=
-                  this.store.getMintimestamp()) {
-            this.first.disable();
+    onSelectDataView: function(c, rec) {
+        if(rec.get('name') !== this.lastFrame) {
+            this.first.setTooltip(this.firstText.apply(rec.data));
+            this.prev.setTooltip(this.prevText.apply(rec.data));
+            this.next.setTooltip(this.nextText.apply(rec.data));
+            this.last.setTooltip(this.lastText.apply(rec.data));
         }
         this.store.load({
             params: {

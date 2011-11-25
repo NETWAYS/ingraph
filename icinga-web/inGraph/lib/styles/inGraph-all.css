@@ -43,7 +43,7 @@ html {
     text-align: center;
 }
 
-.icon-print {
+.ingraph-icon-print {
     background-image: url(../images/icons/printer.png) !important;
 }
 
@@ -99,6 +99,12 @@ html {
 
 .ingraph-icon-sync {
     background-image: url(../images/icons/chart--arrow.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-comment {
+    background-image: url(../images/icons/balloon-ellipsis.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }

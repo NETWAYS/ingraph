@@ -302,7 +302,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     applyTemplate: function() {
-        console.log(this.template);
         if(Ext.isObject(this.template.reader.jsonData.flot)) {
             iG.merge(true, this.flotOptions,
                      this.template.reader.jsonData.flot);
@@ -320,7 +319,6 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             Ext.iterate(series.data, function(key, value) {
                 if((m = map[key]) && m.isFlotOption && value !== undefined &&
                    value !== rec.get(m.mapping || m.name)) {
-                    console.log(key, value);
                     rec.set(m.mapping || m.name, value);
                 }
             }); // TODO

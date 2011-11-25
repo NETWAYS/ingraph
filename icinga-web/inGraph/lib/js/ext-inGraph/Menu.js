@@ -1,18 +1,34 @@
 Ext.ns('Ext.iG');
 Ext.iG.Menu = Ext.extend(Ext.Panel, {
+    dateHelp: _('Either select date via the popup date picker or input an ' + 
+                'English textual date or time, i.e.<br />' +
+                '<ul style="list-style-type:circle; list-style-position:inside;">' +
+                    '<li>now</li>' +
+                    '<li>last month</li>' +
+                    '<li>last mon(day)</li>' +
+                    '<li>last year 6 months</li>' +
+                    '<li>-6 hours 30 minutes 10 secs</li>' +
+                    '<li>-1 month + 10 days</li>' +
+                    '<li>3 October 2005</li>' +
+                '</ul>'),
+    
     constructor: function(cfg) {
         cfg = cfg || {};
         this.hostCmp = new Ext.iG.AutoComboBox({
             name: 'host',
+            fieldLabel: _('Host'),
+            emptyText: _('Choose host'),
             store: {
                 url: Ext.iG.Urls.provider.hosts
             },
             plugins: [new Ext.ux.ComboController(
-                {control: {scope: this, cmp: 'serviceCmp'}})],
-            emptyText: _('Choose Host')
+                {control: [{scope: this, cmp: 'serviceCmp'},
+                           {scope: this, cmp: 'dispGrapthBtn'}]})]
         });
         this.serviceCmp = new Ext.iG.AutoComboBox({
             name: 'service',
+            fieldLabel: _('Service'),
+            emptyText: _('Choose service'),
             store: {
                 url: Ext.iG.Urls.provider.services
             },
@@ -20,32 +36,67 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
                 {depends: {scope: this, param: 'host',
                            cmp: 'hostCmp'}})],
             disabled: true,
-            emptyText: _('Choose Service')
+            qtip: _('Leave this field empty if you want display the host ' + 
+                    'graph'),
+            listeners: {
+                render: function(combo) {
+                    new Ext.ToolTip({
+                        dismissDelay: 0,
+                        target: combo.el,
+                        html: combo.qtip
+                    });
+                }
+            }
         });
         this.viewCmp = new Ext.iG.AutoComboBox({
             name: 'view',
+            fieldLabel: _('View'),
+            emptyText: _('Choose view'),
+            width: 490,
             store: {
                 url: Ext.iG.Urls.provider.views
             },
-            emptyText: _('Choose View'),
-            width: 490
+            plugins: [new Ext.ux.ComboController(
+                {control: {scope: this, cmp: 'dispViewBtn'}})]
         });
         this.startCmp = new Ext.form.DateField({
             format: 'Y-m-d H:i:s',
             fieldLabel: _('Start'),
+            emptyText: _('Starttime'),
             width: 150,
-            emptyText: _('Starttime')
+            listeners: {
+                scope: this,
+                render: function(f) {
+                    new Ext.ToolTip({
+                        dismissDelay: 0,
+                        target: f.el,
+                        html: this.dateHelp
+                    });
+                }
+            }
         });
         this.endCmp = new Ext.form.DateField({
             format: 'Y-m-d H:i:s',
             fieldLabel: _('End'),
+            emptyText: _('Endtime'),
             width: 150,
-            emptyText: _('Endtime')
+            listeners: {
+                scope: this,
+                render: function(f) {
+                    new Ext.ToolTip({
+                        dismissDelay: 0,
+                        target: f.el,
+                        html: this.dateHelp
+                    });
+                }
+            }
         });
-        var dispGraphBtn = new Ext.Button({
+        this.dispGraphBtn = new Ext.Button({
             text: _('Display Graph'),
             width: 80,
             cls: 'x-btn-text-left',
+            disabled: true,
+            scope: this,
             handler: function(self, e) {
                 this.fireEvent('plot', self, {
                     host: this.hostCmp.getValue(),
@@ -53,13 +104,13 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
                     start: this.startCmp.getValue(),
                     end: this.endCmp.getValue()
                 });
-            },
-            scope: this
+            }
         });
-        var dispViewBtn = new Ext.Button({
+        this.dispViewBtn = new Ext.Button({
             text: _('Display View'),
             width: 80,
             cls: 'x-btn-text-left',
+            disabled: true,
             scope: this,
             handler: function(self, e) {
                 this.fireEvent('plot', self, {
@@ -71,7 +122,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             border: true,
             xtype: 'form',
             frame: true,
-            bodyStyle: 'padding:5px',
+            bodyStyle: 'padding:5px;',
             labelAlign: 'top',
             items: [{
                 autoScroll: true,
@@ -87,7 +138,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
                 }, {
                     items: this.serviceCmp
                 }, {
-                    items: dispGraphBtn
+                    items: this.dispGraphBtn
                 }, {
                     items: this.startCmp
                 }, {
@@ -105,7 +156,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
                     items: this.viewCmp,
                     colspan: 2
                 }, {
-                    items: dispViewBtn
+                    items: this.dispViewBtn
                 }]
             }]
         });

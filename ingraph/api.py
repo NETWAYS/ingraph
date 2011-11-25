@@ -12,6 +12,7 @@ class BackendRPCMethods(object):
         self.plots = {}
         self.engine = engine
         self.queryqueue = queryqueue
+        self.shutdown_server = False
         
     def setupTimeFrame(self, interval, retention_period=None):
         tfs = model.TimeFrame.getAll(self.engine)
@@ -315,9 +316,7 @@ class BackendRPCMethods(object):
         return data
 
     def shutdown(self):
-        global shutdown_server
-        
-        shutdown_server = True
+        self.shutdown_server = True
         
         return True
 

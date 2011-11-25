@@ -118,10 +118,12 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         
         server.register_introspection_functions()
         server.register_multicall_functions()
-        server.register_instance(ingraph.api.BackendRPCMethods(engine,
-                                                               queryqueue))
-        server.serve_forever()
 
+        rpcmethods = ingraph.api.BackendRPCMethods(engine, queryqueue)
+        server.register_instance(rpcmethods)
+
+        while not rpcmethods.shutdown_server:
+            server.handle_request()
 
 def main():
     daemon_functions = ('start', 'stop', 'restart', 'status')

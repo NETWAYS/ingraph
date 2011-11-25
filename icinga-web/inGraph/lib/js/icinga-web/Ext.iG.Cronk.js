@@ -47,8 +47,7 @@ Ext.iG.Cronk = function() {
                     host: cfg.host,
                     service: cfg.service,
                     start: cfg.start,
-                    end: cfg.end,
-                    provider: provider
+                    end: cfg.end
                 }),
                 tools: [{
                     id: 'pin',
@@ -75,7 +74,7 @@ Ext.iG.Cronk = function() {
                     panelsCfg: {
                         header: false,
                         showEmpty: true,
-                        hideToolbar: true,
+                        tbar: false,
                         height: cfg.height,
                         flotCfg: {
                             flotOptions: {
@@ -96,7 +95,6 @@ Ext.iG.Cronk = function() {
                     service: cfg.service,
                     start: cfg.start,
                     end: cfg.end,
-                    provider: provider,
                     listeners: {
                         __igpanel__complete: function() {
                             this.ownerCt.doLayout();
@@ -116,7 +114,7 @@ Ext.iG.Cronk = function() {
             var title = titleTpl.apply(cfg);
             this.getParent().setTitle(title);
             Ext.fly(this.getParent().tabEl).child(
-                    'span.x-tab-strip-text', true).qtip = title;
+                'span.x-tab-strip-text', true).qtip = title;
         }
     };
 }();

@@ -20,6 +20,9 @@
                     <route name=".edit" pattern="^/edit$" action=".Edit" />
                     <route name=".delete" pattern="^/delete$" action=".Delete" />
                 </route>
+                <route name=".templates" pattern="^/templates" stop="false" action="Templates" output_type="json">
+                    <route name=".edit" pattern="^/edit$" action=".Edit" />
+                </route>
 			</route>
 		</routes>
 	</ae:configuration>

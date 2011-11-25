@@ -14,5 +14,28 @@ Ext.iG.Template = Ext.extend(Ext.data.GroupingStore, {
         });
         cfg.reader = new Ext.iG.FlotJsonReader(cfg);
         Ext.iG.Template.superclass.constructor.call(this, cfg);
+    },
+    
+    write: function() {
+        var params = {
+            series: []
+        }
+        var map = this.fields.map;
+        this.each(function(rec) {
+            var o = {};
+            Ext.iterate(rec.data, function(k, v) {
+                if((f = map[k]) && f.isFlotOption) {
+                    o[f.name] = v;
+                }
+            });
+            params.series.push(o);
+        });
+        Ext.Ajax.request({
+             url: Ext.iG.Urls.templates.edit,
+             params: Ext.encode(params),
+             scope: this,
+             success: function() { console.log(arguments);},
+             failure: function() { console.log(arguments);}
+        });
     }
 });

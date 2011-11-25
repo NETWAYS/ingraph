@@ -153,11 +153,13 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
                 },
                 items: [{
                     text: 'XML',
+                    iconCls: 'ingraph-icon-document-xml',
                     handler: function() {
                         this.doDownload('xml');
                     }
                 }, {
                    text: 'CSV',
+                   iconCls: 'ingraph-icon-document-csv',
                    handler: function() {
                        this.doDownload('csv');
                    }

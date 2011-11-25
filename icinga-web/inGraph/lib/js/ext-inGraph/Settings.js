@@ -29,24 +29,33 @@ Ext.iG.Settings = Ext.extend(Ext.Window, {
     },
     
     buildItems: function(cfg) {
+        var editor = new Ext.ux.grid.RowEditor({
+            saveText: 'Update'
+        });
         cfg.items = [{
-            xtype: 'editorgrid',
+            xtype: 'grid',
             view: new Ext.grid.GroupingView({
                 forceFit: true,
                 groupTextTpl: '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Items" : "Item"]}) {[Ext.iG.Settings.logger(this, values)]}',
                 showGroupName: false
             }),
-            clicksToEdit: 1,
-            plugins: [new Ext.ux.grid.CheckColumn()],
+            plugins: [editor],
             store: this.store,
             cm: new Ext.grid.ColumnModel({
                 defaults: {
                     sortable: true
                 },
                 columns: [{
-                    dataIndex: 'enabled', 
-                    xtype: 'checkcolumn',
-                    width: 24
+                    xtype: 'booleancolumn',
+                    header: _('Enabled'),
+                    dataIndex: 'enabled',
+                    align: 'center',
+                    width: 50,
+                    trueText: _('Yes'),
+                    falseText: _('No'),
+                    editor: {
+                        xtype: 'checkbox'
+                    }
                 }, {
                     header: _('Group'),
                     dataIndex: 'group',
@@ -54,22 +63,45 @@ Ext.iG.Settings = Ext.extend(Ext.Window, {
                 }, {
                     header: _('Label'),
                     dataIndex: 'label',
-                    editor: new Ext.form.TextField()
+                    editor: {
+                        xtype: 'textfield'
+                    }
                 }, {
                     header: _('Type'),
-                    dataIndex: 'type'
+                    dataIndex: 'type',
+                    align: 'center',
+                    width: 100
                 }, {
                     header: _('Color'),
                     dataIndex: 'color',
-                    editor: new Ext.ux.ColorField()
+                    xtype: 'templatecolumn',
+                    tpl: new Ext.XTemplate(
+                        '<tpl if="values.color">',
+                            '<span style="background:{color}; float:left;' +
+                                          'display: block; height: 10px;' +
+                                          'line-height: 10px; width: 10px;' +
+                                          'border: 1px solid #666;"' +
+                                   'unselectable="on">&#160;</span>' +
+                            '<span style="padding:2px;">{color}</span>' +
+                        '</tpl>',
+                        {compiled: true}),
+                    editor: {
+                        xtype: 'colorfield',
+                        lazyInit: false
+                    }
                 }]
             }),
-            buttonAlign: 'left',
-            buttons: [{
+            bbar: [{
                 text: _('Add Plot'),
                 iconCls: 'ingraph-icon-add',
                 scope: this,
                 handler: this.doAddPlot
+            }, {
+                text: _('Edit Plot'),
+                disabled: true,
+                iconCls: 'icinga-icon-cog',
+                scope: this,
+                handler: this.doEditPlot
             }]
         }];
     },
@@ -94,10 +126,11 @@ Ext.iG.Settings = Ext.extend(Ext.Window, {
     },
     
     doSave: function() {
-        
+        this.store.write();
     },
     
     doApply: function() {
+        console.log(this.store.getRange(), Ext.pluck(this.store.data.items, 'data'));
         this.fireEvent('applysettings', this);
     },
     

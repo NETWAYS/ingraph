@@ -47,7 +47,7 @@ Ext.iG.flot.Fields = function() {
     }, {
         name: 'enabled',
         defaultValue: true,
-        isFlotOption: true
+        isTemplateOption: true
     }, {
         name: 'yaxis',
         defaultValue: undefined,

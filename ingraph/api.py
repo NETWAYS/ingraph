@@ -371,12 +371,16 @@ class BackendRPCMethods(object):
         return self.addOrUpdateComment(comment_id, host, parent_service,
             service, timestamp, author, text)
         
-    def getPlots(self, host, service):
-        hose = model.HostService.getByHostAndServicePattern(
-            self.engine, host, service)
+    def getPlots(self, host_name, service_name):
         res = []
+        host = model.Host.getByName(self.engine, host_name)
+        service = model.Service.getByName(self.engine, service_name)
+        if service_name and not service:
+            return res
+        hose = model.HostService.getByHostAndService(
+            self.engine, host, service, None)
         try:
-            hose = hose['services'][0]
+            hose = hose[0]
         except IndexError:
             pass
         else:

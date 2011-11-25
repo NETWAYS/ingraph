@@ -5,6 +5,7 @@ from SimpleXMLRPCServer import (SimpleXMLRPCDispatcher,
                                 SimpleXMLRPCDispatcher)
 import base64
 import sys
+import traceback
 
 class _xmldumps(object):
     def __init__(self, dumps):
@@ -69,3 +70,19 @@ class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
             return True
         
         return self.required_username == username and self.required_password == password
+
+    def _dispatch(self, method, params):
+        try:
+            return SimpleXMLRPCDispatcher._dispatch(self, method, params)
+        except Exception, e:
+            print '---'
+            print 'XML-RPC request caused exception:'
+            print 'Method: %s' % (method)
+            print 'Parameters: %s' % (str(params))
+            print 'Exception information'
+            print e
+            print 'Stacktrace:'
+            traceback.print_exc()
+            print '---'
+
+            raise

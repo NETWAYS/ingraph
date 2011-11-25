@@ -41,7 +41,8 @@ Ext.iG.AddPlot = Ext.extend(Ext.Window, {
                     url: Ext.iG.Urls.provider.hosts
                 },
                 plugins: [new Ext.ux.ComboController(
-                              { control: { scope: this, cmp: 'serviceCmp'}})]
+                              {control: [{scope: this, cmp: 'serviceCmp'},
+                                         {scope: this, cmp: 'plotCmp'}]})]
             }, {
                 name: 'service',
                 ref: '../serviceCmp',
@@ -52,10 +53,8 @@ Ext.iG.AddPlot = Ext.extend(Ext.Window, {
                     url: Ext.iG.Urls.provider.services
                 },
                 plugins: [new Ext.ux.ComboDependency(
-                              { depends: { scope: this, param: 'host',
-                                           cmp: 'hostCmp'}}),
-                          new Ext.ux.ComboController(
-                              { control: { scope: this, cmp: 'plotCmp'}})]
+                              {depends: {scope: this, param: 'host',
+                                         cmp: 'hostCmp'}})]
             }, {
                 name: 'plot',
                 ref: '../plotCmp',
@@ -77,12 +76,12 @@ Ext.iG.AddPlot = Ext.extend(Ext.Window, {
                     url: Ext.iG.Urls.provider.plots
                 },
                 plugins: [new Ext.ux.ComboDependency(
-                              { depends: [{ scope: this, param: 'host',
-                                            cmp: 'hostCmp'},
-                                          {scope: this, param: 'service',
-                                            cmp: 'serviceCmp'}]}),
+                              {depends: [{scope: this, param: 'host',
+                                          cmp: 'hostCmp'},
+                                         {scope: this, param: 'service',
+                                          cmp: 'serviceCmp'}]}),
                           new Ext.ux.ComboController(
-                              { control: { scope: this, cmp: 'typeCmp'}})]
+                              {control: {scope: this, cmp: 'typeCmp'}})]
             }, {
                 xtype: 'combo',
                 name: 'type',

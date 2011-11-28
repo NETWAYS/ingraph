@@ -1,27 +1,34 @@
 {
-"re": "/^nt-disk/i",
-
-"flot": {
-    "series": {
-        "lines": {
-            "fill": true,
-            "show": true
+    "re": "/^nt-disk/i", 
+    "flot": {
+        "series": {
+            "lines": {
+                "show": true, 
+                "fill": true
+            }
         }
-    }
-},
-
-"series": [{
-    "re": "/.*-avg/",
-	"color": "#0099CC"
-}, {
-    "re": "/.*-warn_upper/",
-	"color": "#FF6600",
-   "lines": {
-	"fill": false}
-}, {
-    "re": "/.*-crit_upper/",
-	"color": "#CC0000",
-   "lines": {
-	"fill": false}
-}]
+    }, 
+    "series": [
+        {
+            "color": "#0099CC", 
+            "re": "/.*/", 
+            "type": "avg"
+        }, 
+        {
+            "color": "#FF6600", 
+            "re": "/.*/", 
+            "lines": {
+                "fill": false
+            }, 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#CC0000", 
+            "re": "/.*/", 
+            "lines": {
+                "fill": false
+            }, 
+            "type": "crit_upper"
+        }
+    ]
 }

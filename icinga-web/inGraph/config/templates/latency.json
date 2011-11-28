@@ -1,32 +1,37 @@
 {
-"re": "/latency$/i",
-
-"flot": {
-    "series": {
-        "lines": {
-            "fill": true,
-            "show": true
+    "re": "/latency$/i", 
+    "flot": {
+        "series": {
+            "lines": {
+                "show": true, 
+                "fill": true
+            }
         }
-    }
-},
-
-"series": [{
-    "re": "/.*Latency-avg/",
-	"color": "#009900",
-	"lines": {
-            "fill": false
-	}
-}, {
-    "re": "/.*Latency-warn_upper/",
-	"color": "#FFFF00",
-	"lines": {
-            "fill": false
-	}
-}, {
-    "re": "/.*Latency-crit_upper/",
-	"color": "#FF0000",
-	"lines": {
-            "fill": false
-	}
-}]
+    }, 
+    "series": [
+        {
+            "color": "#009900", 
+            "re": "/.*Latency/", 
+            "lines": {
+                "fill": false
+            }, 
+            "type": "avg"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*Latency/", 
+            "lines": {
+                "fill": false
+            }, 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*Latency/", 
+            "lines": {
+                "fill": false
+            }, 
+            "type": "crit_upper"
+        }
+    ]
 }

@@ -1,33 +1,44 @@
 {
-"re": "/load$/i",
-
-"flot": {
-    "series": {
-        "lines": {
-            "fill": true,
-            "show": true
+    "re": "/load$/i", 
+    "flot": {
+        "series": {
+            "lines": {
+                "show": true, 
+                "fill": true
+            }
         }
-    }
-},
-
-"series": [{
-    "re": "/load1-avg/",
-	"color": "#0099CC"
-}, {
-    "re": "/load5-avg/",
-        "color": "#66FF33"
-}, {
-    "re": "/load15-avg/",
-        "color": "#CC33FF"
-}, {
-    "re": "/.*15-warn_upper/",
-	"color": "#FF6600",
-   "lines": {
-	"fill": false}
-}, {
-    "re": "/.*15-crit_upper/",
-	"color": "#CC0000",
-   "lines": {
-	"fill": false}
-}]
+    }, 
+    "series": [
+        {
+            "color": "#0099CC", 
+            "re": "/load1/", 
+            "type": "avg"
+        }, 
+        {
+            "color": "#66FF33", 
+            "re": "/load5/", 
+            "type": "avg"
+        }, 
+        {
+            "color": "#CC33FF", 
+            "re": "/load15/", 
+            "type": "avg"
+        }, 
+        {
+            "color": "#FF6600", 
+            "re": "/.*15/", 
+            "lines": {
+                "fill": false
+            }, 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#CC0000", 
+            "re": "/.*15/", 
+            "lines": {
+                "fill": false
+            }, 
+            "type": "crit_upper"
+        }
+    ]
 }

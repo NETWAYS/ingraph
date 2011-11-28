@@ -1,31 +1,33 @@
 {
-"re": "/^nt-procs/i",
-
-"flot": {
-    "series": {
-        "lines": {
-            "fill": true
+    "re": "/^nt-procs/i", 
+    "flot": {
+        "series": {
+            "lines": {
+                "fill": true
+            }
         }
-    }
-},
-
-"series": [{
-    "re": "//",
-    "type": "avg",
-    "color": "#66FF33"
-}, {
-    "re": "//",
-    "type": "warn_upper",
-    "color": "#FF6600",
-    "lines": {
-        "fill": false
-    }
-}, {
-    "re": "//",
-    "type": "crit_upper",
-    "color": "#CC0000",
-    "lines": {
-        "fill": false
-    }
-}]
+    }, 
+    "series": [
+        {
+            "color": "#66FF33", 
+            "re": "//", 
+            "type": "avg"
+        }, 
+        {
+            "color": "#FF6600", 
+            "re": "//", 
+            "type": "warn_upper", 
+            "lines": {
+                "fill": false
+            }
+        }, 
+        {
+            "color": "#CC0000", 
+            "re": "//", 
+            "type": "crit_upper", 
+            "lines": {
+                "fill": false
+            }
+        }
+    ]
 }

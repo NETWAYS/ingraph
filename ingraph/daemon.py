@@ -5,6 +5,11 @@ import atexit
 import errno
 import fcntl
 
+try:
+    os.SEEK_SET
+except AttributeError:
+    import posixfile
+    os.SEEK_SET = posixfile.SEEK_SET
 
 __all__ = ['UnixDaemon']
 

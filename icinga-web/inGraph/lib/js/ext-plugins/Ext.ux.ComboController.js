@@ -13,13 +13,17 @@ Ext.ux.ComboController = Ext.extend(Object, {
                 Ext.each(this.control, function(cfg) {
                     var cmp = cfg.scope[cfg.cmp];
                     cmp.enable();
-                    cmp.clearValue();
+                    if(Ext.isFunction(cmp.clearValue)) {
+                        cmp.clearValue();
+                    }
                 }, this); 
             },
             change: function(self, value) {
                 Ext.each(this.control, function(cfg) {
                     var cmp = cfg.scope[cfg.cmp];
-                    cmp.clearValue();
+                    if(Ext.isFunction(cmp.clearValue)) {
+                        cmp.clearValue();
+                    }
                     if(value) {
                         cmp.enable();
                     } else {

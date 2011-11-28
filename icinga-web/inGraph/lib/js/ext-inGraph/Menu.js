@@ -23,7 +23,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
             },
             plugins: [new Ext.ux.ComboController(
                 {control: [{scope: this, cmp: 'serviceCmp'},
-                           {scope: this, cmp: 'dispGrapthBtn'}]})]
+                           {scope: this, cmp: 'dispGraphBtn'}]})]
         });
         this.serviceCmp = new Ext.iG.AutoComboBox({
             name: 'service',

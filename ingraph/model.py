@@ -9,7 +9,7 @@ from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     and_, or_
 from sqlalchemy.sql import literal, select, between, func
 from sqlalchemy.interfaces import PoolListener
-from time import time
+from time import time, sleep
 from weakref import WeakValueDictionary
 from OrderedDict import OrderedDict
 
@@ -1307,7 +1307,20 @@ def createModelEngine(dsn):
 
     #engine.echo = True
 
-    conn = engine.connect()
+    conn = None
+
+    for i in range(1, 12):
+        try:
+            conn = engine.connect()
+        except:
+            print "Database connection failed (attempt #%d). Waiting for retry..." % (i)
+            sleep(5);
+        else:
+            break
+
+    if conn == None:
+        # Final attempt, without try...except this time
+        conn = engine.connect()
 
     # sqlite3-specific optimization
     try:

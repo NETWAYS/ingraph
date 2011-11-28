@@ -23,7 +23,7 @@ INGRAPH_USER=ingraph
 [ -r /etc/default/ingraph ] && . /etc/default/ingraph
 [ -r /etc/sysconfig/ingraph ] && . /etc/sysconfig/ingraph
 
-BIN="python -m ingraph.bin.ingraphd"
+BIN="python -m ingraph/bin/ingraphd"
 ARGS="-d $INGRAPH_CHDIR -p $INGRAPH_PIDFILE -u $INGRAPH_USER"
 
 [ -n "$INGRAPH_LOGFILE" ] && ARGS="$ARGS -o $INGRAPH_LOGFILE"

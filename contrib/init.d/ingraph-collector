@@ -29,7 +29,7 @@ INGRAPH_COLLECTOR_GROUP=icinga
 [ -r /etc/default/ingraph-collector ] && . /etc/default/ingraph-collector
 [ -r /etc/sysconfig/ingraph-collector ] && . /etc/sysconfig/ingraph-collector
 
-BIN="python -m ingraph.bin.ingraph_collectord"
+BIN="python -m ingraph/bin/ingraph_collectord"
 ARGS="-d $INGRAPH_COLLECTOR_CHDIR -p $INGRAPH_COLLECTOR_PIDFILE \
 -P $INGRAPH_COLLECTOR_PERFDATA_DIR -e $INGRAPH_COLLECTOR_PERFDATA_PATTERN \
 -l $INGRAPH_COLLECTOR_FILE_LIMIT -m $INGRAPH_COLLECTOR_FILE_MODE \

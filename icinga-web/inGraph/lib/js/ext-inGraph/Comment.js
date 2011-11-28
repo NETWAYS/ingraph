@@ -133,7 +133,7 @@ Ext.iG.Comment = Ext.extend(Ext.form.FormPanel, {
     
     doDelete: function() {
         Ext.Ajax.request({
-             url: Ext.iG.Urls.comments.remove,
+             url: Ext.iG.Urls.comments.delete,
              scope: this,
              success: this.onDeleteSuccess,
              failure: this.onFailure,

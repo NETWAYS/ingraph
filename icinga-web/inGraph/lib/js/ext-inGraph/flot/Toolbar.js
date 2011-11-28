@@ -21,7 +21,7 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
     settingsText: _('Change settings of this chart'),
     commentsText: _('Add comment to this chart'),
     downloadText: _('Export data'),
-    printText: _('Print chart(s)'),
+    printText: _('Print chart'),
     
     constructor: function(cfg) {
         var items = [this.first = new Ext.Toolbar.Button({
@@ -105,37 +105,49 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
                 marginTop: '0px'
             }
         }),
-        this.smooth = new Ext.form.Checkbox({
-            boxLabel: _('Smooth'),
-            disabled: true,
-            scope: this,
-            handler: function(box, checked) {
-                this.store.each(function(rec) {
-                    linesCfg = rec.get('lines');
-                    iG.merge(true, linesCfg, {
-                        spline: checked
-                    });
-                    rec.set('lines', linesCfg);
-                    rec.commit();
-                });
-            },
-            style: {
-                marginTop: '0px'
-            }
-        }),
+//        this.smooth = new Ext.form.Checkbox({
+//            boxLabel: _('Smooth'),
+//            disabled: true,
+//            scope: this,
+//            handler: function(box, checked) {
+//                this.store.each(function(rec) {
+//                    linesCfg = rec.get('lines');
+//                    iG.merge(true, linesCfg, {
+//                        spline: checked
+//                    });
+//                    rec.set('lines', linesCfg);
+//                    rec.commit();
+//                });
+//            },
+//            style: {
+//                marginTop: '0px'
+//            }
+//        }),
         this.settings = new Ext.Toolbar.Button({
             tooltip: this.settingsText,
             iconCls: 'icinga-icon-cog',
             scope: this,
             handler: function() {
-                new Ext.iG.Settings({
-                    store: this.ownerCt.template,
-                    listeners: {
-                        scope: this,
-                        applysettings: function(win, settings) {
-                            this.ownerCt.applyTemplate();
+                new Ext.Window({
+                    title: _('Settings'),
+                    layout: 'fit',
+                    width: 450,
+                    height: 300,
+                    collapsible: true,
+                    modal: true,
+                    items: new Ext.iG.Settings({
+                        baseCls: 'x-plain',
+                        store: this.ownerCt.template,
+                        listeners: {
+                            scope: this,
+                            cancel: function(s) {
+                                s.ownerCt[s.ownerCt.closeAction]()
+                            },
+                            applysettings: function(s) {
+                                this.ownerCt.applyTemplate();
+                            }
                         }
-                    }
+                    })
                 }).show();
             }
         }),
@@ -183,7 +195,6 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
         }),
         this.print = new Ext.Toolbar.Button({
             tooltip: this.printText,
-            overflowText: this.printText,
             iconCls: 'ingraph-icon-print',
             scope: this,
             handler: function() {
@@ -236,7 +247,7 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
         this.refresh.enable();
         this.sync.enable();
         this.datapoints.enable();
-        this.smooth.enable();
+//        this.smooth.enable();
         if(this.input.getValue()) {
             if(this.store.getStart() <= this.store.getMintimestamp()) {
                 this.first.disable();

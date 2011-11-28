@@ -17,8 +17,10 @@ Ext.iG.flot.Panel = Ext.extend(Ext.Panel, {
         var cfg = {};
         this.buildItems(cfg);
         this.buildTbar(cfg);
+        this.buildTools(cfg);
         Ext.apply(this, Ext.apply(this.initialConfig, cfg));
         Ext.iG.flot.Panel.superclass.initComponent.call(this);
+        this.addEvents('addpanel', 'removepanel');
     },
     
     buildItems: function(cfg) {
@@ -62,7 +64,7 @@ Ext.iG.flot.Panel = Ext.extend(Ext.Panel, {
     },
     
     buildTbar: function(cfg) {
-        if(this.tbar === undefined || this.tbar) {
+        if(this.tbar !== false) {
             cfg.tbar = {
                 xtype: 'flottbar',
                 store: this.store,
@@ -75,6 +77,30 @@ Ext.iG.flot.Panel = Ext.extend(Ext.Panel, {
                 }
             };
         }
+    },
+    
+    buildTools: function(cfg) {
+        if(this.tools !== false) {
+            cfg.tools = [{
+                id: 'plus',
+                qtip: _('Add panel to view'),
+                scope: this,
+                handler: this.onAddPanel
+            }, {
+                id: 'close',
+                qtip: _('Remove this panel'),
+                scope: this,
+                handler: this.onRemovePanel
+            }];
+        }
+    },
+    
+    onAddPanel: function() {
+        this.fireEvent('addpanel', this);
+    },
+    
+    onRemovePanel: function() {
+        this.fireEvent('removepanel', this);
     },
     
     initEvents: function() {

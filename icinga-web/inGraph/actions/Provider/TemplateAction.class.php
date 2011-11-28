@@ -1,5 +1,5 @@
 <?php
-// TODO(el): Caching.
+// TODO(el): Cache
 class inGraph_Provider_TemplateAction extends inGraphBaseAction {
     protected $host;
     protected $plots;
@@ -17,16 +17,16 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction {
             'Template', 'inGraph',
              AgaviConfig::get('modules.ingraph.templates'))->getTemplate(
                 $service);
-        if(array_key_exists('series', $template)) {
-            $this->compileSeries($template['series']);
+        
+        $this->compileSeries($template['series']);
+        
+        foreach($template['panels'] as &$panel) {
+            if(array_key_exists('series', $panel)) {
+                $this->compileSeries($panel['series']);
+            } else {
+                $panel['series'] = $template['series'];
+            }
         }
-//        if(array_key_exists('panels', $template)) {
-//            foreach($template['panels'] as $panel) {
-//                if(array_key_exists('series', $panel)) {
-//                    $this->compileSeries($panel['series']);
-//                }
-//            }
-//        }
         unset($template['re']);
         $this->setAttribute('template', $template);
         return $this->getDefaultViewName();

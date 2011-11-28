@@ -13,34 +13,6 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
             autoDestroy : true,
             root: 'charts',
             fields: Ext.iG.flot.Fields.series,
-            
-            /*[{name: 'data', defaultValue: [], convert: function(v, rec) {
-                Ext.each(v, function(xy) {
-                    xy[0] *= 1000;
-                });
-                return v;
-            }},
-                     {name: 'label', defaultValue: '', isFlotOption: true},
-                     {name: 'unit', defaultValue: ''},
-                     {name: 'color', defaultValue: null, isFlotOption: true},
-                     {name: 'xaxis', defaultValue: 1},
-                     {name: 'yaxis', defaultValue: undefined},
-                     {name: 'id', defaultValue: undefined},
-                     {name: 'fillBetween', defaultValue: undefined},
-                     {name: 'lines', defaultValue: {}},
-                     {name: 'points', defaultValue: {}},
-                     {name: 'bars', defaultValu : {}},
-                     {name: 'shadowSize', defaultValue: 3},
-                     {name: 'stack', defaultValue: undefined},
-                     {name: 'enabled', defaultValue: true},
-                     {name: 'host'},
-                     {name: 'service'},
-                     {name: 'plot'},
-                     {name: 'type'},
-                     {name: 'convert'},
-                     {name: 'key', convert: function(v, rec) {
-                         return rec.host + rec.service + rec.plot +
-                                rec.type;}}],*/
             autoLoad: true,
             idProperty: 'key',
             listeners: {
@@ -185,16 +157,3 @@ Ext.iG.FlotJsonStore = Ext.extend(Ext.data.Store, {
         this.lastEnd = options.params.end || self.baseParams.end;
     }
 });
-
-Ext.iG.FlotJsonStore.Util = function() {
-    return {
-        convertData: function(v, rec) {
-            console.log("call convert data", rec);
-            var tf = rec.convert;
-            console.log("tf", tf);
-            if(Ext.isFunction(tf)) {
-            };
-            return v;
-        }
-    };
-}();

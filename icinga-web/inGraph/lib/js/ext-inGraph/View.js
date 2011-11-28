@@ -1,14 +1,18 @@
 Ext.ns('Ext.iG');
 /**
  * @class Ext.iG.View
- * @extends Ext.Container
+ * @extends Ext.Panel
  */
-Ext.iG.View = Ext.extend(Ext.Container, {
+Ext.iG.View = Ext.extend(Ext.Panel, {
     autoScroll: true,
     stateful: true,
     stateEvents: [],
     panelsCfg: {},
     layout: 'anchor',
+    baseCls: 'x-plain',
+    downloadText: _('Export data'),
+    printText: _('Print charts'),
+    saveText: _('Save...'),
     defaults: {
         xtype: 'flotpanel',
         bodyStyle: 'padding: 2px;',
@@ -18,6 +22,7 @@ Ext.iG.View = Ext.extend(Ext.Container, {
     initComponent: function() {
         var cfg = {};
         this.buildItems(cfg);
+        this.buildTbar(cfg);
         Ext.apply(this, Ext.apply(this.initialConfig, cfg));
         Ext.iG.View.superclass.initComponent.call(this);
         this.addEvents(
@@ -34,6 +39,26 @@ Ext.iG.View = Ext.extend(Ext.Container, {
             syncframe: function(tbar, start, end) {
                 this.items.each(function(panel) {
                     panel.store.load({params: {start: start, end: end}});
+                });
+            },
+            add: function(ct, cmp) {
+                cmp.on({
+                    scope: this,
+                    addpanel: function(panel) {
+                        // TODO(el): Triggers multiple times in some circumstances
+                        var index = this.items.indexOfKey(panel.id),
+                            cfg = panel.getState();
+                        this.fromState(cfg);
+                        this.insert(index, cfg);
+                        this.doLayout();
+                    },
+                    removepanel: function(panel) {
+                        if(this.items.getCount() > 1) {
+                            panel.destroy();
+                        } else {
+                            // TODO(el): Notify
+                        }
+                    }
                 });
             }
         });
@@ -123,6 +148,43 @@ Ext.iG.View = Ext.extend(Ext.Container, {
                  function(fn) { return !fn.call(this, cfg);}, this);
     },
     
+    buildTbar: function(cfg) {
+        cfg.tbar = [{
+            text: _('Save'),
+            tooltip: this.saveText,
+            iconCls: 'ingraph-icon-save',
+            scope: this,
+            handler: this.onSave,
+            disabled: true
+        }, '->', /*{
+            tooltip: this.downloadText,
+            iconCls: 'ingraph-icon-document-export',
+            menu: {
+                defaults: {
+                    scope: this
+                },
+                items: [{
+                    text: 'XML',
+                    iconCls: 'ingraph-icon-document-xml',
+                    handler: function() {
+                        this.onDownload('xml');
+                    }
+                }, {
+                   text: 'CSV',
+                   iconCls: 'ingraph-icon-document-csv',
+                   handler: function() {
+                       this.onDownload('csv');
+                   }
+                }]
+            }
+        },*/ {
+            tooltip: this.printText,
+            iconCls: 'ingraph-icon-print',
+            scope: this,
+            handler: this.onPrint
+        }];
+    },
+    
     getState: function() {
         var panels = [];
         this.items.each(function(panel) {
@@ -135,10 +197,15 @@ Ext.iG.View = Ext.extend(Ext.Container, {
     
     applyState: function(state) {
         Ext.each(state.panels, function(panel) {
-            panel.store = new Ext.iG.FlotJsonStore(panel.store);
-            panel.template = new Ext.iG.Template({data: panel.template});
+            this.fromState(panel);
             this.add(panel);
         }, this);
+    },
+    
+    fromState: function(panel) {
+        panel.store = new Ext.iG.FlotJsonStore(panel.store);
+        panel.template = new Ext.iG.Template({data: panel.template});
+        delete panel.id;
     },
     
     requestTemplate: function(url, params, callback) {
@@ -158,5 +225,20 @@ Ext.iG.View = Ext.extend(Ext.Container, {
            },
            params: params
         });
+    },
+    
+    onSave: function() {
+        
+    },
+    
+    onDownload: function() {
+        
+    },
+    
+    onPrint: function() {
+        this.items.each(function(panel) {
+            panel.preparePrint();
+        });
+        window.print();
     }
 });

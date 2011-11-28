@@ -305,23 +305,25 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         if(Ext.isObject(this.template.reader.jsonData.flot)) {
             iG.merge(true, this.flotOptions,
                      this.template.reader.jsonData.flot);
-        } // TODO
+        }
         if(Ext.isObject(this.template.reader.jsonData.generic) &&
            Ext.isNumber(this.template.reader.jsonData.generic.refreshInterval)) {
             this.store.startRefresh(this.template.reader.jsonData.generic.refreshInterval);
-        } // TODO
+        }
         this.template.each(function(series) {
             var rec = this.store.getById(series.id);
             if(!rec || !Ext.isObject(rec.data)) {
                 return;
             }
+            series.data = iG.merge(true, {}, this.flotOptions.series || {},
+                                   series.data);
             var map = rec.fields.map;
             Ext.iterate(series.data, function(key, value) {
                 if((m = map[key]) && m.isFlotOption && value !== undefined &&
                    value !== rec.get(m.mapping || m.name)) {
                     rec.set(m.mapping || m.name, value);
                 }
-            }); // TODO
+            });
         }, this);
         if(this.autoYAxes) {
             // Kicks in if yaxes are not defined via template.

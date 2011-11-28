@@ -4,6 +4,8 @@
         <javascript>
             <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/CheckColumn.js</ae:parameter>
             <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/RowEditor.js</ae:parameter>
+            <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/Spinner.js</ae:parameter>
+            <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/SpinnerField.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/jquery/jquery-1.5.2.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/</ae:parameter>

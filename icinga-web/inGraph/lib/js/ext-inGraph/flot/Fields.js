@@ -52,6 +52,18 @@ Ext.iG.flot.Fields = function() {
         name: 'yaxis',
         defaultValue: undefined,
         isFlotOption: true
+    }, {
+        name: 'lines',
+        defaultValue: {},
+        isFlotOption: true
+    }, {
+        name: 'points',
+        defaultValue: {},
+        isFlotOption: true
+    }, {
+        name: 'bars',
+        defaultValue: {},
+        isFlotOption: true
     }];
     var dataConverter = function(v, rec) {
         Ext.each(v, function(xy) {

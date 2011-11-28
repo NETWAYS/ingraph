@@ -64,6 +64,8 @@ Ext.iG.flot.Fields = function() {
         name: 'bars',
         defaultValue: {},
         isFlotOption: true
+    }, {
+        name: 'convert'
     }];
     var dataConverter = function(v, rec) {
         Ext.each(v, function(xy) {

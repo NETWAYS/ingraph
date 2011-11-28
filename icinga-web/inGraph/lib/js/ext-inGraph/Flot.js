@@ -324,6 +324,9 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                     rec.set(m.mapping || m.name, value);
                 }
             });
+            if((c = series.get('convert'))) {
+                rec.set('convert', Ext.decode(c, true));
+            }
         }, this);
         if(this.autoYAxes) {
             // Kicks in if yaxes are not defined via template.
@@ -533,6 +536,23 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             if(series === undefined) {
                 series = [];
                 this.store.each(function(rec) {
+                    if(Ext.isFunction((c = rec.get('convert')))) {
+                        var scope = {},
+                            snapshot = Ext.pluck(this.store.getRange(), 'data');
+                        Ext.each(rec.get('data'), function(xy) {
+                            try {
+                                y = c.call(scope, xy[1], xy[0], snapshot);
+                            } catch(e) {
+                                // TODO(el): Notify
+                                console.log(e);
+                                return false;
+                            }
+                            if(y !== xy[1] &&
+                               (Ext.isNumber(y) || y === null)) {
+                                xy[1] = y;
+                            }
+                        });
+                    }
                     if(rec.get('enabled') === true) {
                         series.push(rec.data);
                     }

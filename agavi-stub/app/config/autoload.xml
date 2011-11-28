@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ae:configurations xmlns="http://agavi.org/agavi/config/parts/autoload/1.0" xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0" parent="%core.system_config_dir%/autoload.xml">
+	
+	<ae:configuration>
+		
+		<autoload name="ClassicBaseAction">%core.lib_dir%/action/ClassicBaseAction.class.php</autoload>
+		<autoload name="ClassicBaseModel">%core.lib_dir%/model/ClassicBaseModel.class.php</autoload>
+		<autoload name="ClassicBaseView">%core.lib_dir%/view/ClassicBaseView.class.php</autoload>
+		
+		<autoload name="AppKitAgaviUtil">%core.lib_dir%/AppKit/AppKitAgaviUtil.class.php</autoload>
+		<autoload name="AppKitBaseModel">%core.lib_dir%/AppKit/AppKitBaseModel.class.php</autoload>
+		<autoload name="AppKitIteratorUtil">%core.lib_dir%/AppKit/AppKitIteratorUtil.class.php</autoload>
+	</ae:configuration>
+	
+</ae:configurations>

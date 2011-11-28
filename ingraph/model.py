@@ -12,6 +12,7 @@ from sqlalchemy.interfaces import PoolListener
 from time import time, sleep
 from weakref import WeakValueDictionary
 from OrderedDict import OrderedDict
+from traceback import print_exc
 
 dbload_min_timestamp = None
 dbload_max_timestamp = None
@@ -1313,6 +1314,7 @@ def createModelEngine(dsn):
         try:
             conn = engine.connect()
         except:
+            print_exc()
             print "Database connection failed (attempt #%d). Waiting for retry..." % (i)
             sleep(5);
         else:

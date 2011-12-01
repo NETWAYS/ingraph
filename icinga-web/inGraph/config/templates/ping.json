@@ -10,7 +10,6 @@
         {
             "color": "#00FF00", 
             "re": "/^rta$/", 
-            "convert": "function() { console.log(arguments);}", 
             "type": "avg", 
             "label": "Round Trip Time"
         }

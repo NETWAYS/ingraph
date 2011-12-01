@@ -22,7 +22,7 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
     initComponent: function() {
         var cfg = {};
         this.buildItems(cfg);
-        this.buildTbar(cfg);
+//        this.buildTbar(cfg);
         Ext.apply(this, Ext.apply(this.initialConfig, cfg));
         Ext.iG.View.superclass.initComponent.call(this);
         this.addEvents(
@@ -68,6 +68,7 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
         if(this.view) {
             var items = [];
             var callback = function(template) {
+                this.__view__ = template;
                 this.panels = new Ext.iG.Panels({data: template.panels});
                 this.panels.each(function(panel) {
                     var query = Ext.encode(
@@ -101,25 +102,26 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
     fromHostService: function(cfg) {
         if(this.host) {
             var callback = function(template) {
+                this.__template__ = template;
+                template = template.content;
                 var items = [];
-                var query = Ext.encode(
-                    Ext.iG.Util.buildQuery(template.series));
                 if(this.start || this.end) {
                     this.panels = new Ext.iG.Panels({
-                        data: [{ start: this.start,
-                                 end: this.end}]
+                        data: [{start: this.start,
+                                end: this.end}]
                     });
                 } else {
                     this.panels = new Ext.iG.Panels({ data: template.panels});
                 }
                 this.panels.each(function(panel) {
+                    var query = Ext.encode(
+                        Ext.iG.Util.buildQuery(panel.series || template.series));
                     items.push(Ext.apply({}, {
                         title: panel.get('title'),
                         titleFormat: panel.get('titleFormat'),
                         host: this.host,
                         service: this.service,
-                        template: new Ext.iG.Template(
-                                      { data: template}),
+                        template: new Ext.iG.Template({data: template}),
                         overview: panel.get('overview'),
                         store: new Ext.iG.FlotJsonStore({
                             url: Ext.iG.Urls.provider.values,
@@ -136,7 +138,7 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
             };
             this.requestTemplate(
                 Ext.iG.Urls.provider.template,
-                { host: this.host, service: this.service},
+                {host: this.host, service: this.service},
                 callback);
             return true;
         }
@@ -154,8 +156,7 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
             tooltip: this.saveText,
             iconCls: 'ingraph-icon-save',
             scope: this,
-            handler: this.onSave,
-            disabled: true
+            handler: this.onSave
         }, '->', /*{
             tooltip: this.downloadText,
             iconCls: 'ingraph-icon-document-export',
@@ -191,7 +192,9 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
             panels.push(panel.getState());
         });
         return {
-            panels: panels
+            panels: panels,
+            __template__: this.__template__,
+            __view__: this.__view__
         };
     },
     
@@ -200,6 +203,8 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
             this.fromState(panel);
             this.add(panel);
         }, this);
+        this.__template__ = state.__template__;
+        this.__view__ = state.__view__;
     },
     
     fromState: function(panel) {
@@ -228,7 +233,30 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
     },
     
     onSave: function() {
-        
+        var panels = [];
+        this.items.each(function(panel) {
+            var cfg = {
+                start: panel.store.baseParams.start,
+                end: panel.store.baseParams.end,
+                titleFormat: panel.titleFormat,
+                title: panel.initialConfig.title,
+                overview: panel.overview ? true : false
+            };
+            Ext.apply(cfg, panel.template.toHash());
+            panels.push(cfg);
+        });
+        Ext.Ajax.request({
+            url: Ext.iG.Urls.templates.edit,
+            params: {
+                content: Ext.encode({
+                    panels: panels
+                }),
+                name: this.__template__.name
+            },
+            scope: this,
+            success: function() { console.log(arguments);},
+            failure: function() { console.log(arguments);}
+        });
     },
     
     onDownload: function() {
@@ -242,3 +270,4 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
         window.print();
     }
 });
+Ext.iG.View.TYPE_

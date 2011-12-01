@@ -17,17 +17,18 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction {
             'Template', 'inGraph',
              AgaviConfig::get('modules.ingraph.templates'))->getTemplate(
                 $service);
+                
+        $this->setAttribute('name', $template['name']);
+        $template = $template['content'];
         
         $this->compileSeries($template['series']);
         
         foreach($template['panels'] as &$panel) {
             if(array_key_exists('series', $panel)) {
                 $this->compileSeries($panel['series']);
-            } else {
-                $panel['series'] = $template['series'];
             }
         }
-        unset($template['re']);
+        
         $this->setAttribute('template', $template);
         return $this->getDefaultViewName();
     }

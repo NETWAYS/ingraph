@@ -196,6 +196,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     showSelectionHint: function(ranges, pos) {
+        return;
         if(!this.shint) {
             this.shint = new Ext.ToolTip({
                 renderTo: Ext.getBody()
@@ -308,7 +309,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         }
         if(Ext.isObject(this.template.reader.jsonData.generic) &&
            Ext.isNumber(this.template.reader.jsonData.generic.refreshInterval)) {
-            this.store.startRefresh(this.template.reader.jsonData.generic.refreshInterval);
+            this.store.startRefresh(
+                this.template.reader.jsonData.generic.refreshInterval);
         }
         this.template.each(function(series) {
             var rec = this.store.getById(series.id);
@@ -536,9 +538,13 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             if(series === undefined) {
                 series = [];
                 this.store.each(function(rec) {
+                    if(rec.get('enabled') !== true) {
+                        return;
+                    }
                     if(Ext.isFunction((c = rec.get('convert')))) {
                         var scope = {},
-                            snapshot = Ext.pluck(this.store.getRange(), 'data');
+                            snapshot = Ext.pluck(this.store.getRange(),
+                                                 'data');
                         Ext.each(rec.get('data'), function(xy) {
                             try {
                                 y = c.call(scope, xy[1], xy[0], snapshot);
@@ -553,9 +559,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
                             }
                         });
                     }
-                    if(rec.get('enabled') === true) {
-                        series.push(rec.data);
-                    }
+                    series.push(rec.data);
                 });
             }
             if(id === undefined) {
@@ -596,12 +600,13 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
         if (this.refreshTask && this.refreshTask.cancel) {
             this.refreshTask.cancel();
         }
-        Ext.iG.Flot.superclass.onDestroy.call(this);
         this.bindStore(null);
+        Ext.iG.Flot.superclass.onDestroy.call(this);
         if(this.tooltip) {
             this.tooltip.destroy();
             this.tooltip = null;
         }
+        this.$plot.clearSelection();
         if(this.shint) {
             this.shint.destroy();
             this.shint = null;
@@ -632,15 +637,9 @@ Ext.iG.Flot.tooltipTemplate = new Ext.Template(
     '<div class = "iG-tooltip">',
     '<h3>{label}</h3>',
     '<div>{x} : {y}</div>',
-    '</div>', {
-        compiled: true,
-        disableFormats: true
-});
+    '</div>', {compiled: true, disableFormats: true});
 Ext.iG.Flot.sHintTpl = new Ext.Template(
     '<div class = "iG-tooltip">',
     '<div><p><b>' + _('Start') + ' : </b> {from}</p></div>',
     '<div><p><b>' + _('End') + ' : </b> {to}</p></div>',
-    '</div>', {
-        compiled: true,
-        disableFormats: true
-});
+    '</div>', {compiled: true, disableFormats: true});

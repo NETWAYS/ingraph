@@ -221,6 +221,7 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             } else {
                 this.store.un('beforeload', this.onBeforeLoad, this);
                 this.store.un('load', this.onLoad, this);
+                this.store.un('exception', this.onLoadError, this);
             }
             if(!store){
                 this.store = null;
@@ -230,7 +231,8 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             store.on({
                 scope: this,
                 beforeload: this.onBeforeLoad,
-                load: this.onLoad
+                load: this.onLoad,
+                exception: this.onLoadError
             });
             this.store = store;
         }
@@ -261,6 +263,12 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             
             this.next.enable();
             this.last.enable();
+        }
+    },
+    
+    onLoadError: function() {
+        if(this.rendered) {
+            this.refresh.enable();
         }
     },
     

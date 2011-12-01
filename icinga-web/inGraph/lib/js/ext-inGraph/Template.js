@@ -16,7 +16,7 @@ Ext.iG.Template = Ext.extend(Ext.data.GroupingStore, {
         Ext.iG.Template.superclass.constructor.call(this, cfg);
     },
     
-    write: function() {
+    toHash: function() {
         var params = {
             series: []
         }
@@ -24,18 +24,12 @@ Ext.iG.Template = Ext.extend(Ext.data.GroupingStore, {
         this.each(function(rec) {
             var o = {};
             Ext.iterate(rec.data, function(k, v) {
-                if((f = map[k]) && f.isFlotOption) {
+                if((f = map[k]) && f.isFlotOption || f.isTemplateOption) {
                     o[f.name] = v;
                 }
             });
             params.series.push(o);
         });
-        Ext.Ajax.request({
-             url: Ext.iG.Urls.templates.edit,
-             params: Ext.encode(params),
-             scope: this,
-             success: function() { console.log(arguments);},
-             failure: function() { console.log(arguments);}
-        });
+        return params;
     }
 });

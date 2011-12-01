@@ -2,7 +2,8 @@ Ext.ns('Ext.iG');
 Ext.iG.Menu = Ext.extend(Ext.Panel, {
     dateHelp: _('Either select date via the popup date picker or input an ' + 
                 'English textual date or time, i.e.<br />' +
-                '<ul style="list-style-type:circle; list-style-position:inside;">' +
+                '<ul style="list-style-type:circle;' +
+                '    list-style-position:inside;">' +
                     '<li>now</li>' +
                     '<li>last month</li>' +
                     '<li>last mon(day)</li>' +
@@ -11,7 +12,7 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
                     '<li>-1 month + 10 days</li>' +
                     '<li>3 October 2005</li>' +
                 '</ul>'),
-    
+
     constructor: function(cfg) {
         cfg = cfg || {};
         this.hostCmp = new Ext.iG.AutoComboBox({
@@ -145,10 +146,11 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
                     items: this.endCmp
                 }, {
                     items: {
-                        xtype: 'box',
+                        xtype: 'container',
                         autoEl: {
-                            tag: 'img',
-                            src: 'images/ingraph_logo.png'
+                            tag: 'div',
+                            cls: 'ingraph-logo',
+                            style: 'height: 65px; width: 190px'
                         }
                     },
                     rowspan: 2

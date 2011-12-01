@@ -29,7 +29,7 @@ class inGraph_TemplateModel extends inGraphBaseModel implements AgaviISingletonM
 			if($template->getFilename() === $this->getParameter('default')) {
 				$this->setParameter('defaultContent', $content);
 			} else {
-				$templates[] = $content;
+				$templates[$template->getFilename()] = $content;
 			}
 		}
 		
@@ -74,6 +74,15 @@ class inGraph_TemplateModel extends inGraphBaseModel implements AgaviISingletonM
 	    return $t;
 	}
 	
+	public function save($name, $json) {
+		$old = json_decode(
+		    file_get_contents($this->getParameter('dir') . DIRECTORY_SEPARATOR . $name), true);
+		$new = array_merge($old, json_decode($json, true));
+	    return file_put_contents(
+	        $this->getParameter('dir') . DIRECTORY_SEPARATOR . $name,
+	        json_encode($new), LOCK_EX);
+	}
+	
 	protected function mergeTemplate($a, $b) {
 	    $c = array_merge(array(), $a, $b);
 	    if(array_key_exists('flot', $a) && array_key_exists('flot', $b)) {
@@ -86,8 +95,11 @@ class inGraph_TemplateModel extends inGraphBaseModel implements AgaviISingletonM
 	public function getTemplate($service) {
 		$serviceTemplate = array();
 		
-		foreach($this->getParameter('templates') as $template) {
+		$l = null;
+		
+		foreach($this->getParameter('templates') as $name => $template) {
 			if(preg_match($template['re'], $service)) {
+			    $l = $name;
 				$serviceTemplate = $this->mergeTemplate($serviceTemplate,
 				                                        $template);
 			}
@@ -96,6 +108,9 @@ class inGraph_TemplateModel extends inGraphBaseModel implements AgaviISingletonM
 		$serviceTemplate = $this->mergeTemplate(
 		    $this->getParameter('defaultContent'), $serviceTemplate);
 
-		return $this->validateTemplate($serviceTemplate);
+		return array(
+		    'name' => $l,
+		    'content' => $this->validateTemplate($serviceTemplate)
+	    );
 	}
 }

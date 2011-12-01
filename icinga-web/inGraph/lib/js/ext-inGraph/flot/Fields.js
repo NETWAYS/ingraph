@@ -15,6 +15,9 @@ Ext.iG.flot.Fields = function() {
         return v ? v : rec.plot + '-' + rec.type;
     };
     var template = [{
+        name: 're',
+        isTemplateOption: true
+    }, {
         name: 'host',
         isTemplateOption: true
     }, {

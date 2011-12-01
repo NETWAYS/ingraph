@@ -102,6 +102,9 @@ class Collectord(daemon.UnixDaemon):
             logdata = self._parse_update_ingraph(tokens)
         else:
             logdata = self._parse_update_pnp(tokens)
+
+        if logdata == False:
+            return []
         
         perfresults = utils.PerfdataParser.parse(logdata['perf'])
         

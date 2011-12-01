@@ -106,7 +106,7 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     
     showTooltip: function(item, pos) {
         if(!this.tooltip) {
-            this.tooltip = new Ext.ToolTip({
+            this.tooltip = new Ext.Tip({
                 renderTo: Ext.getBody()
             });
         }
@@ -196,9 +196,8 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
     },
     
     showSelectionHint: function(ranges, pos) {
-        return;
         if(!this.shint) {
-            this.shint = new Ext.ToolTip({
+            this.shint = new Ext.Tip({
                 renderTo: Ext.getBody()
             });
         }
@@ -601,16 +600,15 @@ Ext.iG.Flot = Ext.extend(Ext.BoxComponent, {
             this.refreshTask.cancel();
         }
         this.bindStore(null);
-        Ext.iG.Flot.superclass.onDestroy.call(this);
         if(this.tooltip) {
             this.tooltip.destroy();
             this.tooltip = null;
         }
-        this.$plot.clearSelection();
         if(this.shint) {
             this.shint.destroy();
             this.shint = null;
         }
+        Ext.iG.Flot.superclass.onDestroy.call(this);
     },
     
     reset: function() {

@@ -171,7 +171,7 @@ def main():
     ingraphd = InGraphd(chdir=options.chdir,
                         detach=options.detach,
                         pidfile=options.pidfile)
-    if options.logfile:
+    if options.logfile and options.logfile != '-':
         ingraphd.stdout = options.logfile
         ingraphd.stderr = options.logfile
     if options.user:

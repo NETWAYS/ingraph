@@ -306,7 +306,7 @@ def main():
                             detach=options.detach,
                             pidfile=options.pidfile,
                             format=options.format)
-    if options.logfile:
+    if options.logfile and options.logfile != '-':
         collectord.stdout = options.logfile
         collectord.stderr = options.logfile
     if options.user:

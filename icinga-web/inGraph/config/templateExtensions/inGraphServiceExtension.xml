@@ -51,7 +51,7 @@
                         </parameter>
                         <parameter name="type">renderer</parameter>
                         <parameter name="arguments">
-                            <parameter name="image">images/icons/chart.png
+                            <parameter name="image">images/icons/chart_bar.png
                             </parameter>
                             <parameter name="css">x-icinga-grid-link
                             </parameter>

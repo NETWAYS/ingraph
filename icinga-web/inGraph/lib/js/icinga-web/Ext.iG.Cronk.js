@@ -22,7 +22,7 @@ Ext.iG.Cronk = function() {
                     params: {
                         host: cfg.host,
                         service: cfg.service
-                    }   
+                    }
                 },
                 tabs = Ext.getCmp('cronk-tabs'),
                 panel = Cronk.factory(cronk);
@@ -37,7 +37,7 @@ Ext.iG.Cronk = function() {
                 layout: 'fit',
                 items: new Ext.iG.View({
                     border: false,
-		    tbar: false,
+                    tbar: false,
                     panelsCfg: {
                         height: cfg.height,
                         header: false,

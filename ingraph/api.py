@@ -282,7 +282,13 @@ class BackendRPCMethods(object):
                   'min_timestamp': model.dbload_min_timestamp,
                   'max_timestamp': time.time()}
 
+        if query == []:
+            query = {}
+
         for host, host_specification in query.iteritems():
+            if host_specification == []:
+                host_specification = {}
+
             for service, service_specification in host_specification.iteritems():
                 svc_data = self.getPlotValues(host, service, start_timestamp, end_timestamp, granularity, null_tolerance)
 

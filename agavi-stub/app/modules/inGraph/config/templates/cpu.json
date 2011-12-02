@@ -1,0 +1,23 @@
+{
+    "re": "/cpu$/i", 
+    "flot": {
+        "lines": {
+            "fill": false
+        }
+    }, 
+    "series": [
+        {
+            "re": "//", 
+            "type": "avg", 
+            "stack": "idle"
+        }, 
+        {
+            "lines": {
+                "show": false
+            }, 
+            "re": "/Idle/i", 
+            "type": "avg", 
+            "id": "idle"
+        }
+    ]
+}

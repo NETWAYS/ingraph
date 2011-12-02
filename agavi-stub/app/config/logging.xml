@@ -21,7 +21,7 @@
 			<!-- logs everything but DEBUG and INFO messages -->
 			<logger name="error" class="AgaviLogger" level="AgaviLogger::ALL ^ AgaviLogger::DEBUG ^ AgaviLogger::INFO">
 				<appenders>
-					<appender>ErrorLogAppender</appender>
+<!-- 					<appender>ErrorLogAppender</appender> -->
 					<appender>StdErrorAppender</appender> 
 				</appenders>
 			</logger>

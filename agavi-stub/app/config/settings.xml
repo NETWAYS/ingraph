@@ -5,7 +5,7 @@
 		
 		<system_actions>
 			<system_action name="default">
-				<module>Default</module>
+				<module>inGraph</module>
 				<action>Index</action>
 			</system_action>
 			
@@ -42,9 +42,9 @@
 			<setting name="debug">false</setting>
 			
 			<setting name="use_database">false</setting>
-			<setting name="use_logging">false</setting>
-			<setting name="use_security">true</setting>
-			<setting name="use_translation">false</setting>
+			<setting name="use_logging">true</setting>
+			<setting name="use_security">false</setting>
+			<setting name="use_translation">true</setting>
 		</settings>
 		
 		<exception_templates>

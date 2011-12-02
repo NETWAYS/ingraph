@@ -42,8 +42,8 @@
 			</available_locale>
 		</available_locales>
 		
-		<translators default_domain="default">
-			<translator domain="default">
+		<translators default_domain="ingraph.default">
+			<translator domain="ingraph">
 				
 				<translator domain="errors">
 					<message_translator class="AgaviSimpleTranslator">
@@ -60,6 +60,7 @@
 				
 				<message_translator class="AgaviGettextTranslator">
 					<ae:parameter name="text_domains">
+                        <ae:parameter name="default">%core.app_dir%/data/i18n</ae:parameter>
 						<ae:parameter name="menu">%core.app_dir%/data/i18n</ae:parameter>
 						<ae:parameter name="layout">%core.app_dir%/data/i18n</ae:parameter>
 						<ae:parameter name="Login">%core.app_dir%/data/i18n</ae:parameter>

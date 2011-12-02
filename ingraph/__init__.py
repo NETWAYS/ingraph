@@ -14,8 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+
+if sys.version_info[:2] < (2,4):
+    print('inGraph requires Python version 2.4 or later.')
+    sys.exit(1)
+
 __name__ = 'ingraph'
-__version__ = '1.0'
+__version__ = '1.0 Beta'
 __author__ = 'NETWAYS GmbH'
 __contact__ = 'info@netways.de'
 __url__ = 'https://www.netways.org'
+__description__ = 'Data collection and graphing utility for monitoring systems'

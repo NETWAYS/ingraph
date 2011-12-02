@@ -15,24 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import distribute_setup
-distribute_setup.use_setuptools()
 from setuptools import setup
 
 import ingraph
 
-console_scripts = ['ingraphd = ingraph.bin.ingraphd:main',
-                   'ingraph-collectord = ingraph.bin.ingraph_collectord:main',
-                   'check_ingraph = ingraph.bin.check_ingraph:main']
 setup(name=ingraph.__name__,
       version=ingraph.__version__,
-      description="Data collection and graphing utility for monitoring systems",
+      description=ingraph.__description__,
       author=ingraph.__author__,
       author_email=ingraph.__contact__,
       url=ingraph.__url__,
-      install_requires=['sqlalchemy>=0.6.3'],
+      requires=['sqlalchemy (>=0.6.3)'],
       packages=['ingraph.bin', 'ingraph'],
+      zip_safe=False,
       entry_points={
-        'console_scripts': console_scripts
-      })
+        'console_scripts': ['ingraphd = ingraph.bin.ingraphd:main',
+                            'ingraph-collectord = ingraph.bin.ingraph_collectord:main',
+                            'check_ingraph = ingraph.bin.check_ingraph:main']
+      },
+      data_files=[('/etc/init.d', ['contrib/init.d/ingraph',
+                                   'contrib/init.d/ingraph-collector'])])

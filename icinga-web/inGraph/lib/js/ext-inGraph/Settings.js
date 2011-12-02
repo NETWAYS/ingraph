@@ -16,18 +16,19 @@ Ext.iG.Settings = Ext.extend(Ext.Panel, {
     },
     
     buildItems: function(cfg) {
-        var editor = new Ext.ux.grid.RowEditor({
-            saveText: _('Apply')
-        });
+//        var editor = new Ext.ux.grid.RowEditor({
+//            saveText: _('Apply')
+//        });
         cfg.items = [{
-            xtype: 'grid',
+            xtype: 'editorgrid',
             ref: 'grid',
             view: new Ext.grid.GroupingView({
                 forceFit: true,
                 groupTextTpl: '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Items" : "Item"]})',
                 showGroupName: false
             }),
-            plugins: [editor],
+//            plugins: [editor],
+            plugins: [new Ext.ux.grid.CheckColumn()],
             store: this.store,
             sm: new Ext.grid.RowSelectionModel({
                 listeners: {
@@ -43,16 +44,11 @@ Ext.iG.Settings = Ext.extend(Ext.Panel, {
                     sortable: true
                 },
                 columns: [{
-                    xtype: 'booleancolumn',
+                    xtype: 'checkcolumn',
                     header: _('Enabled'),
                     dataIndex: 'enabled',
                     align: 'center',
-                    width: 50,
-                    trueText: _('Yes'),
-                    falseText: _('No'),
-                    editor: {
-                        xtype: 'checkbox'
-                    }
+                    width: 50
                 }, {
                     header: _('Group'),
                     dataIndex: 'group',

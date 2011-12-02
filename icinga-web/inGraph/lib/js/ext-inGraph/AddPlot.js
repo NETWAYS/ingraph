@@ -50,6 +50,7 @@ Ext.iG.AddPlot = Ext.extend(Ext.Window, {
                 emptyText: _('Choose Service'),
                 qtip: _('Leave this field empty if you want to search for ' + 
                         'host plots'),
+                allowBlank: true,
                 listeners: {
                     render: function(combo) {
                         new Ext.ToolTip({

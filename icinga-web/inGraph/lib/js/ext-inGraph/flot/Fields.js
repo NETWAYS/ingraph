@@ -9,7 +9,12 @@ Ext.iG.flot.Fields = function() {
         return rec.host + rec.service + rec.plot + rec.type;
     };
     var groupConverter = function(v, rec) {
-        return rec.host + ' - ' + rec.service + ' - ' + rec.plot;
+        var group = rec.host;
+        if(rec.service) {
+            group += ' - ' + rec.service;
+        }
+        group += ' - ' + rec.plot;
+        return group;
     };
     var labelConverter = function(v, rec) {
         return v ? v : rec.plot + '-' + rec.type;
@@ -19,13 +24,12 @@ Ext.iG.flot.Fields = function() {
         isTemplateOption: true
     }, {
         name: 'host',
-        isTemplateOption: true
+        isViewOption: true
     }, {
         name: 'service',
-        isTemplateOption: true
+        isViewOption: true
     }, {
-        name: 'plot',
-        isTemplateOption: true
+        name: 'plot'
     }, {
         name: 'type',
         isTemplateOption: true
@@ -50,7 +54,7 @@ Ext.iG.flot.Fields = function() {
     }, {
         name: 'enabled',
         defaultValue: true,
-        isTemplateOption: true
+        isFlotOption: true
     }, {
         name: 'yaxis',
         defaultValue: undefined,

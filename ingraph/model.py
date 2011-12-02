@@ -1,17 +1,28 @@
-'''
-Created on 17.01.2011
-
-@author: gunnar
-'''
+# inGraph (https://www.netways.org/projects/ingraph)
+# Copyright (C) 2011 NETWAYS GmbH
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Enum, Sequence, ForeignKey, Index, create_engine, \
     and_, or_
 from sqlalchemy.sql import literal, select, between, func
 from sqlalchemy.interfaces import PoolListener
-from time import time
+from time import time, sleep
 from weakref import WeakValueDictionary
 from OrderedDict import OrderedDict
+from traceback import print_exc
 
 dbload_min_timestamp = None
 dbload_max_timestamp = None
@@ -1307,7 +1318,21 @@ def createModelEngine(dsn):
 
     #engine.echo = True
 
-    conn = engine.connect()
+    conn = None
+
+    for i in range(1, 12):
+        try:
+            conn = engine.connect()
+        except:
+            print_exc()
+            print "Database connection failed (attempt #%d). Waiting for retry..." % (i)
+            sleep(5);
+        else:
+            break
+
+    if conn == None:
+        # Final attempt, without try...except this time
+        conn = engine.connect()
 
     # sqlite3-specific optimization
     try:

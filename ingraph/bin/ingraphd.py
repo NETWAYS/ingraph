@@ -1,4 +1,20 @@
 #!/usr/bin/env python
+# inGraph (https://www.netways.org/projects/ingraph)
+# Copyright (C) 2011 NETWAYS GmbH
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 import Queue
 import time
 import traceback
@@ -108,9 +124,11 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         server.required_password = config['xmlrpc_password']
         server.register_introspection_functions()
         server.register_multicall_functions()
-        server.register_instance(ingraph.api.BackendRPCMethods(engine,
-                                                               queryqueue))
         
+        rpcmethods = ingraph.api.BackendRPCMethods(engine, queryqueue)
+        server.register_instance(rpcmethods)
+        
+        self.rpcmethods = rpcmethods
         self.engine = engine
         self.queryqueue = queryqueue
         self.server = server
@@ -121,7 +139,9 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         daemonized_thread(vacuum, (self.engine,))
         daemonized_thread(pragma, (self.engine, 'wal_checkpoint'))
 
-        self.server.serve_forever()
+
+        while not self.rpcmethods.shutdown_server:
+            self.server.handle_request()
 
 def main():
     daemon_functions = ('start', 'stop', 'restart', 'status')
@@ -153,7 +173,7 @@ def main():
     ingraphd = InGraphd(chdir=options.chdir,
                         detach=options.detach,
                         pidfile=options.pidfile)
-    if options.logfile:
+    if options.logfile and options.logfile != '-':
         ingraphd.stdout = options.logfile
         ingraphd.stderr = options.logfile
     if options.user:

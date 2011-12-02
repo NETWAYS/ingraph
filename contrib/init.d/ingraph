@@ -23,20 +23,12 @@ INGRAPH_USER=ingraph
 [ -r /etc/default/ingraph ] && . /etc/default/ingraph
 [ -r /etc/sysconfig/ingraph ] && . /etc/sysconfig/ingraph
 
-BIN="python -m ingraph.bin.ingraphd"
-ARGS="-d $INGRAPH_CHDIR -p $INGRAPH_PIDFILE -u $INGRAPH_USER"
-
-[ -n "$INGRAPH_LOGFILE" ] && ARGS="$ARGS -o $INGRAPH_LOGFILE"
-
-#[ -x "$BIN" ] || { echo "inGraph-collector not installed.";
-#    if [ "$1" = "stop" ]; then exit 0;
-#    else exit 5; fi; }
-
 RETVAL=0
 
 do_action() {
-    $BIN $ARGS $1
-    RETVAL=$?
+    python -m ingraph/bin/ingraphd -d "$INGRAPH_CHDIR" -p "$INGRAPH_PIDFILE" \
+	-u "$INGRAPH_USER" -o "$INGRAPH_LOGFILE" "$1"
+    RETVAL="$?"
 }
 
 case "$1" in

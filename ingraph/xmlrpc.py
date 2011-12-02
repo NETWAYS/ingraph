@@ -1,3 +1,19 @@
+# inGraph (https://www.netways.org/projects/ingraph)
+# Copyright (C) 2011 NETWAYS GmbH
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 import xmlrpclib
 from SocketServer import ThreadingTCPServer
 from SimpleXMLRPCServer import (SimpleXMLRPCDispatcher,
@@ -5,6 +21,7 @@ from SimpleXMLRPCServer import (SimpleXMLRPCDispatcher,
                                 SimpleXMLRPCDispatcher)
 import base64
 import sys
+import traceback
 
 class _xmldumps(object):
     def __init__(self, dumps):
@@ -69,3 +86,19 @@ class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
             return True
         
         return self.required_username == username and self.required_password == password
+
+    def _dispatch(self, method, params):
+        try:
+            return SimpleXMLRPCDispatcher._dispatch(self, method, params)
+        except Exception, e:
+            print '---'
+            print 'XML-RPC request caused exception:'
+            print 'Method: %s' % (method)
+            print 'Parameters: %s' % (str(params))
+            print 'Exception information'
+            print e
+            print 'Stacktrace:'
+            traceback.print_exc()
+            print '---'
+
+            raise

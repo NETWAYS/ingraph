@@ -1,3 +1,19 @@
+# inGraph (https://www.netways.org/projects/ingraph)
+# Copyright (C) 2011 NETWAYS GmbH
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 import time
 import xmlrpclib
 import cPickle
@@ -12,6 +28,7 @@ class BackendRPCMethods(object):
         self.plots = {}
         self.engine = engine
         self.queryqueue = queryqueue
+        self.shutdown_server = False
         
     def setupTimeFrame(self, interval, retention_period=None):
         tfs = model.TimeFrame.getAll(self.engine)
@@ -265,7 +282,13 @@ class BackendRPCMethods(object):
                   'min_timestamp': model.dbload_min_timestamp,
                   'max_timestamp': time.time()}
 
+        if query == []:
+            query = {}
+
         for host, host_specification in query.iteritems():
+            if host_specification == []:
+                host_specification = {}
+
             for service, service_specification in host_specification.iteritems():
                 svc_data = self.getPlotValues(host, service, start_timestamp, end_timestamp, granularity, null_tolerance)
 
@@ -315,9 +338,7 @@ class BackendRPCMethods(object):
         return data
 
     def shutdown(self):
-        global shutdown_server
-        
-        shutdown_server = True
+        self.shutdown_server = True
         
         return True
 

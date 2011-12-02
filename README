@@ -37,12 +37,13 @@ backends should work just fine.
 2. Copy the init scripts:
 
     # cp contrib/init.d/* /etc/init.d/
+    # chmod +x /etc/init.d/ingraph*
 
 3. Add ingraph directory to /var/run
 
     # mkdir /var/run/ingraph && chown ingraph /var/run/ingraph
 
-4. Start the grapher daemon:
+4. Start the inGraph daemon:
 
     # /etc/init.d/ingraph start
 

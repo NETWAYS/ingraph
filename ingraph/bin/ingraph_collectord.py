@@ -1,4 +1,19 @@
 #!/usr/bin/env python
+# inGraph (https://www.netways.org/projects/ingraph)
+# Copyright (C) 2011 NETWAYS GmbH
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import os
@@ -87,6 +102,9 @@ class Collectord(daemon.UnixDaemon):
             logdata = self._parse_update_ingraph(tokens)
         else:
             logdata = self._parse_update_pnp(tokens)
+
+        if logdata == False:
+            return []
         
         perfresults = utils.PerfdataParser.parse(logdata['perf'])
         
@@ -290,7 +308,7 @@ def main():
                             detach=options.detach,
                             pidfile=options.pidfile,
                             format=options.format)
-    if options.logfile:
+    if options.logfile and options.logfile != '-':
         collectord.stdout = options.logfile
         collectord.stderr = options.logfile
     if options.user:

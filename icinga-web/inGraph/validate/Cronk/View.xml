@@ -8,27 +8,21 @@ parent="%core.module_dir%/Reporting/config/validators.xml">
             <validator class="string" name="cmpid" required="false">
                 <argument>cmpid</argument>
             </validator>
-
             <validator class="string" name="parentid" required="false">
                 <argument>parentid</argument>
             </validator>
-
             <validator class="string" name="stateuid" required="false">
                 <argument>stateuid</argument>
             </validator>
-
             <validator class="string" name="state" required="false">
                 <argument>state</argument>
             </validator>
-
             <validator class="string" name="host" required="false">
                 <argument>host</argument>
             </validator>
-
             <validator class="string" name="service" required="false">
                 <argument>service</argument>
             </validator>
-
             <validator class="string" name="view" required="false">
                 <argument>view</argument>
             </validator>

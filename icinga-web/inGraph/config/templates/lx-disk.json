@@ -1,21 +1,22 @@
 {
-"re": "/^lx-disk/i",
-
-"flot": {
-    "series": {
-        "lines": {
-            "fill": true,
-            "show": true
+    "re": "/^lx-disk/i", 
+    "flot": {
+        "series": {
+            "lines": {
+                "show": true, 
+                "fill": true
+            }
         }
-    }
-},
-
-"series": [{
-    "re": "/.*-avg/",
-	"color": "#0099CC"
-},
-{
-     "re": "/.*-max/"
-}
-]
+    }, 
+    "series": [
+        {
+            "color": "#0099CC", 
+            "re": "/.*/", 
+            "type": "avg"
+        }, 
+        {
+            "re": "/.*/", 
+            "type": "max"
+        }
+    ]
 }

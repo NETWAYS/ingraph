@@ -71,6 +71,7 @@ Ext.iG.Cronk = function() {
                 dismissDelay: 0,
                 width: cfg.width,
                 items: new Ext.iG.View({
+                    tbar: false,
                     autoScroll: false,
                     panelsCfg: {
                         header: false,

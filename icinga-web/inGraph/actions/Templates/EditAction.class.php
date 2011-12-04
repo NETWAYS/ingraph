@@ -2,6 +2,7 @@
 
 class inGraph_Templates_EditAction extends inGraphBaseAction {
     public function executeWrite(AgaviRequestDataHolder $rd) {
+        die;
         $template = $this->context->getModel(
             'Template', 'inGraph',
              AgaviConfig::get('modules.ingraph.templates'));

@@ -22,7 +22,7 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
     initComponent: function() {
         var cfg = {};
         this.buildItems(cfg);
-//        this.buildTbar(cfg);
+        this.buildTbar(cfg);
         Ext.apply(this, Ext.apply(this.initialConfig, cfg));
         Ext.iG.View.superclass.initComponent.call(this);
         this.addEvents(
@@ -151,39 +151,41 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
     },
     
     buildTbar: function(cfg) {
-        cfg.tbar = [{
-            text: _('Save'),
-            tooltip: this.saveText,
-            iconCls: 'ingraph-icon-save',
-            scope: this,
-            handler: this.onSave
-        }, '->', /*{
-            tooltip: this.downloadText,
-            iconCls: 'ingraph-icon-document-export',
-            menu: {
-                defaults: {
-                    scope: this
-                },
-                items: [{
-                    text: 'XML',
-                    iconCls: 'ingraph-icon-document-xml',
-                    handler: function() {
-                        this.onDownload('xml');
-                    }
-                }, {
-                   text: 'CSV',
-                   iconCls: 'ingraph-icon-document-csv',
-                   handler: function() {
-                       this.onDownload('csv');
-                   }
-                }]
-            }
-        },*/ {
-            tooltip: this.printText,
-            iconCls: 'ingraph-icon-print',
-            scope: this,
-            handler: this.onPrint
-        }];
+        if(this.tbar !== false) {
+            cfg.tbar = [{
+                text: _('Save'),
+                tooltip: this.saveText,
+                iconCls: 'ingraph-icon-save',
+                scope: this,
+                handler: this.onSave
+            }, '->', /*{
+                tooltip: this.downloadText,
+                iconCls: 'ingraph-icon-document-export',
+                menu: {
+                    defaults: {
+                        scope: this
+                    },
+                    items: [{
+                        text: 'XML',
+                        iconCls: 'ingraph-icon-document-xml',
+                        handler: function() {
+                            this.onDownload('xml');
+                        }
+                    }, {
+                       text: 'CSV',
+                       iconCls: 'ingraph-icon-document-csv',
+                       handler: function() {
+                           this.onDownload('csv');
+                       }
+                    }]
+                }
+            },*/ {
+                tooltip: this.printText,
+                iconCls: 'ingraph-icon-print',
+                scope: this,
+                handler: this.onPrint
+            }];
+        }
     },
     
     getState: function() {
@@ -245,6 +247,7 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
             Ext.apply(cfg, panel.template.toHash());
             panels.push(cfg);
         });
+        console.log(panels);
         Ext.Ajax.request({
             url: Ext.iG.Urls.templates.edit,
             params: {

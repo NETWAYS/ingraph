@@ -1,0 +1,191 @@
+{
+    "re": "/mysql-health.*/", 
+    "series": [
+        {
+            "color": "#7CFC00", 
+            "re": "/.*threads_connected/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*threads_connected/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*threads_connected/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "color": "#7CFC00", 
+            "re": "/.*slave_lag/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*slave_lag/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*slave_lag/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "color": "#7CFC00", 
+            "re": "/.*bufferpool_hitrate/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*bufferpool_hitrate/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*bufferpool_hitrate/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*bufferpool_hitrate-now_avg/"
+        }, 
+        {
+            "color": "#7CFC00", 
+            "re": "/.*connection_time/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*connection_time/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*connection_time/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "color": "#7CFC00", 
+            "re": "/.*innodb_log_waits_rate/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*innodb_log_waits_rate/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*innodb_log_waits_rate/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "color": "#7CFC00", 
+            "re": "/.*qcache_hitrate/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*qcache_hitrate/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*qcache_hitrate/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*qcache_hitrate-now/", 
+            "type": "avg"
+        }, 
+        {
+            "re": "/.*selects_per_sec/", 
+            "type": "max"
+        }, 
+        {
+            "re": "/.*selects_per_sec/", 
+            "type": "avg"
+        }, 
+        {
+            "color": "#7CFC00", 
+            "re": "/.*slow_queries_rate/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*slow_queries_rate/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*slow_queries_rate/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "color": "#7CFC00", 
+            "re": "/.*tablelock_contention/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*tablelock_contention/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*tablelock_contention/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "color": "#7CFC00", 
+            "re": "/.*tablecache_hitrate/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*tablecache_hitrate/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*tablecache_hitrate/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "color": "#7CFC00", 
+            "re": "/.*thread_cache_hitrate/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*thread_cache_hitrate/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*thread_cache_hitrate/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "color": "#7CFC00", 
+            "re": "/.*pct_tmp_table_on_disk/", 
+            "type": "max"
+        }, 
+        {
+            "color": "#FFFF00", 
+            "re": "/.*pct_tmp_table_on_disk/", 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#FF0000", 
+            "re": "/.*pct_tmp_table_on_disk/", 
+            "type": "crit_upper"
+        }, 
+        {
+            "re": "/.*pct_tmp_table_on_disk_now/", 
+            "type": "avg"
+        }
+    ]
+}

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ae:configurations xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0" xmlns="http://agavi.org/agavi/config/parts/routing/1.0">
+	<ae:configuration>
+		<routes>
+			<!-- default action for "/" -->
+			<route name="index" pattern="^/$" module="%actions.default_module%" action="%actions.default_action%" />
+            <route name="modules" pattern="^/modules" stop="false">
+                <route name=".ingraph" pattern="^/ingraph" stop="false" module="inGraph">
+                    <route name=".provider" pattern="^/provider" stop="false" action="Provider" output_type="json">
+                        <route name="ot_xml" pattern=".xml$" cut="true" stop="false" output_type="xml" />
+                        <route name="ot_rss" pattern=".csv$" cut="true" stop="false" output_type="csv" />
+                        <route name="ot_png" pattern=".png$" cut="true" stop="false" output_type="image" />
+                        <route name=".hosts" pattern="^/hosts$" action=".Hosts" />
+                        <route name=".services" pattern="^/services$" action=".Services" />
+                        <route name=".plots" pattern="^/plots$" action=".Plots" />
+                        <route name=".template" pattern="^/template$" action=".Template" />
+                        <route name=".views" pattern="^/views$" action=".Views" />
+                        <route name=".values" pattern="^/values$" action=".Values" />
+                        <route name=".view" pattern="^/view$" action=".View" />
+                    </route>
+                    <route name=".comments" pattern="^/comments" stop="false" action="Comments" output_type="json">
+                        <route name=".add" pattern="^/add$" action=".Add" />
+                        <route name=".edit" pattern="^/edit$" action=".Edit" />
+                        <route name=".delete" pattern="^/delete$" action=".Delete" />
+                    </route>
+                    <route name=".templates" pattern="^/templates" stop="false" action="Templates" output_type="json">
+                        <route name=".edit" pattern="^/edit$" action=".Edit" />
+                    </route>
+                </route>
+            </route>
+		</routes>
+	</ae:configuration>
+</ae:configurations>

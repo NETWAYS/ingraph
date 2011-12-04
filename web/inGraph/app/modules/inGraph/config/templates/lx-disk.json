@@ -1,0 +1,22 @@
+{
+    "re": "/^lx-disk/i", 
+    "flot": {
+        "series": {
+            "lines": {
+                "show": true, 
+                "fill": true
+            }
+        }
+    }, 
+    "series": [
+        {
+            "color": "#0099CC", 
+            "re": "/.*/", 
+            "type": "avg"
+        }, 
+        {
+            "re": "/.*/", 
+            "type": "max"
+        }
+    ]
+}

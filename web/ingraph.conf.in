@@ -1,0 +1,10 @@
+Alias @BASE@ @PREFIX@/pub
+
+<Directory @PREFIX@/pub>
+	DirectoryIndex index.php
+	Options FollowSymLinks
+	AllowOverride all
+	Order allow,deny
+	Allow from all
+</Directory>
+

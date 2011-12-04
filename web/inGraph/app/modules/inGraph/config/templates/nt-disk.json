@@ -1,0 +1,34 @@
+{
+    "re": "/^nt-disk/i", 
+    "flot": {
+        "series": {
+            "lines": {
+                "show": true, 
+                "fill": true
+            }
+        }
+    }, 
+    "series": [
+        {
+            "color": "#0099CC", 
+            "re": "/.*/", 
+            "type": "avg"
+        }, 
+        {
+            "color": "#FF6600", 
+            "re": "/.*/", 
+            "lines": {
+                "fill": false
+            }, 
+            "type": "warn_upper"
+        }, 
+        {
+            "color": "#CC0000", 
+            "re": "/.*/", 
+            "lines": {
+                "fill": false
+            }, 
+            "type": "crit_upper"
+        }
+    ]
+}

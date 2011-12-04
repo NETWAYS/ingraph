@@ -16,7 +16,8 @@ Ext.iG.Urls = function() {
             plots: baseProvider + 'plots',
             template: baseProvider + 'template',
             values: baseProvider + 'values',
-            view: baseProvider + 'view'
+            view: baseProvider + 'view',
+            views: baseProvider + 'views'
         },
         comments: {
             add: baseComments + 'add',

@@ -69,13 +69,13 @@ Ext.iG.Comment = Ext.extend(Ext.form.FormPanel, {
     buildButtons: function(cfg) {
         cfg.buttons = [{
             text: _('Save'),
-            iconCls: 'icinga-icon-accept',
+            iconCls: 'ingraph-icon-save',
             formBind: true,
             scope: this,
             handler: this.doAdd
         }, {
             text: _('Cancel'),
-            iconCls: 'icinga-icon-cancel',
+            iconCls: 'ingraph-icon-cancel',
             scope: this,
             handler: this.doCancel
         }];
@@ -83,7 +83,7 @@ Ext.iG.Comment = Ext.extend(Ext.form.FormPanel, {
             cfg.buttons[0].handler = this.doEdit;
             cfg.buttons.splice(1, 0, {
                 text: _('Delete'),
-                iconCls: 'icinga-icon-delete',
+                iconCls: 'ingraph-icon-delete',
                 scope: this,
                 handler: this.doDelete
                 

@@ -125,7 +125,7 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
 //        }),
         this.settings = new Ext.Toolbar.Button({
             tooltip: this.settingsText,
-            iconCls: 'icinga-icon-cog',
+            iconCls: 'ingraph-icon-settings',
             scope: this,
             handler: function() {
                 new Ext.Window({

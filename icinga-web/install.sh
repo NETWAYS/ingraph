@@ -1,4 +1,10 @@
 #!/bin/sh
+set -e
+
+SCRIPT=`readlink -f $0`
+DIR=`dirname $SCRIPT`
+PREFIX=/usr/local/icinga-web
+
 for ARG in $@
 do
     case "$ARG" in
@@ -27,3 +33,5 @@ do
             ;;
     esac
 done
+
+cp -r $DIR/inGraph $PREFIX/app/modules/

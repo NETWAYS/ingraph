@@ -164,7 +164,7 @@ class NodeJs
                 1 => array('pipe', 'w'),
                 2 => array('pipe', 'w')
             );
-            $cwd = AgaviConfig::get('core.module_dir') . '/inGraph/lib/js/nodejs';
+            $cwd = AgaviConfig::get('core.module_dir') . '/inGraph/lib/nodejs';
             $env = null;
             $this->command = $cwd . '/ingraph-renderer.js';
 

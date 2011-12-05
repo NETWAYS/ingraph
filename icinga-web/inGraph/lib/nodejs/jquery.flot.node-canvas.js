@@ -715,8 +715,11 @@
                 return c;
             }
             
-            canvasWidth = placeholder.width() || options.width;
-            canvasHeight = placeholder.height() || options.height;
+//            canvasWidth = placeholder.width() || options.width;
+//            canvasHeight = placeholder.height() || options.height;
+// TOM -> das mit Placeholder klappt nicht
+canvasWidth = options.width;
+canvasHeight = options.height;
 
             placeholder.html(""); // clear placeholder
             if (placeholder.css("position") == 'static')
@@ -732,16 +735,21 @@
             canvas = makeCanvas(canvasWidth, canvasHeight);
             if (placeholder.length) $(canvas).appendTo(placeholder);
             ctx = canvas.getContext("2d");
-
+/*
+TOM
             // overlay canvas for interactive features
             overlay = makeCanvas(canvasWidth, canvasHeight);
             if (placeholder.length) 
                 $(overlay).css({ position: 'absolute', left: 0, top: 0 }).appendTo(placeholder);
             octx = overlay.getContext("2d");
             octx.stroke();
+*/
         }
 
         function bindEvents() {
+// TOM
+return;
+
             // we include the canvas in the event holder too, because IE 7
             // sometimes has trouble with the stacking order
             eventHolder = $([overlay, canvas]);
@@ -2174,10 +2182,8 @@
                         c = options.grid.backgroundColor;
                         if (c && typeof c == "string")
                             c = $.color.parse(c);
-                        else {
-                            console.log("legend",legend);
+                        else
                             c = $.color.extract(legend, 'background-color');
-                        }
                         c.a = 1;
                         c = c.toString();
                     }

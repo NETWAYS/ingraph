@@ -48,4 +48,8 @@ class inGraph_ApiModel extends inGraphBaseModel implements AgaviISingletonModel 
     public function deleteComment() {
         return $this->client->call('deleteComment', func_get_args());
     }
+    
+    public function getValuesDeprecated() {
+        return $this->client->call('getPlotValues', func_get_args());
+    }
 }

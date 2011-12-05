@@ -29,7 +29,7 @@ class inGraph_TemplateModel extends inGraphBaseModel implements AgaviISingletonM
 			if($template->getFilename() === $this->getParameter('default')) {
 				$this->setParameter('defaultContent', $content);
 			} else {
-				$templates[$template->getFilename()] = $content;
+				$templates[basename($template->getFilename(), '.json')] = $content;
 			}
 		}
 		
@@ -75,12 +75,19 @@ class inGraph_TemplateModel extends inGraphBaseModel implements AgaviISingletonM
 	}
 	
 	public function save($name, $json) {
-		$old = json_decode(
-		    file_get_contents($this->getParameter('dir') . DIRECTORY_SEPARATOR . $name), true);
+	    $tpl = $this->getParameter('dir') . DIRECTORY_SEPARATOR . $name . '.json';
+	    if(is_readable($tpl) === false) {
+	        return 'Error, view not found: ' . $tpl;
+	    }
+		$old = json_decode(file_get_contents($tpl, true));
+		if(is_writable($tpl) !== true) {
+		    return 'Error, permission denied: ' . $tpl;
+		}
 		$new = array_merge($old, json_decode($json, true));
-	    return file_put_contents(
-	        $this->getParameter('dir') . DIRECTORY_SEPARATOR . $name,
-	        json_encode($new), LOCK_EX);
+		if(file_put_contents($tpl, json_encode($new), LOCK_EX) === false) {
+		    return 'Error, unknown: ' . $tpl;
+		}
+		return true;
 	}
 	
 	protected function mergeTemplate($a, $b) {

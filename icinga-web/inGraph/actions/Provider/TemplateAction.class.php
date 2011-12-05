@@ -37,8 +37,6 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction {
         $compiled = array();
         foreach($series as $item) {
             foreach($this->plots as $plot) {
-                // TODO(el): Validate that re exists
-                // and is properly esacped?
                 if(preg_match($item['re'], $plot['plot'])) {
                     if(!array_key_exists('type', $item)) {
                         $item['type'] = 'avg';

@@ -23,6 +23,9 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
             },
             templates: {
             	edit: "<?php echo $ro->gen('modules.ingraph.templates.edit'); ?>"
+            },
+            views: {
+                edit: "<?php echo $ro->gen('modules.ingraph.views.edit'); ?>"
             }
         };
         Ext.iG.Urls.overwrite(urls);

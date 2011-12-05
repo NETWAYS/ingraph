@@ -8,7 +8,8 @@ Ext.iG.Urls = function() {
     var base = AppKit.util.Config.getBaseUrl() + '/modules/ingraph/',
         baseProvider = base + 'provider/',
         baseComments = base + 'comments/',
-        baseTemplates = base + 'templates/';
+        baseTemplates = base + 'templates/',
+        baseViews = base + 'views/';
     return {
         provider: {
             hosts: baseProvider + 'hosts',
@@ -26,6 +27,9 @@ Ext.iG.Urls = function() {
         },
         templates: {
             edit: baseTemplates + 'edit'
+        },
+        views: {
+            edit: baseViews + 'edit'
         },
         available: false,
         overwrite: function(urls) {

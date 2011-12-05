@@ -19,7 +19,7 @@ var src = '';
 var plugins = require(__dirname + '/ingraph-plugins.js');
 
 require('jsdom').env({
-    html: '<html><body><div id="place"></div></body></html>',
+    html: '<html><body><div id="place" /></body></html>',
     src: src,
     done: function (err, window)
     {
@@ -65,13 +65,11 @@ function processJson(data)
 {
     var params = JSON.parse(data);
     // Apply tick formatter function, could be improved:
-    // params.options.yaxis.tickFormatter = plugins.simpleTickFormatter;
-    params.series = [{label:'test',data:[[1,1],[2,2]]}];
-    params.series = [[[1,1],[2,2],[3,3]]];
-    console.log(params.series, params.options);
+    params.options.yaxis.tickFormatter = plugins.simpleTickFormatter;
+
     var $  = window.$,
-    $div = $('#place'),
-    $plot  = $.plot($div, params.series, params.options),
+    $div   = $('#place'),
+    $plot  = $.plot($div, params.flot.results, params.options),
     canvas = $plot.getCanvas();
     canvas.createPNGStream().on('data', function(chunk) {
         process.stdout.write(chunk);

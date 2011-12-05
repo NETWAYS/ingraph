@@ -9,6 +9,11 @@
 		
 		<autoload name="AppKitBaseModel">%core.lib_dir%/AppKit/AppKitBaseModel.class.php</autoload>
 		<autoload name="AppKitIteratorUtil">%core.lib_dir%/AppKit/AppKitIteratorUtil.class.php</autoload>
+
+                <autoload name="XMLRPCException">%core.module_dir%/inGraph/lib/exception/XMLRPCException.class.php</autoload>
+                <autoload name="XMLRPCClientException">%core.module_dir%/inGraph/lib/exception/XMLRPCClientException.class.php</autoload>
+        
+                <autoload name="NodeJs">%core.module_dir%/inGraph/lib/php/NodeJs.php</autoload>
 	</ae:configuration>
 	
 </ae:configurations>

@@ -74,6 +74,12 @@
                 </ae:parameter>
             </output_type>
 
+			<output_type name="image">
+				<ae:parameter name="http_headers">
+					<ae:parameter name="Content-Type">image/png;</ae:parameter>
+				</ae:parameter>
+			</output_type>
+
 			<output_type name="xml">
 				<ae:parameter name="http_headers">
 					<ae:parameter name="Content-Type">application/xml; charset=UTF-8</ae:parameter>

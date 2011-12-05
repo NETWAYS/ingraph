@@ -4,7 +4,7 @@ set -e
 BASE=/ingraph
 SCRIPT=`readlink -f $0`
 DIR=`dirname $SCRIPT`
-PREFIX=$DIR/inGraph
+PREFIX=/usr/local/ingraph
 
 for ARG in $@
 do
@@ -37,7 +37,7 @@ do
             echo
             echo "--help              display this help and exit"
             echo "--prefix=PREFIX     install architecture-independent files in PREFIX"
-            echo "                    [./inGraph]"
+            echo "                    [/usr/local/ingraph]"
             echo "--base=BASE         rewrite base"
             echo "                    [ingraph]"
             exit 0
@@ -65,4 +65,5 @@ done
     do
         install -m 644 $IF $PREFIX/${IF##$DIR}
     done
+    chmod +x $PREFIX/app/modules/inGraph/lib/nodejs/ingraph-renderer.js
 }

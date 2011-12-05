@@ -8,7 +8,7 @@
  */
 final class ClassicIngraphAgaviRunner {
 	
-	const AGAVI_ENV = 'development';
+	const AGAVI_ENV = 'production';
 	const AGAVI_CONTEXT = 'web';
 	
 	/**

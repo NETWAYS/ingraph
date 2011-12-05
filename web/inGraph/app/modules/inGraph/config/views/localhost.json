@@ -1,43 +1,41 @@
 {
 "title" : "Localhost View",
 "panels": [{
-    "title" : "PING -24 hours.",
+    "title" : "PING / HTTP -1 Year",
     "start": "-1 year",
-    "data" : [{
+    "series": [{
         "host": "localhost",
         "service": "PING",
-        "series": [{
-            "re": "/^pl$/",
-            "type": "avg",
-            "label": "Packet Loss",
-            "color": "#FF0000"
-        }, {
-            "re": "/^rta$/",
-            "type": "avg",
-            "label": "Round Trip Time",
-            "color": "#00FF00"
-        }]
+        "re": "/^pl$/",
+        "type": "avg",
+        "label": "Packet Loss",
+        "color": "#FF0000"
     }, {
         "host": "localhost",
-        "service": "Current Load",
-        "series": [{
-            "re": "/.*/",
-            "type": "avg"
-        }]
+        "service": "PING",
+        "re": "/^rta$/",
+        "type": "avg",
+        "label": "Round Trip Time",
+        "color": "#00FF00"
+    }, {
+        "host": "localhost",
+        "service": "HTTP",
+        "re": "//",
+        "type": "avg"
     }]
 }, {
-    "title" : "Current Load -24 hours.",
+    "title" : "Load / Procs -24 Hours",
     "start": "-24 hours",
-    "data" : [{
+    "series": [{
         "host": "localhost",
         "service": "Current Load",
-        "series": [{
-            "re": "/.*/",
-            "type": "avg"
-        }, {
-            "re": "//",
-            "type": "min"
-        }]
+        "re": "//",
+        "type": "avg"
+    }, {
+        "host": "localhost",
+        "service": "Total Processes",
+        "re": "//",
+        "type": "avg"
     }]
 }]
 }

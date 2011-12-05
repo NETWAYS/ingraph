@@ -33,7 +33,7 @@
         <script type="text/javascript" src="js/Ext.ux.AutoComboBox.js"></script>
         
         
-        <script type="text/javascript" src="js/jquery/jquery-1.5.2.js"></script>
+        <script type="text/javascript" src="js/jquery/jquery-1.5.2.min.js"></script>
         
         <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
         <script type="text/javascript" src="js/flot/jquery.flot.text.js"></script>
@@ -51,6 +51,8 @@
         <script type="text/javascript" src="js/strtotime.js"></script>
         
         <script type="text/javascript" src="js/inGraph.js"></script>
+        
+        <script type="text/javascript" src="js/Ext.ux.Toast.js"></script>
         <script type="text/javascript" src="js/extra.js"></script>
         
         <script type="text/javascript" src="js/ext-inGraph/Panels.js"></script>

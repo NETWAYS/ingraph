@@ -46,9 +46,6 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             mode: 'local',
             triggerAction: 'all',
             value: cfg.activeFrame !== undefined ? cfg.activeFrame : '',
-            style: {
-                paddingTop: '1px'
-            },
             qtip: this.inputText,
             listeners: {
                 scope: this,
@@ -161,7 +158,7 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
                     renderTo: Ext.getBody(),
                     anchor: 'left',
                     target: btn.el,
-                    html: _('Trigger comment dialogue by clicking the plot.'),
+                    html: _('Trigger comment dialog by clicking the plot.'),
                     listeners: {
                         hide: function(self) {
                             self.destroy();

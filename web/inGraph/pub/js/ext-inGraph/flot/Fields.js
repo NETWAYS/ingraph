@@ -19,9 +19,13 @@ Ext.iG.flot.Fields = function() {
     var labelConverter = function(v, rec) {
         return v ? v : rec.plot + '-' + rec.type;
     };
+    var reConverter = function(v, rec) {
+        return '/^' + rec.plot + '$/';
+    };
     var template = [{
         name: 're',
-        isTemplateOption: true
+        isTemplateOption: true,
+        convert: reConverter
     }, {
         name: 'host',
         isViewOption: true
@@ -70,6 +74,10 @@ Ext.iG.flot.Fields = function() {
     }, {
         name: 'bars',
         defaultValue: {},
+        isFlotOption: true
+    }, {
+        name: 'stack',
+        defaultValue: null,
         isFlotOption: true
     }, {
         name: 'convert'

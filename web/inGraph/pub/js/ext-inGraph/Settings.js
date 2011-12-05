@@ -141,7 +141,7 @@ Ext.iG.Settings = Ext.extend(Ext.Panel, {
                 title: _('Series Options'),
                 closeAction: 'hide',
                 modal: true,
-                width: 400,
+                width: 500,
                 listeners: {
                     scope: this,
                     beforecancel: function(win) {

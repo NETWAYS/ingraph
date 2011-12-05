@@ -44,7 +44,7 @@ class NodeJs
         if (! self::isPng($res)) {
             throw new NodeJs_Exception(
                 'Renderer didn\'t give us a valid PNG: '
-              . nl2br(htmlspecialchars($this->msg . "\n" . $this->readNodeErrors()))
+              . nl2br(htmlspecialchars($this->readNodeErrors()))
             );
         }
         return $res;
@@ -164,7 +164,7 @@ class NodeJs
                 1 => array('pipe', 'w'),
                 2 => array('pipe', 'w')
             );
-            $cwd = AgaviConfig::get('core.module_dir') . '/inGraph/lib/js/nodejs';
+            $cwd = AgaviConfig::get('core.module_dir') . '/inGraph/lib/nodejs';
             $env = null;
             $this->command = $cwd . '/ingraph-renderer.js';
 

@@ -45,6 +45,7 @@ Ext.iG.flot.Options = Ext.extend(Ext.FormPanel, {
                         name: 'lines.spline',
                     }]
                 }, {
+                    labelWidth: 70,
                     defaults: {
                         anchor: '95%',
                         xtype:'checkbox'
@@ -57,19 +58,20 @@ Ext.iG.flot.Options = Ext.extend(Ext.FormPanel, {
                         name: 'lines.fill',
                     }]
                 },{
+                    labelWidth: 70,
                     defaults: {
                         anchor: '95%'
                     },
                     items: [{
                         xtype: 'spinnerfield',
-                        fieldLabel: _('Width'),
+                        fieldLabel: _('Line Width'),
                         minValue: 1,
                         maxValue: 10,
                         name: 'lines.lineWidth'
                     }, {
                         xtype: 'colorfield',
                         lazyInit: false,
-                        fieldLabel: _('Color'),
+                        fieldLabel: _('Fill Color'),
                         name: 'lines.fillColor'
                     }]
                 }]
@@ -98,6 +100,7 @@ Ext.iG.flot.Options = Ext.extend(Ext.FormPanel, {
                         name: 'points.fill',
                     }]
                 }, {
+                    labelWidth: 70,
                     defaults: {
                         anchor: '95%'
                     },
@@ -110,13 +113,14 @@ Ext.iG.flot.Options = Ext.extend(Ext.FormPanel, {
                     }, {
                         xtype:'colorfield',
                         lazyInit: false,
-                        fieldLabel: _('Color'),
+                        fieldLabel: _('Fill Color'),
                         name: 'points.fillColor'
                     }]
                 },{
+                    labelWidth: 70,
                     items: [{
                         xtype: 'spinnerfield',
-                        fieldLabel: _('Width'),
+                        fieldLabel: _('Line Width'),
                         minValue: 1,
                         maxValue: 10,
                         name: 'points.lineWidth',
@@ -153,12 +157,13 @@ Ext.iG.flot.Options = Ext.extend(Ext.FormPanel, {
                         name: 'bars.align'
                     }]
                 }, {
+                    labelWidth: 70,
                     defaults: {
                         anchor: '95%'
                     },
                     items: [{
                         xtype: 'spinnerfield',
-                        fieldLabel: _('Width'),
+                        fieldLabel: _('Line Width'),
                         minValue: 1,
                         maxValue: 10,
                         name: 'bars.lineWidth',
@@ -169,17 +174,18 @@ Ext.iG.flot.Options = Ext.extend(Ext.FormPanel, {
                         fieldLabel: _('Color'),
                         name: 'bars.fillColor'
                     }, {
-                        fieldLabel: _('Hor.'),
+                        fieldLabel: _('Horizontal'),
                         name: 'bars.horizontal',
                         xtype: 'checkbox'
                     }]
                 },{
+                    labelWidth: 70,
                     defaults: {
                         anchor: '95%'
                     },
                     items: [{
                         xtype: 'spinnerfield',
-                        fieldLabel: _('Width'),
+                        fieldLabel: _('Bar Width'),
                         minValue: 1,
                         maxValue: 10,
                         name: 'bars.barWidth'

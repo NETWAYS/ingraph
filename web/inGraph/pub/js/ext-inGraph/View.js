@@ -22,7 +22,7 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
     initComponent: function() {
         var cfg = {};
         this.buildItems(cfg);
-//        this.buildTbar(cfg);
+        this.buildTbar(cfg);
         Ext.apply(this, Ext.apply(this.initialConfig, cfg));
         Ext.iG.View.superclass.initComponent.call(this);
         this.addEvents(
@@ -69,6 +69,7 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
             var items = [];
             var callback = function(template) {
                 this.__view__ = template;
+                template = template.content;
                 this.panels = new Ext.iG.Panels({data: template.panels});
                 this.panels.each(function(panel) {
                     var query = Ext.encode(
@@ -108,7 +109,8 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
                 if(this.start || this.end) {
                     this.panels = new Ext.iG.Panels({
                         data: [{start: this.start,
-                                end: this.end}]
+                                end: this.end,
+                                title: _('Custom Time Range')}]
                     });
                 } else {
                     this.panels = new Ext.iG.Panels({ data: template.panels});
@@ -151,39 +153,41 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
     },
     
     buildTbar: function(cfg) {
-        cfg.tbar = [{
-            text: _('Save'),
-            tooltip: this.saveText,
-            iconCls: 'ingraph-icon-save',
-            scope: this,
-            handler: this.onSave
-        }, '->', /*{
-            tooltip: this.downloadText,
-            iconCls: 'ingraph-icon-document-export',
-            menu: {
-                defaults: {
-                    scope: this
-                },
-                items: [{
-                    text: 'XML',
-                    iconCls: 'ingraph-icon-document-xml',
-                    handler: function() {
-                        this.onDownload('xml');
-                    }
-                }, {
-                   text: 'CSV',
-                   iconCls: 'ingraph-icon-document-csv',
-                   handler: function() {
-                       this.onDownload('csv');
-                   }
-                }]
-            }
-        },*/ {
-            tooltip: this.printText,
-            iconCls: 'ingraph-icon-print',
-            scope: this,
-            handler: this.onPrint
-        }];
+        if(this.tbar !== false) {
+            cfg.tbar = [{
+                text: _('Save'),
+                tooltip: this.saveText,
+                iconCls: 'ingraph-icon-save',
+                scope: this,
+                handler: this.onSave
+            }, '->', /*{
+                tooltip: this.downloadText,
+                iconCls: 'ingraph-icon-document-export',
+                menu: {
+                    defaults: {
+                        scope: this
+                    },
+                    items: [{
+                        text: 'XML',
+                        iconCls: 'ingraph-icon-document-xml',
+                        handler: function() {
+                            this.onDownload('xml');
+                        }
+                    }, {
+                       text: 'CSV',
+                       iconCls: 'ingraph-icon-document-csv',
+                       handler: function() {
+                           this.onDownload('csv');
+                       }
+                    }]
+                }
+            },*/ {
+                tooltip: this.printText,
+                iconCls: 'ingraph-icon-print',
+                scope: this,
+                handler: this.onPrint
+            }];
+        }
     },
     
     getState: function() {
@@ -242,20 +246,29 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
                 title: panel.initialConfig.title,
                 overview: panel.overview ? true : false
             };
-            Ext.apply(cfg, panel.template.toHash());
+            Ext.apply(cfg, panel.template.toHash(this.__view__ ? true : false));
             panels.push(cfg);
-        });
+        }, this);
+        var url, name;
+        if(this.__template__) {
+            url = Ext.iG.Urls.templates.edit;
+            name = this.__template__.name;
+        } else if(this.__view__) {
+            url = Ext.iG.Urls.views.edit;
+            name = this.__view__.name;
+        }
         Ext.Ajax.request({
-            url: Ext.iG.Urls.templates.edit,
+            url: url,
             params: {
                 content: Ext.encode({
                     panels: panels
                 }),
-                name: this.__template__.name
+                name: name
             },
-            scope: this,
-            success: function() { console.log(arguments);},
-            failure: function() { console.log(arguments);}
+            scope: this
+//            scope: this,
+//            success: function() { console.log(arguments);},
+//            failure: function() { console.log(arguments);}
         });
     },
     

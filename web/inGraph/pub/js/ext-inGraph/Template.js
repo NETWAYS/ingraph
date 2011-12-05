@@ -16,7 +16,7 @@ Ext.iG.Template = Ext.extend(Ext.data.GroupingStore, {
         Ext.iG.Template.superclass.constructor.call(this, cfg);
     },
     
-    toHash: function() {
+    toHash: function(view) {
         var params = {
             series: []
         }
@@ -24,8 +24,14 @@ Ext.iG.Template = Ext.extend(Ext.data.GroupingStore, {
         this.each(function(rec) {
             var o = {};
             Ext.iterate(rec.data, function(k, v) {
-                if((f = map[k]) && f.isFlotOption || f.isTemplateOption) {
-                    o[f.name] = v;
+                if(view) {
+                    if((f = map[k]) && f.isFlotOption || f.isTemplateOption || f.isViewOption) {
+                        o[f.name] = v;
+                    }
+                } else {
+                    if((f = map[k]) && f.isFlotOption || f.isTemplateOption) {
+                        o[f.name] = v;
+                    }
                 }
             });
             params.series.push(o);

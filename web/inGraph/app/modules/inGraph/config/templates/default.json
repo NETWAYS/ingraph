@@ -19,12 +19,11 @@
 }],
 
 "panel": {
-    "toolbar": true,
-    "titleFormat": "{title} graph for {host} - {service}"
+    "titleFormat": "{title} Graph For {host} - {service}"
 },
 
 "panels": [{
-    "title": "Four Hours",
+    "title": "Four Hours (With Quickview)",
     "overview": true,
     "start": "-4 hours"
 }, {

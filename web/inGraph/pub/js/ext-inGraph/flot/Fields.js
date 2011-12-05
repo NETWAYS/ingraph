@@ -80,6 +80,10 @@ Ext.iG.flot.Fields = function() {
         defaultValue: null,
         isFlotOption: true
     }, {
+        name: 'fillBetween',
+        defaultValue: null,
+        isFlotOption: true
+    }, {
         name: 'convert'
     }];
     var dataConverter = function(v, rec) {

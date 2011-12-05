@@ -55,4 +55,6 @@ VERSION=`grep \<setting\ name=\"version.minor\"\> $ICINGA_XML | tr -dc [0-9]`
 
 cp -r $DIR/inGraph $PREFIX/app/modules/
 
+$PREFIX/bin/clearcache.sh
+
 exit 0

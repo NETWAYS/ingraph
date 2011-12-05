@@ -20,7 +20,7 @@ class inGraph_TemplateModel extends inGraphBaseModel implements AgaviISingletonM
 			$content = json_decode(file_get_contents($template->getRealPath()),
 			                       true);
 			if(!$content) {
-                AppKitAgaviUtil::log(
+                $this->logger->log(
                     sprintf($this->tm->_('Template %s not readable. Maybe the JSON format is wrong.'),
                     $template->getRealPath()), AgaviLogger::ERROR);
 				continue;

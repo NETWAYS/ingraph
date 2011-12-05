@@ -6,6 +6,7 @@
 			if(!d) {
 				var t = strtotime(value);
 				if(t !== false) {
+                                        this.strValue = value;
 					t = Math.ceil(t*1000);
 					return new Date(t);
 				}

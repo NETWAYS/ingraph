@@ -27,7 +27,7 @@ class inGraph_ViewModel extends inGraphBaseModel implements AgaviISingletonModel
             $content = json_decode(file_get_contents($view->getRealPath()),
                                    true);
             if(!$content) {
-                AppKitAgaviUtil::log(
+                $this->logger->log(
                     sprintf($this->tm->_('View %s not readable. Maybe the JSON format is wrong.'),
                     $view->getRealPath()), AgaviLogger::ERROR);
                 continue;

@@ -2,8 +2,8 @@
 <ae:configurations xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0" xmlns="http://icinga.org/appkit/config/parts/routing/1.0">
 	<ae:configuration context="web">
 		<routes>
-			<route name=".ingraph" pattern="^/ingraph" stop="false" module="inGraph">
-				<route name=".provider" pattern="^/provider" stop="false" action="Provider" output_type="json">
+            <route name=".ingraph" pattern="^/ingraph" stop="false" module="inGraph">
+               <route name=".provider" pattern="^/provider" stop="false" action="Provider" output_type="json">
                     <route name=".hosts" pattern="^/hosts$" action=".Hosts" />
                     <route name=".services" pattern="^/services$" action=".Services" />
                     <route name=".plots" pattern="^/plots$" action=".Plots" />
@@ -26,7 +26,7 @@
                 <route name=".views" pattern="^/views" stop="false" action="Views" output_type="json">
                     <route name=".edit" pattern="^/edit$" action=".Edit" />
                 </route>
-			</route>
+            </route>
 		</routes>
 	</ae:configuration>
 </ae:configurations>

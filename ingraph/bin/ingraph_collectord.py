@@ -326,6 +326,13 @@ def main():
             sys.stderr.write("Group %s not found.\n" % options.group)
             sys.exit(1)
 
+    if options.perfdata_dir:
+        if not os.access(options.perfdata_dir, os.W_OK):
+            sys.stderr.write("Perfdata directory is not writable.\nPlease make "
+                + "sure the perfdata directory is writable so the inGraph "
+                + "daemon can delete/move perfdata files.\n")
+            sys.exit(1)
+
     getattr(collectord, args[0])()
     return 0
 

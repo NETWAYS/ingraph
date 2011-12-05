@@ -1,5 +1,20 @@
 @CHARSET "UTF-8";
 
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-family: Arial,Verdana,sans-serif;
+    font-size: 8pt;
+}
+
+.flot-print-container {
+    visibility: hidden;
+}
+
 .tickLabel, .legendLabel, .iG-text {
     font-weight: bold;
 }
@@ -26,4 +41,100 @@
     cursor: pointer;
     width: 70px;
     text-align: center;
+}
+
+.ingraph-icon-print {
+    background-image: url(../images/icons/printer.png) !important;
+}
+
+.icon-zoom-in {
+    background-image: url(../images/icons/magnifier-zoom-in.png) !important;
+}
+
+.icon-zoom-out {
+    background-image: url(../images/icons/magnifier-zoom-out.png) !important;
+}
+
+.ingraph-icon-document-export {
+    background-image: url(../images/icons/document-export.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-document-csv {
+    background-image: url(../images/icons/document-excel-csv.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-document-xml {
+    background-image: url(../images/icons/document-list.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-add {
+    background-image: url(../images/icons/add.gif) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-save {
+    background-image: url(../images/icons/disk.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-accept {
+    background-image: url(../images/icons/tick-circle-frame.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-cancel {
+    background-image: url(../images/icons/cross-circle-frame.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-sync {
+    background-image: url(../images/icons/chart--arrow.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-comment {
+    background-image: url(../images/icons/balloon-ellipsis.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.ingraph-icon-settings {
+    background-image: url(../images/icons/cog.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+@media print {
+    body {
+        overflow: visible !important;
+    }
+    
+    * {
+        border: 1px solid transparent;
+    }
+
+    .x-panel, .x-tab-panel, .x-tip {
+        display: none;
+    }
+    
+    .flot-print-container {
+        visibility: visible;
+    }
+    
+    .flot-print-title {
+        font-weight: bold;
+        font-size: 11pt;
+        margin: 10px auto;
+    }
 }

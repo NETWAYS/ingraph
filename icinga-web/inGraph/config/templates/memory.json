@@ -1,17 +1,21 @@
 {
-"re": "/mem$/i",
-
-"flot": {
-    "colors": ["#00CC00", "#FF6600"],
-    "series": {
-        "lines": {
-            "fill": true,
-            "show": true
+    "re": "/mem$/i", 
+    "flot": {
+        "series": {
+            "lines": {
+                "show": true, 
+                "fill": true
+            }
+        }, 
+        "colors": [
+            "#00CC00", 
+            "#FF6600"
+        ]
+    }, 
+    "series": [
+        {
+            "re": "/.*/", 
+            "type": "avg"
         }
-    }
-},
-
-"series": [{
-    "re": "/.*-avg/"
-}]
+    ]
 }

@@ -1,17 +1,20 @@
 {
-"re": "/sw-cpu$/i",
-
-"flot": {
-    "colors": ["#00CC00", "#FF6600"],
-    "series": {
-        "lines": {
-            "fill": true,
-            "show": true
+    "re": "/sw-cpu$/i", 
+    "flot": {
+        "series": {
+            "lines": {
+                "fill": true
+            }
+        }, 
+        "colors": [
+            "#00CC00", 
+            "#FF6600"
+        ]
+    }, 
+    "series": [
+        {
+            "re": "//", 
+            "type": "avg"
         }
-    }
-},
-
-"series": [{
-    "re": "/.*-avg/"
-}]
+    ]
 }

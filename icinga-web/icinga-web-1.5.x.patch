@@ -1,0 +1,13 @@
+diff --git a/app/modules/Cronks/lib/template/CronkGridTemplateXmlParser.class.php b/app/modules/Cronks/lib/template/CronkGridTemplateXmlParser.class.php
+index ae39ac9..85d4f7e 100644
+--- a/app/modules/Cronks/lib/template/CronkGridTemplateXmlParser.class.php
++++ b/app/modules/Cronks/lib/template/CronkGridTemplateXmlParser.class.php
+@@ -221,7 +221,7 @@ class CronkGridTemplateXmlParser {
+     }
+ 
+     private function applyExtender(array $extender) {
+-        $this->data = array_merge($this->data,$extender["data"]);
++        $this->data = array_merge_recursive($this->data,$extender["data"]);
+         foreach($extender["fields"] as $fieldname=>$field) {
+             
+             if(!isset($field['preferPosition'])) {

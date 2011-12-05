@@ -1,21 +1,18 @@
 <?php 
 
-class inGraph_ViewModel extends AppKitBaseModel implements AgaviISingletonModel {
+class inGraph_ViewModel extends inGraphBaseModel implements AgaviISingletonModel {
     
     public function initialize(AgaviContext $ctx, array $params = array()) {
         parent::initialize($ctx, $params);
-        
-        if(!realpath($dir = $this->getParameter('dir'))) {
-            $this->setParameter(
-            	'dir',
-                AgaviConfig::get('core.root_dir') . DIRECTORY_SEPARATOR . $dir
-            );
-        }
-        
-        $this->readViews();
+
+        $this->read();
     }
     
-    protected function readViews() {
+    /**
+     * 
+     * TODO(el): Cache content.
+     */
+    protected function read() {
         $_views = iterator_to_array(
             AppKitIteratorUtil::RegexRecursiveDirectoryIterator(
                 $this->getParameter('dir'),
@@ -27,9 +24,12 @@ class inGraph_ViewModel extends AppKitBaseModel implements AgaviISingletonModel 
         $views = array();
         
         foreach($_views as $path => $view) {
-            $content = json_decode(file_get_contents($view->getRealPath()), true);
+            $content = json_decode(file_get_contents($view->getRealPath()),
+                                   true);
             if(!$content) {
-                //_MVC_Logger::warn(sprintf('View %s not readable. Maybe the JSON format is wrong.', $view->getRealPath()));
+                AppKitAgaviUtil::log(
+                    sprintf($this->tm->_('View %s not readable. Maybe the JSON format is wrong.'),
+                    $view->getRealPath()), AgaviLogger::ERROR);
                 continue;
             }
         
@@ -40,7 +40,26 @@ class inGraph_ViewModel extends AppKitBaseModel implements AgaviISingletonModel 
     }
     
     public function getViews() {
-        return $this->getParameter('views');
+        return array_keys($this->getParameter('views'));
     }
     
+    public function getView($view) {
+        return $this->getParameter("views[$view]");
+    }
+    
+	public function save($name, $json) {
+	    $view = $this->getParameter('dir') . DIRECTORY_SEPARATOR . $name . '.json';
+	    if(is_readable($view) === false) {
+	        return 'Error, view not found: ' . $view;
+	    }
+		$old = json_decode(file_get_contents($view, true));
+		if(is_writable($view) !== true) {
+		    return 'Error, permission denied: ' . $view;
+		}
+		$new = array_merge($old, json_decode($json, true));
+		if(file_put_contents($view, json_encode($new), LOCK_EX) === false) {
+		    return 'Error, unknown: ' . $view;
+		}
+		return true;
+	}
 }

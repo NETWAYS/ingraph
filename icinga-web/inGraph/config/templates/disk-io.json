@@ -1,24 +1,24 @@
 {
-"re": "/^disk-io/",
-
-"flot": {
-    "series": {
-        "lines": {
-            "fill": false
+    "re": "/^disk-io/", 
+    "flot": {
+        "series": {
+            "lines": {
+                "fill": false
+            }
         }
-    }
-},
-
-"series": [{
-    "re": "/TOTAL.*avg/",
-    "color": "#0099CC"
-    },
-           {
-    "re": "/WRITE.*avg/",
-    "color": "#CC0033"
-},
-           {
-    "re": "/READ.*avg/",
-    "color": "#33CC00"
-}]
+    }, 
+    "series": [
+        {
+            "color": "#0099CC", 
+            "re": "/TOTAL.*avg/"
+        }, 
+        {
+            "color": "#CC0033", 
+            "re": "/WRITE.*avg/"
+        }, 
+        {
+            "color": "#33CC00", 
+            "re": "/READ.*avg/"
+        }
+    ]
 }

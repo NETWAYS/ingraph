@@ -37,9 +37,9 @@ class inGraph_Provider_ValuesSuccessView extends inGraphBaseView {
                                $chart['plot'], $chart['type'], $chart['unit']);
                 $el = $simple_xml;
                 foreach($nodes as $i => $node) {
-                    $path = $el->xpath(
-                        '/values/' . join('/',
-                                          array_slice($nodes, 0, $i + 1)));
+                    $xpath = '"/values/' . join(
+                        '/', array_slice($nodes, 0, $i + 1)) . '"';
+                    $path = $el->xpath($xpath);
                     if(empty($path)) {
                         $el = $el->addChild($node);
                     } else {
@@ -65,21 +65,5 @@ class inGraph_Provider_ValuesSuccessView extends inGraphBaseView {
         $response->setHttpHeader('Content-Type', 'text/xml');
         $response->setHttpHeader('Content-Disposition', 'attachment');
         return $handle;
-    }
-    
-    
-    public function executeImage(AgaviRequestDataHolder $rd) {
-        $values = $this->getAttribute('values');
-        $params = array(
-            'series' => $values['charts'],
-            'options' => array(
-                'width' => 400,
-                'height' => 200,
-                'yaxis' => array()
-            )
-        );
-        $node = NodeJs::getInstance();
-        $res = $node->renderImage($params);
-        return $res;
     }
 }

@@ -51,6 +51,8 @@
         <script type="text/javascript" src="js/strtotime.js"></script>
         
         <script type="text/javascript" src="js/inGraph.js"></script>
+        
+        <script type="text/javascript" src="js/Ext.ux.Toast.js"></script>
         <script type="text/javascript" src="js/extra.js"></script>
         
         <script type="text/javascript" src="js/ext-inGraph/Panels.js"></script>

@@ -77,7 +77,7 @@ Ext.iG.flot.Fields = function() {
         isFlotOption: true
     }, {
         name: 'stack',
-        defaultValue: false,
+        defaultValue: null,
         isFlotOption: true
     }, {
         name: 'convert'

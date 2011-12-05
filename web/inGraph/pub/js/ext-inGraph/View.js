@@ -109,7 +109,8 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
                 if(this.start || this.end) {
                     this.panels = new Ext.iG.Panels({
                         data: [{start: this.start,
-                                end: this.end}]
+                                end: this.end,
+                                title: _('Custom Time Range')}]
                     });
                 } else {
                     this.panels = new Ext.iG.Panels({ data: template.panels});

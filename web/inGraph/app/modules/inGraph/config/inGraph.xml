@@ -5,7 +5,7 @@
         <ae:parameter name="host">127.0.0.1</ae:parameter>
         <ae:parameter name="port">5000</ae:parameter>
         <ae:parameter name="user">ingraph</ae:parameter>
-        <ae:parameter name="pass">ingraph</ae:parameter>
+        <ae:parameter name="pass">changeme</ae:parameter>
         <ae:parameter name="timeout">10</ae:parameter>
     </setting>
     <setting name="daemon">

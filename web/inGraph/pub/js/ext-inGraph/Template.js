@@ -19,7 +19,7 @@ Ext.iG.Template = Ext.extend(Ext.data.GroupingStore, {
     toHash: function(view) {
         var params = {
             series: []
-        }
+        };
         var map = this.fields.map;
         this.each(function(rec) {
             var o = {};

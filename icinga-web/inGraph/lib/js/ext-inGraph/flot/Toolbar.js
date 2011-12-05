@@ -138,7 +138,7 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
                         listeners: {
                             scope: this,
                             cancel: function(s) {
-                                s.ownerCt[s.ownerCt.closeAction]()
+                                s.ownerCt[s.ownerCt.closeAction]();
                             },
                             applysettings: function(s) {
                                 this.ownerCt.applyTemplate();

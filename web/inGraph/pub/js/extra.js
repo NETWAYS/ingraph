@@ -24,7 +24,7 @@ Ext.override(Ext.data.Store, {
                 );
             },
             scope: this
-        })
+        });
     }
 }); 
 })();

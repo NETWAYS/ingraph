@@ -283,4 +283,3 @@ Ext.iG.View = Ext.extend(Ext.Panel, {
         window.print();
     }
 });
-Ext.iG.View.TYPE_

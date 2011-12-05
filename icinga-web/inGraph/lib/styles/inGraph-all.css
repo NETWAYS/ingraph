@@ -109,6 +109,12 @@ html {
     background-position: center center;
 }
 
+.ingraph-icon-delete {
+    background-image: url(../images/icons/minus-circle-frame.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
 .ingraph-icon-settings {
     background-image: url(../images/icons/cog.png) !important;
     background-repeat: no-repeat;

@@ -39,10 +39,10 @@ Ext.iG.flot.Options = Ext.extend(Ext.FormPanel, {
                     },
                     items: [{
                         fieldLabel: _('Show'),
-                        name: 'lines.show',
+                        name: 'lines.show'
                     }, {
                         fieldLabel: _('Smooth'),
-                        name: 'lines.spline',
+                        name: 'lines.spline'
                     }]
                 }, {
                     labelWidth: 70,
@@ -52,10 +52,10 @@ Ext.iG.flot.Options = Ext.extend(Ext.FormPanel, {
                     },
                     items: [{
                         fieldLabel: _('Steps'),
-                        name: 'lines.steps',
+                        name: 'lines.steps'
                     }, {
                         fieldLabel: _('Fill'),
-                        name: 'lines.fill',
+                        name: 'lines.fill'
                     }]
                 },{
                     labelWidth: 70,
@@ -94,10 +94,10 @@ Ext.iG.flot.Options = Ext.extend(Ext.FormPanel, {
                     },
                     items: [{
                         fieldLabel: _('Show'),
-                        name: 'points.show',
+                        name: 'points.show'
                     }, {
                         fieldLabel: _('Fill'),
-                        name: 'points.fill',
+                        name: 'points.fill'
                     }]
                 }, {
                     labelWidth: 70,
@@ -109,7 +109,7 @@ Ext.iG.flot.Options = Ext.extend(Ext.FormPanel, {
                         fieldLabel: _('Radius'),
                         minValue: 1,
                         maxValue: 10,
-                        name: 'points.radius',
+                        name: 'points.radius'
                     }, {
                         xtype:'colorfield',
                         lazyInit: false,

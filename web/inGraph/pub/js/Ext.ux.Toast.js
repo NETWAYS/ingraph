@@ -19,6 +19,6 @@ Ext.ux.Toast = function() {
             msgCt.alignTo(document, 'tr-tr');
             m.slideIn('t').pause(3).ghost('t', {remove:true});
         }
-	}
+	};
 
 }();

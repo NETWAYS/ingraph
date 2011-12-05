@@ -36,5 +36,5 @@ Ext.iG.Urls = function() {
             urls.available = true;
             return (Ext.iG.Urls = urls);
         }
-    }
+    };
 }();

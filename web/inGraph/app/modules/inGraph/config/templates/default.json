@@ -1,0 +1,43 @@
+{
+"re": "//",
+
+"generic" : {
+    "refreshInterval" : 300
+},
+
+"flot": {
+    "series": {
+        "lines": {
+            "steps": true
+        }
+    }
+},
+
+"series": [{
+    "re": "//",
+    "type": "avg"
+}],
+
+"panel": {
+    "toolbar": true,
+    "titleFormat": "{title} graph for {host} - {service}"
+},
+
+"panels": [{
+    "title": "Four Hours",
+    "overview": true,
+    "start": "-4 hours"
+}, {
+    "title": "One Day",
+    "start": "-1 day"
+}, {
+    "title": "One Week",
+    "start": "-1 week"
+}, {
+    "title": "One Month",
+    "start": "-1 month"
+}, {
+    "title": "One Year",
+    "start": "-1 year"
+}]
+}

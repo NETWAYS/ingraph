@@ -1,0 +1,33 @@
+{
+    "re": "/^nt-procs/i", 
+    "flot": {
+        "series": {
+            "lines": {
+                "fill": true
+            }
+        }
+    }, 
+    "series": [
+        {
+            "color": "#66FF33", 
+            "re": "//", 
+            "type": "avg"
+        }, 
+        {
+            "color": "#FF6600", 
+            "re": "//", 
+            "type": "warn_upper", 
+            "lines": {
+                "fill": false
+            }
+        }, 
+        {
+            "color": "#CC0000", 
+            "re": "//", 
+            "type": "crit_upper", 
+            "lines": {
+                "fill": false
+            }
+        }
+    ]
+}

@@ -46,9 +46,6 @@ Ext.iG.flot.Toolbar = Ext.extend(Ext.Toolbar, {
             mode: 'local',
             triggerAction: 'all',
             value: cfg.activeFrame !== undefined ? cfg.activeFrame : '',
-            style: {
-                paddingTop: '1px'
-            },
             qtip: this.inputText,
             listeners: {
                 scope: this,

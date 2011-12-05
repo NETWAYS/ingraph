@@ -33,7 +33,7 @@
         <script type="text/javascript" src="js/Ext.ux.AutoComboBox.js"></script>
         
         
-        <script type="text/javascript" src="js/jquery/jquery-1.5.2.js"></script>
+        <script type="text/javascript" src="js/jquery/jquery-1.5.2.min.js"></script>
         
         <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
         <script type="text/javascript" src="js/flot/jquery.flot.text.js"></script>

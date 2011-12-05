@@ -28,7 +28,7 @@ final class ClassicIngraphAgaviRunner {
 		require self::$pathRoot. '/libs/agavi/src/agavi.php';
 
 		require self::$pathRoot. '/app/config.php';
-		
+	        AgaviConfig::set('core.skip_config_transformations', true);	
 		Agavi::bootstrap(self::AGAVI_ENV);
 		
 		AgaviContext::getInstance(self::AGAVI_CONTEXT)->getController()->dispatch();

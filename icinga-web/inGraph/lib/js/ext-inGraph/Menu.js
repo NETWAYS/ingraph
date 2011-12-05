@@ -102,8 +102,8 @@ Ext.iG.Menu = Ext.extend(Ext.Panel, {
                 this.fireEvent('plot', self, {
                     host: this.hostCmp.getValue(),
                     service: this.serviceCmp.getValue(),
-                    start: this.startCmp.getValue(),
-                    end: this.endCmp.getValue()
+                    start: this.startCmp.strValue || this.startCmp.getValue() ? this.startCmp.getValue().getTime()/1000 : null,
+                    end: this.endCmp.strValue || this.endCmp.getValue() ? this.endCmp.getValue().getTime()/1000 : null
                 });
             }
         });

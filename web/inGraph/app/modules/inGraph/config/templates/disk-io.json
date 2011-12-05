@@ -10,15 +10,18 @@
     "series": [
         {
             "color": "#0099CC", 
-            "re": "/TOTAL.*avg/"
+            "re": "/TOTAL.*/",
+            "type": "avg"
         }, 
         {
             "color": "#CC0033", 
-            "re": "/WRITE.*avg/"
+            "re": "/WRITE.*/",
+            "type": "avg"
         }, 
         {
             "color": "#33CC00", 
-            "re": "/READ.*avg/"
+            "re": "/READ.*/",
+            "type": "avg"
         }
     ]
 }

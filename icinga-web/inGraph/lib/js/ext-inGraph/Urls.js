@@ -23,7 +23,7 @@ Ext.iG.Urls = function() {
         comments: {
             add: baseComments + 'add',
             edit: baseComments + 'edit',
-            delete: baseComments + 'delete'
+            remove: baseComments + 'delete'
         },
         templates: {
             edit: baseTemplates + 'edit'

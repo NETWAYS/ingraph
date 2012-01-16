@@ -18,7 +18,7 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
             comments: {
                 add: "<?php echo $ro->gen('modules.ingraph.comments.add'); ?>",
                 edit: "<?php echo $ro->gen('modules.ingraph.comments.edit'); ?>",
-                delete: "<?php echo $ro->gen(
+                remove: "<?php echo $ro->gen(
                     'modules.ingraph.comments.delete'); ?>"
             },
             templates: {

@@ -16,7 +16,7 @@
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Enum, Sequence, ForeignKey, Index, create_engine, \
-    and_, or_
+    and_, or_, tuple_
 from sqlalchemy.sql import literal, select, between, func
 from sqlalchemy.interfaces import PoolListener
 from time import time, sleep
@@ -935,8 +935,10 @@ Index('idx_dp_1', datapoint.c.timeframe_id, datapoint.c.timestamp)
 Index('idx_dp_2', datapoint.c.timestamp)
 
 class DataPoint(object):
-    def getValuesByInterval(conn, plots, start_timestamp=None, end_timestamp=None, granularity=None, null_tolerance=0):
+    def getValuesByInterval(conn, query, start_timestamp=None, end_timestamp=None, granularity=None, null_tolerance=0):
         global dbload_min_timestamp
+
+        plots = query.keys()
 
         if len(plots) == 0:
             return {}
@@ -1018,14 +1020,22 @@ class DataPoint(object):
                      'parent_service': parent_service,
                      'service': status_obj.hostservice.service.name,
                      'timestamp': status_obj.timestamp, 'status': status_obj.status })
-        
-        plot_conds = or_(*[datapoint.c.plot_id==plot.id for plot in plots])
+        st = time()
+
+        plot_conds = tuple_(datapoint.c.plot_id).in_([(plot.id,) for plot in plots])
         sel = select([datapoint],
                      and_(datapoint.c.timeframe_id==data_tf.id,
                           plot_conds,
                           between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % data_tf.interval, end_timestamp))) \
                 .order_by(datapoint.c.timestamp.asc())
+        et = time()
+        print "Building SQL query took %f seconds" % (et - st)
+
+        st = time()
         result = conn.execute(sel)
+        et = time()
+
+        print "SQL query took %f seconds" % (et - st)
 
         charts = OrderedDict()
         prev_rows = {}
@@ -1036,10 +1046,15 @@ class DataPoint(object):
             for type in ['upper_limit', 'max', 'avg', 'min', 'lower_limit',
                              'warn_lower', 'warn_upper', 'warn_type', 'crit_lower',
                              'crit_upper', 'crit_type']:
-                chart[type] = []
+                if type in query[plot]:
+                    chart[type] = []
                 
             charts[plot] = chart
             prev_rows[plot] = None
+
+        print "Result rows: %d" % (result.rowcount)
+
+        st = time()
 
         for row in result:
             plot = Plot.get(row[datapoint.c.plot_id])
@@ -1049,42 +1064,95 @@ class DataPoint(object):
             prev_row = prev_rows[plot]
 
             ts = row[datapoint.c.timestamp]
+
+            plot_types = query[plot]
+
+            has_type_min = 'min' in plot_types
+            has_type_max = 'max' in plot_types
+            has_type_avg = 'avg' in plot_types
+            has_type_lower_limit = 'lower_limit' in plot_types
+            has_type_upper_limit = 'upper_limit' in plot_types
+            has_type_warn_lower = 'warn_lower' in plot_types
+            has_type_warn_upper = 'warn_upper' in plot_types
+            has_type_warn_type = 'warn_type' in plot_types
+            has_type_crit_lower = 'crit_lower' in plot_types
+            has_type_crit_upper = 'crit_upper' in plot_types
+            has_type_crit_type = 'crit_type' in plot_types
             
             if prev_row != None and \
                     row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > (null_tolerance + 1) * granularity:
                 ts_null = prev_row[datapoint.c.timestamp] + (row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp]) / 2
 
-                chart['min'].append([ts_null, None])
-                chart['max'].append([ts_null, None])
-                chart['avg'].append([ts_null, None])
+                if has_type_min:
+                    chart['min'].append((ts_null, None))
 
-                chart['lower_limit'].append([ts_null, None])
-                chart['upper_limit'].append([ts_null, None])
+                if has_type_max:
+                    chart['max'].append((ts_null, None))
 
-                chart['warn_lower'].append([ts_null, None])
-                chart['warn_upper'].append([ts_null, None])
-                chart['warn_type'].append([ts_null, None])
+                if has_type_avg:
+                    chart['avg'].append((ts_null, None))
 
-                chart['crit_lower'].append([ts_null, None])
-                chart['crit_upper'].append([ts_null, None])
-                chart['crit_type'].append([ts_null, None])
+                if has_type_lower_limit:
+                    chart['lower_limit'].append((ts_null, None))
 
-            chart['min'].append([ts, row[datapoint.c.min]])
-            chart['max'].append([ts, row[datapoint.c.max]])
-            chart['avg'].append([ts, row[datapoint.c.avg]])
+                if has_type_upper_limit:
+                    chart['upper_limit'].append((ts_null, None))
 
-            chart['lower_limit'].append([ts, row[datapoint.c.lower_limit]])
-            chart['upper_limit'].append([ts, row[datapoint.c.upper_limit]])
+                if has_type_warn_lower:
+                    chart['warn_lower'].append((ts_null, None))
 
-            chart['warn_lower'].append([ts, row[datapoint.c.warn_lower]])
-            chart['warn_upper'].append([ts, row[datapoint.c.warn_upper]])
-            chart['warn_type'].append([ts, row[datapoint.c.warn_type]])
+                if has_type_warn_upper:
+                    chart['warn_upper'].append((ts_null, None))
 
-            chart['crit_lower'].append([ts, row[datapoint.c.crit_lower]])
-            chart['crit_upper'].append([ts, row[datapoint.c.crit_upper]])
-            chart['crit_type'].append([ts, row[datapoint.c.crit_type]])
+                if has_type_warn_type:
+                    chart['warn_type'].append((ts_null, None))
+
+                if has_type_crit_lower:
+                    chart['crit_lower'].append((ts_null, None))
+
+                if has_type_crit_upper:
+                    chart['crit_upper'].append((ts_null, None))
+
+                if has_type_crit_type:
+                    chart['crit_type'].append((ts_null, None))
+
+            if has_type_min:
+                chart['min'].append((ts, row[datapoint.c.min]))
+
+            if has_type_max:
+                chart['max'].append((ts, row[datapoint.c.max]))
+
+            if has_type_avg:
+                chart['avg'].append((ts, row[datapoint.c.avg]))
+
+            if has_type_lower_limit:
+                chart['lower_limit'].append((ts, row[datapoint.c.lower_limit]))
+
+            if has_type_upper_limit:
+                chart['upper_limit'].append((ts, row[datapoint.c.upper_limit]))
+
+            if has_type_warn_lower:
+                chart['warn_lower'].append((ts, row[datapoint.c.warn_lower]))
+
+            if has_type_warn_upper:
+                chart['warn_upper'].append((ts, row[datapoint.c.warn_upper]))
+
+            if has_type_warn_type:
+                chart['warn_type'].append((ts, row[datapoint.c.warn_type]))
+
+            if has_type_crit_lower:
+                chart['crit_lower'].append((ts, row[datapoint.c.crit_lower]))
+
+            if has_type_crit_upper:
+                chart['crit_upper'].append((ts, row[datapoint.c.crit_upper]))
+
+            if has_type_crit_type:
+                chart['crit_type'].append((ts, row[datapoint.c.crit_type]))
             
             prev_rows[plot] = row
+
+        et = time()
+        print "Processing results took %f seconds" % (et - st)
 
         return { 'comments': comments, 'charts': charts, 'statusdata': statusdata,
                  'start_timestamp': start_timestamp, 'end_timestamp': end_timestamp,

@@ -210,66 +210,28 @@ class BackendRPCMethods(object):
         
         return {'total': result['total'], 'services': items}
     
-    def getPlotValues(self, host, service, start_timestamp=None,
-                      end_timestamp=None, granularity=None, null_tolerance=0):
-        st = time.time()
-
+    def _flattenCharts(self, dps):
         charts = []
-        comments = []
-        statusdata = []
-        result = {'comments': comments, 'charts': charts, 'statusdata': statusdata,
-                  'min_timestamp': model.dbload_min_timestamp,
-                  'max_timestamp': time.time()}
-        
-        if start_timestamp == '':
-            start_timestamp = None
-            
-        if end_timestamp == '':
-            end_timestamp = None
-            
-        if granularity == '':
-            granularity = None
 
-        host_obj = model.Host.getByName(self.engine, host)
-        service_obj = model.Service.getByName(self.engine, service)
+        for plot_obj, plot_charts in dps['charts'].iteritems():
+            for type, data in plot_charts.iteritems():
+                label = plot_obj.name + '-' + type
 
-        result_services = model.HostService.getByHostAndService(
-            self.engine, host_obj, service_obj, None)
+                hostservice_obj = plot_obj.hostservice
 
-        for hostservice_obj in result_services:
-            plot_objs = model.Plot.getByHostServiceAndName(self.engine,
-                                                           hostservice_obj,
-                                                           None)
-            dps = model.DataPoint.getValuesByInterval(
-                self.engine, plot_objs, start_timestamp,end_timestamp,
-                granularity, null_tolerance)
+                if hostservice_obj.parent_hostservice != None:
+                    label = hostservice_obj.service.name + '-' + label     
 
-            if not dps:
-                continue
+                charts.append({'host': hostservice_obj.host.name,
+                               'service': hostservice_obj.service.name,    
+                               'plot': plot_obj.name, 'type': type,
+                               'label': label, 'unit': plot_obj.unit,      
+                               'start_timestamp': dps['start_timestamp'],  
+                               'end_timestamp': dps['end_timestamp'],      
+                               'granularity': dps['granularity'],
+                               'data': data})
 
-            comments.extend(dps['comments'])
-            statusdata.extend(dps['statusdata'])
-
-            for plot_obj, plot_charts in dps['charts'].iteritems():
-                for type, data in plot_charts.iteritems():
-                    label = plot_obj.name + '-' + type
-                    
-                    if hostservice_obj.parent_hostservice != None:
-                        label = hostservice_obj.service.name + '-' + label
-                    
-                    charts.append({'host': hostservice_obj.host.name,
-                                   'service': hostservice_obj.service.name,
-                                   'plot': plot_obj.name, 'type': type,
-                                   'label': label, 'unit': plot_obj.unit,
-                                   'start_timestamp': dps['start_timestamp'],
-                                   'end_timestamp': dps['end_timestamp'],
-                                   'granularity': dps['granularity'],
-                                   'data': data})
-
-        et = time.time()
-        
-        print "Got plot values in %f seconds" % (et - st)
-        return result
+        return charts
 
     def getPlotValues2(self, query, start_timestamp=None, end_timestamp=None,
                        granularity=None, null_tolerance=0):
@@ -282,27 +244,44 @@ class BackendRPCMethods(object):
                   'min_timestamp': model.dbload_min_timestamp,
                   'max_timestamp': time.time()}
 
+        if start_timestamp == '':
+            start_timestamp = None
+
+        if end_timestamp == '':
+            end_timestamp = None
+
+        if granularity == '':
+            granularity = None
+
         if query == []:
             query = {}
 
+        vquery = {}
+
         for host, host_specification in query.iteritems():
+            host_obj = model.Host.getByName(self.engine, host)
+
             if host_specification == []:
                 host_specification = {}
 
             for service, service_specification in host_specification.iteritems():
-                svc_data = self.getPlotValues(host, service, start_timestamp, end_timestamp, granularity, null_tolerance)
+                service_obj = model.Service.getByName(self.engine, service)
+                hostservice_objs = model.HostService.getByHostAndService(self.engine, host_obj, service_obj, None)
 
-                comments.extend(svc_data['comments'])
-                statusdata.extend(svc_data['statusdata'])
+                for hostservice_obj in hostservice_objs:
+                    for plot, types in service_specification.iteritems():
+                        plot_objs = model.Plot.getByHostServiceAndName(self.engine, hostservice_obj, plot)
 
-                for chart in svc_data['charts']:
-                    if not chart['plot'] in service_specification:
-                        continue
+                        for plot_obj in plot_objs:
+                            vquery[plot_obj] = types
 
-                    if not chart['type'] in service_specification[chart['plot']]:
-                        continue
+        dps = model.DataPoint.getValuesByInterval(self.engine, vquery,
+                                                 start_timestamp, end_timestamp,
+                                                 granularity, null_tolerance)
 
-                    charts.append(chart)
+        comments.extend(dps['comments'])
+        statusdata.extend(dps['statusdata'])
+        charts.extend(self._flattenCharts(dps))
 
         et = time.time()
         

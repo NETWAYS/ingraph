@@ -237,6 +237,8 @@ class BackendRPCMethods(object):
 
     def getPlotValues2(self, query, start_timestamp=None, end_timestamp=None,
                        granularity=None, null_tolerance=0):
+        conn = self.engine.connect()
+
         st = time.time()
 
         charts = []
@@ -261,25 +263,27 @@ class BackendRPCMethods(object):
         vquery = {}
 
         for host, host_specification in query.iteritems():
-            host_obj = model.Host.getByName(self.engine, host)
+            host_obj = model.Host.getByName(conn, host)
 
             if host_specification == []:
                 host_specification = {}
 
             for service, service_specification in host_specification.iteritems():
-                service_obj = model.Service.getByName(self.engine, service)
-                hostservice_objs = model.HostService.getByHostAndService(self.engine, host_obj, service_obj, None)
+                service_obj = model.Service.getByName(conn, service)
+                hostservice_objs = model.HostService.getByHostAndService(conn, host_obj, service_obj, None)
 
                 for hostservice_obj in hostservice_objs:
                     for plot, types in service_specification.iteritems():
-                        plot_objs = model.Plot.getByHostServiceAndName(self.engine, hostservice_obj, plot)
+                        plot_objs = model.Plot.getByHostServiceAndName(conn, hostservice_obj, plot)
 
                         for plot_obj in plot_objs:
                             vquery[plot_obj] = types
 
-        dps = model.DataPoint.getValuesByInterval(self.engine, vquery,
+        dps = model.DataPoint.getValuesByInterval(conn, vquery,
                                                  start_timestamp, end_timestamp,
                                                  granularity, null_tolerance)
+
+        conn.close()
 
         comments.extend(dps['comments'])
         statusdata.extend(dps['statusdata'])

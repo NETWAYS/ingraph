@@ -940,6 +940,24 @@ class DataPoint(object):
 
         plots = query.keys()
 
+        types_map = {
+            'min': datapoint.c.min,
+            'max': datapoint.c.max,
+            'avg': datapoint.c.avg,
+            'lower_limit': datapoint.c.lower_limit,
+            'upper_limit': datapoint.c.upper_limit,
+            'warn_lower': datapoint.c.warn_lower,
+            'warn_upper': datapoint.c.warn_upper,
+            'warn_type': datapoint.c.warn_type,
+            'crit_lower': datapoint.c.crit_lower,
+            'crit_upper': datapoint.c.crit_upper,
+            'crit_type': datapoint.c.crit_type
+        }
+
+        types = set()
+        for plot_types in query.values():
+            types = types.union(plot_types)
+
         if len(plots) == 0:
             return {}
 
@@ -1022,8 +1040,14 @@ class DataPoint(object):
                      'timestamp': status_obj.timestamp, 'status': status_obj.status })
         st = time()
 
+        sql_types = [datapoint.c.plot_id, datapoint.c.timestamp]
+        for type in types_map.keys():
+            if type in types:
+                sql_types.append(types_map[type])
+            
+
         plot_conds = tuple_(datapoint.c.plot_id).in_([(plot.id,) for plot in plots])
-        sel = select([datapoint],
+        sel = select(sql_types,
                      and_(datapoint.c.timeframe_id==data_tf.id,
                           plot_conds,
                           between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % data_tf.interval, end_timestamp))) \
@@ -1083,71 +1107,11 @@ class DataPoint(object):
                     row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > (null_tolerance + 1) * granularity:
                 ts_null = prev_row[datapoint.c.timestamp] + (row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp]) / 2
 
-                if has_type_min:
-                    chart['min'].append((ts_null, None))
+                for type in types:
+                    chart[type].append((ts_null, None))
 
-                if has_type_max:
-                    chart['max'].append((ts_null, None))
-
-                if has_type_avg:
-                    chart['avg'].append((ts_null, None))
-
-                if has_type_lower_limit:
-                    chart['lower_limit'].append((ts_null, None))
-
-                if has_type_upper_limit:
-                    chart['upper_limit'].append((ts_null, None))
-
-                if has_type_warn_lower:
-                    chart['warn_lower'].append((ts_null, None))
-
-                if has_type_warn_upper:
-                    chart['warn_upper'].append((ts_null, None))
-
-                if has_type_warn_type:
-                    chart['warn_type'].append((ts_null, None))
-
-                if has_type_crit_lower:
-                    chart['crit_lower'].append((ts_null, None))
-
-                if has_type_crit_upper:
-                    chart['crit_upper'].append((ts_null, None))
-
-                if has_type_crit_type:
-                    chart['crit_type'].append((ts_null, None))
-
-            if has_type_min:
-                chart['min'].append((ts, row[datapoint.c.min]))
-
-            if has_type_max:
-                chart['max'].append((ts, row[datapoint.c.max]))
-
-            if has_type_avg:
-                chart['avg'].append((ts, row[datapoint.c.avg]))
-
-            if has_type_lower_limit:
-                chart['lower_limit'].append((ts, row[datapoint.c.lower_limit]))
-
-            if has_type_upper_limit:
-                chart['upper_limit'].append((ts, row[datapoint.c.upper_limit]))
-
-            if has_type_warn_lower:
-                chart['warn_lower'].append((ts, row[datapoint.c.warn_lower]))
-
-            if has_type_warn_upper:
-                chart['warn_upper'].append((ts, row[datapoint.c.warn_upper]))
-
-            if has_type_warn_type:
-                chart['warn_type'].append((ts, row[datapoint.c.warn_type]))
-
-            if has_type_crit_lower:
-                chart['crit_lower'].append((ts, row[datapoint.c.crit_lower]))
-
-            if has_type_crit_upper:
-                chart['crit_upper'].append((ts, row[datapoint.c.crit_upper]))
-
-            if has_type_crit_type:
-                chart['crit_type'].append((ts, row[datapoint.c.crit_type]))
+            for type in types:
+                chart[type].append((ts, row[types_map[type]]))
             
             prev_rows[plot] = row
 

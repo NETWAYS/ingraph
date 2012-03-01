@@ -230,7 +230,6 @@ class BackendRPCMethods(object):
                                'end_timestamp': dps['end_timestamp'],      
                                'granularity': dps['granularity'],
                                'data': data,
-                               'group': hostservice_obj.host.name + (' - ' if hostservice_obj.service.name != '' else '') + hostservice_obj.service.name + ' - ' + plot_obj.name,
                                'plot_id': hostservice_obj.host.name + (' - ' if hostservice_obj.service.name != '' else '') + hostservice_obj.service.name + ' - ' + plot_obj.name + ' - ' + type})
 
         return charts

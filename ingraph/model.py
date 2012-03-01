@@ -1066,12 +1066,9 @@ class DataPoint(object):
 
         for plot in plots:
             chart = {}
-            
-            for type in ['upper_limit', 'max', 'avg', 'min', 'lower_limit',
-                             'warn_lower', 'warn_upper', 'warn_type', 'crit_lower',
-                             'crit_upper', 'crit_type']:
-                if type in query[plot]:
-                    chart[type] = []
+
+            for type in query[plot]:
+                chart[type] = []
                 
             charts[plot] = chart
             prev_rows[plot] = None
@@ -1091,26 +1088,14 @@ class DataPoint(object):
 
             plot_types = query[plot]
 
-            has_type_min = 'min' in plot_types
-            has_type_max = 'max' in plot_types
-            has_type_avg = 'avg' in plot_types
-            has_type_lower_limit = 'lower_limit' in plot_types
-            has_type_upper_limit = 'upper_limit' in plot_types
-            has_type_warn_lower = 'warn_lower' in plot_types
-            has_type_warn_upper = 'warn_upper' in plot_types
-            has_type_warn_type = 'warn_type' in plot_types
-            has_type_crit_lower = 'crit_lower' in plot_types
-            has_type_crit_upper = 'crit_upper' in plot_types
-            has_type_crit_type = 'crit_type' in plot_types
-            
             if prev_row != None and \
                     row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > (null_tolerance + 1) * granularity:
                 ts_null = prev_row[datapoint.c.timestamp] + (row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp]) / 2
 
-                for type in types:
+                for type in query[plot]:
                     chart[type].append((ts_null, None))
 
-            for type in types:
+            for type in query[plot]:
                 chart[type].append((ts, row[types_map[type]]))
             
             prev_rows[plot] = row

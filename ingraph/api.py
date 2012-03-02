@@ -222,6 +222,13 @@ class BackendRPCMethods(object):
                 if hostservice_obj.parent_hostservice != None:
                     label = hostservice_obj.service.name + '-' + label     
 
+                if hostservice_obj.service.name != '':
+                    svc_id = ' - ' + hostservice_obj.service.name
+                else:
+                    svc_id = ''
+
+                plot_id = hostservice_obj.host.name + svc_id + ' - ' + plot_obj.name + ' - ' + type
+
                 charts.append({'host': hostservice_obj.host.name,
                                'service': hostservice_obj.service.name,    
                                'plot': plot_obj.name, 'type': type,
@@ -230,7 +237,7 @@ class BackendRPCMethods(object):
                                'end_timestamp': dps['end_timestamp'],      
                                'granularity': dps['granularity'],
                                'data': data,
-                               'plot_id': hostservice_obj.host.name + (' - ' if hostservice_obj.service.name != '' else '') + hostservice_obj.service.name + ' - ' + plot_obj.name + ' - ' + type})
+                               'plot_id': plot_id})
 
         return charts
 

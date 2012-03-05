@@ -291,9 +291,14 @@ class BackendRPCMethods(object):
 
         conn.close()
 
-        comments.extend(dps['comments'])
-        statusdata.extend(dps['statusdata'])
-        charts.extend(self._flattenCharts(dps))
+        if 'comments' in dps:
+            comments.extend(dps['comments'])
+
+        if 'statusdata' in dps:
+            statusdata.extend(dps['statusdata'])
+
+        if 'charts' in dps:
+            charts.extend(self._flattenCharts(dps))
 
         et = time.time()
         

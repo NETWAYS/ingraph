@@ -222,7 +222,13 @@ class Collectord(daemon.UnixDaemon):
                 if updates:
                     updates_pickled = pickle.dumps(updates)
                     st = time.time()
-                    self.api.insertValueBulk(updates_pickled)
+                    while True:
+                        try:
+                            self.api.insertValueBulk(updates_pickled)
+                        except Exception:
+                            time.sleep(60)
+                        else:
+                            break
                     et = time.time()
                     print "%d updates (%d lines) took %f seconds" % \
                           (len(updates), input.lineno(), et - st)

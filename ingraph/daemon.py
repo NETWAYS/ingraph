@@ -24,8 +24,7 @@ import fcntl
 try:
     os.SEEK_SET
 except AttributeError:
-    import posixfile
-    os.SEEK_SET = posixfile.SEEK_SET
+    os.SEEK_SET = 0
 
 __all__ = ['UnixDaemon']
 

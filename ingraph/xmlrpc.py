@@ -37,7 +37,7 @@ xmlrpclib.dumps = _xmldumps(xmlrpclib.dumps)
 class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
     allow_reuse_address = 1
 
-    def __init__(self, addr, allow_none=False, logRequests=1,
+    def __init__(self, addr, logger, allow_none=False, logRequests=1,
                  encoding='iso-8859-1'):
         class AuthenticatedRequestHandler(SimpleXMLRPCRequestHandler):
             def parse_request(myself):
@@ -81,6 +81,8 @@ class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
         self.required_username = None
         self.required_password = None
 
+        self.logger = logger
+
     def authenticate(self, username, password):
         if self.required_username == None and self.required_password == None:
             return True
@@ -91,14 +93,8 @@ class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
         try:
             return SimpleXMLRPCDispatcher._dispatch(self, method, params)
         except Exception, e:
-            print '---'
-            print 'XML-RPC request caused exception:'
-            print 'Method: %s' % (method)
-            print 'Parameters: %s' % (str(params))
-            print 'Exception information'
-            print e
-            print 'Stacktrace:'
-            traceback.print_exc()
-            print '---'
-
+            message  = "XML-RPC request caused exception:\n"
+            message += "Method: %s\n" % (method)
+            message += "Parameters: %s" % (str(params))
+            self.logger.exception(message)
             raise

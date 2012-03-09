@@ -21,13 +21,14 @@ import cPickle
 import ingraph.model as model
 
 class BackendRPCMethods(object):
-    def __init__(self, engine, queryqueue):
+    def __init__(self, engine, queryqueue, logger):
         self.hosts = {}
         self.services = {}
         self.hostservices = {}
         self.plots = {}
         self.engine = engine
         self.queryqueue = queryqueue
+        self.logger = logger
         self.shutdown_server = False
         
     def setupTimeFrame(self, interval, retention_period=None):
@@ -302,7 +303,7 @@ class BackendRPCMethods(object):
 
         et = time.time()
         
-        print "Got filtered plot values in %f seconds" % (et - st)
+        self.logger.debug("Got filtered plot values in %f seconds" % (et - st))
         return result
 
     def _optimizePlot(self, plot):

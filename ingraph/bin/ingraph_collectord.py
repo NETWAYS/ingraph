@@ -181,7 +181,7 @@ class Collectord(daemon.UnixDaemon):
         return updates
         
     def before_daemonize(self):
-        print "Starting %s..." % self.name
+        self.logger.info("Starting %s..." % self.name)
         config = utils.load_config('ingraph-xmlrpc.conf')
         config = utils.load_config('ingraph-aggregates.conf', config)
         
@@ -297,6 +297,9 @@ def main():
     parser.add_option('-F', '--format', dest='format', default='pnp',
                       metavar='FORMAT', help='perfdata format, "ingraph" '
                       'or "pnp" [default: %default]')
+    parser.add_option('-L', '--loglevel', dest='loglevel', default='INFO',
+                      help='the log level (INFO, WARNING, ERROR, CRITICAL), ' +
+                           '[default: %default]')
     (options, args) = parser.parse_args()
     
     try:
@@ -317,6 +320,9 @@ def main():
                             format=options.format)
     if options.logfile and options.logfile != '-':
         collectord.addLoggingHandler(logging.FileHandler(options.logfile))
+    if options.loglevel not in ['INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+        collectord.logger.error('Invalid loglevel: %s' % (options.loglevel))
+        sys.exit(1)
     if options.user:
         from pwd import getpwnam
         try:

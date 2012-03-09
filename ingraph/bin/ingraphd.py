@@ -117,7 +117,7 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         self.logger.info("Starting XML-RPC interface on %s:%d..." %
               (config['xmlrpc_address'], config['xmlrpc_port']))
         server = ingraph.xmlrpc.AuthenticatedXMLRPCServer(
-            (config['xmlrpc_address'], config['xmlrpc_port']),
+            (config['xmlrpc_address'], config['xmlrpc_port']), self.logger,
              allow_none=True)
         server.timeout = 5
         if sys.version_info[:2] < (2,6):
@@ -127,7 +127,8 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         server.register_introspection_functions()
         server.register_multicall_functions()
         
-        rpcmethods = ingraph.api.BackendRPCMethods(engine, queryqueue)
+        rpcmethods = ingraph.api.BackendRPCMethods(engine, queryqueue,
+            self.logger)
         server.register_instance(rpcmethods)
         
         self.rpcmethods = rpcmethods
@@ -162,6 +163,9 @@ def main():
                       default=None, help='logfile FILE [default: %default]')
     parser.add_option('-u', '--user', dest='user', default=None)
     parser.add_option('-g', '--group', dest='group', default=None)
+    parser.add_option('-L', '--loglevel', dest='loglevel', default='INFO',
+                      help='the log level (INFO, WARNING, ERROR, CRITICAL), ' +
+                           '[default: %default]')
     (options, args) = parser.parse_args()
     
     try:
@@ -176,6 +180,10 @@ def main():
                         pidfile=options.pidfile)
     if options.logfile and options.logfile != '-':
         ingraphd.addLoggingHandler(logging.FileHandler(options.logfile))
+    if options.loglevel not in ['INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+        ingraphd.logger.error('Invalid loglevel: %s' % (options.loglevel))
+        sys.exit(1)
+    ingraphd.logger.setLevel(getattr(logging, options.loglevel))
     if options.user:
         from pwd import getpwnam
         try:

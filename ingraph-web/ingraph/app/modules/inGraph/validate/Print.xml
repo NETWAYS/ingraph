@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ae:configurations xmlns="http://agavi.org/agavi/config/parts/validators/1.0"
+    xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0"
+    parent="%core.module_dir%/inGraph/config/validators.xml">
+
+    <ae:configuration>
+
+        <validators>
+
+            <validator class="string" name="host" required="false">
+                <argument>host</argument>
+            </validator>
+
+            <validator class="string" name="service" required="false">
+                <argument>service</argument>
+            </validator>
+
+            <validator class="string" name="view" required="false">
+                <argument>view</argument>
+            </validator>
+
+            <validator class="number" name="start" required="false">
+                <argument>start</argument>
+            </validator>
+
+            <validator class="number" name="end" required="false">
+                <argument>end</argument>
+            </validator>
+
+            <validator class="number" name="width" required="false">
+                <argument>width</argument>
+            </validator>
+
+            <validator class="number" name="height" required="false">
+                <argument>height</argument>
+            </validator>
+
+        </validators>
+
+    </ae:configuration>
+
+</ae:configurations>

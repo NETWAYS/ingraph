@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ae:configurations xmlns="http://agavi.org/agavi/config/parts/module/1.0"
+    xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0">
+
+    <ae:configuration>
+
+        <module enabled="true">
+
+            <settings>
+
+                <setting name="title">inGraph Module</setting>
+                <setting name="version">1.0</setting>
+
+                <setting name="authors">
+                    <ae:parameter name="info@netways.de">NETWAYS GmbH</ae:parameter>
+                </setting>
+
+                <setting name="homepage">https://www.netways.org/projects/ingraph</setting>
+                <setting name="update_url" />
+                <setting name="description">inGraph web interface</setting>
+            </settings>
+
+            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="inGraph.xml" />
+
+        </module>  
+
+    </ae:configuration>
+
+</ae:configurations>

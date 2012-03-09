@@ -1,0 +1,21 @@
+Alias @WEB_PATH@ @PREFIX@/pub
+
+<Directory @PREFIX@/pub>
+    DirectoryIndex index.php
+    Options FollowSymLinks
+    AllowOverride all
+    Order allow,deny
+    Allow from all
+
+#
+# Basic authentication example:
+# uncomment the following lines and create
+# a user file for basic auth, i.e.
+# htpasswd -c /etc/ingraph/htpasswd.users ingraph
+#
+#    AuthName "inGraph Access"
+#    AuthType Basic
+#    AuthUserFile /etc/ingraph/htpasswd.users
+#    Require valid-user
+</Directory>
+

@@ -30,6 +30,7 @@
                     </route>
                 </route>
             </route>
+            <route name="print" pattern="^/print$" module="inGraph" action="Print" />
         </routes>
     </ae:configuration>
 </ae:configurations>

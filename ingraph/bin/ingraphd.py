@@ -21,6 +21,7 @@ import traceback
 import threading
 import sys
 import optparse
+import logging
 
 import ingraph
 import ingraph.api
@@ -88,31 +89,32 @@ class InGraphd(ingraph.daemon.UnixDaemon):
     name = 'inGraph'
     
     def before_daemonize(self):
-        print "Starting %s..." % self.name
+        self.logger.info("Starting %s..." % self.name)
         config = ingraph.utils.load_config('ingraph-database.conf')
         config = ingraph.utils.load_config('ingraph-xmlrpc.conf', config)
         if config['dsn'] == None:
-            print("Error: You need to set a database connection string "
-                  "('dsn' setting) in your configuration file.")
+            self.logger.error("Error: You need to set a database connection "
+                  "string ('dsn' setting) in your configuration file.")
             sys.exit(1)
         
         if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
-            print("Error: You need to set a bind address/port for the XML-RPC"
-                  " interface ('xmlrpc_address' and 'xmlrpc_port' settings).")
+            self.logger.error("Error: You need to set a bind address/port for "
+                  "the XML-RPC interface ('xmlrpc_address' and 'xmlrpc_port' "
+                  "settings).")
             sys.exit(1)
             
         if 'xmlrpc_username' not in config or 'xmlrpc_password' not in config:
-            print("Error: You need to set an XML-RPC username and password "
-                  "('xmlrpc_username' and 'xmlrpc_password' settings) in your "
-                  "configuration file.")
+            self.logger.error("Error: You need to set an XML-RPC username and "
+                  "password ('xmlrpc_username' and 'xmlrpc_password' settings)"
+                  " in your configuration file.")
             sys.exit(1)
             
-        print("Connecting to the database...")
+        self.logger.info("Connecting to the database...")
         engine = ingraph.model.createModelEngine(config['dsn'])
         
         queryqueue = Queue.Queue(maxsize=200000)
 
-        print("Starting XML-RPC interface on %s:%d..." %
+        self.logger.info("Starting XML-RPC interface on %s:%d..." %
               (config['xmlrpc_address'], config['xmlrpc_port']))
         server = ingraph.xmlrpc.AuthenticatedXMLRPCServer(
             (config['xmlrpc_address'], config['xmlrpc_port']),
@@ -138,7 +140,6 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         daemonized_thread(cleanup, (self.engine,))
         daemonized_thread(vacuum, (self.engine,))
         daemonized_thread(pragma, (self.engine, 'wal_checkpoint'))
-
 
         while not self.rpcmethods.shutdown_server:
             self.server.handle_request()
@@ -174,21 +175,20 @@ def main():
                         detach=options.detach,
                         pidfile=options.pidfile)
     if options.logfile and options.logfile != '-':
-        ingraphd.stdout = options.logfile
-        ingraphd.stderr = options.logfile
+        ingraphd.addLoggingHandler(logging.FileHandler(options.logfile))
     if options.user:
         from pwd import getpwnam
         try:
             ingraphd.uid = getpwnam(options.user)[2]
         except KeyError:
-            sys.stderr.write("User %s not found.\n" % options.user)
+            ingraphd.logger.error("User %s not found.\n" % options.user)
             sys.exit(1)
     if options.group:
         from grp import getgrnam
         try:
             ingraphd.gid = getgrnam(options.group)[2]
         except KeyError:
-            sys.stderr.write("Group %s not found.\n" % options.group)
+            ingraphd.logger.error("Group %s not found.\n" % options.group)
             sys.exit(1)
     
     getattr(ingraphd, args[0])()

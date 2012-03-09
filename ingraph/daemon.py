@@ -20,6 +20,7 @@ import signal
 import atexit
 import errno
 import fcntl
+import logging
 
 try:
     os.SEEK_SET
@@ -31,11 +32,7 @@ __all__ = ['UnixDaemon']
 
 class UnixDaemon(object):
     def __init__(self, pidfile, umask=0, chdir='/', uid=os.getuid(),
-                 gid=os.getgid(), detach=True, stdin=os.devnull,
-                 stdout=os.devnull, stderr=os.devnull):
-        self.stdin = stdin
-        self.stdout = stdout
-        self.stderr = stderr
+                 gid=os.getgid(), detach=True):
         self.pidfile = pidfile
         self.pidfp = None
         self.pidlocked = False
@@ -44,7 +41,15 @@ class UnixDaemon(object):
         self.uid = uid
         self.gid = gid
         self.umask = umask
+        self.logger = logging.getLogger('ingraph')
+        self.addLoggingHandler(logging.StreamHandler(sys.stderr))
+        self.logger.setLevel(logging.DEBUG)
         super(UnixDaemon, self).__init__()
+
+    def addLoggingHandler(self, handler):
+        formatter = logging.Formatter('[%(asctime)s, %(levelname)s] %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
 
     def _daemonize(self):
         try: 
@@ -168,9 +173,9 @@ class UnixDaemon(object):
         self.before_daemonize()
         if self.detach:
             self._daemonize()
-            self._redirect_stream(sys.stdin, self.stdin)
-            self._redirect_stream(sys.stdout, self.stdout)
-            self._redirect_stream(sys.stderr, self.stderr)
+            self._redirect_stream(sys.stdin, os.devnull)
+            self._redirect_stream(sys.stdout, os.devnull)
+            self._redirect_stream(sys.stderr, os.devnull)
         
         signal.signal(signal.SIGTERM, self._SIGTERM)
         atexit.register(self._atexit)

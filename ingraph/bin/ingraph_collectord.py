@@ -26,6 +26,7 @@ import shutil
 import copy
 import pickle
 import xmlrpclib
+import logging
 
 import ingraph
 from ingraph import daemon
@@ -315,28 +316,27 @@ def main():
                             pidfile=options.pidfile,
                             format=options.format)
     if options.logfile and options.logfile != '-':
-        collectord.stdout = options.logfile
-        collectord.stderr = options.logfile
+        collectord.addLoggingHandler(logging.FileHandler(options.logfile))
     if options.user:
         from pwd import getpwnam
         try:
             collectord.uid = getpwnam(options.user)[2]
         except KeyError:
-            sys.stderr.write("User %s not found.\n" % options.user)
+            collectord.logger.error("User %s not found.\n" % options.user)
             sys.exit(1)
     if options.group:
         from grp import getgrnam
         try:
             collectord.gid = getgrnam(options.group)[2]
         except KeyError:
-            sys.stderr.write("Group %s not found.\n" % options.group)
+            collectord.logger.error("Group %s not found.\n" % options.group)
             sys.exit(1)
 
     if options.perfdata_dir:
         if not os.access(options.perfdata_dir, os.W_OK):
-            sys.stderr.write("Perfdata directory is not writable.\nPlease make "
-                + "sure the perfdata directory is writable so the inGraph "
-                + "daemon can delete/move perfdata files.\n")
+            collectord.logger.error("Perfdata directory is not writable.\n"
+                + "Please make sure the perfdata directory is writable so "
+                + "the inGraph daemon can delete/move perfdata files.\n")
             sys.exit(1)
 
     getattr(collectord, args[0])()

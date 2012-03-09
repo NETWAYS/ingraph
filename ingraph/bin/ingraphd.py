@@ -77,7 +77,7 @@ def pragma(engine, pragma):
         
 def daemonized_thread(target, args):
     t = threading.Thread(target=target, args=args)
-    t.daemon = True
+    t.setDaemon(True)
     t.start()
 
 

@@ -110,10 +110,13 @@ class InGraphd(ingraph.daemon.UnixDaemon):
             sys.exit(1)
             
         self.logger.info("Connecting to the database...")
-        engine = ingraph.model.createModelEngine(config['dsn'])
+        self.engine = None
+        try:
+            self.engine = ingraph.model.createModelEngine(config['dsn'])
+        except:
+            self.logger.exception("Could not connect to the database. Will re-try "
+                "after daemonizing");
         
-        queryqueue = Queue.Queue(maxsize=200000)
-
         self.logger.info("Starting XML-RPC interface on %s:%d..." %
               (config['xmlrpc_address'], config['xmlrpc_port']))
         server = ingraph.xmlrpc.AuthenticatedXMLRPCServer(
@@ -126,23 +129,33 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         server.required_password = config['xmlrpc_password']
         server.register_introspection_functions()
         server.register_multicall_functions()
-        
-        rpcmethods = ingraph.api.BackendRPCMethods(engine, queryqueue,
-            self.logger)
-        server.register_instance(rpcmethods)
-        
-        self.rpcmethods = rpcmethods
-        self.engine = engine
-        self.queryqueue = queryqueue
         self.server = server
+        self.config = config
         
     def run(self):
-        daemonized_thread(flush, (self.engine, self.queryqueue))
+        if self.engine == None:
+            for i in range(1, 12):
+                try:
+                    self.engine = ingraph.model.createModelEngine(self.config['dsn'])
+                except:
+                    self.logger.exception("Database connection failed (attempt"
+                        " #%d). Waiting for retry..." % (i))
+                    time.sleep(5)
+                else:
+                    break
+            if self.engine == None:
+                self.engine = ingraph.model.createModelEngine(self.config['dsn'])
+        queryqueue = Queue.Queue(maxsize=200000)
+        rpcmethods = ingraph.api.BackendRPCMethods(self.engine, queryqueue,
+            self.logger)
+        self.server.register_instance(rpcmethods)
+        
+        daemonized_thread(flush, (self.engine, queryqueue))
         daemonized_thread(cleanup, (self.engine,))
         daemonized_thread(vacuum, (self.engine,))
         daemonized_thread(pragma, (self.engine, 'wal_checkpoint'))
 
-        while not self.rpcmethods.shutdown_server:
+        while not rpcmethods.shutdown_server:
             self.server.handle_request()
 
 def main():

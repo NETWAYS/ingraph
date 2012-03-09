@@ -1,0 +1,9 @@
+{
+    "flot": {
+        "series": {
+            "lines": {
+                "steps": true
+            }
+        }
+    }
+}

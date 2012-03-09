@@ -1,7 +1,6 @@
 <script type="text/javascript">
-
 Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, function() {
-    if(!Ext.iG.Urls.available) {
+    if (!Ext.ux.ingraph.Urls.available) {
         var urls = {
             provider: {
                 hosts: "<?php echo $ro->gen('modules.ingraph.provider.hosts'); ?>",
@@ -16,80 +15,105 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                 view: "<?php echo $ro->gen('modules.ingraph.provider.view'); ?>"
             },
             comments: {
-                add: "<?php echo $ro->gen('modules.ingraph.comments.add'); ?>",
-                edit: "<?php echo $ro->gen('modules.ingraph.comments.edit'); ?>",
+                create: "<?php echo $ro->gen('modules.ingraph.comments.create'); ?>",
+                update: "<?php echo $ro->gen('modules.ingraph.comments.update'); ?>",
                 remove: "<?php echo $ro->gen(
                     'modules.ingraph.comments.delete'); ?>"
             },
             templates: {
-            	edit: "<?php echo $ro->gen('modules.ingraph.templates.edit'); ?>"
+                create: "<?php echo $ro->gen('modules.ingraph.templates.create'); ?>",
+                update: "<?php echo $ro->gen('modules.ingraph.templates.update'); ?>"
             },
             views: {
-                edit: "<?php echo $ro->gen('modules.ingraph.views.edit'); ?>"
+                create: "<?php echo $ro->gen('modules.ingraph.views.create'); ?>",
+                update: "<?php echo $ro->gen('modules.ingraph.views.update'); ?>"
             }
         };
-        Ext.iG.Urls.overwrite(urls);
+        Ext.ux.ingraph.Urls.overwrite(urls);
     }
 
     var host = "<?php echo $rd->getParameter('host'); ?>",
         service = "<?php echo $rd->getParameter('service'); ?>",
         view = "<?php echo $rd->getParameter('view'); ?>";
-    var state = Ext.state.Manager.getProvider().get(this.stateuid);
-    if(!state) {
-        if(!host && !service && !view) {
-            var menu = new Ext.iG.Menu();
-            var w = new Ext.Window({
+
+    var extState = Ext.state.Manager.getProvider().get(this.stateuid);
+    var cronkState = this.state;
+
+    var addView = function (cfg) {
+        cfg = cfg || {};
+        Ext.apply(cfg, {
+            stateful: true,
+            stateEvents: [],
+            stateId: this.stateuid
+        });
+
+        var view = new Ext.ux.ingraph.View(cfg);
+
+        view.on({
+            scope: this,
+            single: true,
+            ready: function(view) {
+                // Replace tab title and tooltip
+                Ext.ux.ingraph.icingaweb.Cronk.setTitle.call(this, cfg);
+
+                // Manual handling of ext state
+                Ext.state.Manager.set(view.stateId, view.getState());
+
+                // Cronk state
+                this.setStatefulObject(view);
+            }
+        });
+
+        // Add view to this cronk
+        this.add(view);
+        this.doLayout();
+
+        return view;
+    };
+
+    if ( ! extState && ! cronkState) {
+        if ( ! host && ! service && ! view) {
+            // Show inGraph menu in case this cronk is not preconfigured
+            var menu = new Ext.ux.ingraph.Menu();
+
+            var menuWindow = new Ext.Window({
                 title: 'inGraph',
                 modal: true,
                 items: menu
             });
+
             menu.on('plot', function(cb, cfg) {
-                cfg.stateId = this.stateuid;
-                var p = new Ext.iG.View(cfg);
-                p.on({
-                    scope: this,
-                    single: true,
-                    __igpanel__complete: function(p) {
-                    	Ext.iG.Cronk.setTitle.call(this, cfg);
-                    	Ext.state.Manager.set(p.stateId, p.getState());
-                    }
-                });
-                this.add(p);
-                this.doLayout();
-                w.destroy();
+                addView.call(this, cfg);
+
+                menuWindow.destroy();
             }, this);
-            w.on('close', function() {
+
+            menuWindow.on('close', function() {
                 // Remove cronk
                 this.getParent().destroy();
             }, this);
-            w.show();
-        } else {
+
+            menuWindow.show();
+        } // Eof no config
+        else {
+            // Host, service or view preconfigured
+            // View decides what to do
             var cfg = {
                 host: host,
                 service: service,
                 view: view,
                 stateId: this.stateuid
             };
-            var p = new Ext.iG.View(cfg);
-            p.on({
-                scope: this,
-                single: true,
-                __igpanel__complete: function(p) {
-                	Ext.iG.Cronk.setTitle.call(this, cfg);
-                	Ext.state.Manager.set(p.stateId, p.getState());
-                }
-            });
-            this.add(p);
-            this.doLayout();
+
+            addView.call(this, cfg);
+        } // Eof host or service or view
+    } // Eof no state
+    else {
+        var view = addView.call(this, cfg);
+
+        if ( ! extState) {
+            view.applyState(cronkState);
         }
-    } else {
-        var cfg = {
-            stateId: this.stateuid,
-            stateEvents: []
-        };
-        var p = new Ext.iG.View(cfg);
-        this.add(p);
-        this.doLayout();
-    }
-});
+    } // Eof has state
+}); // Eof initEnvironment
 </script>

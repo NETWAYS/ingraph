@@ -1,10 +1,14 @@
 <?php
 
-class inGraph_Comments_DeleteAction extends inGraphBaseAction {
-    public function executeWrite(AgaviRequestDataHolder $rd) {
+class inGraph_Comments_DeleteAction extends inGraphBaseAction
+{
+    public function executeWrite(AgaviRequestDataHolder $rd)
+    {
         try {
-            $this->getApi()->deleteComment($rd->getParameter('id'));
-        } catch(XMLRPCClientException $e) {
+            $this->getBackend()->deleteComment(
+                $rd->getParameter('id')
+            );
+        } catch(inGraph_XmlRpc_Exception $e) {
             return $this->setError($e->getMessage());
         }
         return $this->getDefaultViewName();

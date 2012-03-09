@@ -1,12 +1,12 @@
 {
-    "re": "/ping$/i", 
+    "re": "/ping$/i",
     "series": [
         {
             "color": "#FF0000", 
             "re": "/^pl$/", 
             "type": "avg", 
             "label": "Packet Loss"
-        }, 
+        },
         {
             "color": "#00FF00", 
             "re": "/^rta$/", 

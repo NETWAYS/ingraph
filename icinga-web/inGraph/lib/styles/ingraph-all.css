@@ -1,0 +1,48 @@
+.flot-print-container {
+    visibility: hidden;
+}
+
+.tickLabel, .legendLabel, .iG-text {
+    font-weight: bold;
+}
+
+.xflot-spacer {
+    border: 1px solid #D0D0D0;
+    color: #D0D0D0;
+    background-color: #D0D0D0
+}
+
+.x-btn-text-left .x-btn-mc {
+    text-align: left !important;
+}
+
+.xingraph-portal-item {
+    border: 1px #C0C0C0 solid;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+}
+
+@media print {
+    body {
+        overflow: visible !important;
+    }
+    
+    * {
+        border: 1px solid transparent;
+    }
+
+    .x-window-tl, .x-window-bwrap, .x-panel, .x-tab-panel, .x-tip {
+        display: none;
+    }
+    
+    .flot-print-container {
+        visibility: visible;
+    }
+    
+    .flot-print-title {
+        font-weight: bold;
+        font-size: 11pt;
+        margin: 10px auto;
+    }
+}

@@ -10,11 +10,11 @@
                 <argument>query</argument>
                 <error>Parameter query is mandatory.</error>
             </validator>
-            <validator name="start" class="number" required="false">
-                <argument>start</argument>
+            <validator name="startx" class="number" required="false">
+                <argument>startx</argument>
             </validator>
-            <validator name="end" class="number" required="false">
-                <argument>end</argument>
+            <validator name="endx" class="number" required="false">
+                <argument>endx</argument>
             </validator>
             <validator name="interval" class="number" required="false">
                 <argument>interval</argument>

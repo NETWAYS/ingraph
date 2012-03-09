@@ -1,16 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ae:configurations xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0" xmlns="http://icinga.org/icinga/config/global/resource/1.0">
+<ae:configurations xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0"
+    xmlns="http://icinga.org/icinga/config/global/resource/1.0">
+
     <ae:configuration>
+
         <javascript>
+
             <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/CheckColumn.js</ae:parameter>
             <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/RowEditor.js</ae:parameter>
             <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/Spinner.js</ae:parameter>
             <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/SpinnerField.js</ae:parameter>
-            <ae:parameter>%core.module_dir%/inGraph/lib/js/jquery/jquery-1.5.2.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/jquery/</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/</ae:parameter>
-            <ae:parameter>%core.module_dir%/AppKit/lib/js/utils/Ext.ux.AutoComboBox.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/flot/AbstractStyleForm.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/flot/FormWindow.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/flot</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph/View.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph/portal</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph/icinga-web</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/</ae:parameter>
+
         </javascript>
+
     </ae:configuration>
+
 </ae:configurations>

@@ -51,7 +51,7 @@ adjusted (e.g for bar charts or filled areas).
         }
         
         function stackData(plot, s, datapoints) {
-            if (s.stack == null)
+            if (s.stack === null || s.stack === false)
                 return;
 
             var other = findMatchingSeries(s, plot.getData());

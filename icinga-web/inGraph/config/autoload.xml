@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ae:configurations xmlns="http://agavi.org/agavi/config/parts/autoload/1.0" xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0">
-	
-	<ae:configuration>
-		
-		<autoload name="inGraphBaseAction">%core.module_dir%/inGraph/lib/action/inGraphBaseAction.class.php</autoload>
+<ae:configurations xmlns="http://agavi.org/agavi/config/parts/autoload/1.0"
+    xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0">
+
+    <ae:configuration>
+
+        <autoload name="inGraphBaseAction">%core.module_dir%/inGraph/lib/action/inGraphBaseAction.class.php</autoload>
         <autoload name="inGraphBaseModel">%core.module_dir%/inGraph/lib/model/inGraphBaseModel.class.php</autoload>
-		<autoload name="inGraphBaseView">%core.module_dir%/inGraph/lib/view/inGraphBaseView.class.php</autoload>
-        
-        <autoload name="XMLRPCException">%core.module_dir%/inGraph/lib/exception/XMLRPCException.class.php</autoload>
-        <autoload name="XMLRPCClientException">%core.module_dir%/inGraph/lib/exception/XMLRPCClientException.class.php</autoload>
-        
+        <autoload name="inGraphBaseView">%core.module_dir%/inGraph/lib/view/inGraphBaseView.class.php</autoload>
+
         <autoload name="NodeJs">%core.module_dir%/inGraph/lib/php/NodeJs.php</autoload>
         <autoload name="Benchmark">%core.module_dir%/inGraph/lib/php/Benchmark.php</autoload>
-		
-	</ae:configuration>
-	
+        <autoload name="inGraph_Loader">%core.module_dir%/inGraph/lib/php/inGraph/Loader.php</autoload>
+
+    </ae:configuration>
+
 </ae:configurations>

@@ -1,54 +1,57 @@
 <?php
-// TODO(el): Caching.
-class inGraph_Provider_ViewAction extends inGraphBaseAction {
-    protected $plots = array();
-    
-    public function executeWrite(AgaviRequestDataHolder $rd) {
-        $view = $this->context->getModel('View', 'inGraph',
-            AgaviConfig::get('modules.ingraph.views'))->getView(
-                $rd->getParameter('view'));
-        foreach($view['panels'] as &$panel) {
+
+class inGraph_Provider_ViewAction extends inGraphBaseAction
+{
+    protected $plots = array(); // Plots cache
+
+    public function executeWrite(AgaviRequestDataHolder $rd)
+    {
+        $manager = new inGraph_View_Manager(
+            AgaviConfig::get('modules.ingraph.views'));
+
+        $view = $manager->fetchView($rd->getParameter('view'));
+        $content = $view->getContent();
+
+        foreach ($content['panels'] as &$panel) {
             $compiled = array();
-            foreach($panel['series'] as $series) {
-                if(!array_key_exists('host', $series) &&
-                   !array_key_exists('service', $series) &&
-                   !array_key_exists('re', $series) &&
-                   !array_key_exists('type', $series)) {
-                    // TODO(el): Do not ignore silently
-                    continue;
+
+            foreach ($panel['series'] as $series) {
+                try {
+                    $plots = $this->getPlots($series);
+                } catch(inGraph_XmlRpc_Exception $e) {
+                    return $this->setError($e->getMessage());
                 }
-                $plots = $this->getPlots($series);
-                if(!is_array($plots)) {
-                    return 'Error';
-                }
-                foreach($plots as $plot) {
-                    if(preg_match($series['re'], $plot['plot'])) {
-                        $compiled[] = array_merge(
-                            $series, array(
-                                'host' => $series['host'],
-                                'service' => $series['service'],
-                                'plot' => $plot['plot'],
-                            ));
-                    }
+
+                $match = $view->compileSingleSeries(
+                    $series, $series['host'], $plots);
+
+                if ($match) {
+                    $compiled[] = $series;
                 }
             }
+
             $panel['series'] = $compiled;
         }
-        $this->setAttribute('template', $view);
+
+        $this->setAttribute('view', array(
+            'name' => $view->getInfo()->getBasename(),
+            'content' => $content
+        ));
+
         return $this->getDefaultViewName();
     }
-    
-    protected function getPlots($series) {
+
+    protected function getPlots($series)
+    {
         $key = $series['host'] . $series['service'];
-        if(!array_key_exists($key, $this->plots)) {
-            try {
-                $plots = $this->getApi()->getPlots($series['host'], $series['service']);
-            } catch(XMLRPCClientException $e) {
-                return $this->setError($e->getMessage());
-            }
+
+        if ( ! array_key_exists($key, $this->plots)) {
+            $plots = $this->getBackend()->fetchPlots($series['host'],
+                                                     $series['service']);
         } else {
             $plots = $this->plots['key'];
         }
+
         return $plots;
     }
 }

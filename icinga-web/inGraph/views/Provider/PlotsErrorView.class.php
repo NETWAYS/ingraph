@@ -1,3 +1,5 @@
 <?php
 
-class inGraph_Provider_PlotsErrorView extends inGraphBaseView {}
+class inGraph_Provider_PlotsErrorView extends inGraphBaseView
+{
+}

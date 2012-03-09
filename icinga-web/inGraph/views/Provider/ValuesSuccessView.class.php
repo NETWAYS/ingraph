@@ -1,16 +1,19 @@
 <?php
 
-class inGraph_Provider_ValuesSuccessView extends inGraphBaseView {
-    public function executeJson(AgaviRequestDataHolder $rd) {
+class inGraph_Provider_ValuesSuccessView extends inGraphBaseView
+{
+    public function executeJson(AgaviRequestDataHolder $rd)
+    {
         return json_encode($this->getAttribute('values'));
     }
-    
-    public function executeCsv(AgaviRequestDataHolder $rd) {
+
+    public function executeCsv(AgaviRequestDataHolder $rd)
+    {
         $values = $this->getAttribute('values');
         $header = array('host', 'service', 'plot', 'type', 'x', 'y', 'unit');
         $handle = fopen('php://temp', 'w');
         fputcsv($handle, $header);
-        if(array_key_exists('charts', $values)) {
+        if (array_key_exists('charts', $values)) {
             foreach($values['charts'] as $chart) {
                 foreach($chart['data'] as $data) {
                     fputcsv($handle, array(
@@ -21,14 +24,15 @@ class inGraph_Provider_ValuesSuccessView extends inGraphBaseView {
             }
         }
         fseek($handle, 0);
-        
+
         $response = $this->getContainer()->getResponse();
-		$response->setHttpHeader('Content-Type', 'text/csv');
-		$response->setHttpHeader('Content-Disposition', 'attachment');
+        $response->setHttpHeader('Content-Type', 'text/csv');
+        $response->setHttpHeader('Content-Disposition', 'attachment');
         return $handle;
     }
-    
-    public function executeXml(AgaviRequestDataHolder $rd) {
+
+    public function executeXml(AgaviRequestDataHolder $rd)
+    {
         $values = $this->getAttribute('values');
         $simple_xml = new SimpleXMLElement('<values></values>');
         if(array_key_exists('charts', $values)) {
@@ -56,11 +60,11 @@ class inGraph_Provider_ValuesSuccessView extends inGraphBaseView {
         $dom = dom_import_simplexml($simple_xml)->ownerDocument;
         $dom->formatOutput = true;
         $dom->preserveWhiteSpace = false;
-        
+
         $handle = fopen('php://temp', 'w');
         fwrite($handle, $dom->saveXML());
         fseek($handle, 0);
-        
+
         $response = $this->getContainer()->getResponse();
         $response->setHttpHeader('Content-Type', 'text/xml');
         $response->setHttpHeader('Content-Disposition', 'attachment');

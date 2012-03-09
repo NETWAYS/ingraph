@@ -1,50 +1,20 @@
 <?php
 
-class inGraph_Provider_ServicesAction extends inGraphBaseAction {
-    public function executeWrite(AgaviRequestDataHolder $rd) {
-        $host = $rd->getParameter('host');
-        $service = $rd->getParameter('service', '%');
-        
-        $icingaapi = $this->getContext()->getModel(
-            'Store.LegacyLayer.IcingaApi','Api');
-        
-        $search = $icingaapi->createSearch();
-        $search->setSearchTarget(IcingaApiConstants::TARGET_SERVICE);
-        $search->setSearchFilter(
-            'SERVICE_NAME', $service, IcingaApiConstants::MATCH_LIKE);
-        $search->setSearchFilter('HOST_NAME', $host);
-        $search->setResultType(IcingaApiConstants::RESULT_ARRAY);
-        $search->setResultColumns(array('SERVICE_NAME'));
-        
-        IcingaPrincipalTargetTool::applyApiSecurityPrincipals($search);
-        
-        $permittedServices = $icingaapi->fetch()->getAll();
-        $i = new RecursiveIteratorIterator(
-            new RecursiveArrayIterator($permittedServices));
-        $permittedServices = iterator_to_array($i, false);
-    	
-        $ingraphapi = $this->getApi();
+class inGraph_Provider_ServicesAction extends inGraphBaseAction
+{
+    public function executeWrite(AgaviRequestDataHolder $rd)
+    {
         try {
-            $availableServices = $ingraphapi->getServices($host, $service);
-		} catch(XMLRPCClientException $e) {
-		    return $this->setError($e->getMessage());
-		}
-		$finalServices = array();
-		foreach($availableServices['services'] as $service) {
-		    if($service['parent_service'] !== null &&
-		       in_array($service['parent_service'], $permittedServices) ||
-		       in_array($service['service'], $permittedServices)) {
-		        $finalServices[] = $service['service'];
-		       }
-		}
-		$total = count($finalServices);
-		$finalServices = array_slice($finalServices,
-                            		 $rd->getParameter('offset', 0),
-                            		 $rd->getParameter('limit', 10));
-		$this->setAttribute('services', array(
-		    'total' => $total,
-		    'results' => $finalServices
-		));
-		return $this->getDefaultViewName();
+            $services = $this->getBackend()->fetchServices(
+                $rd->getParameter('host', '%'),
+                $rd->getParameter('service', '%'),
+                $rd->getParameter('offset', 0),
+                $rd->getParameter('limit', 20)
+            );
+        } catch (inGraph_XmlRpc_Exception $e) {
+            return $this->setError($e->getMessage());
+        }
+        $this->setAttribute('services', $services);
+        return $this->getDefaultViewName();
     }
 }

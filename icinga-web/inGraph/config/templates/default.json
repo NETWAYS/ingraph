@@ -1,42 +1,42 @@
 {
-"re": "//",
-
-"generic" : {
-    "refreshInterval" : 300
-},
-
-"flot": {
-    "series": {
-        "lines": {
-            "steps": true
-        }
-    }
-},
-
-"series": [{
     "re": "//",
-    "type": "avg"
-}],
 
-"panel": {
-    "titleFormat": "{title} Graph For {host} - {service}"
-},
+    "flot": {
+        "series": {
+            "lines": {
+                "steps": true
+            }
+        }
+    },
 
-"panels": [{
-    "title": "Four Hours (With Quickview)",
-    "overview": true,
-    "start": "-4 hours"
-}, {
-    "title": "One Day",
-    "start": "-1 day"
-}, {
-    "title": "One Week",
-    "start": "-1 week"
-}, {
-    "title": "One Month",
-    "start": "-1 month"
-}, {
-    "title": "One Year",
-    "start": "-1 year"
-}]
+    "series": [{
+        "re": "//",
+        "type": "avg"
+    }],
+
+    "panels": [
+        {
+            "title": "Four Hours (With Quickview) Graph For {host} - {service}",
+            "overviewConfig": {
+                "enable": true
+            },
+            "start": "-4 hours"
+        },
+        {
+            "title": "One Day Graph For {host} - {service}",
+            "start": "-1 day"
+        },
+        {
+            "title": "One Week Graph For {host} - {service}",
+            "start": "-1 week"
+        },
+        {
+            "title": "One Month Graph For {host} - {service}",
+            "start": "-1 month"
+        },
+        {
+            "title": "One Year Graph For {host} - {service}",
+            "start": "-1 year"
+        }
+    ]
 }

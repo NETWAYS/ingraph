@@ -210,12 +210,17 @@ echo "(2/4) Installing directories and files..."
 
 SRC=$DIR/ingraph
 
-for D in $($FIND $SRC -type d ! -path $SRC/app/cache ! -path $SRC/app/log)
+for D in $($FIND $SRC -type d ! -path $SRC/bin ! -path $SRC/app/cache ! -path $SRC/app/log)
 do
     $INSTALL -m 755 -d $PREFIX${D##$SRC}
 
     [ $? -eq 0 ] && install_files "$D" "$PREFIX${D##$SRC}"
 done
+
+# Install bin files
+$INSTALL -m 755 -d $PREFIX/bin
+BINFILES=$(for F in $($FIND $SRC/bin -maxdepth 1 -type f ! -name \*.in); do echo $F; done)
+$INSTALL -m 755 -t $PREFIX/bin $BINFILES
 
 echo "(3/4) Installing cache and log directory..."
 

@@ -44,6 +44,7 @@
 
         <script type="text/javascript" src="js/gettext.js"></script>
         <script type="text/javascript" src="js/AppKit.js"></script>
+        <script type="text/javascript" src="js/Messages.js"></script>
 
         <script type="text/javascript" src="js/Array.js"></script>
         <script type="text/javascript" src="js/strtotime.js"></script>

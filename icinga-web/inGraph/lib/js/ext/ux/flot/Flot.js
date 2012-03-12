@@ -969,6 +969,15 @@
         },
 
         // private
+        onResize: function (adjWidth, adjHeight, rawWidth, rawHeight) {
+            if (this.$plot) {
+                this.$plot.resize();
+                this.$plot.setupGrid();
+                this.$plot.draw();
+            }
+        },
+
+        // private
         onDestroy: function () {
             if (this.refreshTask && this.refreshTask.cancel) {
                 this.refreshTask.cancel();

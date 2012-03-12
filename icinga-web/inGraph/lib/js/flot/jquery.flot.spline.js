@@ -4,7 +4,7 @@
         series: {
             lines: {
                 spline: false,
-                splineNumber: 1000
+                splineNumber: 600
             }
         }
     };

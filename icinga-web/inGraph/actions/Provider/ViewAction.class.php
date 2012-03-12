@@ -12,8 +12,20 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
         $view = $manager->fetchView($rd->getParameter('view'));
         $content = $view->getContent();
 
+        if (!exists($content['panels']) || !is_array($content['panels'])) {
+            return $this->setError(
+                'Invalid configuration for key "panels", expteced array in ' .
+                    $rd->getParameter('view') . '.json');
+        }
+
         foreach ($content['panels'] as &$panel) {
             $compiled = array();
+
+            if (!exists($panel['series']) || !is_array($panel['series'])) {
+                return $this->setError(
+                    'Invalid configuration for key "series", expteced array in ' .
+                        $rd->getParameter('view') . '.json');
+            }
 
             foreach ($panel['series'] as $series) {
                 try {

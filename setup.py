@@ -19,19 +19,26 @@ from setuptools import setup
 
 import ingraph
 
-setup(name=ingraph.__name__,
-      version=ingraph.__version__,
-      description=ingraph.__description__,
-      author=ingraph.__author__,
-      author_email=ingraph.__contact__,
-      url=ingraph.__url__,
-      requires=['sqlalchemy (>=0.6.3)'],
-      packages=['ingraph.bin', 'ingraph'],
-      zip_safe=False,
-      entry_points={
+setup(
+    name = ingraph.__name__,
+    version = ingraph.__version__,
+    description = ingraph.__description__,
+    author = ingraph.__author__,
+    author_email = ingraph.__contact__,
+    url = ingraph.__url__,
+    requires = ['sqlalchemy (>=0.6.3)'],
+    packages = ['ingraph.bin', 'ingraph'],
+    zip_safe = False,
+    entry_points = {
         'console_scripts': ['ingraphd = ingraph.bin.ingraphd:main',
                             'ingraph-collectord = ingraph.bin.ingraph_collectord:main',
                             'check_ingraph = ingraph.bin.check_ingraph:main']
-      },
-      data_files=[('/etc/init.d', ['contrib/init.d/ingraph',
-                                   'contrib/init.d/ingraph-collector'])])
+    },
+    data_files = [
+        ('/etc/init.d', ['contrib/init.d/ingraph',
+                         'contrib/init.d/ingraph-collector']),
+        ('/etc/ingraph', ['examples/config/ingraph-aggregates.conf',
+                          'examples/config/ingraph-database.conf',
+                          'examples/config/ingraph-xmlrpc.conf'])
+    ]
+)

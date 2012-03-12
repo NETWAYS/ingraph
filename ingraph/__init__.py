@@ -16,12 +16,13 @@
 
 import sys
 
-if sys.version_info[:2] < (2,4):
-    print('inGraph requires Python version 2.4 or later.')
-    sys.exit(1)
+if sys.version_info[:2] < (2, 4):
+    sys.exit('inGraph requires Python version 2.4 or later')
+elif sys.version_info[:2] >= (3,):
+    sys.exit('inGraph is not yet compatible with Python 3')
 
 __name__ = 'ingraph'
-__version__ = '1.0 Beta'
+__version__ = '1.0'
 __author__ = 'NETWAYS GmbH'
 __contact__ = 'info@netways.de'
 __url__ = 'https://www.netways.org'

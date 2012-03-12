@@ -106,6 +106,19 @@
                                             }
                                         }
                                     ]
+                                },
+                                flotConfig: {
+                                    listeners: {
+                                        plot: function (flot) {
+                                            // flot -> panel -> view -> window
+                                            var win = flot.ownerCt.ownerCt.ownerCt;
+                                            if (flot.store.isEmpty()) {
+                                                win.setTitle(cfg.title + ' (' + _('No Data') + ')');
+                                            } else {
+                                                win.setTitile(cfg.title);
+                                            }
+                                        }
+                                    }
                                 }
                             },
                             host: cfg.host,
@@ -160,6 +173,16 @@
                                         },
                                         legend: {
                                             show: false
+                                        }
+                                    },
+                                    listeners: {
+                                        single: true,
+                                        plot: function (flot) {
+                                            // flot -> panel -> view -> tip
+                                            var tip = flot.ownerCt.ownerCt.ownerCt;
+                                            if (flot.store.isEmpty()) {
+                                                tip.setTitle(cfg.title + ' (' + _('No Data') + ')');
+                                            }
                                         }
                                     }
                                 }

@@ -286,9 +286,9 @@
                 scope: this,
                 single: true,
                 plot: function () {
-                    if (this.showEmpty === false) {
-                        if (this.store.isEmpty()) {
-                            this.xsetTitle(true);
+                    if (this.store.isEmpty()) {
+                        this.xsetTitle(true);
+                        if (this.showEmpty === false) {
                             this.collapse();
                         }
                     }

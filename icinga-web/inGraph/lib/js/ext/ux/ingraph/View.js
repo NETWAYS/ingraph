@@ -409,13 +409,13 @@
                 {
                     text: _('Template'),
                     menu: [
-                        {
-                            text: _('Save'),
-                            iconCls: 'xflot-icon-save',
-                            scope: this,
-                            disabled: true,
-                            handler: this.saveTemplateHandler
-                        },
+//                        {
+//                            text: _('Save'),
+//                            iconCls: 'xflot-icon-save',
+//                            scope: this,
+//                            disabled: true,
+//                            handler: this.saveTemplateHandler
+//                        },
                         {
                             text: _('Save As View'),
                             iconCls: 'xflot-icon-save-new',
@@ -888,7 +888,8 @@
                     };
                 }
             };
-            Ext.apply(cfg, this.panelConfig);
+
+            cfg = $.extend(true, {}, cfg, this.panelConfig);
 
             return cfg;
         }

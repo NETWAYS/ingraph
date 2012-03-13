@@ -263,7 +263,8 @@
                     this.tbarConfig,
                     {
                         xtype: 'xflottbar',
-                        store: this.store
+                        store: this.store,
+                        activeFrame: this.store.baseParams.startx
                     }
                 );
             }

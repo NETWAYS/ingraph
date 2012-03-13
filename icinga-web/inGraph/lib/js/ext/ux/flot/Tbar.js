@@ -355,11 +355,10 @@
                             }
                         }
                     }, // Eof store
-                    valueField: 'name',
+                    valueField: 'start',
                     displayField: 'name',
                     mode: 'local',
                     triggerAction: 'all',
-                    value: cfg.activeFrame !== undefined ? cfg.activeFrame : '',
                     listeners: {
                         scope: this,
                         select: this.onSelectDataView,
@@ -368,6 +367,12 @@
                                 text: this.inputText,
                                 target: combo.el
                             });
+                            var recordIndex = combo.store.find('start', this.activeFrame);
+                            if (recordIndex !== -1) {
+                                var record = combo.store.getAt(recordIndex);
+                                combo.setValue(this.activeFrame);
+                                this.onSelectDataView(combo, record, false);
+                            }
                         }
                     },
                     hidden: !this.showDataView
@@ -882,19 +887,21 @@
         },
 
         // private
-        onSelectDataView: function (c, rec) {
+        onSelectDataView: function (c, rec, doLoad) {
             if (rec.get('name') !== this.lastFrame) {
                 this.first.setTooltip(this.firstText.apply(rec.data));
                 this.prev.setTooltip(this.prevText.apply(rec.data));
                 this.next.setTooltip(this.nextText.apply(rec.data));
                 this.last.setTooltip(this.lastText.apply(rec.data));
             }
-            this.store.load({
-                params: {
-                    startx: Math.ceil(strtotime(rec.get('start'))),
-                    endx: Math.ceil(strtotime('now'))
-                }
-            });
+            if (doLoad !== false) {
+                this.store.load({
+                    params: {
+                        startx: Math.ceil(strtotime(rec.get('start'))),
+                        endx: Math.ceil(strtotime('now'))
+                    }
+                });
+            }
         },
 
         /**

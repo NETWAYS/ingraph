@@ -101,8 +101,12 @@
                                         {
                                             text: _('Open As Cronk'),
                                             scope: this,
-                                            handler: function () {
+                                            handler: function (btn) {
+                                                // btn -> tbar -> panel -> view -> window
+                                                var win = btn.ownerCt.ownerCt.ownerCt.ownerCt;
                                                 this.open(cfg);
+                                                // Hide or destroy window based on it's config
+                                                win[win.closeAction]();
                                             }
                                         }
                                     ]

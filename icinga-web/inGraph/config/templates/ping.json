@@ -1,17 +1,76 @@
 {
     "re": "/ping$/i",
+    "flot": {
+        "yaxes": [
+            {
+                "unit": "percent",
+                "min": 0,
+                "max": 100,
+                "label": "Packet Loss",
+                "position": "right"
+            },
+            {
+                "unit": "time",
+                "min": 0,
+                "label": "Round Trip Time",
+                "position": "left"
+            }
+        ]
+    },
     "series": [
         {
             "color": "#FF0000", 
             "re": "/^pl$/", 
             "type": "avg", 
-            "label": "Packet Loss"
+            "label": "Packet Loss",
+            "yaxis": 1
+        },
+        {
+            "re": "/^rta$/",
+            "type": "min",
+            "color": "#BDBDBD",
+            "id": "rta-min",
+            "label": "Round Trip Time - Min",
+            "lines": {
+                "lineWidth": 0
+            },
+            "yaxis": 2
         },
         {
             "color": "#00FF00", 
             "re": "/^rta$/", 
             "type": "avg", 
-            "label": "Round Trip Time"
+            "label": "Round Trip Time",
+            "id": "rta-avg",
+            "fillBetween": "rta-min",
+            "lines": {
+                "fill": true,
+                "fillColor": {
+                    "colors": [
+                        "#424242",
+                        "#E6E6E6"
+                    ]
+                }
+            },
+            "yaxis": 2
+        },
+        {
+            "re": "/^rta$/",
+            "type": "max",
+            "color": "#BDBDBD",
+            "fillBetween": "rta-avg",
+            "label": "Round Trip Time - Max",
+            "lines": {
+                "lineWidth": 0,
+                "fill": true,
+                "fillColor": {
+                    "colors": [
+                        "#424242",
+                        "#E6E6E6"
+                    ]
+                }
+            },
+            "yaxis": 2
         }
     ]
 }

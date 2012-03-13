@@ -8,7 +8,7 @@ class inGraph_Provider_ServicesAction extends inGraphBaseAction
             $services = $this->getBackend()->fetchServices(
                 $rd->getParameter('host'),
                 $rd->getParameter('query', '%'),
-                $rd->getParameter('offset', 0),
+                $rd->getParameter('start', 0),
                 $rd->getParameter('limit', 20)
             );
         } catch (inGraph_XmlRpc_Exception $e) {

@@ -692,13 +692,35 @@
                 });
             }
 
-            var xy = item.datapoint,
-                x = xy[0],
-                y = xy[1];
+            var x = item.datapoint[0],
+                series = item.series.data,
+                seriesXY = series[item.dataIndex],
+                y;
 
-            // TODO(el): y is null if steps, fillBetween, stack or any other option
-            // modifying/insertings dapoints is enabled and the previous datapoint
-            // is a gap?
+            // TODO(el): Include nearby series
+
+            // Since flot options like steps, stack and fillBetween modify/insert
+            // datapoints, try to use the vanilla series value
+            if (seriesXY === undefined || seriesXY[0] !== x) {
+                // Index may mismatch if there are added datapoints
+                var xvalues = [],
+                    seriesX;
+                Ext.each(series, function (xy) {
+                    xvalues.push(xy[0]);
+                });
+                // Search datapoint's x value in the series array
+                seriesX = xvalues.bsearch(x);
+                if (seriesX === -1) {
+                    // If the x value is bogus use the y value of the datapoint
+                    y = item.datapoint[1];
+                } else {
+                    y = series[seriesX][1];
+                }
+            } else {
+                // Vanilla value
+                y = seriesXY[1];
+            }
+
             if (y !== null) {
                 var xaxis = item.series.xaxis,
                     yaxis = item.series.yaxis,

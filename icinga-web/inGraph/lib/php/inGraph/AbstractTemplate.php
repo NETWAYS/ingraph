@@ -58,6 +58,8 @@ abstract class inGraph_AbstractTemplate
                 throw new inGraph_Exception($msg);
             }
 
+            $content = str_replace(array("\r", "\n"), array('', ''), $content);
+
             if (null === ($content = json_decode($content, true))) {
                 $msg = __CLASS__ . ': failed to decode ' . $fileInfo->getBaseName();
                 error_log($msg, 0);

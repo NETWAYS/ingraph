@@ -128,6 +128,7 @@
             if (this.keepModifications === true) {
                 this.on({
                     datachanged: function (store) {
+                        store.suspendEvents();
                         Ext.each(store.getModifiedRecords(), function (mr) {
                             var r = store.getById(mr.id) ||
                                     store.getAt(
@@ -140,6 +141,7 @@
                                 });
                             }
                         });
+                        store.resumeEvents();
                     },
                     scope: this
                 });

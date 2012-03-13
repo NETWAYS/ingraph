@@ -1,0 +1,71 @@
+{
+    "re": "/swap$|swap usage$/i",
+    "flot": {
+        "series": {
+            "lines": {
+                "show": true,
+                "fill": true,
+                "lineWidth": 0,
+                "fillColor": {
+                    "colors": [
+                        {
+                            "opacity": 0.3
+                        },
+                        {
+                            "opacity": 0.9,
+                            "brightness": 0.7
+                        }
+                    ]
+                }
+            }
+        },
+        "yaxes": [
+            {
+                "unit": "byte",
+                "min": 0
+            }
+        ]
+    },
+    "series": [
+        {
+            "color": "#00FF40",
+            "re": "/^swap$/",
+            "type": "upper_limit",
+            "id": "swap-available",
+            "label": "Swap Available",
+            "fillBetween": "swap-used",
+            "enabled": false,
+            "yaxis": 1
+        },
+        {
+            "color": "#FE9A2E",
+            "re": "/^swap$/",
+            "type": "avg",
+            "label": "Swap Used",
+            "yaxis": 1,
+            "id": "swap-used",
+            "convert": "function (y, x, series) {
+                if (this.swapMax === undefined) {
+                    Ext.each(series, function (plot) {
+                        if (plot.id === \"swap-available\") {
+                            var yvalues = [],
+                                y;
+                            Ext.each(plot.data, function (xy) {
+                                y = xy[1];
+                                if (y !== null) {
+                                    yvalues.push(y);
+                                }
+                            });
+                            this.swapMax = yvalues.length > 0 ? Ext.max(yvalues) : null;
+                            return false;
+                        }
+                    }, this);
+                }
+                if (y === null) {
+                    return null;
+                }
+                return this.swapMax !== null ? this.swapMax - y : y;
+            }"
+        }
+    ]
+}

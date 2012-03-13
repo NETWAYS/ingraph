@@ -849,6 +849,7 @@
 
                     var callback = function (series, record) {
                         var convert = record.get('convert');
+
                         if (convert) {
                             try {
                                 var convertFn = Ext.decode(convert);
@@ -859,7 +860,7 @@
 
                             if (Ext.isFunction(convertFn)) {
                                 var scope = {},
-                                    snapshot = Ext.pluck(this.store.getRange(),
+                                    snapshot = Ext.pluck(this.store.snapshot.getRange(),
                                                          'data');
 
                                 Ext.each(record.get('data'), function (xy) {
@@ -903,7 +904,7 @@
                         max: max
                     });
                 }
-
+                //console.log(series, this.$flotStyle);
                 this.$plot = $.plot($('#' + id), series, this.$flotStyle);
 
                 if (this.loadMask) {

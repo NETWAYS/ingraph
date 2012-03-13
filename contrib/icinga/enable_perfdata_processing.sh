@@ -1,9 +1,16 @@
 #!/bin/bash
+
 set -e
 
 ICINGA_CFG=$1
 [ -z "$ICINGA_CFG" ] && {
-    echo "Required argument icinga.cfg missing."
+    echo "ERROR: Required first argument icinga.cfg missing" >&2
+    exit 1
+}
+
+PERFDATADIR=$2
+[ -z "$PERFDATADIR" ] && {
+    echo "ERROR: Required second argument perfdata dir missing" >&2
     exit 1
 }
 

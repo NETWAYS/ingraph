@@ -1,15 +1,16 @@
 #!/bin/bash
+
 set -e
 
 COMMANDS_CFG=$1
 [ -z "$COMMANDS_CFG" ] && {
-    echo "Required first argument commands.cfg missing."
+    echo "ERROR: Required first argument commands.cfg missing" >&2
     exit 1
 }
 
 PERFDATADIR=$2
 [ -z "$PERFDATADIR" ] && {
-    echo "Required second argument perfdata dir missing."
+    echo "ERROR: Required second argument perfdata dir missing" >&2
     exit 1
 }
 

@@ -10,8 +10,8 @@
                 <argument>host</argument>
                 <error>Parameter host is mandatory.</error>
             </validator>
-            <validator name="service" class="string" required="false">
-                <argument>service</argument>
+            <validator name="query" class="string" required="false">
+                <argument>query</argument>
             </validator>
             <validator name="offset" class="number" required="false">
                 <argument>offset</argument>

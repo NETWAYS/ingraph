@@ -6,7 +6,7 @@ class inGraph_Provider_HostsAction extends inGraphBaseAction
     {
         try {
             $hosts = $this->getBackend()->fetchHosts(
-                $rd->getParameter('host', '%'),
+                $rd->getParameter('query', '%'),
                 $rd->getParameter('offset', 0),
                 $rd->getParameter('limit', 20)
             );

@@ -6,8 +6,8 @@
 >
 	<ae:configuration>
 		<validators>
-            <validator name="host" class="string" required="false">
-                <argument>host</argument>
+            <validator name="query" class="string" required="false">
+                <argument>query</argument>
             </validator>
             <validator name="offset" class="number" required="false">
                 <argument>offset</argument>

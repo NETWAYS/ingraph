@@ -1,11 +1,11 @@
 {
-    "re": "/users$/i",
+    "re": "/users$|logins$/i",
     "flot": {
         "series": {
             "lines": {
                 "show": true,
                 "fill": true,
-                "lineWidth": 0,
+                "lineWidth": 1,
                 "fillColor": {
                     "colors": [
                         {
@@ -23,7 +23,7 @@
     "series": [
         {
             "color": "#49A835",
-            "re": "/^users$/",
+            "re": "/^users$/i",
             "type": "avg",
             "label": "Users"
         }

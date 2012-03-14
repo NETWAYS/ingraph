@@ -119,7 +119,7 @@
                                             if (flot.store.isEmpty()) {
                                                 win.setTitle(cfg.title + ' (' + _('No Data') + ')');
                                             } else {
-                                                win.setTitile(cfg.title);
+                                                win.setTitle(cfg.title);
                                             }
                                         }
                                     }

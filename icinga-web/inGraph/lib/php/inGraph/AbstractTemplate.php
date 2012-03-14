@@ -151,7 +151,8 @@ abstract class inGraph_AbstractTemplate
     public function update($content)
     {
         if (false === $this->phantom) {
-            $this->extend($content);
+            $this->content = $content;
+//             $this->extend($content);
         } else {
             $this->content = $content;
         }

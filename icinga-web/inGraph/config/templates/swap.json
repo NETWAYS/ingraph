@@ -5,15 +5,15 @@
             "lines": {
                 "show": true,
                 "fill": true,
-                "lineWidth": 0,
+                "lineWidth": 1,
                 "fillColor": {
                     "colors": [
                         {
-                            "opacity": 0.3
+                            "opacity": 0.4
                         },
                         {
                             "opacity": 0.9,
-                            "brightness": 0.7
+                            "brightness": 0.8
                         }
                     ]
                 }
@@ -21,14 +21,13 @@
         },
         "yaxes": [
             {
-                "unit": "byte",
-                "min": 0
+                "unit": "byte"
             }
         ]
     },
     "series": [
         {
-            "color": "#00FF40",
+            "color": "#CB0C29",
             "re": "/^swap$/",
             "type": "upper_limit",
             "id": "swap-available",
@@ -38,7 +37,7 @@
             "yaxis": 1
         },
         {
-            "color": "#FE9A2E",
+            "color": "#49A835",
             "re": "/^swap$/",
             "type": "avg",
             "label": "Swap Used",

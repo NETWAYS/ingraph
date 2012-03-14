@@ -1,37 +1,99 @@
 {
-    "re": "/latency$/i", 
+    "re": "/latency$/i",
+
     "flot": {
         "series": {
             "lines": {
-                "show": true, 
-                "fill": true
+                "show": true,
+                "fill": true,
+                "lineWidth": 1,
+                "fillColor": {
+                    "colors": [
+                        {
+                            "opacity": 0.4
+                        },
+                        {
+                            "opacity": 0.9,
+                            "brightness": 0.8
+                        }
+                    ]
+                }
             }
-        }
-    }, 
+        },
+
+        "yaxes": [
+            {
+                "label": "Latency"
+            }
+        ]
+    },
+
     "series": [
         {
-            "color": "#009900", 
-            "re": "/.*Latency/", 
+            "color": "#49A835",
+            "re": "//", 
+            "type": "avg",
+            "id": "avg",
+            "yaxis": 1,
+            "label": "Latency",
+            "fillBetween": "min",
             "lines": {
-                "fill": false
-            }, 
-            "type": "avg"
+                "fill": true,
+                "fillColor": {
+                    "colors": [
+                        "rgba(189, 189, 189, 0.4)",
+                        "rgba(189, 189, 189, 0.9)"
+                    ]
+                }
+            }
+        },
+        {
+            "color": "#BDBDBD",
+            "re": "//", 
+            "type": "min",
+            "id": "min",
+            "yaxis": 1,
+            "label": "Min",
+            "lines": {
+                "lineWidth": 0,
+                "fill": null
+            }
+        },
+        {
+            "color": "#BDBDBD",
+            "re": "//",
+            "type": "max",
+            "id": "max",
+            "yaxis": 1,
+            "label": "Max",
+            "fillBetween": "avg",
+            "lines": {
+                "lineWidth": 0,
+                "fill": true,
+                "fillColor": {
+                    "colors": [
+                        "rgba(189, 189, 189, 0.4)",
+                        "rgba(189, 189, 189, 0.9)"
+                    ]
+                }
+            }
+        },
+        {
+            "color": "#FF6E00",
+            "re": "//", 
+            "type": "warn_upper",
+            "id": "warn",
+            "fillBetween": "max",
+            "label": "Warning",
+            "yaxis": 1
         }, 
         {
-            "color": "#FFFF00", 
-            "re": "/.*Latency/", 
-            "lines": {
-                "fill": false
-            }, 
-            "type": "warn_upper"
-        }, 
-        {
-            "color": "#FF0000", 
-            "re": "/.*Latency/", 
-            "lines": {
-                "fill": false
-            }, 
-            "type": "crit_upper"
+            "color": "#CB0C29",
+            "re": "//", 
+            "type": "crit_upper",
+            "fillBetween": "warn",
+            "label": "Critical",
+            "yaxis": 1
         }
     ]
 }

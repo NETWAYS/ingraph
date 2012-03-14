@@ -9,11 +9,11 @@
                 "fillColor": {
                     "colors": [
                         {
-                            "opacity": 0.3
+                            "opacity": 0.4
                         },
                         {
                             "opacity": 0.9,
-                            "brightness": 0.7
+                            "brightness": 0.8
                         }
                     ]
                 }
@@ -22,7 +22,7 @@
     },
     "series": [
         {
-            "color": "#04B431",
+            "color": "#49A835",
             "re": "/^users$/",
             "type": "avg",
             "label": "Users"

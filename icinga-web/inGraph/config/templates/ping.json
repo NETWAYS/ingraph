@@ -19,7 +19,7 @@
     },
     "series": [
         {
-            "color": "#FF0000", 
+            "color": "#CB0C29", 
             "re": "/^pl$/", 
             "type": "avg", 
             "label": "Packet Loss",
@@ -37,7 +37,7 @@
             "yaxis": 2
         },
         {
-            "color": "#00FF00", 
+            "color": "#49A835", 
             "re": "/^rta$/", 
             "type": "avg", 
             "label": "Round Trip Time",
@@ -47,8 +47,8 @@
                 "fill": true,
                 "fillColor": {
                     "colors": [
-                        "#424242",
-                        "#E6E6E6"
+                        "rgba(189, 189, 189, 0.4)",
+                        "rgba(189, 189, 189, 0.9)"
                     ]
                 }
             },
@@ -65,8 +65,8 @@
                 "fill": true,
                 "fillColor": {
                     "colors": [
-                        "#424242",
-                        "#E6E6E6"
+                        "rgba(189, 189, 189, 0.4)",
+                        "rgba(189, 189, 189, 0.9)"
                     ]
                 }
             },

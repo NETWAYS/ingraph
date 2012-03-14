@@ -17,6 +17,10 @@
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Enum, Sequence, ForeignKey, Index, create_engine, \
     and_, or_, tuple_
+try:
+    from sqlalchemy import event
+except ImportError:
+    event = None
 from sqlalchemy.sql import literal, select, between, func
 from sqlalchemy.interfaces import PoolListener
 from time import time
@@ -1331,7 +1335,13 @@ creates a DB connection
 def createModelEngine(dsn):
     global dbload_min_timestamp, dbload_max_timestamp
 
-    engine = create_engine(dsn, listeners=[SetTextFactory()])
+    event_obj = SetTextFactory()
+
+    if hasattr(event, 'listen'):
+        engine = create_engine(dsn)
+        event.listen(engine, 'connect', event_obj.connect)
+    else:
+        engine = create_engine(dsn, listeners=[event_obj])
 
     #engine.echo = True
 

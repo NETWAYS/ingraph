@@ -1,21 +1,103 @@
 {
-    "re": "/mem$/i", 
+    "re": "/memory/i",
+
     "flot": {
         "series": {
             "lines": {
-                "show": true, 
-                "fill": true
+                "fill": true,
+                "fillColor": {
+                    "colors": [
+                        {
+                            "opacity": 0.4
+                        },
+                        {
+                            "opacity": 0.8,
+                            "brightness": 0.8
+                        }
+                    ]
+                },
+                "lineWidth": 0
+            },
+            "stack": "usage"
+        },
+
+        "yaxes": [
+            {
+                "label": "Free",
+                "position": "right"
+            },
+            {
+                "label": "Usage",
+                "unit": "byte"
             }
-        }, 
-        "colors": [
-            "#00CC00", 
-            "#FF6600"
         ]
-    }, 
+    },
+
     "series": [
         {
-            "re": "/.*/", 
-            "type": "avg"
+            "color": "#49A835", 
+            "re": "/free$/i", 
+            "type": "avg",
+            "label": "Free",
+            "yaxis": 1,
+            "stack": false,
+            "unit": "percent",
+            "lines": {
+                "lineWidth": 3,
+                "fill": null
+            }
+        },
+        {
+            "color": "#2D7DB3", 
+            "re": "/^active$/i", 
+            "type": "avg",
+            "label": "Used",
+            "yaxis": 2
+        },
+        {
+            "color": "#AB1852", 
+            "re": "/^cached$/i", 
+            "type": "avg",
+            "label": "Cached",
+            "yaxis": 2
+        },
+        {
+            "color": "#844798", 
+            "re": "/^buffers$/i", 
+            "type": "avg",
+            "label": "Buffers",
+            "yaxis": 2
+        },
+        {
+            "color": "#FF6E00", 
+            "re": "/^inactive$/i", 
+            "type": "avg",
+            "label": "Inactive",
+            "yaxis": 2
+        },
+
+        {
+            "color": "#2D7DB3", 
+            "re": "/^memory usage$/i", 
+            "type": "avg",
+            "label": "Used",
+            "yaxis": 2,
+            "stack": false,
+            "lines": {
+                "lineWidth": 2
+            }
+        },
+        {
+            "color": "#CB0C29", 
+            "re": "/^memory usage$/i", 
+            "type": "upper_limit",
+            "label": "Critical",
+            "yaxis": 2,
+            "stack": false,
+            "lines": {
+                "lineWidth": 2,
+                "fill": null
+            }
         }
     ]
 }

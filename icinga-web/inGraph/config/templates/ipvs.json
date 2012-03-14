@@ -1,0 +1,96 @@
+{
+    "re": "/ipvs/i",
+
+    "flot": {
+        "series": {
+            "lines": {
+                "show": true,
+                "fill": true,
+                "fillColor": {
+                    "colors": [
+                        {
+                            "opacity": 0.4
+                        },
+                        {
+                            "opacity": 0.9,
+                            "brightness": 0.8
+                        }
+                    ]
+                }
+            }
+        },
+
+        "yaxes": [
+            {
+                "label": "Connections"
+            }
+        ]
+    },
+
+    "series": [
+        {
+            "color": "#2D7DB3",
+            "re": "/^active/i", 
+            "type": "avg",
+            "id": "aavg",
+            "yaxis": 1,
+            "label": "Active",
+            "fillBetween": "amin",
+            "stack": "connections",
+            "lines": {
+                "fill": true,
+                "lineWidth": 4,
+                "fillColor": {
+                    "colors": [
+                        "rgba(45, 125, 179, 0.4)",
+                        "rgba(45, 125, 179, 0.9)"
+                    ]
+                }
+            }
+        },
+        {
+            "color": "#2D7DB3",
+            "re": "/^active/i", 
+            "type": "min",
+            "id": "amin",
+            "yaxis": 1,
+            "label": "Active Min",
+            "lines": {
+                "lineWidth": 0,
+                "fill": null
+            }
+        },
+        {
+            "color": "#2D7DB3",
+            "re": "/^active/i",
+            "type": "max",
+            "id": "amax",
+            "yaxis": 1,
+            "label": "Active Max",
+            "fillBetween": "aavg",
+            "lines": {
+                "lineWidth": 0,
+                "fill": true,
+                "fillColor": {
+                    "colors": [
+                        "rgba(45, 125, 179, 0.4)",
+                        "rgba(45, 125, 179, 0.9)"
+                    ]
+                }
+            }
+        },
+        {
+            "color": "#FF6E00",
+            "re": "/^inactive/i", 
+            "type": "avg",
+            "id": "iavg",
+            "yaxis": 1,
+            "label": "Inactive",
+            "stack": "connections",
+            "lines": {
+                "fill": null,
+                "lineWidth": 2
+            }
+        }
+    ]
+}

@@ -153,7 +153,7 @@
          * @method toJson
          * @return {Array}
          */
-        toJson: function (callback, scope) {
+        toJson: function () {
             var separator = ':',
                 json = [];
 
@@ -178,10 +178,6 @@
                     });
                     seriesPath[last] = value;
                 });
-
-                if (Ext.isFunction(callback)) {
-                    callback.call(scope, series, rec);
-                }
 
                 Ext.copyTo(series, rec.json, ['host', 'service', 'plot',
                                               'type']);

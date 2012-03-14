@@ -477,10 +477,8 @@
                     axisupdate: this.onTemplateupdate,
                     axisremove: this.onTemplateupdate
                 });
-                // Apply template once on beforeplot
                 this.on({
                     scope: this,
-                    single: true,
                     beforeplot: this.applyTemplate
                 });
                 this.template = template;
@@ -517,10 +515,56 @@
                 });
             }, this);
 
+            this.store.each(function (series) {
+                var convert = series.get('convert');
+
+                if (!convert) {
+                    // Skip
+                    return true;
+                }
+
+                try {
+                    var convertFn = Ext.decode(convert);
+                } catch (e) {
+                    // TODO(el): Notify
+                    AppKit.log(e);
+                    // Skip
+                    return true;
+                }
+
+                if (!Ext.isFunction(convertFn)) {
+                    // TODO(el): Notify
+                    // Skip
+                    return true;
+                }
+
+                var scope = {},
+                    snapshot = Ext.pluck(this.store.getRange(),
+                                         'data');
+
+                Ext.each(series.get('data'), function (xy) {
+                    var y;
+                    try {
+                        y = convertFn.call(scope, xy[1],
+                                           xy[0], snapshot);
+                    } catch (e) {
+                        // TODO(el): Notify
+                        AppKit.log(e);
+                        // Break
+                        return false;
+                    }
+                    if (y !== xy[1] &&
+                            (Ext.isNumber(y) || y === null)) {
+                        xy[1] = y;
+                    }
+                });
+            }, this);
+
             if (this.autoYAxes === true) {
                 // All yaxes share the same baseline
                 var baseline = null,
-                    unitToAxisMap = {};
+                    unitToAxisMap = {},
+                    skyline = null;
 
                 this.store.each(function (series) {
                     if (series.get('enabled') !== true) {
@@ -629,10 +673,10 @@
                                 yaxis.get('min') === null) {
                             yaxis.set('min', 0);
                         }
-                        if (yaxis.isModified('max') === false &&
-                                yaxis.get('max') === null) {
-                            yaxis.set('max', 100);
-                        }
+//                        if (yaxis.isModified('max') === false &&
+//                                yaxis.get('max') === null) {
+//                            yaxis.set('max', 100);
+//                        }
                     }
 
                     if (yaxis.isModified('min') === false &&
@@ -654,12 +698,7 @@
         delayApplyTemplate: function () {
             if (!this.templateRefreshTask) {
                 this.templateRefreshTask = new Ext.util.DelayedTask(
-                    this.applyTemplate.createSequence(
-                        function () {
-                            this.plot();
-                        },
-                        this
-                    ),
+                    this.plot,
                     this
                 );
             }
@@ -668,7 +707,6 @@
 
         // private
         onTemplatechanged: function () {
-            this.applyTemplate();
             this.plot();
         },
 
@@ -868,45 +906,7 @@
                 if (series === undefined) {
                     this.store.suspendEvents();
                     this.store.filter('enabled', true);
-
-                    var callback = function (series, record) {
-                        var convert = record.get('convert');
-
-                        if (convert) {
-                            try {
-                                var convertFn = Ext.decode(convert);
-                            } catch (e) {
-                                // TODO(el): Notify
-                                AppKit.log(e);
-                            }
-
-                            if (Ext.isFunction(convertFn)) {
-                                var scope = {},
-                                    snapshot = Ext.pluck(this.store.snapshot.getRange(),
-                                                         'data');
-
-                                Ext.each(record.get('data'), function (xy) {
-                                    var y;
-                                    try {
-                                        y = convertFn.call(scope, xy[1],
-                                                           xy[0], snapshot);
-                                    } catch (e) {
-                                        // TODO(el): Notify
-                                        AppKit.log(e);
-                                        return false;
-                                    }
-                                    if (y !== xy[1] &&
-                                            (Ext.isNumber(y) || y === null)) {
-                                        xy[1] = y;
-                                    }
-                                });
-                            } else {
-                                // TODO(el): Notify
-                            }
-                        }
-                    }; // Eof callback
-
-                    series = this.store.toJson(callback, this);
+                    series = this.store.toJson();
                     this.store.clearFilter();
                     this.store.resumeEvents();
                 } // Eof no series undefined
@@ -926,7 +926,7 @@
                         max: max
                     });
                 }
-                //console.log(series, this.$flotStyle);
+
                 this.$plot = $.plot($('#' + id), series, this.$flotStyle);
 
                 if (this.loadMask) {

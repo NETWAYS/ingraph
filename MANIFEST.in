@@ -1,5 +1,4 @@
 include README AUTHORS LICENSE
-recursive-include docs *
 recursive-include ingraph *.py
 recursive-include contrib *
 recursive-include examples *

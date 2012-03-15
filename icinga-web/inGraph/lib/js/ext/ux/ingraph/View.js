@@ -90,7 +90,8 @@
                             panelConfig.tbarConfig,
                             panelConfig.baseParams.startx,
                             panelConfig.baseParams.endx,
-                            panelConfig.legendConfig
+                            panelConfig.legendConfig,
+                            panelConfig.baseParams.interval
                         );
 
                         view.insert(index, cfg);
@@ -163,7 +164,8 @@
                         panel.store.load({
                             params: {
                                 startx: startx,
-                                endx: endx
+                                endx: endx,
+                                interval: null
                             }
                         });
                     });
@@ -207,7 +209,8 @@
                         panel.get('tbarConfig'),
                         panel.get('start'),
                         panel.get('end'),
-                        panel.get('legendConfig')
+                        panel.get('legendConfig'),
+                        panel.get('interval')
                     );
 
                     items.push(cfg);
@@ -278,7 +281,8 @@
                         panel.get('tbarConfig'),
                         panel.get('start'),
                         panel.get('end'),
-                        panel.get('legendconfig')
+                        panel.get('legendconfig'),
+                        panel.get('interval')
                     );
 
                     items.push(cfg);
@@ -319,7 +323,8 @@
                     panelConfig.tbarConfig,
                     panelConfig.baseParams.startx,
                     panelConfig.baseParams.endx,
-                    panelConfig.legendConfig
+                    panelConfig.legendConfig,
+                    panelConfig.baseParams.interval
                 );
 
                 items.push(itemConfig);
@@ -467,6 +472,7 @@
                                                         ['enable', 'height']);
                 panelConfig.start = panel.store.baseParams.startx;
                 panelConfig.end = panel.store.baseParams.endx;
+                panelConfig.interval = panel.store.baseParams.interval;
 
                 view.panels.push(panelConfig);
             }, this);
@@ -589,6 +595,7 @@
                                                         ['enable', 'height']);
                 panelConfig.start = panel.store.baseParams.startx;
                 panelConfig.end = panel.store.baseParams.endx;
+                panelConfig.interval = panel.store.baseParams.interval;
                 
                 delete panelConfig.group;
                 
@@ -668,7 +675,8 @@
                     panelConfig.tbarConfig,
                     panelConfig.baseParams.startx,
                     panelConfig.baseParams.endx,
-                    panelConfig.legendConfig
+                    panelConfig.legendConfig,
+                    panelConfig.baseParams.interval
                 );
 
                 items.push(cfg);
@@ -747,6 +755,10 @@
                     {
                         name: 'series',
                         defaultValue: null
+                    },
+                    {
+                        name: 'interval',
+                        defaultValue: null
                     }
                 ] // Eof fields
             }); // Eof applyIf
@@ -755,7 +767,7 @@
 
         // private
         buildPanelCfg: function (title, templateContent, query, overviewConfig,
-                                 tbarConfig, startx, endx, legendConfig) {
+                                 tbarConfig, startx, endx, legendConfig, interval) {
             var cfg = {
                 title: Ext.util.Format.htmlEncode(title),
 
@@ -859,7 +871,8 @@
                     baseParams: {
                         query: query,
                         startx: startx,
-                        endx: endx
+                        endx: endx,
+                        interval: Ext.isNumber(interval) ? interval : null
                     }
                 },
 

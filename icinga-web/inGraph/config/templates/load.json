@@ -6,8 +6,6 @@
             "lines": {
                 "show": true,
                 "fill": true,
-                "steps": false,
-                "lineWidth": 0,
                 "fillColor": {
                     "colors": [
                         {
@@ -38,7 +36,10 @@
             "id": "load1-avg",
             "fillBetween": "load5-avg",
             "label": "Load1",
-            "yaxis": 1
+            "yaxis": 1,
+            "lines": {
+                "lineWidth": 0
+            }
         }, 
         {
             "color": "#FF6E00",
@@ -47,7 +48,10 @@
             "id": "load5-avg",
             "fillBetween": "load15-avg",
             "label": "Load5",
-            "yaxis": 1
+            "yaxis": 1,
+            "lines": {
+                "lineWidth": 0
+            }
         }, 
         {
             "color": "#AB1852",
@@ -55,12 +59,16 @@
             "type": "avg",
             "id": "load15-avg",
             "label": "Load15",
-            "yaxis": 1
+            "yaxis": 1,
+            "lines": {
+                "lineWidth": 0
+            }
         }, 
         {
             "color": "#FF6E00",
             "re": "/load15/",
             "lines": {
+                "lineWidth": 0,
                 "fill": null
             }, 
             "type": "warn_upper",

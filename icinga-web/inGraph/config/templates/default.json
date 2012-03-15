@@ -4,15 +4,34 @@
     "flot": {
         "series": {
             "lines": {
-                "steps": true
+                "show": true,
+                "steps": true,
+                "lineWidth": 2
             }
         }
     },
 
-    "series": [{
-        "re": "//",
-        "type": "avg"
-    }],
+    "series": [
+        {
+            "re": "//",
+            "type": "avg",
+            "lines": {
+                "fill": true,
+                "lineWidth": 2,
+                "fillColor": {
+                    "colors": [
+                        {
+                            "opacity": 0.4
+                        },
+                        {
+                            "opacity": 0.9,
+                            "brightness": 0.8
+                        }
+                    ]
+                }
+            }
+        }
+    ],
 
     "panels": [
         {
@@ -20,15 +39,18 @@
             "overviewConfig": {
                 "enable": true
             },
-            "start": "-4 hours"
+            "start": "-4 hours",
+            "interval": 60
         },
         {
             "title": "One Day Graph For {host} - {service}",
-            "start": "-1 day"
+            "start": "-1 day",
+            "interval": 300
         },
         {
             "title": "One Week Graph For {host} - {service}",
-            "start": "-1 week"
+            "start": "-1 week",
+            "interval": 600
         },
         {
             "title": "One Month Graph For {host} - {service}",

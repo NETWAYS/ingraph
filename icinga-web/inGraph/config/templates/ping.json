@@ -1,5 +1,6 @@
 {
     "re": "/ping$/i",
+
     "flot": {
         "yaxes": [
             {
@@ -13,10 +14,12 @@
                 "unit": "time",
                 "min": 0,
                 "label": "Round Trip Time",
-                "position": "left"
+                "position": "left",
+                "tickColor": "#49A835"
             }
         ]
     },
+
     "series": [
         {
             "color": "#CB0C29", 

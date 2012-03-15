@@ -1,0 +1,61 @@
+{
+    "re": "/^http/i",
+
+    "flot": {
+        "series": {
+            "lines": {
+                "show": true,
+                "fill": true,
+                "fillColor": {
+                    "colors": [
+                        {
+                            "opacity": 0.4
+                        },
+                        {
+                            "opacity": 0.9,
+                            "brightness": 0.8
+                        }
+                    ]
+                }
+            }
+        },
+
+        "yaxes": [
+            {
+                "position": "left",
+                "label": "Time",
+                "unit": "time"
+            },
+            {
+                "position": "right",
+                "tickColor": "#AB1852",
+                "label": "Size",
+                "unit": "byte"
+            }
+        ]
+    },
+
+    "series": [
+        {
+            "color": "#FF6E00",
+            "label": "Size",
+            "yaxis": 2,
+            "type": "avg",
+            "re": "/size/i",
+            "lines": {
+                "fill": null,
+                "lineWidth": 2
+            }
+        },
+        {
+            "color": "#FFAA00",
+            "label": "Time",
+            "yaxis": 1,
+            "type": "avg",
+            "re": "/time/i",
+            "lines": {
+                "lineWidth": 0
+            }
+        }
+    ]
+}

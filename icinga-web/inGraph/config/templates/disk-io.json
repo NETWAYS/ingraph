@@ -6,7 +6,6 @@
             "lines": {
                 "show": true,
                 "fill": true,
-                "lineWidth": 0,
                 "fillColor": {
                     "colors": [
                         {
@@ -23,7 +22,7 @@
 
         "yaxes": [
             {
-                "label": "I/O",
+                "label": "I/O /s",
                 "unit": "byte"
             }
         ]
@@ -38,6 +37,7 @@
             "stack": "io",
             "yaxis": 1,
             "lines": {
+                "lineWidth": 0,
                 "fillColor": {
                     "colors": [
                         {
@@ -57,7 +57,10 @@
             "type": "avg",
             "label": "Write",
             "stack": "io",
-            "yaxis": 1
+            "yaxis": 1,
+            "lines": {
+                "lineWidth": 0
+            }
         },
         {
             "color": "#AB1852",

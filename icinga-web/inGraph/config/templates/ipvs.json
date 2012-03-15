@@ -38,7 +38,6 @@
             "fillBetween": "amin",
             "stack": "connections",
             "lines": {
-                "fill": true,
                 "lineWidth": 4,
                 "fillColor": {
                     "colors": [
@@ -70,7 +69,6 @@
             "fillBetween": "aavg",
             "lines": {
                 "lineWidth": 0,
-                "fill": true,
                 "fillColor": {
                     "colors": [
                         "rgba(45, 125, 179, 0.4)",

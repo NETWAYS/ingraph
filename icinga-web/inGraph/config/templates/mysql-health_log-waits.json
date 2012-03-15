@@ -1,5 +1,5 @@
 {
-    "re": "/^temp(erature)?|temp(erature)?$/i",
+    "re": "/log-waits/i",
 
     "flot": {
         "series": {
@@ -22,19 +22,19 @@
 
         "yaxes": [
             {
-                "label": "Temperature"
+                "label": "Log Waits"
             }
         ]
     },
 
     "series": [
         {
-            "color": "#AB1852",
-            "re": "//", 
+            "color": "#49A835",
+            "re": "/log_waits_rate$/i",
             "type": "avg",
             "id": "avg",
             "yaxis": 1,
-            "label": "Temperature",
+            "label": "Rate",
             "fillBetween": "min",
             "lines": {
                 "fillColor": {
@@ -47,7 +47,7 @@
         },
         {
             "color": "#BDBDBD",
-            "re": "//", 
+            "re": "/innodb_log_waits_rate$/i", 
             "type": "min",
             "id": "min",
             "yaxis": 1,
@@ -59,7 +59,7 @@
         },
         {
             "color": "#BDBDBD",
-            "re": "//",
+            "re": "/innodb_log_waits_rate$/i",
             "type": "max",
             "id": "max",
             "yaxis": 1,
@@ -77,22 +77,20 @@
         },
         {
             "color": "#FF6E00",
-            "re": "//", 
+            "re": "/innodb_log_waits_rate$/i", 
             "type": "warn_upper",
             "id": "warn",
             "fillBetween": "max",
             "label": "Warning",
-            "yaxis": 1,
-            "enabled": false
+            "yaxis": 1
         }, 
         {
             "color": "#CB0C29",
-            "re": "//", 
+            "re": "/innodb_log_waits_rate$/i", 
             "type": "crit_upper",
             "fillBetween": "warn",
             "label": "Critical",
-            "yaxis": 1,
-            "enabled": false
+            "yaxis": 1
         }
     ]
 }

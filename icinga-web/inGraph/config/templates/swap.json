@@ -1,11 +1,11 @@
 {
     "re": "/swap$|swap usage$/i",
+
     "flot": {
         "series": {
             "lines": {
                 "show": true,
                 "fill": true,
-                "lineWidth": 1,
                 "fillColor": {
                     "colors": [
                         {
@@ -19,9 +19,11 @@
                 }
             }
         },
+
         "yaxes": [
             {
-                "unit": "byte"
+                "unit": "byte",
+                "label": "Swap Usage"
             }
         ]
     },

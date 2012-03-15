@@ -1,5 +1,5 @@
 {
-    "re": "/^temp(erature)?|temp(erature)?$/i",
+    "re": "/bufferpool-hitrate/i",
 
     "flot": {
         "series": {
@@ -22,19 +22,19 @@
 
         "yaxes": [
             {
-                "label": "Temperature"
+                "label": "Bufferpool"
             }
         ]
     },
 
     "series": [
         {
-            "color": "#AB1852",
-            "re": "//", 
+            "color": "#49A835",
+            "re": "/bufferpool_hitrate$/i",
             "type": "avg",
             "id": "avg",
             "yaxis": 1,
-            "label": "Temperature",
+            "label": "Hitrate",
             "fillBetween": "min",
             "lines": {
                 "fillColor": {
@@ -47,7 +47,7 @@
         },
         {
             "color": "#BDBDBD",
-            "re": "//", 
+            "re": "/bufferpool_hitrate$/i", 
             "type": "min",
             "id": "min",
             "yaxis": 1,
@@ -59,7 +59,7 @@
         },
         {
             "color": "#BDBDBD",
-            "re": "//",
+            "re": "/bufferpool_hitrate$/i",
             "type": "max",
             "id": "max",
             "yaxis": 1,
@@ -77,22 +77,20 @@
         },
         {
             "color": "#FF6E00",
-            "re": "//", 
+            "re": "/bufferpool_hitrate$/i", 
             "type": "warn_upper",
             "id": "warn",
             "fillBetween": "max",
             "label": "Warning",
-            "yaxis": 1,
-            "enabled": false
+            "yaxis": 1
         }, 
         {
             "color": "#CB0C29",
-            "re": "//", 
+            "re": "/bufferpool_hitrate$/i", 
             "type": "crit_upper",
             "fillBetween": "warn",
             "label": "Critical",
-            "yaxis": 1,
-            "enabled": false
+            "yaxis": 1
         }
     ]
 }

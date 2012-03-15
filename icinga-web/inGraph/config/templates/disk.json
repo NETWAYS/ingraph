@@ -1,25 +1,78 @@
 {
-    "re": "/partition$/i", 
+   "re": "/^(lx-|nt-)?disk(?!-io)|partition$/i",
+
     "flot": {
         "series": {
             "lines": {
-                "show": true, 
-                "fill": true
+                "show": true,
+                "fill": true,
+                "fillColor": {
+                    "colors": [
+                        {
+                            "opacity": 0.4
+                        },
+                        {
+                            "opacity": 0.9,
+                            "brightness": 0.8
+                        }
+                    ]
+                }
             }
-        }, 
-        "colors": [
-            "#00CC00", 
-            "#FF6600"
+        },
+
+        "yaxes": [
+            {
+                "label": "Disk Usage",
+                "unit": "byte"
+            }
         ]
-    }, 
+    },
+
     "series": [
         {
+            "color": "#2D7DB3",
             "re": "//", 
-            "type": [
-                "avg", 
-                "upper_limit", 
-                "crit_upper"
-            ]
+            "type": "avg",
+            "yaxis": 1,
+            "id": "avg",
+            "label": "Used Space",
+            "lines": {
+                "lineWidth": 2
+            }
+        },
+        {
+            "color": "#FF6E00",
+            "re": "//", 
+            "type": "warn_upper",
+            "id": "warn",
+            "fillBetween": "avg",
+            "label": "Warning",
+            "lines": {
+                "lineWidth": 0
+            },
+            "yaxis": 1
+        }, 
+        {
+            "color": "#CB0C29",
+            "re": "//", 
+            "type": "crit_upper",
+            "fillBetween": "warn",
+            "label": "Critical",
+            "lines": {
+                "lineWidth": 0
+            },
+            "yaxis": 1
+        }, 
+        {
+            "color": "#49A835",
+            "re": "//", 
+            "type": "upper_limit",
+            "label": "Available Space",
+            "lines": {
+                "fill": null,
+                "lineWidth": 2
+            },
+            "yaxis": 1
         }
     ]
 }

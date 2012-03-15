@@ -6,7 +6,6 @@
             "lines": {
                 "show": true,
                 "fill": true,
-                "lineWidth": 1,
                 "fillColor": {
                     "colors": [
                         {
@@ -38,7 +37,6 @@
             "label": "Latency",
             "fillBetween": "min",
             "lines": {
-                "fill": true,
                 "fillColor": {
                     "colors": [
                         "rgba(189, 189, 189, 0.4)",
@@ -69,7 +67,6 @@
             "fillBetween": "avg",
             "lines": {
                 "lineWidth": 0,
-                "fill": true,
                 "fillColor": {
                     "colors": [
                         "rgba(189, 189, 189, 0.4)",

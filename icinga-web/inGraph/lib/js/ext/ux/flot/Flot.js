@@ -833,7 +833,9 @@
         zoomin: function (ranges) {
             this.zooms.push(ranges);
 
-            var params = {};
+            var params = {
+                interval: null
+            };
 
             Ext.iterate(ranges, function (axisName, range) {
                 // Axis identifiers are direction + index, f.e. x, x2, y, y2

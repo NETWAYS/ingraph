@@ -12,8 +12,8 @@
                     <parameter name="title">inGraph: {host_name} {service_name}</parameter>
                     <parameter name="popup">
                         <parameter name="timeout">400</parameter>
-                        <parameter name="height">80</parameter>
-                        <parameter name="width">400</parameter>
+                        <parameter name="height">110</parameter>
+                        <parameter name="width">500</parameter>
                         <parameter name="start">-4 hours</parameter>
                     </parameter>
                     <parameter name="preview">

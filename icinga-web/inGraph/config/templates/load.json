@@ -1,44 +1,81 @@
 {
-    "re": "/load$/i", 
+    "re": "/load$/i",
+
     "flot": {
         "series": {
             "lines": {
-                "show": true, 
-                "fill": true
+                "show": true,
+                "fill": true,
+                "steps": false,
+                "lineWidth": 0,
+                "fillColor": {
+                    "colors": [
+                        {
+                            "opacity": 0.4
+                        },
+                        {
+                            "opacity": 0.9,
+                            "brightness": 0.8
+                        }
+                    ]
+                }
             }
+        },
+
+        "yaxes": {
+            "label": "Load",
+            "unit": "raw"
         }
-    }, 
+    },
+
     "series": [
         {
-            "color": "#0099CC", 
-            "re": "/load1/", 
-            "type": "avg"
+            "color": "#2D7DB3",
+            "re": "/load1/",
+            "type": "avg",
+            "id": "load1-avg",
+            "fillBetween": "load5-avg",
+            "label": "Load1",
+            "yaxis": 1
         }, 
         {
-            "color": "#66FF33", 
-            "re": "/load5/", 
-            "type": "avg"
+            "color": "#FF6E00",
+            "re": "/load5/",
+            "type": "avg",
+            "id": "load5-avg",
+            "fillBetween": "load15-avg",
+            "label": "Load5",
+            "yaxis": 1
         }, 
         {
-            "color": "#CC33FF", 
-            "re": "/load15/", 
-            "type": "avg"
+            "color": "#AB1852",
+            "re": "/load15/",
+            "type": "avg",
+            "id": "load15-avg",
+            "label": "Load15",
+            "yaxis": 1
         }, 
         {
-            "color": "#FF6600", 
-            "re": "/.*15/", 
+            "color": "#FF6E00",
+            "re": "/load15/",
             "lines": {
-                "fill": false
+                "fill": null
             }, 
-            "type": "warn_upper"
+            "type": "warn_upper",
+            "enabled": false,
+            "yaxis": 1,
+            "id": "warn"
         }, 
         {
-            "color": "#CC0000", 
-            "re": "/.*15/", 
+            "color": "#CB0C29",
+            "re": "/load15/",
             "lines": {
-                "fill": false
+                "lineWidth": 2
             }, 
-            "type": "crit_upper"
+            "type": "crit_upper",
+            "fillBetween": "warn",
+            "enabled": false,
+            "yaxis": 1
         }
     ]
 }

@@ -15,6 +15,6 @@ echo "Clearing cache..."
 #    exit 0
 #}
 
-$FIND $CACHEDIR -type f \( \( -execdir $RM $RM_OPTS {} \; -a -exec echo "Done." \; \) -o -exec echo "ERROR: Failed to clear cache due to insufficient permissions" >&2 \; \)
+$FIND $CACHEDIR -type f \( \( -execdir $RM $RM_OPTS {} \; -a -execdir echo "Cleared {}" \; \) -o -execdir echo "ERROR: Failed to clear cache due to insufficient permissions" >&2 \; \)
 
 exit $?

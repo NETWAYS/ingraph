@@ -8,7 +8,9 @@
 
             <route name="index" pattern="^/$" module="%actions.default_module%" action="%actions.default_action%" />
 
-            <route name=".ingraph" pattern="^/modules/ingraph" stop="false" module="inGraph" output_type="json">
+            <route name="print" pattern="^/print$" module="inGraph" action="Print" />
+
+            <route name="ingraph" pattern="^/modules/ingraph" stop="false" module="inGraph" output_type="json">
 
                <route name=".provider" pattern="^/provider" stop="false" action="Provider">
                     <route name=".hosts" pattern="^/hosts$" action=".Hosts" />

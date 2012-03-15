@@ -33,7 +33,6 @@
         <script type="text/javascript" src="js/flot/jquery.flot.fillbetween.js"></script>
         <script type="text/javascript" src="js/flot/jquery.flot.selection.js"></script>
         <script type="text/javascript" src="js/flot/jquery.flot.stack.js"></script>
-        <script type="text/javascript" src="js/flot/jquery.flot.resize.js"></script>
         <script type="text/javascript" src="js/flot/jquery.flot.threshold.js"></script>
         <script type="text/javascript" src="js/flot/jquery.flot.pie.js"></script>
         <script type="text/javascript" src="js/flot/jquery.flot.sort.js"></script>

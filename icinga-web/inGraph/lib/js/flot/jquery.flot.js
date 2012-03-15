@@ -41,7 +41,7 @@
         var series = [],
             options = {
                 // the color theme used for graphs
-                colors: ["#edc240", "#afd8f8", "#cb4b4b", "#4da74d", "#9440ed"],
+                colors: ["#2D7DB3", "#844798", "#49A835", "#AB1852", "#FF6E00", "#CB0C29"],
                 legend: {
                     show: true,
                     noColumns: 1, // number of colums in legend table

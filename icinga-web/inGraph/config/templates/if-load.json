@@ -1,0 +1,21 @@
+{
+    "re": "/if-load/i",
+    "flot": {
+    },
+    "series": [
+        {
+            "color": "#2D7DB3", 
+            "re": "/^input octets$/", 
+            "type": "avg", 
+            "label": "Octets In",
+            "id": "ocin"
+        },
+        {
+            "color": "#844798", 
+            "re": "/^output octets$/", 
+            "type": "avg", 
+            "label": "Octets Out",
+            "id": "ocout"
+        }
+    ]
+}

@@ -22,10 +22,12 @@
             }
         },
 
-        "yaxes": {
-            "label": "Load",
-            "unit": "raw"
-        }
+        "yaxes": [
+            {
+                "label": "Load",
+                "unit": "raw"
+            }
+        ]
     },
 
     "series": [

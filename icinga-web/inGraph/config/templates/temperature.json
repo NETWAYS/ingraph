@@ -29,7 +29,7 @@
 
     "series": [
         {
-            "color": "#49A835",
+            "color": "#AB1852",
             "re": "//", 
             "type": "avg",
             "id": "avg",

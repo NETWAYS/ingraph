@@ -355,7 +355,7 @@
                             }
                         }
                     }, // Eof store
-                    valueField: 'start',
+                    valueField: 'name',
                     displayField: 'name',
                     mode: 'local',
                     triggerAction: 'all',
@@ -370,7 +370,7 @@
                             var recordIndex = combo.store.find('start', this.activeFrame);
                             if (recordIndex !== -1) {
                                 var record = combo.store.getAt(recordIndex);
-                                combo.setValue(this.activeFrame);
+                                combo.setValue(record.get('name'));
                                 this.onSelectDataView(combo, record, false);
                             }
                         }
@@ -855,7 +855,8 @@
                 this.store.load({
                     params: {
                         startx: Math.ceil(s / 1000),
-                        endx: Math.ceil(e / 1000)
+                        endx: Math.ceil(e / 1000),
+                        interval: null
                     }
                 });
             }
@@ -880,7 +881,8 @@
                 this.store.load({
                     params: {
                         startx: Math.ceil(s / 1000),
-                        endx: Math.ceil(e / 1000)
+                        endx: Math.ceil(e / 1000),
+                        interval: null
                     }
                 });
             }
@@ -898,7 +900,8 @@
                 this.store.load({
                     params: {
                         startx: Math.ceil(strtotime(rec.get('start'))),
-                        endx: Math.ceil(strtotime('now'))
+                        endx: Math.ceil(strtotime('now')),
+                        interval: null
                     }
                 });
             }
@@ -925,7 +928,8 @@
                 this.store.load({
                     params: {
                         startx: Math.ceil(s / 1000),
-                        endx: Math.ceil(e / 1000)
+                        endx: Math.ceil(e / 1000),
+                        interval: null
                     }
                 });
             }
@@ -942,7 +946,8 @@
                 this.store.load({
                     params: {
                         startx: Math.ceil(strtotime(rec.get('start'))),
-                        endx: Math.ceil(strtotime(rec.get('end')))
+                        endx: Math.ceil(strtotime(rec.get('end'))),
+                        interval: null
                     }
                 });
             }

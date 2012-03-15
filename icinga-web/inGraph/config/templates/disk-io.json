@@ -1,27 +1,74 @@
 {
-    "re": "/^disk-io/", 
+    "re": "/^disk-io/i",
+
     "flot": {
         "series": {
             "lines": {
-                "fill": false
+                "show": true,
+                "fill": true,
+                "lineWidth": 0,
+                "fillColor": {
+                    "colors": [
+                        {
+                            "opacity": 0.4
+                        },
+                        {
+                            "opacity": 0.9,
+                            "brightness": 0.8
+                        }
+                    ]
+                }
             }
-        }
-    }, 
+        },
+
+        "yaxes": [
+            {
+                "label": "I/O",
+                "unit": "byte"
+            }
+        ]
+    },
+
     "series": [
         {
-            "color": "#0099CC", 
-            "re": "/TOTAL.*/",
-            "type": "avg"
-        }, 
+            "color": "#2D7DB3",
+            "re": "/read/i",
+            "type": "avg",
+            "label": "Read",
+            "stack": "io",
+            "yaxis": 1,
+            "lines": {
+                "fillColor": {
+                    "colors": [
+                        {
+                            "opacity": 0.7
+                        },
+                        {
+                            "opacity": 1,
+                            "brightness": 0.9
+                        }
+                    ]
+                }
+            }
+        },
         {
-            "color": "#CC0033", 
-            "re": "/WRITE.*/",
-            "type": "avg"
-        }, 
+            "color": "#844798",
+            "re": "/write/i",
+            "type": "avg",
+            "label": "Write",
+            "stack": "io",
+            "yaxis": 1
+        },
         {
-            "color": "#33CC00", 
-            "re": "/READ.*/",
-            "type": "avg"
+            "color": "#AB1852",
+            "re": "/total/i",
+            "type": "avg",
+            "label": "Total",
+            "lines": {
+                "fill": null,
+                "lineWidth": 2
+            },
+            "yaxis": 1
         }
     ]
 }

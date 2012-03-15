@@ -662,9 +662,12 @@
                     }
 
                     var seriesTemplate = this.template.getById(series.id);
-                    seriesTemplate.set('yaxis', series.get('yaxis'));
-                    seriesTemplate.set('label', series.get('label'));
-                    seriesTemplate.set('unit', series.get('unit'));
+                    if (seriesTemplate) {
+                        // Series template may not exist, i.e. removed via dialog
+                        seriesTemplate.set('yaxis', series.get('yaxis'));
+                        seriesTemplate.set('label', series.get('label'));
+                        seriesTemplate.set('unit', series.get('unit'));
+                    }
                 }, this);
 
                 this.template.yaxes.each(function (yaxis) {

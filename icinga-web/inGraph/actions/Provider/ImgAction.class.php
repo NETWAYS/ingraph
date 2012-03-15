@@ -10,20 +10,20 @@ class inGraph_Provider_ImgAction extends inGraphBaseAction
         if (! is_numeric($params->start)) {
             throw new Exception('Got invalid start time');
         }
-        
+
         $rd = new AgaviRequestDataHolder();
         $rd->setParameters(
             array('host' => $params->host, 'service' => $params->service));
-        
+
         $template = $this->container->createExecutionContainer(
             'inGraph', 'Provider.Template', $rd, 'json',
             'write')->execute()->getContent();
         $template = json_decode($template, true);
-        
+
         if(array_key_exists('errorMessage', $template)) {
             throw new Exception($template['errorMessage']);
         }
-        
+
         $query = array();
         foreach($template['content']['series'] as $series) {
             if(!array_key_exists($series['host'], $query)) {
@@ -39,12 +39,12 @@ class inGraph_Provider_ImgAction extends inGraphBaseAction
                 $query[$series['host']][$series['service']][$series['plot']][] = $series['type'];
             }
         }
-        
+
         $interval = $this->siftInterval($params->start, $params->end);
-        
-        $plots = $this->getApi()->getValues(
+
+        $plots = $this->getBackend()->fetchValues(
             $query, $params->start, $params->end, $interval, 2);
-        
+
         $data = array();
         foreach($plots['charts'] as $chart) {
             array_walk($chart['data'], array($this, 'ensureTypes'));
@@ -80,7 +80,7 @@ class inGraph_Provider_ImgAction extends inGraphBaseAction
             'maxTimestamp' => $plots['max_timestamp']
         );
     }
-    
+
     protected function ensureTypes(&$xy)
     {
         $xy = array(

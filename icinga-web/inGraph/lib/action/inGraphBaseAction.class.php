@@ -71,16 +71,14 @@ class inGraphBaseAction extends IcingaBaseAction
     protected function siftInterval($start, $end)
     {
         $range = $end - $start;
-        if ($range <= 60 * 60 * 24 * 3) {
+        if ($range <= 60 * 60 * 2) {
+            $interval = 60;
+        } elseif ($range <= 60 * 60 * 24) {
             $interval = 60 * 5;
         } elseif ($range <= 60 * 60 * 24 * 14) {
             $interval = 60 * 30;
-        } elseif ($range <= 60 * 60 * 24 * 3) {
-            $interval = 60 * 60;
-        } elseif ($range <= 60 * 60 * 24 * 90) {
-            $interval = 60 * 60 * 6;
         } else {
-            $interval = 60 * 60 * 24;
+            $interval = null;
         }
         return $interval;
     }

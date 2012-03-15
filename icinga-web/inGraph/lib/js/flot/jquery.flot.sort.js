@@ -62,13 +62,13 @@
             };
 
         plot.hooks.processRawData.push(sortByLabel);
-        plot.hooks.drawSeries.push(sortByMean);
+//        plot.hooks.drawSeries.push(sortByMean);
     };
 
-//    $.plot.plugins.push({
-//        init: init,
-//        options: options,
-//        name: 'sort',
-//        version: '1.0'
-//    });
+    $.plot.plugins.push({
+        init: init,
+        options: options,
+        name: 'sort',
+        version: '1.0'
+    });
 }(jQuery));

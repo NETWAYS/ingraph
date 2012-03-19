@@ -131,6 +131,7 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
 
         if ( ! extState) {
             portal.applyState(cronkState);
+            portal.doLayout();
         }
     } // Eof has state
 }); // Eof initEnvironment

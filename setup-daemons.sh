@@ -135,8 +135,6 @@ then
     usage
 fi
 
-PREFIX=${PREFIX%%/} # Remove trailing / from prefix (if existing)
-
 echo "(1/2) Preparing *.in files..."
 
 # Prepare *.in files

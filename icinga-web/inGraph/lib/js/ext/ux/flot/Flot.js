@@ -287,20 +287,20 @@
             });
 
             // Plotselecting only fires if the selection plugin of flot is loaded
-            $('#' + this.id).bind('plotselecting', function ($event, ranges) {
-                var e = window.event,
-                    pos = {};
-
-                if (Ext.isIE) {
-                    pos.pageX = e.clientX + document.body.scrollLeft +
-                                document.documentElement.scrollLeft;
-
-                    pos.pageY = e.clientY + document.body.scrollTop +
-                                document.documentElement.scrollTop;
-                } else {
-                    pos.pageX = e.pageX;
-                    pos.pageY = e.pageY;
-                }
+            $('#' + this.id).bind('plotselecting', function ($event, ranges, pos) {
+//                var e = window.event,
+//                    pos = {};
+//
+//                if (Ext.isIE) {
+//                    pos.pageX = e.clientX + document.body.scrollLeft +
+//                                document.documentElement.scrollLeft;
+//
+//                    pos.pageY = e.clientY + document.body.scrollTop +
+//                                document.documentElement.scrollTop;
+//                } else {
+//                    pos.pageX = e.pageX;
+//                    pos.pageY = e.pageY;
+//                }
                 self.fireEvent('plotselecting', self, ranges, pos);
 
                 self.onPlotselecting(ranges, pos);

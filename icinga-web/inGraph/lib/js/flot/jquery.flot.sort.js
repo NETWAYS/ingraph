@@ -62,7 +62,7 @@
             };
 
         plot.hooks.processRawData.push(sortByLabel);
-//        plot.hooks.drawSeries.push(sortByMean);
+        plot.hooks.drawSeries.push(sortByMean);
     };
 
     $.plot.plugins.push({

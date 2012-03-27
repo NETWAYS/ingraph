@@ -20,7 +20,7 @@
 (function () {
     "use strict";
 
-    Ext.ns('Ext.ux.ingraph.portal.Portal');
+    Ext.ns('Ext.ux.ingraph.portal');
 
     /**
      * @class Ext.ux.ingraph.portal.Portal
@@ -103,8 +103,8 @@
          * @return {Object}
          */
         getState: function () {
-            // Collect state of each child item. This is either a view or a
-            // portalmenuitem
+            // Collect state of each child item. This is either a view, a
+            // portalmenuitem or an empty container
             var columns = [];
             this.items.each(function (row) {
                 row.items.each(function (column) {

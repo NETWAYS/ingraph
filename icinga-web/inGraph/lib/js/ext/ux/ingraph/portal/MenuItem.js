@@ -20,7 +20,7 @@
 (function () {
     "use strict";
 
-    Ext.ns('Ext.ux.ingraph.portal.MenuItem');
+    Ext.ns('Ext.ux.ingraph.portal');
 
     /**
      * @class Ext.ux.ingraph.portal.MenuItem
@@ -76,22 +76,52 @@
                         single: true,
                         scope: this,
                         afterrender: function (ct) {
-                            ct.el.on('click', function (e, el) {
-                                var menu = new Ext.ux.ingraph.Menu(),
-                                    menuWindow = new Ext.Window({
-                                        title: 'inGraph',
-                                        modal: true,
-                                        items: menu
+                            ct.el.on({
+                                scope: this,
+                                click: function (e, el) {
+                                    var menu = new Ext.ux.ingraph.Menu(),
+                                        menuWindow = new Ext.Window({
+                                            title: 'inGraph',
+                                            modal: true,
+                                            items: menu
+                                        });
+
+                                    menu.on('plot', function (cb, cfg) {
+                                        cfg.xtype = 'xigportalview';
+                                        this.replaceWith(cfg);
+
+                                        menuWindow.destroy();
+                                    }, this);
+
+                                    menuWindow.show();
+                                },
+                                contextmenu: function (e) {
+                                    e.stopEvent();
+
+                                    var contextMenu = new Ext.menu.Menu({
+                                        items: [
+                                            {
+                                                text: _('Hide'),
+                                                // TODO(el): iconCls
+//                                                iconCls: '',
+                                                scope: this,
+                                                handler: function () {
+                                                    var cfg = {
+                                                        xtype: 'xigportalplaceholder',
+                                                        getState: function () {
+                                                            return {
+                                                                xtype: this.getXType()
+                                                            };
+                                                        }
+                                                    };
+                                                    this.replaceWith(cfg);
+                                                }
+                                            }
+                                        ]
                                     });
-
-                                menu.on('plot', function (cb, cfg) {
-                                    this.replaceWithView(cfg);
-
-                                    menuWindow.destroy();
-                                }, this);
-
-                                menuWindow.show();
-                            }, this);
+                                    contextMenu.showAt(e.getXY());
+                                }
+                            });
                         }
                     }
                 }
@@ -100,7 +130,7 @@
             cfg.items = items;
         },
 
-        replaceWithView: function (cfg) {
+        replaceWith: function (cfg) {
             cfg = cfg || {};
 
             var rowCt = this.ownerCt;
@@ -111,8 +141,7 @@
 
                     Ext.apply(cfg, {
                         row: column.row,
-                        flex: column.flex,
-                        xtype: 'xigportalview'
+                        flex: column.flex
                     });
 
                     rowCt.insert(columnIndex, cfg);
@@ -130,8 +159,6 @@
          * @return {Object}
          */
         getState: function () {
-            // A menu item isn't really customizeable hence it's enough
-            // to return the xtype
             return {
                 xtype: this.getXType()
             };

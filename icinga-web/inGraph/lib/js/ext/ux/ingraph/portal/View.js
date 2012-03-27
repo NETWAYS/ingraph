@@ -98,6 +98,16 @@
                     return false;
                 }
             }, this);
+        },
+
+        // private
+        onBeforeAdd: function (item) {
+            Ext.ux.ingraph.portal.View.superclass.onBeforeAdd.call(this, item);
+            if (item.title === this.title) {
+                item.elements = item.elements.replace(',header', '');
+                item.showEmpty = true;
+                item.header = false;
+            }
         }
     });
     Ext.reg('xigportalview', Ext.ux.ingraph.portal.View);

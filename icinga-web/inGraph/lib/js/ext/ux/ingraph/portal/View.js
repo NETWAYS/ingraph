@@ -64,9 +64,14 @@
                     id: 'refresh',
                     scope: this,
                     handler: function () {
-                        this.view = this.view.name;
                         this.removeAll(true);
-                        this.fromView();
+                        if (this.view) {
+                            this.view = this.view.name;
+                            this.fromView();
+                        } else {
+                            this.template = this.template.name;
+                            this.fromHostService();
+                        }
                     }
                 }
             ];

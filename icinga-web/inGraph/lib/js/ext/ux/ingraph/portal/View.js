@@ -59,6 +59,15 @@
                     id: 'close',
                     scope: this,
                     handler: this.replaceWithMenuItem
+                },
+                {
+                    id: 'refresh',
+                    scope: this,
+                    handler: function () {
+                        this.view = this.view.name;
+                        this.removeAll(true);
+                        this.fromView();
+                    }
                 }
             ];
         },

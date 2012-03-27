@@ -219,7 +219,7 @@ SRC=$DIR/inGraph
 
 if [ $INSTALL_DEV -eq 1 ]
 then
-    $LN -s $SRC $PREFIX/app/modules/inGraph
+    $LN -s -t $PREFIX/app/modules $SRC
 else
     for D in $($FIND $SRC -type d ! -path $SRC/config/templates ! -path $SRC/config/views)
     do

@@ -58,7 +58,7 @@
         },
 
         applyHandler: function () {
-            var panelTitle = this.form.findField('panelTitle').getValue();
+            var panelTitle = this.form.getForm().findField('panelTitle').getValue();
 
             this.flotPanel.initialConfig.title = panelTitle;
             this.flotPanel.xsetTitle(this.flotPanel.store.isEmpty());

@@ -75,6 +75,7 @@
                 defaults: {
                     xtype: 'container',
                     layout: 'form',
+                    labelWidth: 50,
                     flex: 1
                 },
                 items: [
@@ -92,6 +93,17 @@
                     {
                         items: [
                             {
+                                xtype: 'numberfield',
+                                fieldLabel: _('Flex'),
+                                name: 'flex',
+                                value: 1,
+                                anchor: '95%'
+                            }
+                        ]
+                    },
+                    {
+                        items: [
+                            {
                                 xtype: 'textfield',
                                 fieldLabel: String.format(
                                     '<span ext:qtip="{0}">{1}</span>',
@@ -99,8 +111,8 @@
                                     _('Columns')
                                 ),
                                 name: 'columns',
-                                anchor: '95%',
-                                stripCharsRe: /[^\d, ]+/g
+                                stripCharsRe: /[^\d, ]+/g,
+                                anchor: '95%'
                             }
                         ]
                     }

@@ -61,10 +61,15 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
         var applyHandler = function (btn) {
             var items = [],
                 formValues = builder.getForm().getValues(),
-                columnDef = formValues.columns;
+                columnDef = formValues.columns,
+                rowFlexDef = formValues.flex;
 
             if ( ! Ext.isArray(columnDef)) {
                 columnDef = [columnDef];
+            }
+
+            if ( ! Ext.isArray(rowFlexDef)) {
+                rowFlexDef = [rowFlexDef];
             }
 
             Ext.each(columnDef, function (str, rowIndex) {
@@ -82,11 +87,13 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                         return true;
                     }
 
-                    var flex = parseInt(column);
+                    var flex = parseInt(column),
+                        rowFlex = rowFlexDef.hasOwnProperty(rowIndex) ? parseInt(rowFlexDef[rowIndex]) : 1;
 
                     items.push({
                         flex: flex,
                         row: rowIndex + 1,
+                        rowFlex: rowFlex,
                         xtype: 'xigportalmenuitem'
                     });
                 }); // Eof each columns
@@ -107,7 +114,7 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
             title: 'inGraph-Portal',
             autoScroll: true,
             modal: true,
-            width: 400,
+            width: 500,
             height: 200,
             items: builder,
             buttons: [

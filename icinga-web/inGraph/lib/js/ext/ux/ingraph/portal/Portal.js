@@ -87,6 +87,7 @@
 
                 if (rowIndex > rows.length) {
                     rows.push({
+                        flex: item.rowFlex,
                         items: []
                     });
                 }

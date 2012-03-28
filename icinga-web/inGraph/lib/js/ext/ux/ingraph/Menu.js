@@ -264,7 +264,7 @@
 
         // private
         displayGraphHandler: function () {
-            var values = this.getForm().getValues();
+            var values = this.getForm().getFieldValues();
 
             // View value not needed for host / service graphs
             delete values.view;

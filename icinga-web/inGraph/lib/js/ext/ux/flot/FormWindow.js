@@ -148,7 +148,7 @@
          * The form values
          */
         getValues: function () {
-            return this.form.getForm().getValues();
+            return this.form.getForm().getFieldValues();
         },
 
         // private

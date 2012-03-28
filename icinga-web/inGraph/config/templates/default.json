@@ -35,7 +35,7 @@
 
     "panels": [
         {
-            "title": "Four Hours (With Quickview) Graph For {host} - {service}",
+            "title": "Four Hours (With Quickview) Graph For {host}<tpl if=\"service\"> - {service}</tpl>",
             "overviewConfig": {
                 "enable": true
             },
@@ -43,21 +43,21 @@
             "interval": 60
         },
         {
-            "title": "One Day Graph For {host} - {service}",
+            "title": "One Day Graph For {host}<tpl if=\"service\"> - {service}</tpl>",
             "start": "-1 day",
             "interval": 300
         },
         {
-            "title": "One Week Graph For {host} - {service}",
+            "title": "One Week Graph For {host}<tpl if=\"service\"> - {service}</tpl>",
             "start": "-1 week",
             "interval": 600
         },
         {
-            "title": "One Month Graph For {host} - {service}",
+            "title": "One Month Graph For {host}<tpl if=\"service\"> - {service}</tpl>",
             "start": "-1 month"
         },
         {
-            "title": "One Year Graph For {host} - {service}",
+            "title": "One Year Graph For {host}<tpl if=\"service\"> - {service}</tpl>",
             "start": "-1 year"
         }
     ]

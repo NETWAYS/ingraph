@@ -264,17 +264,15 @@
 
                 this.panels.each(function (panel) {
                     var query = Ext.encode(
-                        Ext.ux.ingraph.Util.buildQuery(
-                            panel.get('series') || template.content.series));
+                            Ext.ux.ingraph.Util.buildQuery(
+                                panel.get('series') || template.content.series)),
+                        titleTemplate = new Ext.XTemplate(panel.get('title'));
 
                     var cfg = this.buildPanelCfg(
-                        String.format(
-                            panel.get('title'),
-                            {
-                                host: this.host,
-                                service: this.service
-                            }
-                        ),
+                        titleTemplate.apply({
+                            host: this.host,
+                            service: this.service
+                        }),
                         template.content,
                         query,
                         panel.get('overviewConfig'),

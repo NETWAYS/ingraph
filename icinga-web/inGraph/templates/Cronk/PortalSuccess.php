@@ -62,14 +62,14 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
             var items = [],
                 formValues = builder.getForm().getValues(),
                 columnDef = formValues.columns,
-                rowFlexDef = formValues.flex;
+                rowHeightDef = formValues.rowHeight;
 
             if ( ! Ext.isArray(columnDef)) {
                 columnDef = [columnDef];
             }
 
-            if ( ! Ext.isArray(rowFlexDef)) {
-                rowFlexDef = [rowFlexDef];
+            if ( ! Ext.isArray(rowHeightDef)) {
+                rowHeightDef = [rowHeightDef];
             }
 
             Ext.each(columnDef, function (str, rowIndex) {
@@ -88,12 +88,12 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                     }
 
                     var flex = parseInt(column),
-                        rowFlex = rowFlexDef.hasOwnProperty(rowIndex) ? parseInt(rowFlexDef[rowIndex]) : 1;
+                        rowHeight = rowHeightDef.hasOwnProperty(rowIndex) ? parseInt(rowHeightDef[rowIndex]) : 1;
 
                     items.push({
                         flex: flex,
                         row: rowIndex + 1,
-                        rowFlex: rowFlex,
+                        rowHeight: rowHeight,
                         xtype: 'xigportalmenuitem'
                     });
                 }); // Eof each columns

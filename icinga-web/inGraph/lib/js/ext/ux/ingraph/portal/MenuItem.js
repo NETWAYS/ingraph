@@ -141,7 +141,8 @@
 
                     Ext.apply(cfg, {
                         row: column.row,
-                        flex: column.flex
+                        flex: column.flex,
+                        rowHeight: column.rowHeight
                     });
 
                     rowCt.insert(columnIndex, cfg);

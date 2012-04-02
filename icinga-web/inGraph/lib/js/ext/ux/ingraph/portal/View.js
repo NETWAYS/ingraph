@@ -35,6 +35,8 @@
     Ext.ux.ingraph.portal.View = Ext.extend(Ext.ux.ingraph.View, {
         baseCls: 'x-panel',
 
+        bodyBorder: false,
+
         layout: 'anchor',
         layoutConfig: {
             defaultAnchor: '100% 100%'
@@ -88,6 +90,7 @@
                     var cfg = {
                         row: column.row,
                         flex: column.flex,
+                        rowHeight: column.rowHeight,
                         xtype: 'xigportalmenuitem'
                     };
 

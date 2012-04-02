@@ -94,9 +94,9 @@
                         items: [
                             {
                                 xtype: 'numberfield',
-                                fieldLabel: _('Flex'),
-                                name: 'flex',
-                                value: 1,
+                                fieldLabel: _('Height'),
+                                name: 'rowHeight',
+                                value: 250,
                                 anchor: '95%'
                             }
                         ]
@@ -111,6 +111,7 @@
                                     _('Columns')
                                 ),
                                 name: 'columns',
+                                value: 1,
                                 stripCharsRe: /[^\d, ]+/g,
                                 anchor: '95%'
                             }

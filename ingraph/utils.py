@@ -114,23 +114,21 @@ class PerfdataParser(object):
     parsePerfdataNumber = staticmethod(parsePerfdataNumber)
     
     def parse(perfdata):
-        if '.' in perfdata and ',' in perfdata:
-            perfdata = perfdata.replace(',', ';')
-        else:
-            perfdata = perfdata.replace(',', '.')
- 
-        if perfdata.count('.') > 1 and not ';' in perfdata:
-            perfdata = perfdata.replace('.', ';')
-
-        matches = PerfdataParser._perfRegex.findall(perfdata)
-        
         plots = {}
-        
         multi_prefix = None
-        
+        matches = PerfdataParser._perfRegex.findall(perfdata)
         for match in matches:
+            values_str = match[1]
+            if '.' in values_str and ',' in values_str:
+                values_str = values_str.replace(',', ';')
+            else:
+                values_str = values_str.replace(',', '.')
+
+            if values_str.count('.') > 1 and not ';' in values_str:
+                values_str = values_str.replace('.', ';')
+
             key = match[0]
-            values = match[1].split(';')
+            values = values_str.split(';')
             
             multi_match = PerfdataParser._multiRegex.match(key)
             

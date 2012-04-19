@@ -39,7 +39,7 @@ class UnsupportedDaemonFunction(Exception): pass
 class Collectord(daemon.UnixDaemon):
     name = 'inGraph-collector'
     check_multi_regex = re.compile('^([^:]+::[^:]+)::([^:]+)$')
-    
+
     def __init__(self, perfdata_dir, pattern, limit, sleeptime, mode, format,
                  **kwargs):
         self.perfpattern = perfdata_dir + '/' + pattern
@@ -85,7 +85,7 @@ class Collectord(daemon.UnixDaemon):
             return False
         elif len(tokens) < 5:
             tokens.append(time())
-        
+
         logdata = {
             'host': tokens[0],
             'service': tokens[1],
@@ -106,66 +106,66 @@ class Collectord(daemon.UnixDaemon):
 
         if logdata == False:
             return []
-        
+
         perfresults = utils.PerfdataParser.parse(logdata['perf'])
-        
+
         is_multidata = False
-        
+
         updates = []
         for plotname in perfresults:
             match = Collectord.check_multi_regex.match(plotname)
-                    
+
             perfresult = perfresults[plotname]
-    
+
             uom = perfresult['raw']['uom']
             raw_value = str(perfresult['raw']['value'])
-            
+
             warn_lower = None
             warn_upper = None
             warn_type = None
-    
+
             if 'warn' in perfresult:
                 if perfresult['warn']['lower']['value'] != None:
                     warn_lower = str(perfresult['warn']['lower']['value'])
-                    
+
                 if perfresult['warn']['upper']['value'] != None:
                     warn_upper = str(perfresult['warn']['upper']['value'])
-    
+
                 warn_type = str(perfresult['warn']['type'])
-            
+
             crit_lower = None
             crit_upper = None
             crit_type = None
-    
+
             if 'crit' in perfresult:
                 if perfresult['crit']['lower']['value'] != None:
                     crit_lower = str(perfresult['crit']['lower']['value'])
-                    
+
                 if perfresult['crit']['upper']['value'] != None:
                     crit_upper = str(perfresult['crit']['upper']['value'])
-    
+
                 crit_type = str(perfresult['crit']['type'])
-    
+
             if 'min' in perfresult:
                 min_value = str(perfresult['min']['value'])
             else:
                 min_value = None
-            
+
             if 'max' in perfresult:
                 max_value = str(perfresult['max']['value'])
             else:
                 max_value = None
-    
+
             upd_parentservice = None
             upd_service = logdata['service']
             upd_plotname = plotname
-    
+
             if match:
                 is_multidata = True
-                
+
                 multi_service = match.group(1)
                 upd_plotname = match.group(2)
-    
+
             if is_multidata:
                 upd_parentservice = logdata['service']
                 upd_service = multi_service
@@ -179,38 +179,40 @@ class Collectord(daemon.UnixDaemon):
                       pluginstatus)
             updates.append(update)
         return updates
-        
+
     def before_daemonize(self):
         self.logger.info("Starting %s..." % self.name)
         config = utils.load_config('ingraph-xmlrpc.conf')
         config = utils.load_config('ingraph-aggregates.conf', config)
-        
+
         url = utils.get_xmlrpc_url(config)
         api = xmlrpclib.ServerProxy(url, allow_none=True)
-        
+
         tfs = api.getTimeFrames()
         intervals = tfs.keys()
-            
+
         for aggregate in config['aggregates']:
             interval = aggregate['interval']
-            
+
             if str(interval) in intervals:
                 intervals.remove(str(interval))
-            
+
             if 'retention-period' in aggregate:
                 retention_period = aggregate['retention-period']
             else:
                 retention_period = None
-            
+
             api.setupTimeFrame(interval, retention_period)
-        
+
 #        for interval in intervals:
 #            tf = tfs[interval]
 #            print tf
-            
+
         self.api = api
-    
+
     def run(self):
+        last_flush = time.time()
+        processed_lines = 0
         while True:
             updates = []
             files = glob.glob(self.perfpattern)[:self.limit]
@@ -220,19 +222,23 @@ class Collectord(daemon.UnixDaemon):
                     update = self._prepare_update(line)
                     if update:
                         updates.extend(update)
-                if updates:
-                    updates_pickled = pickle.dumps(updates)
-                    st = time.time()
-                    while True:
-                        try:
-                            self.api.insertValueBulk(updates_pickled)
-                        except Exception:
-                            time.sleep(60)
-                        else:
-                            break
-                    et = time.time()
-                    print "%d updates (%d lines) took %f seconds" % \
-                          (len(updates), input.lineno(), et - st)
+                    if last_flush + 30 < time.time() or len(updates) >= 25000:
+                        if updates:
+                            updates_pickled = pickle.dumps(updates)
+                            st = time.time()
+                            while True:
+                                try:
+                                    self.api.insertValueBulk(updates_pickled)
+                                except Exception:
+                                    time.sleep(60)
+                                else:
+                                    break
+                            et = time.time()
+                            print "%d updates (%d lines) took %f seconds" % \
+                                  (len(updates), input.lineno() - processed_lines, et - st)
+                        updates = []
+                        last_flush = time.time()
+                        processed_lines = input.lineno()
                 if self.mode == 'BACKUP':
                     for file in files:
                         shutil.move(file, file + '.bak')
@@ -240,8 +246,8 @@ class Collectord(daemon.UnixDaemon):
                     for file in files:
                         os.remove(file)
             time.sleep(self.sleeptime)
-            
-            
+
+
 class Option(optparse.Option):
     MODES = ['REMOVE', 'BACKUP']
 
@@ -250,7 +256,7 @@ class Option(optparse.Option):
         Option.TYPE_CHECKER = copy.copy(optparse.Option.TYPE_CHECKER)
         Option.TYPE_CHECKER['mode'] = self.check_mode
         optparse.Option.__init__(self, *opts, **attrs)
-    
+
     def check_mode(self, option, opt, value):
         value = value.upper()
         if value not in Option.MODES:
@@ -258,8 +264,8 @@ class Option(optparse.Option):
                 'Option %s: invalid mode. Expected is one of: %s.' %
                 (value, ', '.join(Option.Modes)))
         return value
-    
-    
+
+
 def main():
     daemon_functions = ['start', 'stop', 'restart', 'status']
     usage = 'Usage: %%prog [options] %s' % '|'.join(daemon_functions)
@@ -301,14 +307,14 @@ def main():
                       help='the log level (INFO, WARNING, ERROR, CRITICAL), ' +
                            '[default: %default]')
     (options, args) = parser.parse_args()
-    
+
     try:
         if args[0] not in daemon_functions:
             raise UnsupportedDaemonFunction()
     except (IndexError, UnsupportedDaemonFunction):
             parser.print_help()
             sys.exit(1)
-            
+
     collectord = Collectord(perfdata_dir=options.perfdata_dir,
                             pattern=options.pattern,
                             limit=options.limit,

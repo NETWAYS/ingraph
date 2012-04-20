@@ -4,7 +4,7 @@
     "flot": {
         "yaxes": [
             {
-                "label": "Octects /s",
+                "label": "Bits /s",
                 "unit": "byte"
             }
         ]
@@ -15,17 +15,23 @@
             "color": "#2D7DB3", 
             "re": "/^input octets$/", 
             "type": "avg", 
-            "label": "Octets In",
+            "label": "Traffic In",
             "id": "ocin",
-            "yaxis": 1
+            "yaxis": 1,
+            "convert": "function(y) {
+                return y * 8;
+            }"
         },
         {
             "color": "#844798", 
             "re": "/^output octets$/", 
             "type": "avg", 
-            "label": "Octets Out",
+            "label": "Traffic Out",
             "id": "ocout",
-            "yaxis": 1
+            "yaxis": 1,
+            "convert": "function(y) {
+                return y * 8;
+            }"
         }
     ]
 }

@@ -27,18 +27,19 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
                         $rd->getParameter('view') . '.json');
             }
 
-            foreach ($panel['series'] as $series) {
+            foreach ($panel['series'] as $seriesStub) {
                 try {
-                    $plots = $this->getPlots($series);
+                    $plots = $this->getPlots($seriesStub);
                 } catch(inGraph_XmlRpc_Exception $e) {
                     return $this->setError($e->getMessage());
                 }
 
-                $match = $view->compileSingleSeries(
-                    $series, $series['host'], $plots);
+                $series = $seriesStub;
 
-                if ($match) {
+                while ( ($matchedPlotIndex = $view->compileSingleSeries($series, $series['host'], $plots)) !== false) {
                     $compiled[] = $series;
+                    unset($plots[$matchedPlotIndex]);
+                    $series = $seriesStub;
                 }
             }
 

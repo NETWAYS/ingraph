@@ -23,8 +23,11 @@ class inGraph_View extends inGraph_AbstractTemplate
     {
         $match = false;
 
-        foreach ($plots as $plot) {
-            if (preg_match($series['re'], $plot['plot'])) {
+        foreach ($plots as $index => $plot) {
+            $plotName = $series['service'] != $plot['service']
+                      ? ($plot['service'] . '::' . $plot['plot'])
+                      : $plot['plot'];
+            if (preg_match($series['re'], $plotName)) {
                 if ( ! array_key_exists('type', $series)) {
                     $series['type'] = 'avg';
                 }
@@ -39,7 +42,7 @@ class inGraph_View extends inGraph_AbstractTemplate
                     'plot' => $plot['plot']
                 ));
 
-                $match = true;
+                $match = $index;
                 break;
             }
         }
@@ -58,6 +61,6 @@ class inGraph_View extends inGraph_AbstractTemplate
         $series['plot_id'] = $series['group'] . ' - ' . $series['type'];
 
 
-        return true;
+        return $match;
     }
 }

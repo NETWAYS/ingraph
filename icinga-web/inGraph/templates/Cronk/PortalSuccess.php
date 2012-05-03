@@ -102,7 +102,11 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
             var portal = addPortal.call(this, items);
 
             // Save state manually
-            Ext.state.Manager.set(portal.stateId, portal.getState());
+            Ext.state.Manager.getProvider().set(portal.stateId, portal.getState());
+
+            this.getParent().on('removed', function () {
+                Ext.state.Manager.getProvider().clear(portal.stateId);
+            });
 
             // Button -> Tbar -> Window
             var win = btn.ownerCt.ownerCt;

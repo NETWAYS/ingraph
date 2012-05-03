@@ -32,6 +32,8 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
         Ext.ux.ingraph.Urls.overwrite(urls);
     }
 
+    this.getParent().on('close', function() { console.log("closed"); });
+
     var host = "<?php echo $rd->getParameter('host'); ?>",
         service = "<?php echo $rd->getParameter('service'); ?>",
         view = "<?php echo $rd->getParameter('view'); ?>";
@@ -57,10 +59,14 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                 Ext.ux.ingraph.icingaweb.Cronk.setTitle.call(this, cfg);
 
                 // Manual handling of ext state
-                Ext.state.Manager.set(view.stateId, view.getState());
+                Ext.state.Manager.getProvider().set(view.stateId, view.getState());
+
+                this.getParent().on('removed', function () {
+                    Ext.state.Manager.getProvider().clear(view.stateId);
+                });
 
                 // Cronk state
-                this.setStatefulObject(view);
+                //this.setStatefulObject(view);
             }
         });
 

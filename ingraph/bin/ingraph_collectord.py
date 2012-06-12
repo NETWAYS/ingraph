@@ -213,8 +213,8 @@ class Collectord(daemon.UnixDaemon):
     def run(self):
         last_flush = time.time()
         processed_lines = 0
+        updates = []
         while True:
-            updates = []
             files = glob.glob(self.perfpattern)[:self.limit]
             if files:
                 input = fileinput.input(files)

@@ -8,8 +8,8 @@
 # Provides: ingraph
 # Required-Start: $remote_fs $network
 # Required-Stop: $remote_fs $network
-# Should-Start: $mysql $postgresql
-# Should-Stop: $mysql $postgresql
+# Should-Start: mysql postgresql
+# Should-Stop: mysql postgresql
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
 # Short-Description: Short description.

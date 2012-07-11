@@ -165,18 +165,20 @@
                                 flotConfig: {
                                     flotStyle: {
                                         xaxis: {
-                                            show: false,
                                             mode: 'time'
                                         },
                                         yaxis: {
-                                            show: false
+                                            tickDecimals: 0,
+                                            minTickSize: 1,
+                                            ticks: 2,
+                                            showLabel: false
                                         },
                                         grid: {
                                             hoverable: false,
                                             clickable: false
                                         },
                                         legend: {
-                                            show: false
+                                            show: true
                                         }
                                     },
                                     listeners: {

@@ -168,7 +168,9 @@
             },
 
             yTickFormatter: function (v, axis) {
-                if (axis.ticks.length === 0) {
+                if (this.showLabel !== false
+                    && axis.ticks.length === 0
+                ) {
                     this.rawTicks = axis.tickGenerator(axis);
                 }
                 if (this.units === undefined) {
@@ -179,7 +181,10 @@
                         c: Ext.ux.ingraph.Util.formatCounter
                     };
                 }
-                if (v === this.rawTicks.last() && this.label) {
+                if (this.showLabel !== false
+                    && this.label
+                    && v === this.rawTicks.last()
+                ) {
                     if (!Ext.isArray(this.label)) {
                         this.label = [this.label];
                     }

@@ -39,18 +39,15 @@
             "overviewConfig": {
                 "enable": true
             },
-            "start": "-4 hours",
-            "interval": 60
+            "start": "-4 hours"
         },
         {
             "title": "One Day Graph For {host}<tpl if=\"service\"> - {service}</tpl>",
-            "start": "-1 day",
-            "interval": 300
+            "start": "-1 day"
         },
         {
             "title": "One Week Graph For {host}<tpl if=\"service\"> - {service}</tpl>",
-            "start": "-1 week",
-            "interval": 600
+            "start": "-1 week"
         },
         {
             "title": "One Month Graph For {host}<tpl if=\"service\"> - {service}</tpl>",

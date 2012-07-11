@@ -6,11 +6,12 @@ class inGraph_Provider_ValuesAction extends inGraphBaseAction
     {
         $start = $start = $rd->getParameter('startx', null);
         $end = $rd->getParameter('endx', time());
-        if (($interval = $rd->getParameter('interval', null)) === null) {
-            if ($start !== null) {
-                $interval = $this->siftInterval($start, $end);
-            }
-        }
+//        if (($interval = $rd->getParameter('interval', null)) === null) {
+//            if ($start !== null) {
+//                $interval = $this->siftInterval($start, $end);
+//            }
+//        }
+        $interval = null;
         $daemonConfig = AgaviConfig::get('modules.ingraph.daemon');
         try {
             $values = $this->getBackend()->fetchValues(

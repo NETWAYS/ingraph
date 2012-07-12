@@ -21,6 +21,7 @@ import atexit
 import errno
 import fcntl
 import logging
+import resource
 
 try:
     os.SEEK_SET
@@ -29,6 +30,10 @@ except AttributeError:
 
 __all__ = ['UnixDaemon']
 
+try:
+    MAXFD = os.sysconf('SC_OPEN_MAX')
+except:
+    MAXFD = 254
 
 class UnixDaemon(object):
     def __init__(self, pidfile, umask=0, chdir='/', uid=os.getuid(),
@@ -44,6 +49,7 @@ class UnixDaemon(object):
         self.logger = logging.getLogger('ingraph')
         self.addLoggingHandler(logging.StreamHandler(sys.stderr))
         self.logger.setLevel(logging.DEBUG)
+        self.close_fds = True
         super(UnixDaemon, self).__init__()
 
     def addLoggingHandler(self, handler):
@@ -157,6 +163,17 @@ class UnixDaemon(object):
         except AttributeError:
             targetfd = os.open(target, os.O_CREAT | os.O_APPEND | os.O_RDWR)
         os.dup2(targetfd, source.fileno())
+        
+    def _close_fds(self, maxfd):
+        try:
+            os.closerange(3, maxfd)
+        except AttributeError:
+            # Python < v2.6
+            for i in xrange(3, maxfd):
+                try:
+                    os.close(i)
+                except:
+                    pass
 
     def start(self):
         pid = self._getpid()
@@ -176,11 +193,16 @@ class UnixDaemon(object):
             self._redirect_stream(sys.stdin, os.devnull)
             self._redirect_stream(sys.stdout, os.devnull)
             self._redirect_stream(sys.stderr, os.devnull)
+            
+            maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+            if maxfd == resource.RLIM_INFINITY:
+                maxfd = MAXFD
+            self._close_fds(maxfd)
         
         signal.signal(signal.SIGTERM, self._SIGTERM)
         atexit.register(self._atexit)
  
-        self._writepid()       
+        self._writepid()
         
         self.run()
 

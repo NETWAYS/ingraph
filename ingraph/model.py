@@ -851,9 +851,14 @@ class TimeFrame(ModelBase):
         self.retention_period = retention_period
         self.active = active
 
-    def getAll(conn):
-        if TimeFrame.cache_tfs == None:
-            sel = timeframe.select().where(timeframe.c.active==True).order_by(timeframe.c.interval.asc())
+    def getAll(conn, include_inactive=False):
+        if TimeFrame.cache_tfs == None or include_inactive:
+            sel = timeframe.select()
+
+            if not include_inactive:
+                sel = sel.where(timeframe.c.active==True)
+
+            sel = sel.order_by(timeframe.c.interval.asc())
             
             objs = []
             
@@ -868,6 +873,9 @@ class TimeFrame(ModelBase):
                 
                 objs.append(obj)
                 
+            if include_inactive:
+                return objs
+
             TimeFrame.cache_tfs = objs
             
         return TimeFrame.cache_tfs
@@ -1111,7 +1119,7 @@ class DataPoint(object):
     getValuesByInterval = staticmethod(getValuesByInterval)
 
     def cleanupOldData(conn):
-        tfs = TimeFrame.getAll(conn)
+        tfs = TimeFrame.getAll(conn, True)
 
         for tf in tfs:
             if tf.retention_period == None:
@@ -1303,7 +1311,7 @@ class PluginStatus(ModelBase):
     def cleanupOldData(conn):
         retention_period = None
 
-        tfs = TimeFrame.getAll(conn)
+        tfs = TimeFrame.getAll(conn, True)
 
         for tf in tfs:
             if tf.retention_period == None:

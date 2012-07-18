@@ -883,11 +883,8 @@ class TimeFrame(ModelBase):
             res = conn.execute(sel)
             row = res.fetchone()
             
-            obj = TimeFrame()
+            obj = TimeFrame(row[timeframe.c.interval], row[timeframe.c.retention_period], row[timeframe.c.active])
             obj.id = row[timeframe.c.id]
-            obj.interval = row[timeframe.c.interval]
-            obj.retention_period = row[timeframe.c.retention_period]
-            obj.active = row[timeframe.c.active]
             obj.activate()
             
         return obj

@@ -204,9 +204,9 @@ class Collectord(daemon.UnixDaemon):
 
             api.setupTimeFrame(interval, retention_period)
 
-#        for interval in intervals:
-#            tf = tfs[interval]
-#            print tf
+        for interval in intervals:
+            tf = tfs[interval]
+            api.disableTimeFrame(tf['id'])
 
         self.api = api
 

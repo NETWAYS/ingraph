@@ -1238,6 +1238,8 @@ pluginstatus = Table('pluginstatus', metadata,
     mysql_engine='InnoDB'
 )
 
+Index('idx_ps_1', pluginstatus.c.timestamp)
+
 class PluginStatus(ModelBase):
     def __init__(self, hostservice, timestamp, status):
         self.id = None

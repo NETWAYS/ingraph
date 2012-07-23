@@ -1125,7 +1125,11 @@ class DataPoint(object):
             if tf.retention_period == None:
                 continue
         
-            delsql = datapoint.delete(and_(datapoint.c.timeframe_id==tf.id, datapoint.c.timestamp < time() - tf.retention_period))
+            # DELETE .... LIMIT is a MySQL extention
+            if conn.dialect.name == 'mysql':
+                delsql = "DELETE FROM datapoint WHERE timeframe_id=%d AND timestamp < %d LIMIT 25000" % (tf.id, time() - tf.retention_period)
+            else:
+                delsql = datapoint.delete(and_(datapoint.c.timeframe_id==tf.id, datapoint.c.timestamp < time() - tf.retention_period))
             
             conn.execute(delsql)
     
@@ -1321,7 +1325,7 @@ class PluginStatus(ModelBase):
                 retention_period = tf.retention_period
 
         if retention_period != None:
-            delsql = datapoint.delete(pluginstatus.c.timestamp < time() - retention_period)
+            delsql = pluginstatus.delete(pluginstatus.c.timestamp < time() - retention_period)
             
             conn.execute(delsql)
     

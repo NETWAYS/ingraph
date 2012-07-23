@@ -60,7 +60,7 @@ def flush(engine, queryqueue):
 
 def cleanup(engine):
     while True:
-        time.sleep(3*60*60)
+        time.sleep(60)
         ingraph.model.cleanup(engine)
         
 

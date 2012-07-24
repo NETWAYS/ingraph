@@ -1010,6 +1010,9 @@ class DataPoint(object):
         start_timestamp -= 1.5 * granularity
         end_timestamp += 1.5 * granularity
 
+        if data_tf.retention_period != None:
+            start_timestamp = max(start_timestamp, data_tf.retention_period - 2 * granularity)
+
         assert granularity > 0
         
         # properly align interval with the timeframe

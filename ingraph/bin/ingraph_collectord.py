@@ -53,7 +53,11 @@ class Collectord(daemon.UnixDaemon):
         logdata = {}
 
         for nvpair in tokens:
-            (key, value) = nvpair.split('::', 1)
+            try:
+                (key, value) = nvpair.split('::', 1)
+            except:
+                print "Invalid PNP key-value pair:", nvpair
+                continue
 
             if key == 'TIMET':
                 key = 'timestamp'
@@ -70,6 +74,7 @@ class Collectord(daemon.UnixDaemon):
             logdata[key] = value
 
         if 'perf' not in logdata or 'host' not in logdata or 'status' not in logdata:
+            print "Update is missing host, status or performance data:", tokens
             return False
 
         if 'timestamp' not in logdata:
@@ -222,23 +227,26 @@ class Collectord(daemon.UnixDaemon):
                     update = self._prepare_update(line)
                     if update:
                         updates.extend(update)
-                    if last_flush + 30 < time.time() or len(updates) >= 25000:
-                        if updates:
-                            updates_pickled = pickle.dumps(updates)
-                            st = time.time()
-                            while True:
-                                try:
-                                    self.api.insertValueBulk(updates_pickled)
-                                except Exception:
-                                    time.sleep(60)
-                                else:
-                                    break
-                            et = time.time()
-                            print "%d updates (%d lines) took %f seconds" % \
-                                  (len(updates), input.lineno() - processed_lines, et - st)
-                        updates = []
-                        last_flush = time.time()
-                        processed_lines = input.lineno()
+
+            if last_flush + 30 < time.time() or len(updates) >= 25000:
+                if updates:
+                    updates_pickled = pickle.dumps(updates)
+                    st = time.time()
+                    while True:
+                        try:
+                            self.api.insertValueBulk(updates_pickled)
+                        except Exception:
+                            time.sleep(60)
+                        else:
+                            break
+                    et = time.time()
+                    print "%d updates (%d lines) took %f seconds" % \
+                          (len(updates), input.lineno() - processed_lines, et - st)
+                updates = []
+                last_flush = time.time()
+                processed_lines = input.lineno()
+
+            if files:
                 if self.mode == 'BACKUP':
                     for file in files:
                         shutil.move(file, file + '.bak')

@@ -1285,7 +1285,7 @@ class PluginStatus(ModelBase):
                 hostservice = HostService.getByID(conn, row[pluginstatus.c.hostservice_id])
     
                 obj = PluginStatus(hostservice, row[pluginstatus.c.timestamp], row[pluginstatus.c.status])
-                obj.id = row[host.c.id]
+                obj.id = row[pluginstatus.c.id]
                 obj.activate()
             
             objs.append(obj)

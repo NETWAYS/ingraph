@@ -26,6 +26,10 @@
                 "unit": "byte"
             },
             {
+                "label": "Usage (%)",
+                "unit": "percent"
+            },
+            {
                 "label": "Free",
                 "position": "right",
                 "tickColor": "#49A835"
@@ -115,6 +119,30 @@
                 "fill": null
             },
             "enabled": false
+        },
+        {
+            "color": "#2D7DB3",
+            "re": "/^physical memory$/i",
+            "type": "avg",
+            "label": "Used",
+            "yaxis": 1,
+            "stack": false,
+            "lines": {
+                "lineWidth": 2,
+                "fill": null
+            }
+        },
+        {
+            "color": "#FF6E00",
+            "re": "/^physical memory %$/i",
+            "type": "avg",
+            "label": "Used (%)",
+            "yaxis": 2,
+            "stack": false,
+            "lines": {
+                "lineWidth": 2,
+                "fill": null
+            }
         }
     ]
 }

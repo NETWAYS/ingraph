@@ -16,7 +16,7 @@
     <setting name="daemon">
         <!-- Control how many consecutive datapoints may be missing before
         inserting null values (gaps) -->
-        <ae:parameter name="nullTolerance">2</ae:parameter>
+        <ae:parameter name="nullTolerance">@NULL_TOLERANCE@</ae:parameter>
     </setting>
 
     <setting name="templates">

@@ -14,6 +14,7 @@ XMLRPC_HOST=${XMLRPC_HOST-127.0.0.1}
 XMLRPC_PORT=${XMLRPC_PORT-5000}
 XMLRPC_USER=${XMLRPC_USER-ingraph}
 XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
+NULL_TOLERANCE=${NULL_TOLERANCE-2}
 
 FIND=${FIND-find}
 INSTALL=${INSTALL-install}
@@ -53,6 +54,8 @@ usage () {
     echo "                          [$XMLRPC_USER]"
     echo "--with-xmlrpc-password    xml-rpc password"
     echo "                          [$XMLRPC_PASSWORD]"
+    echo "--with-null-tolerance     null tolerance value"
+    echo "                          [$NULL_TOLERANCE]"
     echo
     exit 1
 }
@@ -145,6 +148,14 @@ do
                 exit 1
             }
             ;;
+        --with-null-tolerance*)
+            NULL_TOLERANCE=${ARG#--with-null-tolerance}
+            NULL_TOLERANCE=${NULL_TOLERANCE#=}
+            [ -z "$NULL_TOLERANCE" ] && {
+                echo "ERROR: expected a numeric value." >&2
+                exit 1
+            }
+            ;;
         --help | -h)
             usage
             ;;
@@ -210,6 +221,7 @@ do
     $SED -i -e s,@XMLRPC_PORT@,$XMLRPC_PORT, $F
     $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
     $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
+    $SED -i -e s,@NULL_TOLERANCE@,$NULL_TOLERANCE, $F
 done
 
 # Install from the inGraph directory

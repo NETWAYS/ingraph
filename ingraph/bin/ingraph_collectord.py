@@ -217,9 +217,9 @@ class Collectord(daemon.UnixDaemon):
 
     def run(self):
         last_flush = time.time()
-        processed_lines = 0
         updates = []
         while True:
+            lines = 0
             files = glob.glob(self.perfpattern)[:self.limit]
             if files:
                 input = fileinput.input(files)
@@ -227,6 +227,7 @@ class Collectord(daemon.UnixDaemon):
                     update = self._prepare_update(line)
                     if update:
                         updates.extend(update)
+                    lines += 1
 
             if last_flush + 30 < time.time() or len(updates) >= 25000:
                 if updates:
@@ -240,11 +241,11 @@ class Collectord(daemon.UnixDaemon):
                         else:
                             break
                     et = time.time()
-                    print "%d updates (%d lines) took %f seconds" % \
-                          (len(updates), input.lineno() - processed_lines, et - st)
+                    print "%d updates (approx. %d lines) took %f seconds" % \
+                          (len(updates), lines, et - st)
                 updates = []
                 last_flush = time.time()
-                processed_lines = input.lineno()
+                lines = 0
 
             if files:
                 if self.mode == 'BACKUP':

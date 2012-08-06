@@ -322,7 +322,9 @@ def main():
                             format=options.format)
     
     if options.logfile and options.logfile != '-':
-        collectord.addLoggingHandler(logging.FileHandler(options.logfile))
+        collectord.addLoggingHandler(
+            logging.RotatingFileHandler(options.logfile, maxBytes=2**10,
+                                        backupCount=3))
         collectord.stdout_logger = ingraph.log.FileLikeLogger(collectord.logger,
                                                               logging.INFO)
         collectord.stderr_logger = ingraph.log.FileLikeLogger(collectord.logger,

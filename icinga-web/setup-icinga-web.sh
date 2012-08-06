@@ -66,7 +66,8 @@ install_files () (
     DEST=$2
     INSTALL_OPTS=${3-}
     
-    FILES=$(for F in $($FIND $D -maxdepth 1 -type f ! -name \*.in); do echo $F; done)
+    # Exclude .in suffixed files and inGraph.xml
+    FILES=$(for F in $($FIND $D -maxdepth 1 -type f ! -name \*.in ! -path \*/config/inGraph.xml); do echo $F; done)
     
     [ -n "$FILES" ] && $INSTALL -m 644 $INSTALL_OPTS -t $DEST $FILES
 )
@@ -246,6 +247,11 @@ else
         
         [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}" "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP"
     done
+    
+    # If inGraph.xml does not exist install it
+    [ ! -r $PREFIX/app/modules/inGraph/config/inGraph.xml ] && {
+        $INSTALL -m 644 $PREFIX/app/modules/inGraph/config $SRC/config/inGraph.xml
+    }
 fi
 
 echo "(5/5) Invoking clearCache..."

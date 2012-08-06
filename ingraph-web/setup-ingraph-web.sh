@@ -62,7 +62,8 @@ install_files () (
     DEST=$2
     INSTALL_OPTS=${3-}
     
-    FILES=$(for F in $($FIND $D -maxdepth 1 -type f ! -name \*.in); do echo $F; done)
+    # Exclude .in suffixed files and inGraph.xml
+    FILES=$(for F in $($FIND $D -maxdepth 1 -type f ! -name \*.in ! -path \*/config/inGraph.xml); do echo $F; done)
     
     [ -n "$FILES" ] && $INSTALL -m 644 $INSTALL_OPTS -t $DEST $FILES
 )
@@ -222,12 +223,17 @@ echo "(2/4) Installing directories and files..."
 
 SRC=$DIR/ingraph
 
-for D in $($FIND $SRC -type d ! -path $SRC/bin ! -path $SRC/app/cache ! -path $SRC/app/log)
+for D in $($FIND $SRC -type d ! -path $SRC/bin)
 do
     $INSTALL -m 755 -d $PREFIX${D##$SRC}
 
     [ $? -eq 0 ] && install_files "$D" "$PREFIX${D##$SRC}"
 done
+
+# If inGraph.xml does not exist install it
+[ ! -r $PREFIX/app/modules/inGraph/config/inGraph.xml ] && {
+    $INSTALL -m 644 $PREFIX/app/modules/inGraph/config $SRC/config/inGraph.xml
+}
 
 # Install bin files
 $INSTALL -m 755 -d $PREFIX/bin
@@ -236,10 +242,7 @@ $INSTALL -m 755 -t $PREFIX/bin $BINFILES
 
 echo "(3/4) Installing cache and log directory..."
 
-for D in $($FIND $SRC -type d -path $SRC/app/cache -o -path $SRC/app/log)
-do
-    $INSTALL -m 755 -o $WEB_USER -g $WEB_GROUP -d $PREFIX${D##$SRC}
-done
+$INSTALL -m 755 -o $WEB_USER -g $WEB_GROUP -t $PREFIX/app cache log
 
 # Install direcotries and files from icinga-web module
 echo "(4/4) Installing directories and files from common source..."

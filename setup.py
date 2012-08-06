@@ -16,8 +16,15 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from setuptools import setup
+from os.path import isfile
 
 import ingraph
+
+config_files = []
+for config_file in ('ingraph-aggregates.conf', 'ingraph-database.conf',
+                    'ingraph-xmlrpc.conf'):
+    if not isfile('/etc/ingraph/%s' % config_file):
+        config_files.append('examples/config/%s' % config_file)
 
 setup(
     name = ingraph.__name__,
@@ -37,8 +44,6 @@ setup(
     data_files = [
         ('/etc/init.d', ['contrib/init.d/ingraph',
                          'contrib/init.d/ingraph-collector']),
-        ('/etc/ingraph', ['examples/config/ingraph-aggregates.conf',
-                          'examples/config/ingraph-database.conf',
-                          'examples/config/ingraph-xmlrpc.conf'])
+        ('/etc/ingraph', config_files)
     ]
 )

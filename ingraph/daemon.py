@@ -42,7 +42,7 @@ class UnixDaemon(object):
         self.gid = gid
         self.umask = umask
         self.logger = logging.getLogger('ingraph')
-        self.addLoggingHandler(logging.StreamHandler(sys.stderr))
+        self.addLoggingHandler(logging.StreamHandler(sys.stdout))
         self.logger.setLevel(logging.DEBUG)
         super(UnixDaemon, self).__init__()
 

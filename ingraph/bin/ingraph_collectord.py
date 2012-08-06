@@ -262,45 +262,46 @@ def main():
     DAEMON_FUNCTIONS = ['start', 'stop', 'restart', 'status']
     LOG_LVLS = ('INFO', 'WARNING', 'ERROR', 'CRITICAL')
     PERFDATA_FORMATS = ('ingraph', 'pnp')
+    PERFDATA_MODES = ('BACKUP', 'REMOVE')
     usage = 'Usage: %%prog [options] {%s}' % '|'.join(DAEMON_FUNCTIONS)
-    parser = optparse.OptionParser(option_class=Option, usage=usage,
+    parser = optparse.OptionParser(usage=usage,
                                    version='%%prog %s' % ingraph.__version__)
     parser.add_option('-f', '--foreground', dest='detach', default=True,
-                      action='store_false', help='run in foreground')
+                      action='store_false', help="run in foreground")
     parser.add_option('-d', '--chdir', dest='chdir', metavar='DIR',
                       default='/etc/ingraph',
-                      help='change to directory DIR [default: %default]')
+                      help="change to directory DIR [default: %default]")
     parser.add_option('-p', '--pidfile', dest='pidfile', metavar='FILE',
                       default='/var/run/ingraph/ingraph-collectord.pid',
-                      help='pidfile FILE [default: %default]')
+                      help="pidfile FILE [default: %default]")
     parser.add_option('-o', '--logfile', dest='logfile', metavar='FILE',
-                      default=None, help='logfile FILE [default: %default]')
+                      default=None, help="logfile FILE [default: %default]")
     parser.add_option('-P', '--perfdata-dir', dest='perfdata_dir',
                       default='/usr/local/icinga/var/perfdata',
-                      metavar='DIR', help='perfdata directory DIR '
-                      '[default: %default]')
+                      metavar='DIR', help="perfdata directory DIR "
+                                          "[default: %default]")
     parser.add_option('-e', '--pattern', dest='pattern',
-                      help='shell pattern PATTERN [default: %default]',
+                      help="shell pattern PATTERN [default: %default]",
                       default='*-perfdata.*[0-9]')
     parser.add_option('-m', '--mode', dest='mode', default='BACKUP',
-                      type='mode',
-                      help='backup or remove perfdata files '
-                      'after processing [default: %default]')
+                      choices=PERFDATA_MODES,
+                      help="perfdata files post processing, one of: %s "
+                           "[default: %%default]" % ', '.join(PERFDATA_MODES))
     parser.add_option('-l', '--limit', dest='limit', type='int',
                       help='limit files [default: %default]', default=50)
     parser.add_option('-s', '--sleeptime', dest='sleeptime', type='int',
-                      help='seconds to sleep [default: %default]',
+                      help="seconds to sleep [default: %default]",
                       default=30)
     parser.add_option('-u', '--user', dest='user', default=None)
     parser.add_option('-g', '--group', dest='group', default=None)
     parser.add_option('-F', '--format', dest='format', default='pnp',
                       choices=PERFDATA_FORMATS,
-                      help="perfdata format, one of: %s [default: %%default]" %
-                      ', '.join(PERFDATA_FORMATS))
+                      help="perfdata format, one of: %s "
+                           "[default: %%default]" % ', '.join(PERFDATA_FORMATS))
     parser.add_option('-L', '--loglevel', dest='loglevel', default='INFO',
                       choices=LOG_LVLS,
-                      help="the log level, one of: %s [default: %%default]" %
-                      ', '.join(LOG_LVLS))
+                      help="the log level, one of: %s "
+                           "[default: %%default]" % ', '.join(LOG_LVLS))
     (options, args) = parser.parse_args()
 
     try:

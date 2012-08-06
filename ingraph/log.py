@@ -19,11 +19,12 @@ import logging
 class FileLikeLogger(object):
     """A file-like python.logging.Logger interface."""
 
-    def init(self, logger, loglvl):
+    def __init__(self, logger, loglvl):
         self._logger = logger
         self._loglvl = loglvl
 
     def write(self, msg):
+        msg = msg.rstrip()
         if msg:
             # Do not log if empty
             self._logger.log(self._loglvl, msg)

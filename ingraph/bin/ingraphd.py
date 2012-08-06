@@ -180,7 +180,7 @@ def main():
     parser.add_option('-g', '--group', dest='group', default=None)
     parser.add_option('-L', '--loglevel', dest='loglevel', default='INFO',
                       choices=LOG_LVLS,
-                      help="the log level, one of %s [default: %default]" %
+                      help="the log level, one of %s [default: %%default]" %
                       ', '.join(LOG_LVLS))
     (options, args) = parser.parse_args()
     

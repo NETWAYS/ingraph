@@ -54,7 +54,7 @@ class UnixDaemon(object):
         self.addLoggingHandler(logging.StreamHandler(sys.stdout))
         self.logger.setLevel(logging.DEBUG)
         self.stdout_logger=stdout_logger
-        self.stderr_logger=stderr_looger
+        self.stderr_logger=stderr_logger
         super(UnixDaemon, self).__init__()
 
     def addLoggingHandler(self, handler):

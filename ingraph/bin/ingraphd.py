@@ -29,6 +29,7 @@ import ingraph.daemon
 import ingraph.model
 import ingraph.utils
 import ingraph.xmlrpc
+import ingraph.log
 
 
 def flush(engine, queryqueue):
@@ -138,8 +139,8 @@ class InGraphd(ingraph.daemon.UnixDaemon):
                 try:
                     self.engine = ingraph.model.createModelEngine(self.config['dsn'])
                 except:
-                    self.logger.exception("Database connection failed (attempt"
-                        " #%d). Waiting for retry..." % (i))
+                    self.logger.exception("Database connection failed (attempt " 
+                                          "#%d). Waiting for retry..." % (i))
                     time.sleep(5)
                 else:
                     break
@@ -159,33 +160,35 @@ class InGraphd(ingraph.daemon.UnixDaemon):
             self.server.handle_request()
 
 def main():
-    daemon_functions = ('start', 'stop', 'restart', 'status')
-    usage = "Usage: %%prog [options] %s" % '|'.join(daemon_functions)
+    DAEMON_FUNCTIONS = ('start', 'stop', 'restart', 'status')
+    LOG_LVLS = ('INFO', 'WARNING', 'ERROR', 'CRITICAL')
+    usage = "Usage: %%prog [options] {%s}" % '|'.join(DAEMON_FUNCTIONS)
     parser = optparse.OptionParser(usage=usage,
                                    version='%%prog %s' % ingraph.__version__)
     parser.add_option('-f', '--foreground', dest='detach', default=True,
                       action='store_false',
-                      help='run in foreground')
+                      help="run in foreground")
     parser.add_option('-d', '--chdir', dest='chdir', metavar='DIR',
                       default='/etc/ingraph',
-                      help='change to directory DIR [default: %default]')
+                      help="change to directory DIR [default: %default]")
     parser.add_option('-p', '--pidfile', dest='pidfile', metavar='FILE',
                       default='/var/run/ingraph/ingraphd.pid',
                       help="pidfile FILE [default: %default]")
     parser.add_option('-o', '--logfile', dest='logfile', metavar='FILE',
-                      default=None, help='logfile FILE [default: %default]')
+                      default=None, help="logfile FILE [default: %default]")
     parser.add_option('-u', '--user', dest='user', default=None)
     parser.add_option('-g', '--group', dest='group', default=None)
     parser.add_option('-L', '--loglevel', dest='loglevel', default='INFO',
-                      help='the log level (INFO, WARNING, ERROR, CRITICAL), ' +
-                           '[default: %default]')
+                      choices=LOG_LVLS,
+                      help="the log level, one of %s [default: %default]" %
+                      ', '.join(LOG_LVLS))
     (options, args) = parser.parse_args()
     
     try:
-        if args[0] not in daemon_functions:
+        if args[0] not in DAEMON_FUNCTIONS:
             raise UnsupportedDaemonFunction()
     except (IndexError, UnsupportedDaemonFunction):
-            parser.print_help()
+            parser.print_usage()
             sys.exit(1)
             
     ingraphd = InGraphd(chdir=options.chdir,
@@ -193,23 +196,24 @@ def main():
                         pidfile=options.pidfile)
     if options.logfile and options.logfile != '-':
         ingraphd.addLoggingHandler(logging.FileHandler(options.logfile))
-    if options.loglevel not in ['INFO', 'WARNING', 'ERROR', 'CRITICAL']:
-        ingraphd.logger.error('Invalid loglevel: %s' % (options.loglevel))
-        sys.exit(1)
+        ingraphd.stdout_logger = ingraph.log.FileLikeLogger(ingraphd.logger,
+                                                            logging.INFO)
+        ingraphd.stderr_logger = ingraph.log.FileLikeLogger(ingraphd.logger,
+                                                            logging.CRITICAL)
     ingraphd.logger.setLevel(getattr(logging, options.loglevel))
     if options.user:
         from pwd import getpwnam
         try:
-            ingraphd.uid = getpwnam(options.user)[2]
+            ingraphd.uid = getpwnam(options.user).pw_uid
         except KeyError:
-            ingraphd.logger.error("User %s not found.\n" % options.user)
+            sys.stderr.write("User %s not found.\n" % options.user)
             sys.exit(1)
     if options.group:
         from grp import getgrnam
         try:
-            ingraphd.gid = getgrnam(options.group)[2]
+            ingraphd.gid = getgrnam(options.group).gr_gid
         except KeyError:
-            ingraphd.logger.error("Group %s not found.\n" % options.group)
+            sys.stderr.write("Group %s not found.\n" % options.group)
             sys.exit(1)
     
     getattr(ingraphd, args[0])()

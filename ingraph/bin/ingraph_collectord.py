@@ -31,6 +31,7 @@ import logging
 import ingraph
 from ingraph import daemon
 from ingraph import utils
+import ingraph.log
 
 
 class UnsupportedDaemonFunction(Exception): pass
@@ -257,38 +258,21 @@ class Collectord(daemon.UnixDaemon):
             time.sleep(self.sleeptime)
 
 
-class Option(optparse.Option):
-    MODES = ['REMOVE', 'BACKUP']
-
-    def __init__(self, *opts, **attrs):
-        Option.TYPES = optparse.Option.TYPES + ('mode',)
-        Option.TYPE_CHECKER = copy.copy(optparse.Option.TYPE_CHECKER)
-        Option.TYPE_CHECKER['mode'] = self.check_mode
-        optparse.Option.__init__(self, *opts, **attrs)
-
-    def check_mode(self, option, opt, value):
-        value = value.upper()
-        if value not in Option.MODES:
-            raise optparse.OptionValueError(
-                'Option %s: invalid mode. Expected is one of: %s.' %
-                (value, ', '.join(Option.Modes)))
-        return value
-
-
 def main():
-    daemon_functions = ['start', 'stop', 'restart', 'status']
-    usage = 'Usage: %%prog [options] %s' % '|'.join(daemon_functions)
+    DAEMON_FUNCTIONS = ['start', 'stop', 'restart', 'status']
+    LOG_LVLS = ('INFO', 'WARNING', 'ERROR', 'CRITICAL')
+    PERFDATA_FORMATS = ('ingraph', 'pnp')
+    usage = 'Usage: %%prog [options] {%s}' % '|'.join(DAEMON_FUNCTIONS)
     parser = optparse.OptionParser(option_class=Option, usage=usage,
                                    version='%%prog %s' % ingraph.__version__)
     parser.add_option('-f', '--foreground', dest='detach', default=True,
-                      action='store_false',
-                      help='run in foreground')
+                      action='store_false', help='run in foreground')
     parser.add_option('-d', '--chdir', dest='chdir', metavar='DIR',
                       default='/etc/ingraph',
                       help='change to directory DIR [default: %default]')
     parser.add_option('-p', '--pidfile', dest='pidfile', metavar='FILE',
                       default='/var/run/ingraph/ingraph-collectord.pid',
-                      help="pidfile FILE [default: %default]")
+                      help='pidfile FILE [default: %default]')
     parser.add_option('-o', '--logfile', dest='logfile', metavar='FILE',
                       default=None, help='logfile FILE [default: %default]')
     parser.add_option('-P', '--perfdata-dir', dest='perfdata_dir',
@@ -310,18 +294,20 @@ def main():
     parser.add_option('-u', '--user', dest='user', default=None)
     parser.add_option('-g', '--group', dest='group', default=None)
     parser.add_option('-F', '--format', dest='format', default='pnp',
-                      metavar='FORMAT', help='perfdata format, "ingraph" '
-                      'or "pnp" [default: %default]')
+                      choices=PERFDATA_FORMATS,
+                      help="perfdata format, one of: %s [default: %%default]" %
+                      ', '.join(PERFDATA_FORMATS))
     parser.add_option('-L', '--loglevel', dest='loglevel', default='INFO',
-                      help='the log level (INFO, WARNING, ERROR, CRITICAL), ' +
-                           '[default: %default]')
+                      choices=LOG_LVLS,
+                      help="the log level, one of: %s [default: %%default]" %
+                      ', '.join(LOG_LVLS))
     (options, args) = parser.parse_args()
 
     try:
-        if args[0] not in daemon_functions:
+        if args[0] not in DAEMON_FUNCTIONS:
             raise UnsupportedDaemonFunction()
     except (IndexError, UnsupportedDaemonFunction):
-            parser.print_help()
+            parser.print_usage()
             sys.exit(1)
 
     collectord = Collectord(perfdata_dir=options.perfdata_dir,
@@ -333,36 +319,38 @@ def main():
                             detach=options.detach,
                             pidfile=options.pidfile,
                             format=options.format)
+    
     if options.logfile and options.logfile != '-':
         collectord.addLoggingHandler(logging.FileHandler(options.logfile))
-    if options.loglevel not in ['INFO', 'WARNING', 'ERROR', 'CRITICAL']:
-        collectord.logger.error('Invalid loglevel: %s' % (options.loglevel))
-        sys.exit(1)
+        collectord.stdout_logger = ingraph.log.FileLikeLogger(collectord.logger,
+                                                              logging.INFO)
+        collectord.stderr_logger = ingraph.log.FileLikeLogger(collectord.logger,
+                                                              logging.CRITICAL)
+    collectord.logger.setLevel(getattr(logging, options.loglevel))
     if options.user:
         from pwd import getpwnam
         try:
-            collectord.uid = getpwnam(options.user)[2]
+            collectord.uid = getpwnam(options.user).pw_uid
         except KeyError:
-            collectord.logger.error("User %s not found.\n" % options.user)
+            sys.stderr.write("User %s not found.\n" % options.user)
             sys.exit(1)
     if options.group:
         from grp import getgrnam
         try:
-            collectord.gid = getgrnam(options.group)[2]
+            collectord.gid = getgrnam(options.group).gr_gid
         except KeyError:
-            collectord.logger.error("Group %s not found.\n" % options.group)
+            sys.stderr.write("Group %s not found.\n" % options.group)
             sys.exit(1)
 
     if options.perfdata_dir:
         if not os.access(options.perfdata_dir, os.W_OK):
-            collectord.logger.error("Perfdata directory is not writable.\n"
+            sys.stderr.write("Perfdata directory is not writable.\n"
                 + "Please make sure the perfdata directory is writable so "
                 + "the inGraph daemon can delete/move perfdata files.\n")
             sys.exit(1)
 
     getattr(collectord, args[0])()
     return 0
-
 
 if __name__ == '__main__':
     sys.exit(main())

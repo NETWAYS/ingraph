@@ -24,6 +24,7 @@ TR=${TR-tr}
 PATCH=${PATCH-patch}
 GREP=${GREP-grep}
 SHELL=${SHELL-sh}
+GETENT=${GETENT-getent}
 
 usage () {
     echo
@@ -172,6 +173,20 @@ then
 
     usage
 fi
+
+$GETENT passwd $WEB_USER
+[ $? -ne 0 ] && {
+    echo "ERROR: Web user $WEB_USER: no such user" >&2
+    
+    usage
+}
+
+$GETENT group $WEB_GROUP
+[ $? -ne 0 ] && {
+    echo "ERROR: Web group $WEB_GROUP: no such group" >&2
+    
+    usage
+}
 
 # Remove trailing / from prefix (if existing)
 PREFIX=${PREFIX%%/}

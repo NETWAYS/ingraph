@@ -20,6 +20,7 @@ FIND=${FIND-find}
 INSTALL=${INSTALL-install}
 SED=${SED-sed}
 LN=${LN-ln}
+GETENT=${GETENT-getent}
 
 usage () {
     echo
@@ -192,6 +193,20 @@ then
 
     usage
 fi
+
+$GETENT passwd $WEB_USER
+[ $? -ne 0 ] && {
+    echo "ERROR: Web user $WEB_USER: no such user" >&2
+    
+    usage
+}
+
+$GETENT group $WEB_GROUP
+[ $? -ne 0 ] && {
+    echo "ERROR: Web group $WEB_GROUP: no such group" >&2
+    
+    usage
+}
 
 PREFIX=${PREFIX%%/} # Remove trailing / from prefix (if existing)
 

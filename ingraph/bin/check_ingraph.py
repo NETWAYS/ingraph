@@ -226,19 +226,19 @@ def main():
                       metavar='SECOND_END', help='end of the second interval ' +
                       '(relative to the current time, in hours)')
     parser.add_option('-w', '--warning', dest='warning', default=20,
-                      metavar='WARNING', help='warning threshold, in % [default: %%default]')
+                      metavar='WARNING', help='warning threshold, in % [default: %default]')
     parser.add_option('-c', '--critical', dest='critical', default=10,
-                      metavar='CRITICAL', help='critical threshold, in % [default: %%default]')
+                      metavar='CRITICAL', help='critical threshold, in % [default: %default]')
     parser.add_option('-E', '--season', dest='season', default=24,
-                      metavar='SEASON', help='Season, in hours [for HW, default: %%default]')
+                      metavar='SEASON', help='Season, in hours [for HW, default: %default]')
     parser.add_option('-A', '--alpha', dest='alpha', default=0.5,
-                      metavar='ALPHA', help='Alpha [for HW, default: %%default]')
+                      metavar='ALPHA', help='Alpha [for HW, default: %default]')
     parser.add_option('-B', '--beta', dest='beta', default=0.5,
-                      metavar='BETA', help='Beta [for HW, default: %%default]')
+                      metavar='BETA', help='Beta [for HW, default: %default]')
     parser.add_option('-G', '--gamma', dest='gamma', default=0.5,
-                      metavar='GAMMA', help='Gamma [for HW, default: %%default]')
+                      metavar='GAMMA', help='Gamma [for HW, default: %default]')
     parser.add_option('-T', '--failures', dest='failures', default=5,
-                      metavar='FAILURES', help='Failures, in % of total number of values in one season [for HW, default: %%default]')
+                      metavar='FAILURES', help='Failures, in % of total number of values in one season [for HW, default: %default]')
 
     (options, args) = parser.parse_args()
 
@@ -340,11 +340,11 @@ def main():
     if options.function == 'trend':
         metric_first = calculate_trend(data_first)
         metric_second = calculate_trend(data_second)
-        total = metric_first
+        average = metric_first
     elif options.function == 'stddev':
         metric_first = calculate_stddev(data_first)
         metric_second = calculate_stddev(data_second)
-        total = (calculate_average(data_first) +
+        average = (calculate_average(data_first) +
             calculate_average(data_second)) / 2
     elif options.function == 'hw':
         chart = result_first['charts'][0]
@@ -360,14 +360,16 @@ def main():
         failures_warning = 0
 
         for i in range(data_season_len):
-            if data_season_first[i][1] == None or data_hw_first[i][1] == 0:
+            if data_season_first[i][1] == None or data_season_first[i][1] == 0:
                 continue
 
-            difference = (data_season_first[i][1] / data_hw_first[i][1]) * 100
+            average = (data_hw_first[i][1] + data_season_first[i][1]) / 2
+            difference = (data_hw_first[i][1] - data_season_first[i][1]) * 100 / average
 
-            if math.fabs(difference) > options.critical:
+            if math.fabs(difference) * 100 > options.critical:
                 failures_critical += 1
-            elif math.fabs(difference) > options.warning:
+
+            if math.fabs(difference) * 100 > options.warning:
                 failures_warning += 1
 
         if failures_critical > options.failures / 100 * data_season_len:
@@ -388,13 +390,13 @@ def main():
     else:
         metric_first = calculate_average(data_first)
         metric_second = calculate_average(data_second)
-        total = (calculate_average(data_first) +
+        average = (calculate_average(data_first) +
             calculate_average(data_second)) / 2
 
     if metric_first == None or metric_second == None:
         plugin_result('warning', 'Metric could not be calculated.')
 
-    difference = (metric_second - metric_first) * 100 / total
+    difference = (metric_second - metric_first) * 100 / verage
 
     perfdata = {
         'metric_first': metric_first,

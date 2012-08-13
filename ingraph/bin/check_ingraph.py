@@ -170,6 +170,10 @@ def hwpredict(chart, season_len, granularity, alpha, beta, gamma):
         else:
             values.append(0)
 
+    # Not enough values
+    if len(values) < 2 * count_predict:
+        return None
+
     #print "XXX: ", len(values)
 
     #print values

@@ -290,6 +290,15 @@ def main():
     if options.warning:
         options.warning = float(options.warning)
 
+    if options.alpha:
+        options.alpha = float(options.alpha)
+
+    if options.beta:
+        options.beta = float(options.beta)
+
+    if options.gamma:
+        options.gamma = float(options.gamma)
+
     config = ingraph.utils.load_config('ingraph-xmlrpc.conf')
 
     if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:

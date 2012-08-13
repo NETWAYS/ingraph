@@ -391,7 +391,7 @@ def main():
         perfdata = {
             'failures_critical': failures_critical,
             'failures_warning': failures_warning,
-            'available_datapoints': len(data_first),
+            'total_datapoints': len(data_first),
             'season_datapoints': data_season_len
         }
 

@@ -226,19 +226,19 @@ def main():
                       metavar='SECOND_END', help='end of the second interval ' +
                       '(relative to the current time, in hours)')
     parser.add_option('-w', '--warning', dest='warning', default=20,
-                      metavar='WARNING', help='warning threshold, in % (default: 20)')
+                      metavar='WARNING', help='warning threshold, in % [default: %%default]')
     parser.add_option('-c', '--critical', dest='critical', default=10,
-                      metavar='CRITICAL', help='critical threshold, in % (default: 10)')
+                      metavar='CRITICAL', help='critical threshold, in % [default: %%default]')
     parser.add_option('-E', '--season', dest='season', default=24,
-                      metavar='SEASON', help='Season, in hours (for HW, default: 24)')
+                      metavar='SEASON', help='Season, in hours [for HW, default: %%default]')
     parser.add_option('-A', '--alpha', dest='alpha', default=0.5,
-                      metavar='ALPHA', help='Alpha (for HW, default: 0.5)')
+                      metavar='ALPHA', help='Alpha [for HW, default: %%default]')
     parser.add_option('-B', '--beta', dest='beta', default=0.5,
-                      metavar='BETA', help='Beta (for HW, default: 0.5)')
+                      metavar='BETA', help='Beta [for HW, default: %%default]')
     parser.add_option('-G', '--gamma', dest='gamma', default=0.5,
-                      metavar='GAMMA', help='Gamma (for HW, default: 0.5)')
+                      metavar='GAMMA', help='Gamma [for HW, default: %%default]')
     parser.add_option('-T', '--failures', dest='failures', default=5,
-                      metavar='FAILURES', help='Failures, in % of total number of values in one season (for HW, default: 5%')
+                      metavar='FAILURES', help='Failures, in % of total number of values in one season [for HW, default: %%default]')
 
     (options, args) = parser.parse_args()
 

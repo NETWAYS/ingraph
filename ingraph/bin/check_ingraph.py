@@ -278,6 +278,18 @@ def main():
             print("Error: second interval must not be specified when using Holt-Winters.")
             sys.exit(1)
 
+    if options.season:
+        options.season = int(options.season)
+
+    if options.failures:
+        options.failures = float(options.failures)
+
+    if options.critical:
+        options.critical = float(options.critical)
+
+    if options.warning:
+        options.warning = float(options.warning)
+
     config = ingraph.utils.load_config('ingraph-xmlrpc.conf')
 
     if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
@@ -348,16 +360,19 @@ def main():
         failures_warning = 0
 
         for i in range(data_season_len):
+            if data_season_first[i][1] == None or data_hw_first[i][1] == 0:
+                continue
+
             difference = (data_season_first[i][1] / data_hw_first[i][1]) * 100
 
-            if math.fabs(difference) > float(options.critical):
+            if math.fabs(difference) > options.critical:
                 failures_critical += 1
-            elif math.fabs(difference) > float(options.warning):
+            elif math.fabs(difference) > options.warning:
                 failures_warning += 1
 
-        if failures_critical > options.failures:
+        if failures_critical > options.failures / 100 * data_season_len:
             status = 'critical'
-        elif failures_warning > options.failures:
+        elif failures_warning > options.failures / 100 * data_season_len:
             status = 'warning'
         else:
             status = 'ok'
@@ -387,9 +402,9 @@ def main():
         'difference': str(round(difference, 2)) + '%'
     }
 
-    if math.fabs(difference) > float(options.critical):
+    if math.fabs(difference) > options.critical:
         status = 'critical'
-    elif math.fabs(difference) > float(options.warning):
+    elif math.fabs(difference) > options.warning:
         status = 'warning'
     else:
         status = 'ok'

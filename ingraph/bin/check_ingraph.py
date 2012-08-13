@@ -67,6 +67,126 @@ def calculate_average(values):
     else:
         return float(sum) / count
 
+def holtwinters(y, alpha, beta, gamma, c, debug=False):
+    """
+    y - time series data.
+    alpha , beta, gamma - exponential smoothing coefficients 
+			      for level, trend, seasonal components.
+    c -  extrapolated future data points.
+	  4 quarterly
+	  7 weekly.
+	  12 monthly
+ 
+ 
+    The length of y must be a an integer multiple  (> 2) of c.
+    """
+    #Compute initial b and intercept using the first two complete c periods.
+    ylen =len(y)
+    if ylen % c !=0:
+        return None
+    fc =float(c)
+    ybar2 =sum([y[i] for i in range(c, 2 * c)])/ fc
+    ybar1 =sum([y[i] for i in range(c)]) / fc
+    b0 =(ybar2 - ybar1) / fc
+    if debug: print "b0 = ", b0
+
+    #Compute for the level estimate a0 using b0 above.
+    tbar  =sum(i for i in range(1, c+1)) / fc
+    if debug: print tbar
+    a0 =ybar1  - b0 * tbar
+    if debug: print "a0 = ", a0
+
+    #Compute for initial indices
+    I = []
+    for i in range(0, ylen):
+        div = a0 + (i+1) * b0
+
+        if div != 0:
+            I.append(y[i] / div)
+        else:
+            I.append(0)
+    if debug: print "Initial indices = ", I
+
+    S=[0] * (ylen+ c)
+    for i in range(c):
+        S[i] =(I[i] + I[i+c]) / 2.0
+ 
+    #Normalize so S[i] for i in [0, c)  will add to c.
+    Ssum = sum([S[i] for i in range(c)])
+    if Ssum != 0:
+        tS =c / Ssum
+
+        for i in range(c):
+            S[i] *=tS
+            if debug: print "S[",i,"]=", S[i]
+ 
+    # Holt - winters proper ...
+    if debug: print "Use Holt Winters formulae"
+    F =[0] * (ylen+ c)
+ 
+    At =a0
+    Bt =b0
+    for i in range(ylen):
+        Atm1 =At
+        Btm1 =Bt
+        if S[i] == 0:
+            Sy = 0
+        else:
+            Sy = y[i] / S[i]
+        At =alpha * Sy + (1.0-alpha) * (Atm1 + Btm1)
+        Bt =beta * (At - Atm1) + (1- beta) * Btm1
+        if At != 0:
+            S[i+c] =gamma * y[i] / At + (1.0 - gamma) * S[i]
+        else:
+            S[i+c] =0
+        F[i]=(a0 + b0 * (i+1)) * S[i]
+        if debug: print "i=", i+1, "y=", y[i], "S=", S[i], "Atm1=", Atm1, "Btm1=",Btm1, "At=", At, "Bt=", Bt, "S[i+c]=", S[i+c], "F=", F[i]
+        if debug: print i,y[i],  F[i]
+    #Forecast for next c periods:
+    forecast = []
+    for m in range(c):
+        forecast.append((At + Bt* (m+1))* S[ylen + m])
+    return forecast
+
+def hwpredict(chart, season_len, granularity, alpha, beta, gamma):
+    # only apply hw to 'avg' plots
+    data = chart['data']
+
+    if len(data) == 0:
+        return None
+
+    count_predict = season_len
+    count_init = (len(data) / count_predict - 1) * count_predict
+
+    if count_init <= 0:
+        return None
+
+    #print "data:", len(data), "init:", count_init, "predict:", count_predict
+
+    values = []
+    for value in data[-(count_init + count_predict):-count_predict]:
+        if value[1] != None:
+            values.append(value[1])
+        else:
+            values.append(0)
+
+    #print "XXX: ", len(values)
+
+    #print values
+    forecast = holtwinters(values, alpha, beta, gamma, count_predict)
+    #print forecast
+
+    if forecast == None:
+        return None
+
+    ts = data[-count_predict][0]
+    forecast_data = []
+    for value in forecast:
+        ts += granularity
+        forecast_data.append((ts, value))
+
+    return forecast_data
+
 def plugin_result(status, message, perfdata=[]):
     perfdata_str = ''.join(["%s=%s;" % (k, str(v)) for k, v in perfdata.items()])
     print status, '-', message + '|' + perfdata_str
@@ -88,7 +208,7 @@ def main():
     parser.add_option('-P', '--perfkey', dest='perfkey', metavar='PERFKEY',
                       help='perfdata key')
     parser.add_option('-F', '--function', dest='function', metavar='FUNCTION',
-                     help='comparison function ("trend", "stddev" or "average")')
+                     help='comparison function ("trend", "stddev", "average", "hw")')
     parser.add_option('-f', '--first-start', dest='first_start',
                       metavar='FIRST_START', help='start of the first ' +
                       'interval (relative to the current time, in hours)')
@@ -105,6 +225,17 @@ def main():
                       metavar='WARNING', help='warning threshold, in % (default: 10)')
     parser.add_option('-c', '--critical', dest='critical', default=20,
                       metavar='CRITICAL', help='critical threshold, in % (default: 20)')
+    parser.add_option('-E', '--season', dest='season', default=24,
+                      metavar='SEASON', help='Season, in hours (for HW, default: 24)')
+    parser.add_option('-A', '--alpha', dest='alpha', default=0.5,
+                      metavar='ALPHA', help='Alpha (for HW, default: 0.5)')
+    parser.add_option('-B', '--beta', dest='beta', default=0.5,
+                      metavar='BETA', help='Beta (for HW, default: 0.5)')
+    parser.add_option('-G', '--gamma', dest='gamma', default=0.5,
+                      metavar='GAMMA', help='Gamma (for HW, default: 0.5)')
+    parser.add_option('-T', '--failures', dest='failures', default=10,
+                      metavar='FAILURES', help='Failures, in % of total numbero f values (for HW, default 10%')
+
     (options, args) = parser.parse_args()
 
     if options.chdir:
@@ -126,7 +257,7 @@ def main():
         print("Error: comparison function must be specified.")
         sys.exit(1)
 
-    if options.function not in ['trend', 'stddev', 'average']:
+    if options.function not in ['trend', 'stddev', 'average', 'hw']:
         print("Error: invalid comparison function.")
         sys.exit(1)
 
@@ -134,9 +265,14 @@ def main():
         print("Error: first interval must be specified.")
         sys.exit(1)
 
-    if not options.second_start or not options.second_end:
-        print("Error: second interval must be specified.")
-        sys.exit(1)
+    if options.function != 'hw':
+        if not options.second_start or not options.second_end:
+            print("Error: second interval must be specified.")
+            sys.exit(1)
+    else:
+        if options.second_start or options.second_end:
+            print("Error: second interval must not be specified when using Holt-Winters.")
+            sys.exit(1)
 
     config = ingraph.utils.load_config('ingraph-xmlrpc.conf')
 
@@ -158,16 +294,29 @@ def main():
 
     first_start = now + int(options.first_start) * 3600
     first_end = now + int(options.first_end) * 3600
-    second_start = now + int(options.second_start) * 3600
-    second_end = now + int(options.second_end) * 3600
+
+    if options.function != 'hw':
+        second_start = now + int(options.second_start) * 3600
+        second_end = now + int(options.second_end) * 3600
 
     query = { options.host: { options.service: { options.perfkey: ['avg'] } } }
 
     result_first = api.getPlotValues2(query, first_start, first_end, 300)
+
+    if len(result_first['charts']) == 0:
+        print("No data returned for first time interval.")
+        sys.exit(1)
+
     data_first = result_first['charts'][0]['data']
 
-    result_second = api.getPlotValues2(query, second_start, second_end, 300)
-    data_second = result_second['charts'][0]['data']
+    if options.function != 'hw':
+        result_second = api.getPlotValues2(query, second_start, second_end, 300)
+
+        if len(result_second['charts']) == 0:
+            print("No data returned for second time interval.")
+            sys.exit(1)
+
+        data_second = result_second['charts'][0]['data']
 
 #    print data_first
 #    print data_second
@@ -181,6 +330,42 @@ def main():
         metric_second = calculate_stddev(data_second)
         total = (calculate_average(data_first) +
             calculate_average(data_second)) / 2
+    elif options.function == 'hw':
+        chart = result_first['charts'][0]
+        data_season_len = options.season * 3600 / chart['granularity']
+        data_season_first = data_first[-data_season_len:]
+        data_hw_first = hwpredict(chart, data_season_len, chart['granularity'], options.alpha, options.beta, options.gamma)
+
+        if data_hw_first == None:
+            print("Not enough data to run Holt-Winters analysis.")
+            sys.exit(1)
+
+        failures_critical = 0
+        failures_warning = 0
+
+        for i in range(data_season_len):
+            difference = (data_season_first[i][1] / data_hw_first[i][1]) * 100
+
+            if math.fabs(difference) > float(options.critical):
+                failures_critical += 1
+            elif math.fabs(difference) > float(options.warning):
+                failures_warning += 1
+
+        if failures_critical > options.failures:
+            status = 'critical'
+        elif failures_warning > options.failures:
+            status = 'warning'
+        else:
+            status = 'ok'
+
+        perfdata = {
+            'failures_critical': failures_critical,
+            'failures_warning': failures_warning,
+            'available_datapoints': len(data_first),
+            'season_datapoints': data_season_len
+        }
+
+        plugin_result(status, '', perfdata)
     else:
         metric_first = calculate_average(data_first)
         metric_second = calculate_average(data_second)
@@ -204,7 +389,7 @@ def main():
         status = 'warning'
     else:
         status = 'ok'
-       
+
     plugin_result(status, '', perfdata)
 
 if __name__ == '__main__':

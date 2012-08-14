@@ -21,6 +21,7 @@ import atexit
 import errno
 import fcntl
 import logging
+import logging.handlers
 
 try:
     os.SEEK_SET
@@ -40,7 +41,8 @@ class UnixDaemon(object):
         gid=os.getgid(),
         detach=True,
         stdout_logger=None,
-        stderr_logger=None):
+        stderr_logger=None,
+        log=None):
         """Create a new unix daemon instance."""
         self.pidfile = pidfile
         self.pidfp = None
@@ -53,8 +55,9 @@ class UnixDaemon(object):
         self.logger = logging.getLogger('ingraph')
         self.addLoggingHandler(logging.StreamHandler(sys.stdout))
         self.logger.setLevel(logging.DEBUG)
-        self.stdout_logger=stdout_logger
-        self.stderr_logger=stderr_logger
+        self.stdout_logger = stdout_logger
+        self.stderr_logger = stderr_logger
+        self.log = log
         super(UnixDaemon, self).__init__()
 
     def addLoggingHandler(self, handler):
@@ -180,6 +183,12 @@ class UnixDaemon(object):
         os.chdir(self.chdir)
         os.setgid(self.gid)
         os.setuid(self.uid)
+
+        if self.log and self.log != '-':
+            self.addLoggingHandler(
+                logging.handlers.RotatingFileHandler(
+                     self.log, maxBytes=2**11*5, backupCount=4)) # 4 files,
+                                                                 # 5MB each
         
         self.before_daemonize()
         if self.detach:

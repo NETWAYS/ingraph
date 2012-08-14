@@ -27,7 +27,6 @@ import copy
 import pickle
 import xmlrpclib
 import logging
-import logging.handlers
 
 import ingraph
 from ingraph import daemon
@@ -320,12 +319,10 @@ def main():
                             chdir=options.chdir,
                             detach=options.detach,
                             pidfile=options.pidfile,
-                            format=options.format)
+                            format=options.format,
+                            log=options.logfile)
     
     if options.logfile and options.logfile != '-':
-        collectord.addLoggingHandler(
-            logging.handlers.RotatingFileHandler(
-                 options.logfile, maxBytes=2**10, backupCount=3))
         collectord.stdout_logger = ingraph.log.FileLikeLogger(collectord.logger,
                                                               logging.INFO)
         collectord.stderr_logger = ingraph.log.FileLikeLogger(collectord.logger,

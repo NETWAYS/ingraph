@@ -22,7 +22,6 @@ import threading
 import sys
 import optparse
 import logging
-import logging.handlers
 
 import ingraph
 import ingraph.api
@@ -194,11 +193,9 @@ def main():
             
     ingraphd = InGraphd(chdir=options.chdir,
                         detach=options.detach,
-                        pidfile=options.pidfile)
+                        pidfile=options.pidfile,
+                        log=options.logfile)
     if options.logfile and options.logfile != '-':
-        ingraphd.addLoggingHandler(
-            logging.handlers.RotatingFileHandler(
-                 options.logfile, maxBytes=2**10, backupCount=3))
         ingraphd.stdout_logger = ingraph.log.FileLikeLogger(ingraphd.logger,
                                                             logging.INFO)
         ingraphd.stderr_logger = ingraph.log.FileLikeLogger(ingraphd.logger,

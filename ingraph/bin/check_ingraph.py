@@ -372,6 +372,8 @@ def main():
             if data_season_first[i][1] == None or data_season_first[i][1] == 0:
                 continue
 
+            #print data_season_first[i][1], data_hw_first[i][1]
+
             average = (data_hw_first[i][1] + data_season_first[i][1]) / 2
             difference = (data_hw_first[i][1] - data_season_first[i][1]) * 100 / average
 
@@ -405,7 +407,7 @@ def main():
     if metric_first == None or metric_second == None:
         plugin_result('warning', 'Metric could not be calculated.')
 
-    difference = (metric_second - metric_first) * 100 / verage
+    difference = (metric_second - metric_first) * 100 / average
 
     perfdata = {
         'metric_first': metric_first,

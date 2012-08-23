@@ -239,6 +239,10 @@ def main():
                       metavar='GAMMA', help='Gamma [for HW, default: %default]')
     parser.add_option('-T', '--failures', dest='failures', default=5,
                       metavar='FAILURES', help='Failures, in % of total number of values in one season [for HW, default: %default]')
+    parser.add_option('-a', '--absolute', dest='absolute', default=0,
+                      metavar='ABSOLUTE', help='Interpret thresholds as absolute values (rather than percentages)')
+    parser.add_option('-p', '--percent', dest='percent', default=0,
+                      metavar='PERCENT', help='Interpret thresholds as percentage values (rather than absolute values)')
 
     (options, args) = parser.parse_args()
 
@@ -298,6 +302,8 @@ def main():
 
     if options.gamma:
         options.gamma = float(options.gamma)
+
+    use_percentages = not options.absolute
 
     config = ingraph.utils.load_config('ingraph-xmlrpc.conf')
 
@@ -383,12 +389,20 @@ def main():
             if math.fabs(difference) * 100 > options.warning:
                 failures_warning += 1
 
-        if failures_critical > options.failures / 100 * data_season_len:
-            status = 'critical'
-        elif failures_warning > options.failures / 100 * data_season_len:
-            status = 'warning'
+        if use_percentages:
+            if failures_critical > options.failures / 100 * data_season_len:
+                status = 'critical'
+            elif failures_warning > options.failures / 100 * data_season_len:
+                status = 'warning'
+            else:
+                status = 'ok'
         else:
-            status = 'ok'
+            if failures_critical > options.failures:
+                status = 'critical'
+            elif failures_warning > options.failures:
+                status = 'warning'
+            else:
+                status = 'ok'
 
         perfdata = {
             'failures_critical': failures_critical,
@@ -407,7 +421,10 @@ def main():
     if metric_first == None or metric_second == None:
         plugin_result('warning', 'Metric could not be calculated.')
 
-    difference = (metric_second - metric_first) * 100 / average
+    if use_percentages:
+        difference = (metric_second - metric_first) * 100 / average
+    else:
+        difference = metric_second - metric_first
 
     perfdata = {
         'metric_first': metric_first,

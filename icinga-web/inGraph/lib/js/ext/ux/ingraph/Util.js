@@ -63,6 +63,8 @@
             formatTime: function (v) {
                 var sign = v >= 0 ? 1 : -1;
                 v = Math.abs(v);
+                
+                /* If value is less than one, use a smaller unit */
                 if (v < 1) {
                     var pow = calcPow(v, timeSpec.base, timeSpec.units.length,
                                       true);
@@ -70,8 +72,33 @@
                         value: v * Math.pow(timeSpec.base, pow) * sign,
                         unit: timeSpec.units[pow]
                     };
-
                 }
+                
+                /* After 48h switch to days */
+                if (v > 48 * 60 * 60) {
+                    return {
+                        value: v / 60 / 60 / 24 * sign,
+                        unit: 'd'
+                    };
+                }
+                
+                /* After 120minutes switch to hours */
+                if (v > 120 * 60) {
+                    return {
+                        value: v / 60 / 60 * sign,
+                        unit: 'h'
+                    };
+                }
+                
+                /* After 10minutes switch to minutes */
+                if (v > 60 * 10) {
+                    return {
+                        value: v / 60 * sign,
+                        unit: 'm'
+                    };
+                }
+                
+                /* Default */
                 return {
                     value: v * sign,
                     unit: 's'

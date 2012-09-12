@@ -174,14 +174,14 @@ then
     usage
 fi
 
-$GETENT passwd $WEB_USER
+$GETENT passwd $WEB_USER > /dev/null
 [ $? -ne 0 ] && {
     echo "ERROR: Web user $WEB_USER: no such user" >&2
     
     usage
 }
 
-$GETENT group $WEB_GROUP
+$GETENT group $WEB_GROUP > /dev/null
 [ $? -ne 0 ] && {
     echo "ERROR: Web group $WEB_GROUP: no such group" >&2
     

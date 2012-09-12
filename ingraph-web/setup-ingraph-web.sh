@@ -247,7 +247,7 @@ done
 
 # If inGraph.xml does not exist install it
 [ ! -r $PREFIX/app/modules/inGraph/config/inGraph.xml ] && {
-    $INSTALL -m 644 -t $PREFIX/app/modules/inGraph/config $SRC/config/inGraph.xml
+    $INSTALL -m 644 -t $PREFIX/app/modules/inGraph/config $SRC/app/modules/inGraph/config/inGraph.xml
 }
 
 # Install bin files

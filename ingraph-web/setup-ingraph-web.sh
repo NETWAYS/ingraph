@@ -257,7 +257,7 @@ $INSTALL -m 755 -t $PREFIX/bin $BINFILES
 
 echo "(3/4) Installing cache and log directory..."
 
-$INSTALL -m 755 -o $WEB_USER -g $WEB_GROUP -t $PREFIX/app cache log
+$INSTALL -m 755 -o $WEB_USER -g $WEB_GROUP -d $PREFIX/app/log $PREFIX/app/cache
 
 # Install direcotries and files from icinga-web module
 echo "(4/4) Installing directories and files from common source..."

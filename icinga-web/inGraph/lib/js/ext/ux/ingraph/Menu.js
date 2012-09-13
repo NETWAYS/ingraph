@@ -57,7 +57,7 @@
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         dateText: _('Either select date via the popup date picker or input an ' +
-                    'English textual date or time, i.e.<br />' +
+                    'English textual date or time, e.g.<br />' +
                     '<ul style="list-style-type:circle;' +
                         'list-style-position:inside;">' +
                         '<li>now</li>' +

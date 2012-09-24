@@ -50,7 +50,7 @@
                     // Sort series by their mean from highest to lowest.
                     // This is nice for filled lines since series will not paint
                     // over each other.
-                    series.sort(function (a, b) {
+                    series.sort(function (b, a) {
                         return $.map(a.data, function (v) {
                             return parseFloat(v[1]);
                         }).mean() - $.map(b.data, function (v) {

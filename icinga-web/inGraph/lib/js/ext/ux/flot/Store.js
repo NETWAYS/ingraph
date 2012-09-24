@@ -251,15 +251,15 @@
                 return true;
             }
 
-            var empty = Ext.each(this.data.items, function (chart) {
+            var empty = true;
+            Ext.each(this.data.items, function (chart) {
                 // Data property is the series array
-                if (chart.data.data.length === 0) {
+                if (chart.data.data.length > 0) {
+                    empty = false;
                     return false;
                 }
-                return true;
             });
-            // Ext.each returns count of passed iterations if false returned
-            return empty !== undefined ? true : false;
+            return empty;
         },
 
         // private

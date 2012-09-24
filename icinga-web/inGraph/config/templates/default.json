@@ -21,11 +21,11 @@
                 "fillColor": {
                     "colors": [
                         {
-                            "opacity": 0.4
+                            "opacity": 0.7
                         },
                         {
                             "opacity": 0.9,
-                            "brightness": 0.8
+                            "brightness": 0.9
                         }
                     ]
                 }

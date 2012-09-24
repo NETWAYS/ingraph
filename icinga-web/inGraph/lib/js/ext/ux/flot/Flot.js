@@ -681,11 +681,15 @@
 //                            yaxis.set('max', 100);
 //                        }
                     }
-
-                    if (yaxis.isModified('min') === false &&
-                            yaxis.get('min')  === null) {
-                        yaxis.set('min', baseline);
-                    }
+                    
+                    /*
+                     * TODO(el): Set baseline on every load if not user-defined.
+                     * Store needs sort of locking prior to that.
+                     */
+//                    if (yaxis.isModified('min') === false &&
+//                            yaxis.get('min')  === null) {
+//                        yaxis.set('min', baseline);
+//                    }
                 });
             }
 

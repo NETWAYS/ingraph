@@ -514,8 +514,15 @@
                     series.set(field.name, templateValue);
                 });
             }, this);
-
+            
+            var hosts = [];
+            
             this.store.each(function (series) {
+                
+                if (-1 === hosts.indexOf(series.json.host)) {
+                    hosts.push(series.json.host);
+                }
+                
                 var convert = series.get('convert');
 
                 if (!convert) {
@@ -690,6 +697,14 @@
 //                            yaxis.get('min')  === null) {
 //                        yaxis.set('min', baseline);
 //                    }
+                });
+            }
+            
+            if (hosts.length > 1) {
+                this.store.each(function (series) {
+                    series.set(
+                        'label',
+                        series.json.host + ': ' + series.get('label'));
                 });
             }
 

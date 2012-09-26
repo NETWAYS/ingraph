@@ -8,6 +8,9 @@
                 "steps": true,
                 "lineWidth": 2
             }
+        },
+        "legend": {
+            "position": "nw"
         }
     },
 

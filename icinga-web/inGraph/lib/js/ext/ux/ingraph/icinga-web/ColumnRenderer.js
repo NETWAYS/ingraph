@@ -14,12 +14,9 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
-
 (function () {
     "use strict";
-
     Ext.ns('Ext.ux.ingraph.icingaweb');
-
     /**
      * @class Ext.ux.ingraph.icingaweb.ColumnRenderer
      * @namespace Ext.ux.ingraph.icingaweb
@@ -30,7 +27,6 @@
     Ext.ux.ingraph.icingaweb.ColumnRenderer = (function () {
         /**
          * Preview graph within a new window.
-         * @method Preview
          * @private
          */
         var Preview = function (e, el) {
@@ -38,7 +34,6 @@
 
             if (row !== false) {
                 var rec = this.store.getAt(row);
-
                 Ext.ux.ingraph.icingaweb.Cronk.Window({
                     title: new Ext.XTemplate(this.cfg.title).apply(rec.data),
                     host: rec.get(this.cfg.host),
@@ -50,14 +45,29 @@
                     overview: this.cfg.preview.overview
                 });
             }
-        };
-
+        },
+        /**
+         * Preview graph within a new window.
+         */
+        preview = function () {
+            var args = this.getHandlerArgsTemplated();
+            Ext.ux.ingraph.icingaweb.Cronk.Window({
+                title: args.title,
+                host: args.host,
+                service: args.service,
+                start: args.preview.start ?
+                       Math.ceil(strtotime(args.preview.start)) :
+                       '',
+                height: args.preview.height,
+                width: args.preview.width,
+                overview: args.preview.overview
+            });
+        },
         /**
          * Preview graph within a tooltip.
-         * @method Popup
          * @private
          */
-        var Popup = function (e, el) {
+        Popup = function (e, el) {
             var row = this.grid.getView().findRowIndex(el);
 
             if (row !== false) {
@@ -74,15 +84,51 @@
                     target: e.getTarget()
                 });
             }
-        };
-
+        },
+        /**
+         * Preview graph within a tooltip.
+         * @private
+         */
+        Popup2 = function (e, el) {
+            Ext.ux.ingraph.icingaweb.Cronk.Popup({
+                title: this.title,
+                host: this.host,
+                service: this.service,
+                start: this.popup.start ?
+                       Math.ceil(strtotime(this.popup.start)) :
+                       '',
+                height: this.popup.height,
+                width: this.popup.width,
+                target: e.getTarget()
+            });
+        },
+        /**
+         * Preview graph within a tooltip.
+         */
+        popup = function (el, e) {
+            var args = this.getHandlerArgsTemplated();
+            if (!this.task) {
+                // Execute Popup with args as scope
+                this.task = new Ext.util.DelayedTask(Popup2, args);
+            }
+            this.task.delay(args.popup.timeout, null, null, [e, el]);
+        },
+        /**
+         * Cancel/clear graph tooltip.
+         */
+        disarm = function () {
+            if (this.task) {
+                this.task.cancel();
+                this.task = null;
+            }
+        },
         /**
          * Grid's store load listener. Adds listeners for mouseover, mouseout and
          * click to all ingraph columns of the grid.
          * @method onLoad
          * @private 
          */
-        var onLoad = function () {
+        onLoad = function () {
             var iGColumns = this.grid.el.select('div.iGColumn');
 
             iGColumns.each(function (column) {
@@ -107,7 +153,6 @@
                 });
             }, this);
         };
-
         // public
         return {
             /**
@@ -123,12 +168,14 @@
                     cfg: cfg,
                     store: grid.store
                 };
-
                 grid.store.on({
                     scope: scope,
                     load: onLoad
                 });
-            }
-        }; // Eof return
+            },
+            popup: popup,
+            preview: preview,
+            disarm: disarm
+        };
     }());
 }());

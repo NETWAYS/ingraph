@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<template match-pattern="icinga-host-template">
+    <option>
+        <parameter name="rowEvents">
+            <parameter>
+                <parameter name="title">inGraph</parameter>
+                <parameter name="menuid">ingraph</parameter>
+                <parameter name="items">
+                    <parameter>
+                        <parameter name="target">sub</parameter>
+                        <parameter name="handler">
+                            <parameter name="mouseover">Ext.ux.ingraph.icingaweb.ColumnRenderer.popup</parameter>
+                            <parameter name="mouseout">Ext.ux.ingraph.icingaweb.ColumnRenderer.disarm</parameter>
+                            <parameter name="click">Ext.ux.ingraph.icingaweb.ColumnRenderer.preview</parameter>
+                        </parameter>
+                        <parameter name="handlerArguments">
+                            <parameter name="host">{host_name}</parameter>
+                            <parameter name="service"></parameter>
+                            <parameter name="title">inGraph: {host_name}</parameter>
+                            <parameter name="popup">
+                                <parameter name="timeout">400</parameter>
+                                <parameter name="height">110</parameter>
+                                <parameter name="width">500</parameter>
+                                <parameter name="start">-4 hours</parameter>
+                            </parameter>
+                            <parameter name="preview">
+                                <parameter name="height">200</parameter>
+                                <parameter name="width">660</parameter>
+                                <parameter name="start">-1 day</parameter>
+                                <parameter name="overview">20%</parameter>
+                            </parameter>
+                        </parameter>
+                        <parameter name="conditions">
+                            <parameter>
+                                <parameter name="condition">show</parameter>
+                                <parameter name="fn">
+<![CDATA[
+function () {
+    if (this.getRecord().get("process_performance_data") === "1") {
+        return true;
+    } else {
+        return false;
+    }
+}
+]]>
+                                </parameter>
+                            </parameter>
+                        </parameter>
+                        <parameter name="model"></parameter>
+                        <parameter name="xtype">grideventbutton</parameter>
+                        <parameter name="menuid">ingraph_host_chart</parameter>
+                        <parameter name="iconCls">icinga-icon-chart</parameter>
+                        <parameter name="text">Preview</parameter>
+                    </parameter>
+                </parameter>
+            </parameter>
+        </parameter>
+    </option>
+    <fields>
+        <field name="process_performance_data">
+            <datasource>
+                <parameter name="field">HOST_PROCESS_PERFORMANCE_DATA</parameter>
+            </datasource>
+            <display>
+                <parameter name="visible">false"</parameter>
+                <parameter name="label"></parameter>
+            </display>
+            <filter>
+                <parameter name="enabled">false</parameter>
+            </filter>
+            <order>
+                <parameter name="enabled">false</parameter>
+                <parameter name="default">false</parameter>
+            </order>
+        </field>
+    </fields>
+</template>

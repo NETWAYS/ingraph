@@ -1,3 +1,5 @@
 .*
 *.pyc
-/nbproject/
+MANIFEST
+contrib/init.d/ingraph-collector
+setup.py

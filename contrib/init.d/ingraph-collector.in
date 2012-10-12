@@ -1,0 +1,54 @@
+#!/bin/sh
+#
+# chkconfig: 345 99 02
+# description: Startup script for ingraph-collector daemon
+# processname: ingraph-collectord
+
+### BEGIN INIT INFO
+# Provides: ingraph-collector
+# Required-Start: $remote_fs $network
+# Required-Stop: $remote_fs network
+# Should-Start: ingraph
+# Should-Stop: ingraph
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Short description.
+# Description: Description.
+### END INIT INFO
+
+INGRAPH_COLLECTOR_CHDIR="@CONFIG_DIR@"
+INGRAPH_COLLECTOR_PIDFILE="/var/run/ingraph/ingraph-collectord.pid"
+INGRAPH_COLLECTOR_PERFDATA_DIR="/usr/local/icinga/var/perfdata"
+INGRAPH_COLLECTOR_PERFDATA_PATTERN="*-perfdata.*[0-9]"
+INGRAPH_COLLECTOR_FILE_LIMIT="50"
+INGRAPH_COLLECTOR_FILE_MODE="BACKUP"
+INGRAPH_COLLECTOR_SLEEPSECS="60"
+INGRAPH_COLLECTOR_USER="ingraph"
+INGRAPH_COLLECTOR_GROUP="icinga"
+INGRAPH_COLLECTOR_LOGFILE="-" # - = stdout/stderr
+
+[ -r /etc/default/ingraph-collector ] && . /etc/default/ingraph-collector
+[ -r /etc/sysconfig/ingraph-collector ] && . /etc/sysconfig/ingraph-collector
+
+RETVAL=0
+
+do_action() {
+    python -m ingraph/bin/ingraph_collectord -d "$INGRAPH_COLLECTOR_CHDIR" \
+    -p "$INGRAPH_COLLECTOR_PIDFILE" -P "$INGRAPH_COLLECTOR_PERFDATA_DIR" \
+    -e "$INGRAPH_COLLECTOR_PERFDATA_PATTERN" \
+    -l "$INGRAPH_COLLECTOR_FILE_LIMIT" -m "$INGRAPH_COLLECTOR_FILE_MODE" \
+    -s "$INGRAPH_COLLECTOR_SLEEPSECS" -u "$INGRAPH_COLLECTOR_USER" \
+    -g "$INGRAPH_COLLECTOR_GROUP" -o "$INGRAPH_COLLECTOR_LOGFILE" "$1"
+    RETVAL="$?"
+}
+
+case "$1" in
+    start|stop|restart|status)
+        do_action $1
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|restart|status}"
+        RETVAL=1
+esac
+
+exit $RETVAL

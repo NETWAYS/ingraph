@@ -28,8 +28,8 @@ class inGraph_View_Manager extends inGraph_Template_AbstractManager
      *
      * @return array
      */
-    public function getViewNames()
+    public function getViewNames($offset, $length)
     {
-        return $this->getTemplateNames();
+        return array_slice($this->getTemplateNames(), $offset, $length);
     }
 }

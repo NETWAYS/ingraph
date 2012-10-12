@@ -84,6 +84,8 @@ abstract class inGraph_Template_AbstractManager
                 $this->templates[$templateName] = $template;
             }
         }
+
+        ksort($this->templates);
     }
 
     /**

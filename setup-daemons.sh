@@ -138,7 +138,7 @@ fi
 echo "(1/2) Preparing *.in files..."
 
 # Prepare *.in files
-for FIN in $($FIND $DIR -type f -name \*.in)
+for FIN in $($FIND $DIR/*.in $DIR/contrib $DIR/examples -type f -name \*.in)
 do
     F=${FIN%.in}
     $INSTALL -m 644 $FIN $F

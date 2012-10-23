@@ -9,61 +9,74 @@ BEGIN
 
 DECLARE output TEXT DEFAULT '';
 DECLARE rowCount INT UNSIGNED DEFAULT 0;
+DECLARE affectedRows INT UNSIGNED DEFAULT 50000;
 
 /*
- * Rollback on any error
+ * Uncomment following tow lines to rollback on any error
  */ 
-DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
-DECLARE EXIT HANDLER FOR SQLWARNING ROLLBACK;
+#DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
+#DECLARE EXIT HANDLER FOR SQLWARNING ROLLBACK;
 
 START TRANSACTION;
 
 /*
  * Delete from datapoints
  */
-DELETE FROM
-    datapoint
-WHERE
-    plot_id IN (
-        SELECT
-            p.id
-        FROM 
-            plot p 
-        INNER JOIN
-            hostservice hs ON p.hostservice_id = hs.id
-        INNER JOIN
-            hostservice parent ON parent.id = hs.parent_hostservice_id
-        INNER JOIN
-            host h on parent.host_id = h.id
-        INNER JOIN
-            service s on parent.service_id = s.id
-        WHERE
-            h.name LIKE hostname
-            AND s.name LIKE servicename
-    );
-    
-SET rowCount = ROW_COUNT();
-
-DELETE FROM
-    datapoint
-WHERE
-    plot_id IN (
-        SELECT
-            p.id
-        FROM 
-            plot p 
-        INNER JOIN
-            hostservice hs ON p.hostservice_id = hs.id
-        INNER JOIN
-            host h on hs.host_id = h.id
-        INNER JOIN
-            service s on hs.service_id = s.id
-        WHERE
-            h.name LIKE hostname
-            AND s.name LIKE servicename
-    );
-
-SET rowCount = rowCount + ROW_COUNT();
+WHILE affectedRows >= 50000 DO
+    DELETE FROM
+        datapoint
+    WHERE
+        plot_id IN (
+            SELECT
+                p.id
+            FROM 
+                plot p 
+            INNER JOIN
+                hostservice hs ON p.hostservice_id = hs.id
+            INNER JOIN
+                hostservice parent ON parent.id = hs.parent_hostservice_id
+            INNER JOIN
+                host h on parent.host_id = h.id
+            INNER JOIN
+                service s on parent.service_id = s.id
+            WHERE
+                h.name LIKE hostname
+                AND s.name LIKE servicename
+            ORDER BY
+                p.id
+        )
+    LIMIT
+        50000;
+    SET affectedRows = ROW_COUNT();
+    SET rowCount = rowCount + affectedRows;
+END WHILE;
+SET affectedRows = 50000;
+WHILE affectedRows >= 50000  DO
+    DELETE FROM
+        datapoint
+    WHERE
+        plot_id IN (
+            SELECT
+                p.id
+            FROM 
+                plot p 
+            INNER JOIN
+                hostservice hs ON p.hostservice_id = hs.id
+            INNER JOIN
+                host h on hs.host_id = h.id
+            INNER JOIN
+                service s on hs.service_id = s.id
+            WHERE
+                h.name LIKE hostname
+                AND s.name LIKE servicename
+            ORDER BY
+                p.id
+        )
+    LIMIT
+        50000;
+    SET affectedRows = ROW_COUNT();
+    SET rowCount = rowCount + affectedRows;
+END WHILE;
 SET output = CONCAT("Removed ", rowCount, " datapoints");
 
 /*

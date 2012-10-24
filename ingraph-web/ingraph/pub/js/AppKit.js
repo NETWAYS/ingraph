@@ -9,6 +9,9 @@
                 if (Ext.isObject(console) && Ext.isFunction(console.log)) {
                     console.log.apply(console, arguments);
                 }
+            },
+            notifyMessage: function () {
+                Ext.ux.Toast.apply({}, arguments);
             }
         };
     }());

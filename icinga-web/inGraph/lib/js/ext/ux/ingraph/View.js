@@ -102,7 +102,14 @@
                     id: 'close',
                     qtip: _('Remove this panel'),
                     handler: function (e, toolEl, flotPanel) {
-                        flotPanel.destroy();
+                        if (flotPanel.ownerCt.items.length === 1) {
+                            // Do not remove last panel
+                            AppKit.notifyMessage(
+                                _('Sorry'),
+                                _('Could not remove the last panel!'));
+                        } else {
+                            flotPanel.destroy();
+                        }
                     }
                 }
             ]

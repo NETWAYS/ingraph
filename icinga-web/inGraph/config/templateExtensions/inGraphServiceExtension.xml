@@ -1,70 +1,77 @@
+<!-- Icinga-web >= 1.8 grid integration -->
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <template match-pattern="icinga-service-template">
     <option>
-        <parameter name="gridEvents">
+        <parameter name="rowEvents">
             <parameter>
-                <parameter name="type">viewready</parameter>
-                <parameter name="function">Ext.ux.ingraph.icingaweb.ColumnRenderer.init</parameter>
-                <parameter name="arguments">
-                    <parameter name="host">host_name</parameter>
-                    <parameter name="service">service_name</parameter>
-                    <parameter name="start"></parameter>
-                    <parameter name="title">inGraph: {host_name} {service_name}</parameter>
-                    <parameter name="popup">
-                        <parameter name="timeout">400</parameter>
-                        <parameter name="height">110</parameter>
-                        <parameter name="width">500</parameter>
-                        <parameter name="start">-4 hours</parameter>
-                    </parameter>
-                    <parameter name="preview">
-                        <parameter name="height">200</parameter>
-                        <parameter name="width">660</parameter>
-                        <parameter name="start">-1 day</parameter>
-                        <parameter name="overview">20%</parameter>
+                <parameter name="title">inGraph</parameter>
+                <parameter name="menuid">ingraph</parameter>
+                <parameter name="items">
+                    <parameter>
+                        <parameter name="target">sub</parameter>
+                        <parameter name="handler">
+                            <parameter name="mouseover">Ext.ux.ingraph.icingaweb.ColumnRenderer.popup</parameter>
+                            <parameter name="mouseout">Ext.ux.ingraph.icingaweb.ColumnRenderer.disarm</parameter>
+                            <parameter name="click">Ext.ux.ingraph.icingaweb.ColumnRenderer.preview</parameter>
+                        </parameter>
+                        <parameter name="handlerArguments">
+                            <parameter name="host">{host_name}</parameter>
+                            <parameter name="service">{service_name}</parameter>
+                            <parameter name="title">inGraph: {host_name} {service_name}</parameter>
+                            <parameter name="popup">
+                                <parameter name="timeout">400</parameter>
+                                <parameter name="height">110</parameter>
+                                <parameter name="width">500</parameter>
+                                <parameter name="start">-4 hours</parameter>
+                            </parameter>
+                            <parameter name="preview">
+                                <parameter name="height">200</parameter>
+                                <parameter name="width">660</parameter>
+                                <parameter name="start">-1 day</parameter>
+                                <parameter name="overview">20%</parameter>
+                            </parameter>
+                        </parameter>
+                        <parameter name="conditions">
+                            <parameter>
+                                <parameter name="condition">show</parameter>
+                                <parameter name="fn">
+<![CDATA[
+function () {
+    if (this.getRecord().get("process_performance_data") === "1") {
+        return true;
+    } else {
+        return false;
+    }
+}
+]]>
+                                </parameter>
+                            </parameter>
+                        </parameter>
+                        <parameter name="model"></parameter>
+                        <parameter name="xtype">grideventbutton</parameter>
+                        <parameter name="menuid">ingraph_service_chart</parameter>
+                        <parameter name="iconCls">icinga-icon-chart</parameter>
+                        <parameter name="text">Preview</parameter>
                     </parameter>
                 </parameter>
             </parameter>
         </parameter>
     </option>
-
     <fields>
-        <field name="ig_service_link">
-            <preferPosition>after:comments</preferPosition>
+        <field name="process_performance_data">
             <datasource>
-                <parameter name="field">SERVICE_NAME</parameter>
+                <parameter name="field">SERVICE_PROCESS_PERFORMANCE_DATA</parameter>
             </datasource>
             <display>
-                <parameter name="visible">true</parameter>
+                <parameter name="visible">false"</parameter>
                 <parameter name="label"></parameter>
-                <parameter name="width">22</parameter>
-                <parameter name="Ext.grid.Column">
-                    <parameter name="menuDisabled">true</parameter>
-                    <parameter name="fixed">true</parameter>
-                </parameter>
-                <parameter name="jsFunc">
-                    <parameter>
-                        <parameter name="namespace">Cronk.grid.ColumnRenderer
-                        </parameter>
-                        <parameter name="function">columnImage
-                        </parameter>
-                        <parameter name="type">renderer</parameter>
-                        <parameter name="arguments">
-                            <parameter name="image">images/icons/chart_bar.png
-                            </parameter>
-                            <parameter name="css">x-icinga-grid-link
-                            </parameter>
-                            <parameter name="attr">
-                                <parameter name="class">iGColumn</parameter>
-                            </parameter>
-                        </parameter>
-                    </parameter>
-                </parameter>
             </display>
             <filter>
                 <parameter name="enabled">false</parameter>
             </filter>
             <order>
                 <parameter name="enabled">false</parameter>
+                <parameter name="default">false</parameter>
             </order>
         </field>
     </fields>

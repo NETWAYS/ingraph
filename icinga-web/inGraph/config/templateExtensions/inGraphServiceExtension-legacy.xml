@@ -1,0 +1,72 @@
+<!-- Icinga-web < 1.8 grid integration -->
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<template match-pattern="icinga-service-template">
+    <option>
+        <parameter name="gridEvents">
+            <parameter>
+                <parameter name="type">viewready</parameter>
+                <parameter name="function">Ext.ux.ingraph.icingaweb.ColumnRenderer.init</parameter>
+                <parameter name="arguments">
+                    <parameter name="host">host_name</parameter>
+                    <parameter name="service">service_name</parameter>
+                    <parameter name="start"></parameter>
+                    <parameter name="title">inGraph: {host_name} {service_name}</parameter>
+                    <parameter name="popup">
+                        <parameter name="timeout">400</parameter>
+                        <parameter name="height">110</parameter>
+                        <parameter name="width">500</parameter>
+                        <parameter name="start">-4 hours</parameter>
+                    </parameter>
+                    <parameter name="preview">
+                        <parameter name="height">200</parameter>
+                        <parameter name="width">660</parameter>
+                        <parameter name="start">-1 day</parameter>
+                        <parameter name="overview">20%</parameter>
+                    </parameter>
+                </parameter>
+            </parameter>
+        </parameter>
+    </option>
+
+    <fields>
+        <field name="ig_service_link">
+            <preferPosition>after:comments</preferPosition>
+            <datasource>
+                <parameter name="field">SERVICE_NAME</parameter>
+            </datasource>
+            <display>
+                <parameter name="visible">true</parameter>
+                <parameter name="label"></parameter>
+                <parameter name="width">22</parameter>
+                <parameter name="Ext.grid.Column">
+                    <parameter name="menuDisabled">true</parameter>
+                    <parameter name="fixed">true</parameter>
+                </parameter>
+                <parameter name="jsFunc">
+                    <parameter>
+                        <parameter name="namespace">Cronk.grid.ColumnRenderer
+                        </parameter>
+                        <parameter name="function">columnImage
+                        </parameter>
+                        <parameter name="type">renderer</parameter>
+                        <parameter name="arguments">
+                            <parameter name="image">images/icons/chart_bar.png
+                            </parameter>
+                            <parameter name="css">x-icinga-grid-link
+                            </parameter>
+                            <parameter name="attr">
+                                <parameter name="class">iGColumn</parameter>
+                            </parameter>
+                        </parameter>
+                    </parameter>
+                </parameter>
+            </display>
+            <filter>
+                <parameter name="enabled">false</parameter>
+            </filter>
+            <order>
+                <parameter name="enabled">false</parameter>
+            </order>
+        </field>
+    </fields>
+</template>

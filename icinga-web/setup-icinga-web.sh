@@ -15,6 +15,7 @@ XMLRPC_PORT=${XMLRPC_PORT-5000}
 XMLRPC_USER=${XMLRPC_USER-ingraph}
 XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
 NULL_TOLERANCE=${NULL_TOLERANCE-2}
+TEMPLATE_SUFFIX=
 
 FIND=${FIND-find}
 INSTALL=${INSTALL-install}
@@ -225,6 +226,11 @@ echo "(2/5) Applying patches if necessary (icinga-web < 1.6.0)..."
 # Prepare *.in files
 echo "(3/5) Preparing *.in files..."
 
+[ $VERSION -lt 8 ] && {
+    # Icinga-web's grid integration configuration changed with version 1.8
+    TEMPLATE_SUFFIX="-legacy"
+}
+
 for FIN in $($FIND $DIR -type f -name \*.in)
 do
     F=${FIN%.in}
@@ -238,6 +244,7 @@ do
     $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
     $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
     $SED -i -e s,@NULL_TOLERANCE@,$NULL_TOLERANCE, $F
+    $SED -i -e s,@TEMPLATE_SUFFIX@,$TEMPLATE_SUFFIX, $F
 done
 
 # Install from the inGraph directory

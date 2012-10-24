@@ -392,6 +392,8 @@ class BackendRPCMethods(object):
     def getPlots(self, host_name, service_name):
         res = []
         host = model.Host.getByName(self.engine, host_name)
+        if host_name and not host:
+            return res
         service = model.Service.getByName(self.engine, service_name)
         if service_name and not service:
             return res

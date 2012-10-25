@@ -3,6 +3,3 @@
 MANIFEST
 contrib/init.d/ingraph-collector
 setup.py
-ingraph-web/ingraph/app/modules/inGraph/config/inGraph.xml
-ingraph-web/ingraph/app/modules/inGraph/config/module.xml
-ingraph-web/ingraph/bin/clearcache.sh

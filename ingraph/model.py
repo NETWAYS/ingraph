@@ -1171,7 +1171,7 @@ class Comment(ModelBase):
             hostservice = HostService.getByID(conn, row[comment.c.hostservice_id])
 
             obj = Comment(hostservice, row[comment.c.timestamp], row[comment.c.author], row[comment.c.text])
-            obj.id = row[host.c.id]
+            obj.id = row[comment.c.id]
             obj.comment_timestamp = row[comment.c.comment_timestamp]
             obj.activate()
         
@@ -1194,7 +1194,7 @@ class Comment(ModelBase):
                 hostservice = HostService.getByID(conn, row[comment.c.hostservice_id])
     
                 obj = Comment(hostservice, row[comment.c.timestamp], row[comment.c.author], row[comment.c.text])
-                obj.id = row[host.c.id]
+                obj.id = row[comment.c.id]
                 obj.comment_timestamp = row[comment.c.comment_timestamp]
                 obj.activate()
             
@@ -1263,7 +1263,7 @@ class PluginStatus(ModelBase):
             hostservice = HostService.getByID(conn, row[pluginstatus.c.hostservice_id])
 
             obj = PluginStatus(hostservice, row[pluginstatus.c.timestamp], row[pluginstatus.c.status])
-            obj.id = row[host.c.id]
+            obj.id = row[pluginstatus.c.id]
             obj.activate()
         
         return obj

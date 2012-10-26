@@ -466,8 +466,11 @@
                 var panelConfig = {};
 
                 panelConfig.series = panel.template.toJson(['host', 'service',
-                                                            're', 'plot',
+                                                            'plot',
                                                             'type', 'plot_id']);
+                Ext.each(panelConfig.series, function (series) {
+                    series.re = '/^' + series.plot + '$/';
+                });
                 panelConfig.title = panel.initialConfig.title;
                 panelConfig.flot = panel.template.getStyle();
                 panelConfig.tbarConfig = panel.tbarConfig;

@@ -6,7 +6,7 @@ SCRIPT=$(readlink -f "$0")
 DIR=$(dirname "$SCRIPT")
 COMMON_SRC=$(readlink -f "$DIR/../icinga-web")
 
-PREFIX=${PREFIX-/usr/local/ingraph}
+PREFIX=${PREFIX-/usr/local/ingraph-web}
 WEB_USER=${WEB_USER-www-data}
 WEB_GROUP=${WEB_GROUP-www-data}
 WEB_PATH=${WEB_PATH-/ingraph}

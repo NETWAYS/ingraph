@@ -191,6 +191,11 @@
                     }
                 });
             } // Eof position beneath
+            
+            if (this.template.xaxis.get('position') === 'top') {
+                // Auto-margin does not work properly
+                this.template.grid.set('minBorderMargin', 10);
+            }
 
             if (this.overviewConfig.enable === true) {
                 items = items.concat([

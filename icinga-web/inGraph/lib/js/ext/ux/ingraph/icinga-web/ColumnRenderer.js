@@ -81,7 +81,9 @@
                             Math.ceil(strtotime(this.cfg.popup.start)) : '',
                     height: this.cfg.popup.height,
                     width: this.cfg.popup.width,
-                    target: e.getTarget()
+                    target: e.getTarget(),
+                    e: e,
+                    iconCls: this.cfg.iconCls
                 });
             }
         },
@@ -89,7 +91,7 @@
          * Preview graph within a tooltip.
          * @private
          */
-        Popup2 = function (e, el) {
+        Popup2 = function (e, el, iconCls) {
             Ext.ux.ingraph.icingaweb.Cronk.Popup({
                 title: this.title,
                 host: this.host,
@@ -99,19 +101,21 @@
                        '',
                 height: this.popup.height,
                 width: this.popup.width,
-                target: e.getTarget()
+                target: e.getTarget(),
+                e: e,
+                iconCls: iconCls
             });
         },
         /**
          * Preview graph within a tooltip.
          */
-        popup = function (el, e) {
+        popup = function (e, el) {
             var args = this.getHandlerArgsTemplated();
             if (!this.task) {
                 // Execute Popup with args as scope
                 this.task = new Ext.util.DelayedTask(Popup2, args);
             }
-            this.task.delay(args.popup.timeout, null, null, [e, el]);
+            this.task.delay(args.popup.timeout, null, null, [e, el, this.iconCls]);
         },
         /**
          * Cancel/clear graph tooltip.
@@ -178,4 +182,39 @@
             disarm: disarm
         };
     }());
+}());
+
+(function () {
+    "use strict";
+    Ext.ns('Cronk.grid.ColumnRenderer');
+    Cronk.grid.ColumnRenderer.iGColumn = function (cfg) {
+            return function(value, metaData, record, rowIndex, colIndex, store) {
+                if ('0' === record.get(cfg.hideIfZero)) {
+                    return '';
+                }
+                return Ext.DomHelper.markup({
+                    tag: 'div',
+                    cls: 'iGColumn icon-16 x-icinga-grid-link ' + cfg.iconCls,
+                    style: "width:25px;height:24px;display:block"
+                });
+            }
+    };
+}());
+
+(function () {
+    "use strict";
+    Ext.ns('Ext.ux.ingraph.icingaweb');
+    Ext.ux.ingraph.icingaweb.GridIcon = Ext.extend(Ext.BoxComponent, {
+        cls: 'icon-16 x-icinga-grid-link',
+        style: {
+            margin: '3px 0px'
+        },
+        afterRender: function () {
+            this.el.addClass(this.iconCls);
+            this.relayEvents(this.el, ['mouseover', 'mouseout', 'click']);
+            this.initEventMixin(this);
+        }
+    });
+    Ext.override(Ext.ux.ingraph.icingaweb.GridIcon, Cronk.grid.events.EventMixin);
+    Ext.reg('igridicon', Ext.ux.ingraph.icingaweb.GridIcon);
 }());

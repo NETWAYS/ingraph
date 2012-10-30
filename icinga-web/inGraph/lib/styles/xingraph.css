@@ -23,6 +23,16 @@
     -webkit-border-radius: 5px;
 }
 
+.ingraph-icon-chart-bar {
+    background-image: url(../images/icons/chart_bar.png) !important;
+    background-repeat: no-repeat;
+}
+
+.ingraph-icon-chart-pie {
+    background-image: url(../images/icons/chart-pie.png) !important;
+    background-repeat: no-repeat;
+}
+
 @media print {
     body {
         overflow: visible !important;

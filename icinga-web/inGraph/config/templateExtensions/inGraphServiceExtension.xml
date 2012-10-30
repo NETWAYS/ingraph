@@ -1,4 +1,3 @@
-<!-- Icinga-web >= 1.8 grid integration -->
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <template match-pattern="icinga-service-template">
     <option>
@@ -12,18 +11,48 @@
                         <parameter name="handler">
                             <parameter name="mouseover">Ext.ux.ingraph.icingaweb.ColumnRenderer.popup</parameter>
                             <parameter name="mouseout">Ext.ux.ingraph.icingaweb.ColumnRenderer.disarm</parameter>
-                            <parameter name="click">Ext.ux.ingraph.icingaweb.ColumnRenderer.preview</parameter>
                         </parameter>
                         <parameter name="handlerArguments">
                             <parameter name="host">{host_name}</parameter>
                             <parameter name="service">{service_name}</parameter>
                             <parameter name="title">inGraph: {host_name} {service_name}</parameter>
                             <parameter name="popup">
-                                <parameter name="timeout">400</parameter>
+                                <parameter name="timeout">0</parameter>
                                 <parameter name="height">110</parameter>
                                 <parameter name="width">500</parameter>
                                 <parameter name="start">-4 hours</parameter>
                             </parameter>
+                        </parameter>
+                        <parameter name="conditions">
+                            <parameter>
+                                <parameter name="condition">show</parameter>
+                                <parameter name="fn">
+<![CDATA[
+function () {
+    if (this.getRecord().get("process_performance_data") === "1") {
+        return true;
+    } else {
+        return false;
+    }
+}
+]]>
+                                </parameter>
+                            </parameter>
+                        </parameter>
+                        <parameter name="model"></parameter>
+                        <parameter name="xtype">igridicon</parameter>
+                        <parameter name="menuid">ingraph_tip</parameter>
+                        <parameter name="iconCls">ingraph-icon-chart-pie</parameter>
+                    </parameter>
+                    <parameter>
+                        <parameter name="target">sub</parameter>
+                        <parameter name="handler">
+                            <parameter name="click">Ext.ux.ingraph.icingaweb.ColumnRenderer.preview</parameter>
+                        </parameter>
+                        <parameter name="handlerArguments">
+                            <parameter name="host">{host_name}</parameter>
+                            <parameter name="service">{service_name}</parameter>
+                            <parameter name="title">inGraph: {host_name} {service_name}</parameter>
                             <parameter name="preview">
                                 <parameter name="height">200</parameter>
                                 <parameter name="width">660</parameter>
@@ -49,8 +78,8 @@ function () {
                         </parameter>
                         <parameter name="model"></parameter>
                         <parameter name="xtype">grideventbutton</parameter>
-                        <parameter name="menuid">ingraph_service_chart</parameter>
-                        <parameter name="iconCls">icinga-icon-chart</parameter>
+                        <parameter name="menuid">ingraph_window</parameter>
+                        <parameter name="iconCls">ingraph-icon-chart-bar</parameter>
                         <parameter name="text">Preview</parameter>
                     </parameter>
                 </parameter>

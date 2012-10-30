@@ -144,7 +144,6 @@
             Popup: function (cfg) {
                 var tip = new Ext.ToolTip({
                     title: cfg.title,
-                    target: cfg.target,
                     anchor: 'left',
                     dismissDelay: 0,
                     width: cfg.width,
@@ -189,6 +188,14 @@
                                             if (flot.store.isEmpty()) {
                                                 tip.setTitle(cfg.title + ' (' + _('No Data') + ')');
                                             }
+                                            var xy = tip.el.adjustForConstraints(
+                                                tip.getTargetXY(), tip.el.dom.parentNode);
+                                            tip.setPagePosition(xy[0], xy[1]);
+                                            tip.showAt(xy);
+                                            tip.anchorEl.show();
+                                            tip.syncAnchor();
+                                            tip.target.removeClass('icinga-icon-throbber');
+                                            tip.target.addClass(cfg.iconCls);
                                         }
                                     }
                                 }
@@ -203,11 +210,33 @@
                         hide: function (me) {
                             // TODO(el): No delay leads to "cannot set style of undefined"
                             me.destroy.createDelegate(me, [], 1000);
+                            if (me.target.hasClass('icinga-icon-throbber')) {
+                                me.target.removeClass('icinga-icon-throbber');
+                                me.target.addClass(cfg.iconCls);
+                            }
                         }
                     }
                 });
-
-                tip.show();
+                tip.target = tip.anchorTarget = Ext.get(cfg.target);
+                var t = cfg.e.getTarget(tip.delegate);
+                if (t) {
+                    tip.target.removeClass(cfg.iconCls);
+                    tip.target.addClass('icinga-icon-throbber');
+                    tip.clearTimers();
+                    tip.triggerElement = t;
+                    tip.targetXY = cfg.e.getXY();
+                    tip.showAt([-1000, -1000]);
+                }
+                
+                tip.mon(tip.target, {
+                    scope: tip,
+                    mouseout: tip.onTargetOut.createSequence(function () {
+                        if (tip.target.hasClass('icinga-icon-throbber')) {
+                            tip.target.removeClass('icinga-icon-throbber');
+                            tip.target.addClass(cfg.iconCls);
+                        }
+                    })
+                });
             },
 
             /**

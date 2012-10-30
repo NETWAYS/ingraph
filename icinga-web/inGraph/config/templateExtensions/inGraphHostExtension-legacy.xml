@@ -1,4 +1,3 @@
-<!-- Icinga-web < 1.8 grid integration -->
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <template match-pattern="icinga-host-template">
     <option>
@@ -7,7 +6,9 @@
                 <parameter name="type">viewready</parameter>
                 <parameter name="function">Ext.ux.ingraph.icingaweb.ColumnRenderer.init</parameter>
                 <parameter name="arguments">
+                    <parameter name="iconCls">ingraph-icon-chart-bar</parameter>
                     <parameter name="host">host_name</parameter>
+                    <parameter name="service"></parameter>
                     <parameter name="start"></parameter>
                     <parameter name="title">inGraph: {host_name}</parameter>
                     <parameter name="popup">
@@ -28,10 +29,10 @@
     </option>
 
     <fields>
-        <field name="ig_service_link">
+        <field name="ig_host_link">
             <preferPosition>after:comments</preferPosition>
             <datasource>
-                <parameter name="field">HOST_NAME</parameter>
+                <parameter name="field">HOST_PROCESS_PERFORMANCE_DATA</parameter>
             </datasource>
             <display>
                 <parameter name="visible">true</parameter>
@@ -43,20 +44,12 @@
                 </parameter>
                 <parameter name="jsFunc">
                     <parameter>
-                        <parameter name="namespace">Cronk.grid.ColumnRenderer
-                        </parameter>
-                        <parameter name="function">columnImage
-                        </parameter>
+                        <parameter name="namespace">Cronk.grid.ColumnRenderer</parameter>
+                        <parameter name="function">iGColumn</parameter>
                         <parameter name="type">renderer</parameter>
                         <parameter name="arguments">
-                            <parameter name="image">images/icons/chart_bar.png
-                            </parameter>
-                            <parameter name="css">x-icinga-grid-link
-                            </parameter>
-                            <parameter name="attr">
-                                <parameter name="qtip">Open inGraph</parameter>
-                                <parameter name="class">iGColumn</parameter>
-                            </parameter>
+                            <parameter name="hideIfZero">process_performance_data</parameter>
+                            <parameter name="iconCls">ingraph-icon-chart-bar</parameter>
                         </parameter>
                     </parameter>
                 </parameter>

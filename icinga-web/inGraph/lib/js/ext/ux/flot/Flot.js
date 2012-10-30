@@ -320,12 +320,18 @@
             });
 
             if (this.tips.enable === true) {
+                this.showDatapointTipTask = new Ext.util.DelayedTask(
+                    this.showDatapointTip, this);
                 // Show datapoint tooltip on either plotclick or plothover
                 this.on(this.tips.event, function (me, item, pos) {
                     if (item) {
-                        me.showDatapointTip(item, pos);
-                    } else if (me.dpTip) {
-                        me.dpTip.hide();
+                        me.showDatapointTipTask.delay(
+                            100, null, null, [item, pos]);
+                    } else {
+                        me.showDatapointTipTask.cancel();
+                        if (me.dpTip) {
+                            me.dpTip.hide();
+                        }
                     }
                 });
 
@@ -748,7 +754,8 @@
             if (!this.dpTip) {
                 // Limit to one tooltip instance
                 this.dpTip = new Ext.Tip({
-                    renderTo: Ext.getBody()
+                    renderTo: Ext.getBody(),
+                    constrainPosition: true
                 });
             }
 
@@ -1039,6 +1046,10 @@
             if (this.dpTip) {
                 this.dpTip.destroy();
                 this.dpTip = null;
+            }
+            if (this.showDatapointTipTask) {
+                this.showDatapointTipTask.cancel();
+                this.showDatapointTipTask = null;
             }
 
             if (this.selTip) {

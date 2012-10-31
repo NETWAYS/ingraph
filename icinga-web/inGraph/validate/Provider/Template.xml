@@ -12,7 +12,9 @@
             </validator>
             <validator name="service" class="string" required="false">
                 <argument>service</argument>
-                <error>Parameter service is mandatory.</error>
+            </validator>
+            <validator name="parentService" class="string" required="false">
+                <argument>parentService</argument>
             </validator>
         </validators>
     </ae:configuration>

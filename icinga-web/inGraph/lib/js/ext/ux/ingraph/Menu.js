@@ -133,8 +133,8 @@
                                     displayField: 'host',
                                     valueField: 'host',
                                     plugins: [
-                                        new Ext.ux.ComboController('serviceCombo',
-                                                                   'dispGraphBtn')
+                                        new Ext.ux.ComboController(
+                                            'serviceCombo', 'dispGraphBtn')
                                     ]
                                 }
                             ]
@@ -147,13 +147,17 @@
                                     ref: '../../serviceCombo',
                                     emptyText: _('Choose service'),
                                     store: {
-                                        xtype: 'arraystore',
+                                        xtype: 'jsonstore',
                                         root: 'results',
-                                        fields: ['service'],
-                                        idProperty: 'service',
+                                        fields: [
+                                            'name',
+                                            'service',
+                                            'parentService'
+                                        ],
+                                        idProperty: 'name',
                                         url: Ext.ux.ingraph.Urls.provider.services
                                     },
-                                    displayField: 'service',
+                                    displayField: 'name',
                                     valueField: 'service',
                                     plugins: [
                                         new Ext.ux.ComboDependency({
@@ -277,6 +281,8 @@
                          this.endDateField.getValue() ?
                          this.endDateField.getValue().getTime() / 1000 : null;
 
+            values.parentService = this.serviceCombo.getSelectedRecord()
+                .get('parentService');
             this.fireEvent('plot', this, values);
         },
 

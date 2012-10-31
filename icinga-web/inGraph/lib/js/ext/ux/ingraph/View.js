@@ -303,7 +303,8 @@
                 Ext.ux.ingraph.Urls.provider.template,
                 {
                     host: this.host,
-                    service: this.service
+                    service: this.service,
+                    parentService: this.parentService
                 },
                 callback
             );

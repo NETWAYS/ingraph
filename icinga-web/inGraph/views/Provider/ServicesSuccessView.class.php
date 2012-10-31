@@ -4,6 +4,6 @@ class inGraph_Provider_ServicesSuccessView extends inGraphBaseView
 {
     public function executeJson(AgaviRequestDataHolder $rd)
     {
-        return $this->json_encode('services');
+        return json_encode($this->getAttribute('services'));
     }
 }

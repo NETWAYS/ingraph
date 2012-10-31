@@ -74,11 +74,21 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
                                                            $servicePattern);
         $services = array();
         foreach ($availableServices['services'] as $service) {
-            if ($service['parent_service'] !== null &&
-               in_array($service['parent_service'], $permittedServices) ||
-               in_array($service['service'], $permittedServices))
-            {
-                $services[] = $service['service'];
+            if ($service['parent_service'] !== null
+                && (in_array($service['parent_service'], $permittedServices)
+                    || in_array($service['service'], $permittedServices))
+            ) {
+                $services[] = array(
+                    'name' => $service['parent_service'] . ' - '
+                        . $service['service'],
+                    'service' => $service['service'],
+                    'parentService' => $service['parent_service']
+                );
+            } elseif (in_array($service['service'], $permittedServices)) {
+                $services[] = array(
+                    'name' => $service['service'],
+                    'service' => $service['service']
+                );
             }
         }
         $total = count($services);

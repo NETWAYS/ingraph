@@ -102,13 +102,17 @@
                             allowBlank: true,
                             disabled: true,
                             store: {
-                                xtype: 'arraystore',
+                                xtype: 'jsonstore',
                                 root: 'results',
-                                fields: ['service'],
-                                idProperty: 'service',
+                                fields: [
+                                    'name',
+                                    'service',
+                                    'parentService'
+                                ],
+                                idProperty: 'name',
                                 url: Ext.ux.ingraph.Urls.provider.services
                             },
-                            displayField: 'service',
+                            displayField: 'name',
                             valueField: 'service',
                             plugins: [
                                 new Ext.ux.ComboDependency({
@@ -147,7 +151,7 @@
                                     },
                                     {
                                         ref: 'serviceCombo',
-                                        param: 'service'
+                                        param: ['service', 'parentService']
                                     }
                                 ),
                                 new Ext.ux.ComboController('typeCombo')
@@ -167,6 +171,14 @@
                     ] // Eof form items
                 } // Eof form
             ]; // Eof items
+        },
+        
+        getValues: function () {
+            var values = Ext.ux.ingraph.AddPlotWindow.superclass.getValues
+                .call(this);
+            values.parentService = this.serviceCombo.getSelectedRecord()
+                .get('parentService');
+            return values;
         }
     });
 }());

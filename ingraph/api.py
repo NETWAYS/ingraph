@@ -264,27 +264,23 @@ class BackendRPCMethods(object):
         if granularity == '':
             granularity = None
 
-        if query == []:
-            query = {}
-
         vquery = {}
-
-        for host, host_specification in query.iteritems():
-            host_obj = model.Host.getByName(conn, host)
-
-            if host_specification == []:
-                host_specification = {}
-
-            for service, service_specification in host_specification.iteritems():
-                service_obj = model.Service.getByName(conn, service)
-                hostservice_objs = model.HostService.getByHostAndService(conn, host_obj, service_obj, None)
-
-                for hostservice_obj in hostservice_objs:
-                    for plot, types in service_specification.iteritems():
-                        plot_objs = model.Plot.getByHostServiceAndName(conn, hostservice_obj, plot)
-
-                        for plot_obj in plot_objs:
-                            vquery[plot_obj] = types
+        
+        for spec in query:
+            host = model.Host.getByName(conn, spec['host'])
+            service = model.Service.getByName(conn, spec['service'], spec['parent_service'])
+            hose = model.HostService.getByHostAndService(conn, host, service, None)
+            try:
+                hose = hose[0]
+            except IndexError:
+                # Not found
+                continue
+            plots = model.Plot.getByHostServiceAndName(conn, hose, spec['plot'])
+            for plot in plots:
+                if plot not in vquery:
+                    vquery[plot] = []
+                if spec['type'] not in vquery[plot]:
+                    vquery[plot].append(spec['type'])
 
         dps = model.DataPoint.getValuesByInterval(conn, vquery,
                                                  start_timestamp, end_timestamp,
@@ -399,6 +395,7 @@ class BackendRPCMethods(object):
         if service_name and not service:
             return res
         parent_hose = None
+        """
         if parent_service_name:
             parent_service = model.Service.getByName(
                 self.engine, parent_service_name, None)
@@ -411,6 +408,7 @@ class BackendRPCMethods(object):
             except IndexError:
                 # Not found
                 pass
+        """
         hose = model.HostService.getByHostAndService(
             self.engine, host, service, parent_hose)
         try:

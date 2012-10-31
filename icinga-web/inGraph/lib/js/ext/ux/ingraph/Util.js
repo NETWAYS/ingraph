@@ -147,29 +147,24 @@
             },
 
             buildQuery: function (series) {
-                var query = {};
+                var query = [];
                 Ext.each(series, function (item) {
-                    var qpart = query;
-                    Ext.each([item.host, item.service],
-                        function (v) {
-                         if (!Ext.isObject(qpart[v])) {
-                             qpart[v] = {};
-                         }
-                         qpart = qpart[v];
-                    }, this);
-                    if (!Ext.isArray(qpart[item.plot])) {
-                        qpart[item.plot] = [];
-                    }
-                    qpart = qpart[item.plot];
+                    var qpart = {
+                        host: item.host,
+                        service: item.service,
+                        plot: item.plot,
+                        parent_service: item.parentService
+                    };
                     if (!Ext.isArray(item.type)) {
                         item.type = [item.type];
+                    } else {
+                        item.type = Ext.unique(item.type)
                     }
                     Ext.each(item.type, function (type) {
-                        if (qpart.indexOf(type) === -1) {
-                            qpart.push(type);
-                        }
+                        qpart.type = type;
+                        query.push(qpart);
                     });
-                }, this);
+                });
                 return query;
             },
 

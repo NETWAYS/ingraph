@@ -56,11 +56,13 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
 
     protected function getPlots($series)
     {
-        $key = $series['host'] . $series['service'];
+        $parentService = isset($series['parentService']) ?
+            $series['parentService'] : null;
+        $key = $series['host'] . $parentService . $series['service'];
 
         if ( ! array_key_exists($key, $this->plots)) {
-            $plots = $this->getBackend()->fetchPlots($series['host'],
-                                                     $series['service']);
+            $plots = $this->getBackend()->fetchPlots(
+                $series['host'], $series['service'], $parentService);
         } else {
             $plots = $this->plots['key'];
         }

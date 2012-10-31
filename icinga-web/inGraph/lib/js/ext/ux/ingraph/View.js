@@ -467,7 +467,7 @@
                 var panelConfig = {};
 
                 panelConfig.series = panel.template.toJson(['host', 'service',
-                                                            'plot',
+                                                            'parentService', 'plot',
                                                             'type', 'plot_id']);
                 Ext.each(panelConfig.series, function (series) {
                     series.re = '/^' + series.plot + '$/';
@@ -888,7 +888,7 @@
                 getState: function () {
                     var templateData = {};
                     templateData[this.template.root] = this.template.toJson(
-                        ['host', 'service', 're', 'plot', 'type', 'plot_id']);
+                        ['host', 'service', 'parentService', 're', 'plot', 'type', 'plot_id']);
                     templateData.flot = this.template.getStyle();
 
                     return {

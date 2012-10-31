@@ -49,6 +49,7 @@ class inGraph_Template extends inGraph_AbstractTemplate
                             $compiled[] = array_merge($item, array(
                                 'host' => $host,
                                 'service' => $plot['service'],
+                                'parentService' => $plot['parent_service'],
                                 'plot' => $plot['plot'],
                                 'type' => $type
                             ));
@@ -57,6 +58,7 @@ class inGraph_Template extends inGraph_AbstractTemplate
                         $compiled[] = array_merge($item, array(
                             'host' => $host,
                             'service' => $plot['service'],
+                            'parentService' => $plot['parent_service'],
                             'plot' => $plot['plot']
                         ));
                     }

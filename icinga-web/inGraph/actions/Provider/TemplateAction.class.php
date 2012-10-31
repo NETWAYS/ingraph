@@ -7,7 +7,8 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction
         $service = $rd->getParameter('service');
 
         try {
-            $plots = $this->getBackend()->fetchPlots($host, $service);
+            $plots = $this->getBackend()->fetchPlots(
+                $host, $service, $rd->getParameter('parentService', null));
         } catch (inGraph_XmlRpc_Exception $e) {
             return $this->setError($e->getMessage());
         }

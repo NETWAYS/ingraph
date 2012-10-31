@@ -39,6 +39,7 @@ class inGraph_View extends inGraph_AbstractTemplate
                 $series = array_merge($series, array(
                     'host' => $host,
                     'service' => $plot['service'],
+                    'parentService' => $plot['parent_service'],
                     'plot' => $plot['plot']
                 ));
 

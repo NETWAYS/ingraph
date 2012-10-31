@@ -127,6 +127,10 @@
                     this.doQuery('', true);
                 }
             });
+        },
+        
+        getSelectedRecord: function () {
+            return this.findRecord(this.valueField, this.getValue());
         }
     });
     Ext.reg('xigautocombo', Ext.ux.ingraph.AutoComboBox);

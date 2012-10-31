@@ -64,10 +64,17 @@
                 beforeload: function (store, options) {
                     Ext.each(this.dependencies, function (dependency) {
                         var scope = dependency.scope || combo.refOwner,
-                            cmp = scope[dependency.ref];
+                            cmp = scope[dependency.ref],
+                            selectedRecord = cmp.getSelectedRecord();
 
                         if (cmp) {
-                            options.params[dependency.param] = cmp.getValue();
+                            if (Ext.isArray(dependency.param)) {
+                                Ext.each(dependency.param, function (param) {
+                                    options.params[param] = selectedRecord.get(param);
+                                });
+                            } else {
+                                options.params[dependency.param] = selectedRecord.get(dependency.param);
+                            }
                         }
                     }, this);
                 }

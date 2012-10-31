@@ -98,8 +98,11 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         );
     }
 
-    public function fetchPlots($hostName, $serviceName = '') {
-        return $this->backend->fetchPlots($hostName, $serviceName);
+    public function fetchPlots($hostName, $serviceName='',
+                               $parentService=null
+    ) {
+        return $this->backend->fetchPlots($hostName, $serviceName,
+                                          $parentService);
     }
 
     public function fetchValues($query, $start = null, $end = null,

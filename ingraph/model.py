@@ -738,9 +738,9 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
                 conn.execute(datapoint.insert(), inserts)
             
             for update in updates:
-                cond = and_(datapoint.c.plot_id==query['plot_id'],
-                            datapoint.c.timeframe_id==query['timeframe_id'],
-                            datapoint.c.timestamp==query['timestamp'])
+                cond = and_(datapoint.c.plot_id==update['plot_id'],
+                            datapoint.c.timeframe_id==update['timeframe_id'],
+                            datapoint.c.timestamp==update['timestamp'])
                 conn.execute(datapoint.update().where(cond).values(update))
     
     executeUpdateQueries = staticmethod(executeUpdateQueries)

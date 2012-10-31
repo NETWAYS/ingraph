@@ -176,7 +176,7 @@
         getValues: function () {
             var values = Ext.ux.ingraph.AddPlotWindow.superclass.getValues
                 .call(this);
-            values.parentService = this.serviceCombo.getSelectedRecord()
+            values.parentService = this.form.serviceCombo.getSelectedRecord()
                 .get('parentService');
             return values;
         }

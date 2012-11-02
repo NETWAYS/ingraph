@@ -1,265 +1,65 @@
 inGraph
-=======
 
-This README file contains a short installation guide. For the full guide please refer to https://www.netways.org/projects/ingraph/wiki .
+What is it?
+-----------
+inGraph is a flexible, open source charting tool for Icinga and Nagios. The
+Python backend collects performance data provided by check plugins and stores
+them in a relational database. For displaying graphs inGraph provides a
+standalone web interface and an icinga-web integration module both written in PHP
+and JavaScript. Furthermore using the check_ingraph plugin you can monitor trends for
+any of your checks which provide performance data. For example you can configure
+a check to notify you if the load for your server is increasing unexpectedly.
 
-Requirements
-============
-
-CentOS packages: python-devel gcc python-setuptools php-curl php-xmlrpc
-Debian/Ubuntu packages: python-sqlalchemy python-setuptools php5-curl php5-xmlrpc
-SLES 10: python-devel python-setuptools php5-curl php5-xmlrpc
-
-PHP
----
-
-Minimum PHP version required is 5.1.2. Recommended PHP version is 5.2.x. Further you have to enable PHP's curl and xmlrpc support.
-Please refer to http://docs.icinga.org/latest/en/icinga-web-scratch.html if you're planning on using the icinga-web integration.
-
-Python
-------
-
-As Python 3.x sheds backwards compatibility, we do NOT currently support it. We recommend Python 2.6 but any version greater than or equal to 2.4 will do.
-The python development package (python-devel in most cases) and python-setuptools are required as well.
-
-SQLAlchemy
-----------
-
-SQLAlchemy is an open source SQL toolkit and object-relational mapper for Python. You should use the latest available version, though any version greater or equal to 0.6.0 is supported.
-
-If the desired version is not shipped with your distribution's repository you may have to install SQLAlchemy from source.
-
-DBMS interface
---------------
-
-SQLAlchemy supports several DB drivers. In order to connect to your database, the appropiate DBAPI driver has to be installed.
-
-The following table provides an overview of major dialects with their associated distribution driver package name respectively:
-
-(R)DBMS		Debian			SuSe		Red Hat, CentOS
-MySQL		python-mysqldb		python-mysql	MySQL-python
-PostgreSQL	python-pygresql		PyGreSQL	postgresql-python
-
-MySQL is the recommended DBMS for inGraph. Other database systems should work just fine but have received less testing.
-For further information on dialects please refer to http://www.sqlalchemy.org/docs/core/engines.html#supported-dbapis.
-
-Oracle
-------
-
-cx_Oracle is a Python extension module that allows access to Oracle databases. It is not available in any distribution repository, and therefore has to be installed from source.
-
-In order to successfully install this driver, please refer to cx_Oracle's build help. After all the prerequisites mentioned there are installed you need to obtain the source code for cx_Oracle, extract the archive and call the following command in the resulting directory, which installs cx_Oracle to the standard location for third-party Python modules.
-
-# python setup.py install
-For more information on installing python modules, i.e. choosing an installation directory, please refer to the Python documentation.
-
-Icinga-web
-----------
-
-Mininum required version is 1.5.0.
-
-Package requirements:
-
-* gcc
-* python-devel
-* python-setuptools
-* python-sqlalchemy >= 0.6.0
-* php5-curl
-* php5-xmlrpc
-* icinga-web >= 1.5.0 (optional)
+Documentation
+-------------
+Documentation can be found at
+https://www.netways.org/projects/ingraph/wiki.
 
 Installation
-============
+------------
+For a installation overview please see the file called INSTALL. For the full
+guide please refer to Documentation.
 
-After installing all the requirements, obtain inGraph, extract the archive and proceed in the resulting directory.
+Upgrade Notes
+-------------
+Please see the file called UPGRADING.
 
-Backend
+Licensing
+---------
+Please see the file called LICENSE.
+
+Authors
 -------
+Please see the file called AUTHORS.
 
-The following command installs inGraph to the standard location for third-party Python modules:
+Development
+-----------
+inGraph development is hosted by NETWAYS GmbH and powered by Redmine, a flexible
+project management web application (www.redmine.org). NETWAYS' community area is here:
+    https://www.netways.org/
 
-# ./setup-daemons.sh --install
-Add inGraph user:
+And the inGraph development page is here:
+    https://www.netways.org/projects/ingraph
 
-# useradd ingraph 
+The inGraph source repository is available and maintained via git:
+    https://git.netways.org/ingraph
 
-Frontend
+For known bugs and further development please see the file called TODO.
+
+Contacts
 --------
+    - Project news will be announced via the NETWAYS Blog:
+      https://blog.netways.de
 
-1. Standalone
+    - If you have a bug report or feature request please report to:
+      https://www.netways.org/projects/ingraph/issues
 
-Assuming /usr/local/ingraph as target directory you have to run the following commands (adjust user, group and paths to your environment):
+    - If you want commercial support for inGraph please contact NETWAYS GmbH:
+      info@netways.de
 
-# cd web/
-# ./setup-ingraph-web.sh --prefix=/usr/local/ingraph --with-web-path=/ingraph
-Note: Try ./setup-ingraph-web.sh to see a list of available parameters (e.g. for setting the username/group Apache is running as).
+    - You'll find freely available support via the project's bug tracker and
+      the Monitoring-Portal forums:
+      http://monitoring-portal.org/wbb/index.php?page=Board&boardID=86
 
-Copy Apache configuration file:
-
-# cp ingraph.conf /etc/apache2/conf.d/
-# service apache2 restart
-Note: Make sure that the mod_rewrite module is enabled ("a2enmod rewrite" on Debian/Ubuntu systems).
-
-2. Icinga-web
-
-Assuming /usr/local/icinga-web as target directory you have to run the following commands (adjust user, group and paths to your environment):
-
-# cd icinga-web/
-# ./setup-icinga-web.sh --prefix=/usr/local/icinga-web
-Note: Try ./setup-icinga-web.sh to see a list of available parameters (e.g. for setting the username/group Apache is running as).
-
-Configuring inGraph
-===================
-
-Backend
--------
-
-Copy the example config files from source to a directory of your choice.
-Assuming /etc/ingraph you have to call the following commands:
-
-# mkdir /etc/ingraph
-# cp examples/config/* /etc/ingraph
-
-Frontend
---------
-
-Assuming you have used /usr/local/ingraph as the installation directory, the configuration files are located at: 
-
-# /usr/local/ingraph/app/modules/inGraph/config/ 
-Path settings for templates and views are configured via inGraph.xml. In most cases the default settings will do. Remember to adjust your XML-RPC settings according to server-side configuration.
-
-# vi /usr/local/ingraph/app/modules/inGraph/config/inGraph.xml
-For icinga-web configuration replace /usr/local/ingraph with your prefix, e.g. /usr/local/icinga-web.
-
-Remember to clear the Agavi config cache after changing any of the configuration files:
-
-Icinga-web:
-# /usr/local/icinga-web/bin/clearcache.sh
-Standalone:
-# /usr/local/ingraph/bin/clearcache.sh
-
-Database connection settings
-----------------------------
-
-ingraph-database.conf holds the database connection string with the following format: dialect://user:password@host/dbname.
-
-# vi /etc/ingraph/ingraph-database.conf
-
-Example configuration entries:
-MySQL
-dsn = 'mysql://ingraph:ingraph@localhost:3306/ingraph'
-PostgreSQL
-dsn = 'postgresql://ingraph:ingraph@localhost:5432/ingraph' 
-
-XML-RPC settings
-----------------
-
-The daemon's XML-RPC interface is secured via username / password.
-Both server (daemon) and clients (grapherv2 import, perfdata file collector) use ingraph-xmlrpc.conf
-
-# vi /etc/ingraph/ingraph-xmlrpc.conf 
-Note: If you change any of the XML-RPC interface settings you are required to adjust the frontend configuration too, i.e. in:
-
-/usr/local/icinga-web/app/modules/inGraph/config/inGraph.xml
-/usr/local/ingraph/app/modules/inGraph/config/inGraph.xml
-
-Aggregates
-----------
-
-inGraph implements its own housekeeping mechanism via so called "aggregates".
-Raw monitoring data is consolidated according to configured interval and retention period settings in ingraph-aggregates.conf
-
-# vi /etc/ingraph/ingraph-aggregates.conf
-
-Daemons
--------
-
-Both ingraph and ingraph-collector init scripts are each configureable via /etc/default and/or /etc/sysconfig.
-Following arguments are default, you may only change those values which do not suit your environment.
-
-ingraph:
-
-INGRAPH_CHDIR=/etc/ingraph
-INGRAPH_PIDFILE=/var/run/ingraph/ingraphd.pid
-INGRAPH_USER=ingraph
-
-ingraph-collector:
-
-INGRAPH_COLLECTOR_CHDIR="/etc/ingraph" 
-INGRAPH_COLLECTOR_PIDFILE="/var/run/ingraph/ingraph-collectord.pid" 
-INGRAPH_COLLECTOR_PERFDATA_DIR="/usr/local/icinga/var/perfdata" 
-INGRAPH_COLLECTOR_PERFDATA_PATTERN="*-perfdata.*[0-9]" 
-INGRAPH_COLLECTOR_FILE_LIMIT="50" 
-INGRAPH_COLLECTOR_FILE_MODE="BACKUP" 
-INGRAPH_COLLECTOR_SLEEPSECS="60" 
-INGRAPH_COLLECTOR_USER="ingraph" 
-INGRAPH_COLLECTOR_GROUP="icinga" 
-INGRAPH_COLLECTOR_LOGFILE="-" # - = stdout/stderr
-
-Database setup
-==============
-
-Create Database and -User
-inGraph requires its own database (e.g. "ingraph"). Since the database schema is automatically set up / modified on start, the database user needs appropriate permissions for CREATE TABLE, CREATE INDEX, etc
-
-Example PostgreSQL
-Create Database and -User:
-
-# su - postgres
-$ psql
-postgres=# CREATE USER ingraph;
-postgres=# ALTER USER ingraph WITH PASSWORD 'changeme';
-postgres=# CREATE DATABASE ingraph;
-
-Icinga/Nagios Setup
-===================
-
-The inGraph backend is not responsible for collecting data and therefore expects data from external clients.
-The following configuration sets up Icinga / Nagios performance data processing with the included file collector daemon.
-
-1. Enable data writing
-In order to enable Icinga / Nagios to write performance data to text files, alter the main configuration with the following lines
-
-Enable performance data processing
-
-process_performance_data=1
-
-Service performance data
-service_perfdata_file=/usr/local/icinga/var/perfdata/service-perfdata
-service_perfdata_file_template=DATATYPE::SERVICEPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tSERVICEDESC::$SERVICEDESC$\tSERVICEPERFDATA::$SERVICEPERFDATA$\tSERVICECHECKCOMMAND::$SERVICECHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$\tSERVICESTATE::$SERVICESTATE$\tSERVICESTATETYPE::$SERVICESTATETYPE$
-service_perfdata_file_mode=a
-service_perfdata_file_processing_interval=30
-service_perfdata_file_processing_command=process-service-perfdata-file
-
-Host performance data
-host_perfdata_file=/usr/local/icinga/var/perfdata/host-perfdata
-host_perfdata_file_template=DATATYPE::HOSTPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tHOSTPERFDATA::$HOSTPERFDATA$\tHOSTCHECKCOMMAND::$HOSTCHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$
-host_perfdata_file_mode=a
-host_perfdata_file_processing_interval=30
-host_perfdata_file_processing_command=process-host-perfdata-file
-2. Command definitions
-define command {
-command_name    process-service-perfdata-file
-command_line    mv /usr/local/icinga/var/perfdata/service-perfdata /usr/local/icinga/var/perfdata/service-perfdata.$TIMET$
-}
-
-define command {
-command_name    process-host-perfdata-file
-command_line    mv /usr/local/icinga/var/perfdata/host-perfdata /usr/local/icinga/var/perfdata/host-perfdata.$TIMET$
-}
-3. Create Performance Data Directory
-Suit user, group and path to your environment.
-
-# mkdir /path/to/icinga/var/perfdata 
-# chown icinga.icinga /path/to/icinga/var/perfdata
-Note that by default ingraph-collector runs with user ingraph and group icinga. Thus the perfdata dir needs group write permissions.
-
-# chmod g+w /path/to/var/perfdata
-
-Starting The Daemons
-====================
-
-# chkconfig ingraph on
-# chkconfig ingraph-collector on 
-# service ingraph start
-# service ingraph-collector start
+    - If you want to participate in actively developing please contact:
+      info@netways.de

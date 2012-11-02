@@ -1,0 +1,275 @@
+inGraph INSTALLATION OVERVIEW
+
+For full documentation, please see
+    https://www.netways.org/projects/ingraph/wiki.
+
+Requirements
+------------
+    - Apache
+      You need to enable the "mod_rewrite" module.
+
+    - PHP
+      Minimum PHP version required is 5.1.2. Recommended PHP version is 5.2.x.
+      You also have to enable the modules "curl" and "xmlrpc".
+
+    - Python
+      As Python 3.x is not backwards-compatible we do NOT currently
+      support it. We recommend Python 2.6 but any version greater than or
+      equal to 2.4 will do. The python development package
+      (python-devel in most cases) and python-setuptools are required as well.
+
+    - SQLAlchmey
+      SQLAlchemy is an open source SQL toolkit and object-relational mapper for
+      Python. It is designed for efficient and high-performing database access.
+      You should use the latest available version, though any version greater or
+      equal to 0.6.0 is supported.
+      
+      If the desired version is not shipped with your distribution's repository
+      you may have to install SQLAlchemy from source.
+
+    - Python database driver
+      SQLAlchemy supports several database backends. In order to connect to your
+      database, the appropiate Python Database API driver has to be installed.
+      The following table provides an overview of major dialects with their
+      associated distribution driver package name respectively.
+      
+      (R)DBMS    |  Debian          |   SUSE            |  Red Hat, CentOS
+      -------------------------------------------------------------------
+      MySQL      |  python-mysqldb  |   python-mysql    |  MySQL-python
+      PostgreSQL |  python-psycopg2 |   python-psycopg2 |  python-psycopg2
+
+Requirements - Packages
+-----------------------
+      - python-devel
+      - python-setuptools
+      - python-sqlalchemy >= 0.6.0
+      - gcc (optional, SQLAlchemy includes C extensions which provide an
+        extra speed boost. But SQLAlchemy will install just fine if gcc
+        is missing)
+      - php5-curl
+      - php5-xmlrpc
+      - icinga-web >= 1.5.0 (optional, If you're planning on using the
+        icinga-web integration, icinga-web is a requirement obviously)
+      - Python DP-API driver
+      For RHEL and CentOS php's packge prefix is php- rather than php5-.
+
+Installation - Backend
+----------------------
+The inGraph backend is made up of two python daemons. The ingraph-collector which
+collects performance data files written by Icinga and the ingraph daemon which
+receives the pre-processed data from the collector and stores them into a
+relational database. The ingraph daemon is used by the web interface as well as
+the check_ingraph plugin to retrieve data for generating graphs.
+
+The following command installs
+    inGraph to the standard location for third-party Python modules,
+    initscripts to /etc/init.d and
+    configuration files to /etc/ingraph:
+
+    $ ./setup-daemons.sh --install
+
+You may customize the installation with configure-like parameters.
+Run setup-daemon.sh with the -h switch to get an idea of what is possbile:
+
+    $ ./setup-daemons-sh -h
+
+Installation - Frontend
+-----------------------
+For displaying graphs inGraph provides a standalone web interface and a icinga-web
+integration module. Usually you only need to install one of them.
+
+Installation - Frontend - Standalone Web Interface
+--------------------------------------------------
+Assuming /usr/local/ingraph-web is your target directory you have to run the
+following commands (adjust user, group and paths to your environment):
+
+    $ cd ingraph-web/
+    $ ./setup-ingraph-web.sh --prefix=/usr/local/ingraph-web \
+    --with-web-path=/ingraph
+
+To see a list of available parameters (e.g. for setting the username and group
+Apache is running as) please try:
+
+    $ ./setup-ingraph-web.sh -h
+
+After installation please copy the Apache configuration file:
+
+    $ cp ingraph.conf /etc/apache2/conf.d/
+    $ service apache2 restart
+
+Also, make sure that the mod_rewrite Apache module is enabled
+("a2enmod rewrite" on Debian/Ubuntu systems).
+
+Installation - Frontend - Icinga-Web Module
+-------------------------------------------
+Assuming /usr/local/icinga-web is your target directory you have to run the
+following commands (adjust user, group and paths to your environment):
+
+    $ cd icinga-web/
+    $ ./setup-icinga-web.sh --prefix=/usr/local/icinga-web
+
+To see a list of available parameters (e.g. for setting the username and group
+Apache is running as) please try:
+
+    $ ./setup-ingraph-web.sh -h
+
+Database Setup
+--------------
+inGraph requires its own database, e.g. "ingraph". Since the database schema is
+automatically set up or modified (if needed) when starting the ingraph daemon,
+the database user needs appropriate permissions for CREATE TABLE, CREATE INDEX,
+etc. MySQL is the recommended DBMS for inGraph. PostgreSQL should work just fine
+too but has received less testing.
+
+Setup MySQL:
+    mysql> CREATE DATABASE ingraph;
+    mysql> GRANT ALL ON ingraph.* TO 'ingraph'@'localhost'
+        -> IDENTIFIED BY 'changeme';
+
+Setup PostgreSQL:
+    $ su - postgres
+    $ psql
+    postgres=# CREATE USER ingraph;
+    postgres=# ALTER USER ingraph WITH PASSWORD 'changeme';
+    postgres=# CREATE DATABASE ingraph;
+    postgres=# GRANT ALL ON DATABASE ingraph TO ingraph;
+
+Configuration - Backend
+-----------------------
+By default configuration files are located at
+    /etc/ingraph/ingraph-aggregates.conf,
+    /etc/ingraph/ingraph-database.conf and
+    /etc/ingraph/ingraph-xmlrpc.conf.
+
+inGraph implements its own housekeeping mechanism via so called "aggregates".
+Raw monitoring data is consolidated according to configured interval and
+retention period settings in ingraph-aggregates.conf.
+
+ingraph-database.conf holds the database connection string with the format
+    dialect://user:password@host:port/dbname.
+Example MySQL:
+    dsn = 'mysql://ingraph:ingraph@localhost:3306/ingraph'
+Example: PostgreSQL:
+    dsn = 'postgresql://ingraph:ingraph@localhost:5432/ingraph'
+
+The ingraph daemon's XML-RPC interface is secured via username and password.
+Both servers ingraph and ingraph-collector use ingraph-xmlrpc.conf
+
+Note that if you change any of the XML-RPC interface settings you are required
+to adjust the frontend configuration too, i.e. in:
+    /usr/local/icinga-web/app/modules/inGraph/config/inGraph.xml for the
+    icinga-web module
+
+    /usr/local/ingraph-web/app/modules/inGraph/config/inGraph.xml for the
+    standalone web interface
+
+Configuration - Daemons
+-----------------------
+Both ingraph and ingraph-collector initscripts are each configureable via
+    /etc/default and/or /etc/sysconfig configuration files.
+These files are not part of the installation process and therefore have to
+be created if you change any of the following default arguments.
+
+/etc/default/ingraph or /etc/sysconfig/ingraph
+    INGRAPH_CHDIR=/etc/ingraph
+    INGRAPH_PIDFILE=/var/run/ingraph/ingraphd.pid
+    INGRAPH_USER=ingraph
+
+/etc/default/ingraph-collector or /etc/sysconfig/ingraph-collectior
+    INGRAPH_COLLECTOR_CHDIR="/etc/ingraph" 
+    INGRAPH_COLLECTOR_PIDFILE="/var/run/ingraph/ingraph-collectord.pid" 
+    INGRAPH_COLLECTOR_PERFDATA_DIR="/usr/local/icinga/var/perfdata" 
+    INGRAPH_COLLECTOR_PERFDATA_PATTERN="*-perfdata.*[0-9]" 
+    INGRAPH_COLLECTOR_FILE_LIMIT="50" 
+    # Collector file mode, one of "BACKUP" or "REMOVE":
+    # Use "BACKUP" to keep processed files with .bak extension.
+    INGRAPH_COLLECTOR_FILE_MODE="REMOVE" 
+    INGRAPH_COLLECTOR_SLEEPSECS="60" 
+    INGRAPH_COLLECTOR_USER="ingraph" 
+    INGRAPH_COLLECTOR_GROUP="icinga" 
+    INGRAPH_COLLECTOR_LOGFILE="-" # - = stdout/stderr
+
+Configuration - Frontend
+------------------------
+Assuming you have used /usr/local/ingraph-web as the installation directory,
+the configuration files are located at
+    /usr/local/ingraph/app/modules/inGraph/config/.
+
+Path settings for templates and views are configured via inGraph.xml.
+In most cases the default settings will do. Remember to adjust your XML-RPC
+settings according to server-side configuration.
+
+For icinga-web integration module configuration replace /usr/local/ingraph-web
+with icinga-web prefix, e.g. /usr/local/icinga-web.
+
+Remember to clear the Agavi config cache after changing any of the
+configuration files:
+Icinga-web:
+    # /usr/local/icinga-web/bin/clearcache.sh
+Standalone:
+    # /usr/local/ingraph-web/bin/clearcache.sh
+
+Icinga Setup
+------------
+Enable Icinga to process performance data returned from service and host checks.
+If the perfdata directory does not yet exist, create it with appropriate
+permissions. Icinga and the ingraph-collector daemon must able to write
+files there. Adjust users, groups and paths to your environment.
+
+icinga.cfg
+    process_performance_data=1
+    
+    service_perfdata_file=/usr/local/icinga/var/perfdata/service-perfdata
+    service_perfdata_file_template=DATATYPE::SERVICEPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tSERVICEDESC::$SERVICEDESC$\tSERVICEPERFDATA::$SERVICEPERFDATA$\tSERVICECHECKCOMMAND::$SERVICECHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$\tSERVICESTATE::$SERVICESTATE$\tSERVICESTATETYPE::$SERVICESTATETYPE$
+    service_perfdata_file_mode=a
+    service_perfdata_file_processing_interval=30
+    service_perfdata_file_processing_command=process-service-perfdata-file
+    
+    host_perfdata_file=/usr/local/icinga/var/perfdata/host-perfdata
+    host_perfdata_file_template=DATATYPE::HOSTPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tHOSTPERFDATA::$HOSTPERFDATA$\tHOSTCHECKCOMMAND::$HOSTCHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$
+    host_perfdata_file_mode=a
+    host_perfdata_file_processing_interval=30
+    host_perfdata_file_processing_command=process-host-perfdata-file
+
+commands.cfg
+    define command {
+        command_name    process-service-perfdata-file
+        command_line    /bin/mv /usr/local/icinga/var/perfdata/service-perfdata /usr/local/icinga/var/perfdata/service-perfdata.$TIMET$
+    }
+    
+    define command {
+        command_name    process-host-perfdata-file
+        command_line    /bin/mv /usr/local/icinga/var/perfdata/host-perfdata /usr/local/icinga/var/perfdata/host-perfdata.$TIMET$
+    }
+
+Create perfdata directory with user icinga and group icinga:
+    $ mkdir -p /usr/local/icinga/var/perfdata
+    $ chown -R icinga.icinga /usr/local/icinga/var/perfdata
+
+By default ingraph-collector runs with user ingraph and group icinga.
+Thus the perfdata dir needs group write permissions:
+    $ chmod g+w /usr/local/icinga/var/perfdata
+
+Starting The Daemons
+--------------------
+Activate initscripts (you may use update-rc.d, chkconfig or insserv, ...
+depending on your system):
+    $ chkconfig ingraph on
+    $ chkconfig ingraph-collector on 
+
+Start daemons:
+    $ service ingraph start
+    $ service ingraph-collector start
+
+Troubleshooting
+---------------
+Start daemons in foreground (-f switch).
+
+ingraph:
+    $ python -m ingraph/bin/ingraphd -d /etc/ingraph \
+    -p /var/run/ingraph/ingraphd.pid -u ingraph -f start
+
+ingraph-collector:
+    $ python -m ingraph/bin/ingraph_collectord -d /etc/ingraph \
+    -p /var/run/ingraph/ingraph-collectord.pid -P /var/icinga/perfdata \
+    -e *-perfdata.*[0-9] -l 50 -m BACKUP -s 60 -u ingraph -g icinga -f start

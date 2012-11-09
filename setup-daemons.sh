@@ -26,11 +26,16 @@ usage () {
     echo
     echo "Usage: $(basename $0) [OPTION]..."
     echo
+    echo "Defaults for the options are specified in brackets."
+    echo
     echo "Required options are:"
     echo "--install                 install the inGraph python backend"
     echo
-    echo "Options (defaults are specified in brackets):"
-    echo "--help, -h                display this help and exit"
+    echo "Help:"
+    echo "-h, --help                display this help and exit"
+    echo "-V, --version             display version information and exit"
+    echo
+    echo "Installation directories:"
     echo "--with-config-dir=DIR     installation directory for the config files"
     echo "                          [$CONFIG_DIR]"
     echo "--with-lib-dir=DIR        installation directory for the python module"
@@ -39,6 +44,8 @@ usage () {
     echo "                          [May be one of /usr/bin, /usr/local/bin,"
     echo "                           /path/to/python/bin"
     echo "                           depending on your python installation]"
+    echo
+    echo "Configuration:"
     echo "--with-xmlrpc-host        xml-rpc host"
     echo "                          [$XMLRPC_HOST]"
     echo "--with-xmlrpc-port        xml-rpc port"
@@ -48,6 +55,11 @@ usage () {
     echo "--with-xmlrpc-password    xml-rpc password"
     echo "                          [$XMLRPC_PASSWORD]"
     echo
+    exit 1
+}
+
+version () {
+    $PYTHON setup.py --version
     exit 1
 }
 
@@ -121,6 +133,9 @@ do
             ;;
         --help | -h)
             usage
+            ;;
+        --version | -V)
+            version
             ;;
         *)
             echo "WARN: Unknown option (ignored): $ARG" >&2

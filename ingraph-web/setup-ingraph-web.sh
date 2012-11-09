@@ -2,6 +2,8 @@
 
 set -o nounset
 
+VERSION=1.0.1
+
 SCRIPT=$(readlink -f "$0")
 DIR=$(dirname "$SCRIPT")
 COMMON_SRC=$(readlink -f "$DIR/../icinga-web")
@@ -24,19 +26,26 @@ GETENT=${GETENT-getent}
 
 usage () {
     echo
-    echo "Install the inGraph web-interface"
+    echo "Install the inGraph web-interface version $VERSION"
     echo
     echo "Usage: $(basename $0) [OPTION]..."
     echo
+    echo "Defaults for the options are specified in brackets."
+    echo
     echo "Required options are:"
-    echo "--install                 install the inGraph web-interface"
+    echo "--install                 install the inGraph web interface"
     echo "or"
     echo "--install-dev             install dev environment"
     echo
-    echo "Options (defaults are specified in brackets):"
-    echo "--help, -h                display this help and exit"
+    echo "Help:"
+    echo "-h, --help                display this help and exit"
+    echo "-V, --version             display version information and exit"
+    echo
+    echo "Installation directories:"
     echo "--prefix=PREFIX           installation prefix"
     echo "                          [$PREFIX]"
+    echo
+    echo "Configuration:"
     echo "--with-web-user           web user"
     echo "                          [$WEB_USER]"
     echo "--with-web-group          web group"
@@ -54,6 +63,11 @@ usage () {
     echo "--with-null-tolerance     null tolerance value"
     echo "                          [$NULL_TOLERANCE]"
     echo
+    exit 1
+}
+
+version () {
+    echo $VERSION
     exit 1
 }
 
@@ -180,6 +194,9 @@ do
             ;;
         --help | -h)
             usage
+            ;;
+        --version | -V)
+            version
             ;;
         *)
             echo "WARN: Unknown option (ignored): $ARG" >&2

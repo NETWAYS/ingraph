@@ -2,14 +2,15 @@
 
 set -o nounset
 
+VERSION=1.0.1
+
 SCRIPT=$(readlink -f "$0")
 DIR=$(dirname "$SCRIPT")
 COMMON_SRC=$(readlink -f "$DIR/../icinga-web")
 
-PREFIX=${PREFIX-/usr/local/ingraph}
+PREFIX=${PREFIX-/usr/local/icinga-web}
 WEB_USER=${WEB_USER-www-data}
 WEB_GROUP=${WEB_GROUP-www-data}
-WEB_PATH=${WEB_PATH-/ingraph}
 XMLRPC_HOST=${XMLRPC_HOST-127.0.0.1}
 XMLRPC_PORT=${XMLRPC_PORT-5000}
 XMLRPC_USER=${XMLRPC_USER-ingraph}
@@ -29,25 +30,30 @@ GETENT=${GETENT-getent}
 
 usage () {
     echo
-    echo "Install the inGraph icinga-web module"
+    echo "Install the inGraph icinga-web module version $VERSION"
     echo
     echo "Usage: $(basename $0) [OPTION]..."
+    echo
+    echo "Defaults for the options are specified in brackets."
     echo
     echo "Required options are:"
     echo "--install                 install the inGraph icinga-web module"
     echo "or"
     echo "--install-dev             install dev environment"
     echo
-    echo "Options (defaults are specified in brackets):"
-    echo "--help, -h                display this help and exit"
-    echo "--prefix=PREFIX           installation prefix"
+    echo "Help:"
+    echo "-h, --help                display this help and exit"
+    echo "-V, --version             display version information and exit"
+    echo
+    echo "Installation directories:"
+    echo "--prefix=PREFIX           icinga-web installation prefix"
     echo "                          [$PREFIX]"
+    echo
+    echo "Configuration:"
     echo "--with-web-user           web user"
     echo "                          [$WEB_USER]"
     echo "--with-web-group          web group"
     echo "                          [$WEB_GROUP]"
-    echo "--with-web-path           web path"
-    echo "                          [$WEB_PATH]"
     echo "--with-xmlrpc-host        xml-rpc host"
     echo "                          [$XMLRPC_HOST]"
     echo "--with-xmlrpc-port        xml-rpc port"
@@ -59,6 +65,11 @@ usage () {
     echo "--with-null-tolerance     null tolerance value"
     echo "                          [$NULL_TOLERANCE]"
     echo
+    exit 1
+}
+
+version () {
+    echo $VERSION
     exit 1
 }
 
@@ -111,14 +122,6 @@ do
                 exit 1
             }
             ;;
-        --with-web-path*)
-            WEB_PATH=${ARG#--with-web-path}
-            WEB_PATH=${WEB_PATH#=}
-            [ -z "$WEB_PATH" ] && {
-                echo "ERROR: expected a web path." >&2
-                exit 1
-            }
-            ;;
         --with-xmlrpc-host*)
             XMLRPC_HOST=${ARG#--with-xmlrpc-host}
             XMLRPC_HOST=${XMLRPC_HOST#=}
@@ -161,6 +164,9 @@ do
             ;;
         --help | -h)
             usage
+            ;;
+        --version | -V)
+            version
             ;;
         *)
             echo "WARN: Unknown option (ignored): $ARG" >&2
@@ -238,7 +244,6 @@ do
     $SED -i -e s,@PREFIX@,$PREFIX, $F
     $SED -i -e s,@WEB_USER@,$WEB_USER, $F
     $SED -i -e s,@WEB_GROUP@,$WEB_GROUP, $F
-    $SED -i -e s,@WEB_PATH@,$WEB_PATH, $F
     $SED -i -e s,@XMLRPC_HOST@,$XMLRPC_HOST, $F
     $SED -i -e s,@XMLRPC_PORT@,$XMLRPC_PORT, $F
     $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F

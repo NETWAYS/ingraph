@@ -22,7 +22,7 @@ elif sys.version_info[:2] >= (3,):
     sys.exit('inGraph is not yet compatible with Python 3')
 
 __name__ = 'ingraph'
-__version__ = '1.0'
+__version__ = '1.0.1'
 __author__ = 'NETWAYS GmbH'
 __contact__ = 'info@netways.de'
 __url__ = 'https://www.netways.org'

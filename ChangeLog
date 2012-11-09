@@ -1,0 +1,39 @@
+inGraph 1.0.1 (YYYY-MM-DD)
+
+This version of inGraph is a bug fix maintenance release,
+including the following significant fixes:
+
+- Setup
+    * Fix "PREFIX: paraemter not set" on setup-daemons.sh (Bug #1372)
+    * Fix initscripts LSB-headers (Bug #1464)
+    * Fix cache dir not being created on setup-ingraph-web.sh (Bug #1468)
+    * Exit if web user or group invalid on setup-ingraph-web.sh and setup-icinga-web.sh (Bug #1470)
+
+- icinga-web Module
+    * Fix saved ingraph-portal cronks do not render after opening (Bug #1374)
+    * Rework grid-integration to be compatible with icinga-web < 1.8 and icinga-web 1.8 (Bug #1510, Bug #1570)
+    * Show the grapher icon only if process_perf_data=1 (Feature #1412)
+
+- ingraph-web
+    * Remove DirectorySlash necessity
+
+- Both ingraph-web and icinga-web Module
+    * Fix change panel title throwing JavaScript errors (Bug #1380)
+    * Fix Firefox throwing JavaScript Errors on zooming (Bug #1388)
+    * Fix save view not including all plots (Bug #1406)
+    * Fix header showing "No Data" although data is present (Bug #1408)
+    * Fix tooltips display outside the viewable are (Bug #1410)
+    * Fix view pager only showing the first page (Bug #1430)
+
+- ingraphd
+    * Fix unnormal peaks with PostgreSQL (Bug #1398)
+    * Fix "Server fault: 1: :'NoneType' object has no attribute 'id'" (Bug #1436)
+    * Fix NoSuchColumnError and "Server fault: 1: :"Could not locate column in row for column 'host.id'" exceptions (Bug #1458)
+    * Fix housekeeping thread only running once / locking database
+
+- ingraph-collectord
+    * Add support for dropped trailing unfilled semicolons (perfdata)
+    * Fix perfdata collection not sending any data to ingrapd sometimes 
+
+- contrib
+    * Add MySQL procedure to manually remove host service combinations

@@ -280,9 +280,9 @@
             values.end = this.endDateField.strValue ||
                          this.endDateField.getValue() ?
                          this.endDateField.getValue().getTime() / 1000 : null;
-
-            values.parentService = this.serviceCombo.getSelectedRecord()
-                .get('parentService');
+            values.parentService = this.serviceCombo.getSelectedRecord() ?
+                this.serviceCombo.getSelectedRecord().get('parentService') :
+                null;
             this.fireEvent('plot', this, values);
         },
 

@@ -27,7 +27,19 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
                                                   $limit, $offset);
         $flat = array();
         foreach ($services['services'] as $service) {
-            $flat[] = $service['service'];
+            if ($service['parent_service'] !== null) {
+                $flat[] = array(
+                    'name' => $service['parent_service'] . ' - '
+                        . $service['service'],
+                    'service' => $service['service'],
+                    'parentService' => $service['parent_service']
+                );
+            } else {
+                $flat[] = array(
+                    'name' => $service['service'],
+                    'service' => $service['service']
+                );              
+            }
         }
 
         return array(

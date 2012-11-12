@@ -203,18 +203,21 @@
 
 (function () {
     "use strict";
-    Ext.ns('Ext.ux.ingraph.icingaweb');
-    Ext.ux.ingraph.icingaweb.GridIcon = Ext.extend(Ext.BoxComponent, {
-        cls: 'icon-16 x-icinga-grid-link',
-        style: {
-            margin: '3px 0px'
-        },
-        afterRender: function () {
-            this.el.addClass(this.iconCls);
-            this.relayEvents(this.el, ['mouseover', 'mouseout', 'click']);
-            this.initEventMixin(this);
-        }
-    });
-    Ext.override(Ext.ux.ingraph.icingaweb.GridIcon, Cronk.grid.events.EventMixin);
-    Ext.reg('igridicon', Ext.ux.ingraph.icingaweb.GridIcon);
+    if (Cronk.grid.events && Cronk.grid.events.EventMixin) {
+        // Icinga-web > 1.8 only
+        Ext.ns('Ext.ux.ingraph.icingaweb');
+        Ext.ux.ingraph.icingaweb.GridIcon = Ext.extend(Ext.BoxComponent, {
+            cls: 'icon-16 x-icinga-grid-link',
+            style: {
+                margin: '3px 0px'
+            },
+            afterRender: function () {
+                this.el.addClass(this.iconCls);
+                this.relayEvents(this.el, ['mouseover', 'mouseout', 'click']);
+                this.initEventMixin(this);
+            }
+        });
+        Ext.override(Ext.ux.ingraph.icingaweb.GridIcon, Cronk.grid.events.EventMixin);
+        Ext.reg('igridicon', Ext.ux.ingraph.icingaweb.GridIcon);
+    }
 }());

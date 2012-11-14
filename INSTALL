@@ -51,7 +51,7 @@ Requirements - Packages
       - icinga-web >= 1.5.0 (optional, If you're planning on using the
         icinga-web integration, icinga-web is a requirement obviously)
       - Python DP-API driver
-      For RHEL and CentOS php's packge prefix is php- rather than php5-.
+      For RHEL, CentOS and Fedora php's packge prefix is php- rather than php5-.
 
 Installation - Backend
 ----------------------

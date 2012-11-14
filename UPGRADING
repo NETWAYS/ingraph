@@ -7,17 +7,17 @@ See README for instructions on installing for the first time.
 
 UPGRADING FROM 1.0 TO 1.0.1
 ---------------------------
-1. Stop Daemons
+1. Stop daemons:
     $ service ingraph-collector stop
     $ service ingraph stop
 
 2. Install inGraph as you did with version 1.0. For instructions please see the
-file called INSTALL. Setup will not overwrite existing configuration files.
-However initscripts will be replaced.
+file called INSTALL. The setup script will not overwrite existing
+configuration files. However initscripts will be replaced.
 
 3. If you changed any of the graph templates they got backuped with the '~'
 (tilde) suffix before getting overwritten. Currently there is no support to
 distinguish between distributed and user templates. Hence you have to merge your
 changes back in.
 
-4. Sart Daemons
+4. Start daemons.

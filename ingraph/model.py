@@ -14,6 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+try:
+    import pkg_resources
+    pkg_resources.require('SQLAlchemy >= 0.6.3')
+except ImportError:
+    pass
+
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Enum, Sequence, ForeignKey, Index, create_engine, \
     and_, or_, tuple_

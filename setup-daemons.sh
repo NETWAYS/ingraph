@@ -150,7 +150,7 @@ then
     usage
 fi
 
-echo "(1/2) Preparing *.in files..."
+echo "(1/3) Preparing *.in files..."
 
 # Prepare *.in files
 for FIN in $($FIND $DIR/*.in $DIR/examples -type f -name \*.in)
@@ -173,7 +173,7 @@ $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
 $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
 
 # Install files from the ingraph directory
-echo "(2/2) Running setup.py..."
+echo "(2/3) Running setup.py..."
 
 [ -n "$LIB_DIR" ] && {
     PYTHON_OPTS="$PYTHON_OPTS --install-lib=$LIB_DIR"
@@ -183,5 +183,14 @@ echo "(2/2) Running setup.py..."
 }
 
 $PYTHON setup.py $PYTHON_OPTS
+
+# Create ingraph user
+echo "(3/3) Creating \"ingraph\" user..."
+
+if ! id ingraph >/dev/null 2>&1; then
+	useradd -b /etc/ingraph -M ingraph
+fi
+
+echo "Done."
 
 exit 0

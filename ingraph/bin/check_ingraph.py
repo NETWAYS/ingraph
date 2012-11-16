@@ -330,7 +330,13 @@ def main():
         second_start = now + int(options.second_start) * 3600
         second_end = now + int(options.second_end) * 3600
 
-    query = { options.host: { options.service: { options.perfkey: ['avg'] } } }
+    query = [{
+        'host': options.host,
+        'service': options.service,
+        'plot': options.perfkey,
+        'parent_service': None,
+        'type': 'avg'
+    }]
 
     result_first = api.getPlotValues2(query, first_start, first_end, 300)
 

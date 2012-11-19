@@ -188,7 +188,7 @@ $PYTHON setup.py $PYTHON_OPTS
 echo "(3/3) Creating \"ingraph\" user..."
 
 if ! id ingraph >/dev/null 2>&1; then
-	useradd -b /etc/ingraph -M ingraph
+    useradd -b $CONFIG_DIR -M ingraph
 fi
 
 echo "Done."

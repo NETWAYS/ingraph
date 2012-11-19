@@ -22,7 +22,7 @@ Requirements
       SQLAlchemy is an open source SQL toolkit and object-relational mapper for
       Python. It is designed for efficient and high-performing database access.
       You should use the latest available version, though any version greater or
-      equal to 0.6.0 is supported.
+      equal to 0.6.3 is supported.
       
       If the desired version is not shipped with your distribution's repository
       you may have to install SQLAlchemy from source.
@@ -63,8 +63,9 @@ the check_ingraph plugin to retrieve data for generating graphs.
 
 The following command installs
     inGraph to the standard location for third-party Python modules,
-    initscripts to /etc/init.d and
-    configuration files to /etc/ingraph:
+    initscripts to /etc/init.d,
+    configuration files to /etc/ingraph,
+    and the ingraph user with /etc/ingraph as the value for the login directory:
 
     $ ./setup-daemons.sh --install
 

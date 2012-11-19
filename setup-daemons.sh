@@ -163,14 +163,17 @@ do
     $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
     $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
 done
-FIN=$DIR/contrib/init.d/ingraph-collector.in
-F=${FIN%.in}
-$INSTALL -m 755 $FIN $F
-$SED -i -e s,@CONFIG_DIR@,$CONFIG_DIR, $F
-$SED -i -e s,@XMLRPC_HOST@,$XMLRPC_HOST, $F
-$SED -i -e s,@XMLRPC_PORT@,$XMLRPC_PORT, $F
-$SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
-$SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
+for FIN in $($FIND $DIR/contrib/init.d/ -type f -name \*.in)
+do
+    F=${FIN%.in}
+    # Install initscripts with the execute bit set
+    $INSTALL -m 755 $FIN $F
+    $SED -i -e s,@CONFIG_DIR@,$CONFIG_DIR, $F
+    $SED -i -e s,@XMLRPC_HOST@,$XMLRPC_HOST, $F
+    $SED -i -e s,@XMLRPC_PORT@,$XMLRPC_PORT, $F
+    $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
+    $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
+done
 
 # Install files from the ingraph directory
 echo "(2/3) Running setup.py..."

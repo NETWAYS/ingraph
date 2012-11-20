@@ -95,7 +95,8 @@ class BackendRPCMethods(object):
         
         return obj
 
-    def _createHostService(self, conn, host, service, parent_hostservice):
+    def _createHostService(self, conn, host, service, parent_hostservice,
+                           check_command):
         hostservice_key = (host, service)
         
         if hostservice_key in self.hostservices:
@@ -104,10 +105,13 @@ class BackendRPCMethods(object):
         objs = model.HostService.getByHostAndService(conn, host, service,
                                                      parent_hostservice)
         if len(objs) == 0:
-            obj = model.HostService(host, service, parent_hostservice)
+            obj = model.HostService(host, service, parent_hostservice, check_command)
             obj.save(conn)
         else:
             obj = objs[0]
+            if obj.check_command != check_command:
+                obj.check_command = check_command
+                obj.save(conn)
             
         self.hostservices[hostservice_key] = obj
         
@@ -138,7 +142,7 @@ class BackendRPCMethods(object):
         for update in updates:
             (host, parent_service, service, plot, timestamp, unit, value, min,
              max, lower_limit, upper_limit, warn_lower, warn_upper, warn_type,
-             crit_lower, crit_upper, crit_type, pluginstatus) = update
+             crit_lower, crit_upper, crit_type, pluginstatus, check_command) = update
             
             host_obj = self._createHost(conn, host)
             if parent_service != None:
@@ -151,7 +155,8 @@ class BackendRPCMethods(object):
 
             hostservice_obj = self._createHostService(conn, host_obj,
                                                       service_obj,
-                                                      parent_hostservice_obj)
+                                                      parent_hostservice_obj,
+                                                      check_command)
             plot_obj = self._createPlot(conn, hostservice_obj, plot)
 
             queries = plot_obj.buildUpdateQueries(

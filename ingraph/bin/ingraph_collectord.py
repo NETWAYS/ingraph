@@ -71,6 +71,9 @@ class Collectord(daemon.UnixDaemon):
                 key = 'status'
             elif key == 'SERVICEPERFDATA' or key == 'HOSTPERFDATA':
                 key = 'perf'
+            elif key == 'SERVICECHECKCOMMAND' or key == 'HOSTCHECKCOMMAND':
+                key = 'check_command'
+                value = value.split('!', 1)[0]
 
             logdata[key] = value
 
@@ -178,11 +181,16 @@ class Collectord(daemon.UnixDaemon):
 
             pluginstatus = logdata['status'].lower()
 
+            try:
+                check_command = logdata['check_command']
+            except KeyError:
+                check_command = None
+            
             update = (logdata['host'], upd_parentservice, upd_service,
                       upd_plotname, logdata['timestamp'], uom, raw_value,
                       raw_value, raw_value, min_value, max_value, warn_lower,
                       warn_upper, warn_type, crit_lower, crit_upper, crit_type,
-                      pluginstatus)
+                      pluginstatus, check_command)
             updates.append(update)
         return updates
 

@@ -309,11 +309,12 @@ hostservice = Table('hostservice', metadata,
 )
 
 class HostService(ModelBase):
-    def __init__(self, host, service, parent_hostservice):
+    def __init__(self, host, service, parent_hostservice, check_command=None):
         self.id = None
         self.host = host
         self.service = service
         self.parent_hostservice = parent_hostservice
+        self.check_command = check_command
 
     def save(self, conn):
         if self.id == None:
@@ -330,17 +331,19 @@ class HostService(ModelBase):
             else:
                 parent_hostservice_id = None
     
-            ins = hostservice.insert().values(host_id=self.host.id, service_id=self.service.id, \
-                                              parent_hostservice_id=parent_hostservice_id)
+            ins = hostservice.insert().values(
+                host_id=self.host.id, service_id=self.service.id,
+                parent_hostservice_id=parent_hostservice_id,
+                check_command=self.check_command)
             result = conn.execute(ins)
             self.id = result.last_inserted_ids()[0]
             self.activate()
         else:
-            # TODO: should probably just throw an exception instead -
-            # as changing a service's host/service ids doesn't make any sense
-            upd = hostservice.update().where(hostservice.c.id==self.id).values(host_id=self.host.id, \
-                                                                               service_id=self.service.id, \
-                                                                               parent_hostservice_id=self.parent_hostservice.id)
+            upd = hostservice.update().where(hostservice.c.id==self.id).values(
+                # host_id=self.host.id,
+                # service_id=self.service.id,
+                # parent_hostservice_id=self.parent_hostservice.id,
+                check_command=self.check_command)
             conn.execute(upd)
 
     def getByID(conn, id):
@@ -361,8 +364,9 @@ class HostService(ModelBase):
             else:
                 parent_hostservice = None
 
-            obj = HostService(host, service, parent_hostservice)
-            obj.id = row[hostservice.c.id]            
+            obj = HostService(host, service, parent_hostservice,
+                              row[hostservice.c.check_command])
+            obj.id = row[hostservice.c.id]
             obj.activate()
         
         return obj
@@ -397,7 +401,8 @@ class HostService(ModelBase):
                 else:
                     phs = parent_hostservice
 
-                obj = HostService(host, svc, phs)
+                obj = HostService(host, svc, phs,
+                                  row[hostservice.c.check_command])
                 obj.id = row[hostservice.c.id]
                 obj.activate()
                 
@@ -446,7 +451,8 @@ class HostService(ModelBase):
                 else:
                     phs = None
 
-                obj = HostService(hst, svc, phs)
+                obj = HostService(hst, svc, phs,
+                                  row[hostservice.c.check_command])
                 obj.id = row[hostservice.c.id]
                 obj.activate()
                 
@@ -478,7 +484,8 @@ class HostService(ModelBase):
                 else:
                     parent_hostservice = None
                 
-                obj = HostService(host, service_obj, parent_hostservice)
+                obj = HostService(host, service_obj, parent_hostservice,
+                                  row[hostservice.c.check_command])
                 obj.id = row[hostservice.c.id]
                 obj.activate()
                 

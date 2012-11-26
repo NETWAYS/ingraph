@@ -6,15 +6,23 @@
 >
     <ae:configuration>
         <validators>
-            <validator name="host" class="string" required="true">
+            <validator name="host" class="string" required="false">
                 <argument>host</argument>
-                <error>Parameter host is mandatory.</error>
             </validator>
             <validator name="service" class="string" required="false">
                 <argument>service</argument>
             </validator>
             <validator name="parentService" class="string" required="false">
                 <argument>parentService</argument>
+            </validator>
+            <validator name="plot" class="string" required="false">
+                <argument>plot</argument>
+            </validator>
+            <validator name="start" class="number" required="false">
+                <argument>start</argument>
+            </validator>
+            <validator name="limit" class="number" required="false">
+                <argument>limit</argument>
             </validator>
         </validators>
     </ae:configuration>

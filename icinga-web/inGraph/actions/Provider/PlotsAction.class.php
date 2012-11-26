@@ -6,10 +6,12 @@ class inGraph_Provider_PlotsAction extends inGraphBaseAction
     {
         try {
             $plots = $this->getBackend()->fetchPlots(
-                $rd->getParameter('host'),
-                // Empty string as service represents host graph
+                $rd->getParameter('host', '%'),
                 $rd->getParameter('service', ''),
-                $rd->getParameter('parentService', null)
+                $rd->getParameter('parentService', null),
+                $rd->getParameter('plot', null),
+                $rd->getParameter('start', 0),
+                $rd->getParameter('limit', 20)
             );
         } catch (inGraph_XmlRpc_Exception $e) {
             return $this->setError($e->getMessage());

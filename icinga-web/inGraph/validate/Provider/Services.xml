@@ -6,9 +6,8 @@
 >
     <ae:configuration>
         <validators>
-            <validator name="host" class="string" required="true">
+            <validator name="host" class="string" required="false">
                 <argument>host</argument>
-                <error>Parameter host is mandatory.</error>
             </validator>
             <validator name="query" class="string" required="false">
                 <argument>query</argument>

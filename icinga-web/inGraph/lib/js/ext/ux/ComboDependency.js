@@ -2,7 +2,7 @@
  * Ext.ux.ComboDependency
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * Ext.ux.grid.ColorColumn is licensed under the terms of the
+ * Ext.ux.ComboDependency is licensed under the terms of the
  *             GNU Open Source GPL 3.0
  * license.
  *
@@ -70,10 +70,18 @@
                         if (cmp) {
                             if (Ext.isArray(dependency.param)) {
                                 Ext.each(dependency.param, function (param) {
-                                    options.params[param] = selectedRecord.get(param);
+                                    if (selectedRecord) {
+                                        options.params[param] = selectedRecord.get(param);
+                                    } else if (Ext.isFunction(dependency.callback)) {
+                                        options.params[param] = '%' + cmp.getValue() + '%';
+                                    }
                                 });
                             } else {
-                                options.params[dependency.param] = selectedRecord.get(dependency.param);
+                                if (selectedRecord) {
+                                    options.params[dependency.param] = selectedRecord.get(dependency.param);
+                                } else if (Ext.isFunction(dependency.callback)) {
+                                    options.params[dependency.param] = '%' + cmp.getValue() + '%';
+                                }
                             }
                         }
                     }, this);

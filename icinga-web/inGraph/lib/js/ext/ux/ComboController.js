@@ -2,7 +2,7 @@
  * Ext.ux.ComboController
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * Ext.ux.grid.ColorColumn is licensed under the terms of the
+ * Ext.ux.ComboController is licensed under the terms of the
  *             GNU Open Source GPL 3.0
  * license.
  *

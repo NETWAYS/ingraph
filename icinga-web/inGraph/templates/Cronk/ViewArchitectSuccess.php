@@ -31,5 +31,8 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
         };
         Ext.ux.ingraph.Urls.overwrite(urls);
     }
+    var viewarchitect = new Ext.ux.ingraph.ViewArchitect();
+    this.add(viewarchitect);
+    this.doLayout();
 });
 </script>

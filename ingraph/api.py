@@ -390,65 +390,46 @@ class BackendRPCMethods(object):
         return self.addOrUpdateComment(comment_id, host, parent_service,
             service, timestamp, author, text)
         
-    def getPlots(self, host_name, service_name, parent_service_name=None):
-        res = []
-        host = model.Host.getByName(self.engine, host_name)
-        if host_name and not host:
-            return res
-        service = model.Service.getByName(self.engine, service_name,
-                                          parent_service_name)
-        if service_name and not service:
-            return res
-        parent_hose = None
-        """
-        if parent_service_name:
-            parent_service = model.Service.getByName(
-                self.engine, parent_service_name, None)
-            if not parent_service:
-                return res
-            parent_hose = model.HostService.getByHostAndService(
-                self.engine, host, parent_service, None)
-            try:
-                parent_hose = parent_hose[0]
-            except IndexError:
-                # Not found
-                pass
-        """
-        hose = model.HostService.getByHostAndService(
-            self.engine, host, service, parent_hose)
-        try:
-            hose = hose[0]
-        except IndexError:
-            # Not found
-            pass
+    def getPlots(self, host_name_pattern=None, service_name_pattern=None,
+                 parent_service_name_pattern=None, plot_name_pattern=None,
+                 offset=None, limit=None):
+        plots = []
+        hostservices = []
+        if parent_service_name_pattern:
+            parent_services = model.Service.getByPattern(
+                self.engine, parent_service_name_pattern)
+            if not parent_services:
+                parent_services = [None]
         else:
-            children = model.HostService.getByHostAndService(
-                self.engine, hose.host, None, hose)
-            if children:
-                for child in children:
-                    if child.parent_hostservice != None:
-                        parent_service_name = child.parent_hostservice.service.name
-                    else:
-                        parent_service_name = None
-                    plots = model.Plot.getByHostServiceAndName(
-                        self.engine, child, None)
-                    for plot in plots:
-                        res.append({
-                            'service': child.service.name,
-                            'plot': plot.name,
-                            'parent_service': parent_service_name
-                        })
+            parent_services = [None]
+        for parent_service in parent_services:
+            hostservices.extend(
+                model.HostService.getByHostAndServicePattern(
+                    self.engine,
+                    host_name_pattern,
+                    service_name_pattern,
+                    parent_service).get('services'))
+        cache = set()
+        res =  model.Plot.getByHostServiceIdsAndName(
+            self.engine,
+            [hostservice.id for hostservice in hostservices if
+             hostservice.id not in cache and not
+             cache.add(hostservice.id)],
+            plot_name_pattern,
+            offset, limit)
+        for plot in res.get('plots'):
+            if plot.hostservice.parent_hostservice:
+                parent_service_name = plot.hostservice.parent_hostservice.service_name
             else:
-                if hose.parent_hostservice != None:
-                    parent_service_name = hose.parent_hostservice.service.name
-                else:
-                    parent_service_name = None
-                plots = model.Plot.getByHostServiceAndName(
-                    self.engine, hose, None)
-                for plot in plots:
-                    res.append({
-                        'service': hose.service.name,
-                        'plot': plot.name,
-                        'parent_service': parent_service_name
-                    })
-        return res
+                parent_service_name = None
+            plots.append({
+                'id': plot.id,
+                'host': plot.hostservice.host.name,
+                'service': plot.hostservice.service.name,
+                'parent_service': parent_service_name,
+                'plot': plot.name
+            })
+        return {
+            'total': res.get('total'),
+            'plots': plots
+        }

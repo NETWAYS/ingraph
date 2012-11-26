@@ -62,6 +62,19 @@
         },
         // private
         buildItems: function (cfg) {
+            var sm = new Ext.grid.CheckboxSelectionModel({
+                listeners: {
+                    scope: this,
+                    selectionchange: function (sm) {
+                        if (sm.getSelected() === undefined) {
+                            // No more selections
+//                            this.handleDeselectAll();
+                        } else {
+//                            this.handleSelectAny();
+                        }
+                    }
+                }
+            });
             cfg.items = [
                 {
                     xtype: 'grid',
@@ -73,6 +86,7 @@
                             sortable: true
                         },
                         columns: [
+                            sm,
                             {
                                 header: _('Host Name'),
                                 dataIndex: 'host'
@@ -91,19 +105,7 @@
                             }
                         ]
                     }),
-                    sm: new Ext.grid.CheckboxSelectionModel({
-                        listeners: {
-                            scope: this,
-                            selectionchange: function (sm) {
-                                if (sm.getSelected() === undefined) {
-                                    // No more selections
-//                                    this.handleDeselectAll();
-                                } else {
-//                                    this.handleSelectAny();
-                                }
-                            }
-                        }
-                    }),
+                    sm: sm,
                     tbar: [
                         _('Host:'),
                         {

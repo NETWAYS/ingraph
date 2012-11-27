@@ -85,10 +85,8 @@
                 listeners: {
                     scope: this,
                     add: function (store, records, index) {
-                        Ext.each(records, function (record) {
-                            this.grid.getSelectionModel().selectRow(
-                                store.indexOfId(record.id), true);
-                        }, this);
+                        this.grid.getSelectionModel().selectAll.defer(
+                            10, this.grid.getSelectionModel());
                     }
                 }
             });

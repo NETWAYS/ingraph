@@ -287,13 +287,7 @@
                             }
                         ]
                     }),
-                    sm: sm,
-                    bbar: {
-                        xtype: 'paging',
-                        store: this.store,
-                        displayInfo: true,
-                        pageSize: 20
-                    }
+                    sm: sm
                 }
             ];
         }

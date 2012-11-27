@@ -62,13 +62,17 @@
                     scope: this,
                     datachanged: function (storeToChooseFrom) {
                         var indexOf,
-                            sm = this.gridToChooseFrom.getSelectionModel();
+                            sm = this.gridToChooseFrom.getSelectionModel(),
+                            rows = [];
+                        sm.clearSelections(true); // True to suppress rowdeselect
                         storeToChooseFrom.each(function (record) {
                             indexOf = this.store.indexOfId(record.id);
                             if (indexOf !== -1) {
-                                sm.selectRow(indexOf, true);
+                                rows.push(storeToChooseFrom.indexOfId(
+                                    record.id));
                             }
                         }, this);
+                        sm.selectRows.defer(10, sm, [rows]);
                     }
                 }
             });
@@ -99,13 +103,13 @@
         },
         // private
         rowdeslectOfGridToChooseFrom: function (sm, rowIndex, record) {
-            this.store.remove(record);
+            this.store.removeAt(this.store.indexOfId(record.id));
         },
         // private
         rowdeselect: function (sm, rowIndex, record) {
             this.gridToChooseFrom.getSelectionModel().deselectRow(
                 this.storeToChooseFrom.indexOfId(record.id));
-            this.store.remove(record);
+            this.store.removeAt(this.store.indexOfId(record.id));
         },
         // private
         buildItems: function (cfg) {

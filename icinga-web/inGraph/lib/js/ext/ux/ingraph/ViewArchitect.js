@@ -57,27 +57,77 @@
                 baseParams: {
                     start: 0,
                     limit: 20
+                },
+                listeners: {
+                    scope: this,
+                    datachanged: function (storeToChooseFrom) {
+                        var indexOf,
+                            sm = this.gridToChooseFrom.getSelectionModel();
+                        storeToChooseFrom.each(function (record) {
+                            indexOf = this.store.indexOf(record);
+                            if (indexOf !== -1) {
+                                sm.selectRow(indexOf, true);
+                            }
+                        }, this);
+                    }
+                }
+            });
+            this.store = new Ext.data.JsonStore({
+                fields: [
+                    'id',
+                    'host',
+                    'service',
+                    'parentService',
+                    'plot'
+                ],
+                idProperty: 'id',
+                data: [],
+                listeners: {
+                    scope: this,
+                    add: function (store, records, index) {
+                        this.grid.getSelectionModel().selectAll(true);
+                    }
                 }
             });
         },
         // private
+        rowselectOfGridToChooseFrom: function (sm, rowIndex, record) {
+            if (-1 === this.store.indexOf(record)) {
+                this.store.add(record);
+            }
+        },
+        // private
+        rowdeslectOfGridToChooseFrom: function (sm, rowIndex, record) {
+            this.store.remove(record);
+        },
+        // private
+        rowdeselect: function (sm, rowIndex, record) {
+            this.store.remove(record);
+            this.gridToChooseFrom.getSelectionModel().deselectRow(
+                this.storeToChooseFrom.indexOf(record));
+        },
+        // private
         buildItems: function (cfg) {
+            var smOfGridToChooseFrom = new Ext.grid.CheckboxSelectionModel({
+                listeners: {
+                    scope: this,
+                    rowselect: this.rowselectOfGridToChooseFrom,
+                    rowdeselect: this.rowdeslectOfGridToChooseFrom
+                }
+            });
             var sm = new Ext.grid.CheckboxSelectionModel({
                 listeners: {
                     scope: this,
-                    selectionchange: function (sm) {
-                        if (sm.getSelected() === undefined) {
-                            // No more selections
-//                            this.handleDeselectAll();
-                        } else {
-//                            this.handleSelectAny();
-                        }
-                    }
+                    rowdeselect: this.rowdeselect
                 }
             });
+            cfg.defaults = {
+                flex: 1
+            };
             cfg.items = [
                 {
                     xtype: 'grid',
+                    ref: 'gridToChooseFrom',
                     store: this.storeToChooseFrom,
                     cm: new Ext.grid.ColumnModel({
                         defaults:
@@ -86,7 +136,7 @@
                             sortable: true
                         },
                         columns: [
-                            sm,
+                            smOfGridToChooseFrom,
                             {
                                 header: _('Host Name'),
                                 dataIndex: 'host'
@@ -105,7 +155,7 @@
                             }
                         ]
                     }),
-                    sm: sm,
+                    sm: smOfGridToChooseFrom,
                     tbar: [
                         _('Host:'),
                         {
@@ -127,7 +177,8 @@
                                     store: this.storeToChooseFrom,
                                     param: 'host'
                                 })
-                            ]
+                            ],
+                            width: 150
                         },
                         _('Service:'),
                         {
@@ -157,7 +208,8 @@
                                     store: this.storeToChooseFrom,
                                     param: 'service'
                                 })
-                            ]
+                            ],
+                            width: 150
                         },
                         _('Plot:'),
                         {
@@ -194,12 +246,51 @@
                                     store: this.storeToChooseFrom,
                                     param: 'plot'
                                 })
-                            ]
+                            ],
+                            width: 150
                         }
                     ],
                     bbar: {
                         xtype: 'paging',
                         store: this.storeToChooseFrom,
+                        displayInfo: true,
+                        pageSize: 20
+                    }
+                },
+                {
+                    xtype: 'grid',
+                    ref: 'grid',
+                    store: this.store,
+                    cm: new Ext.grid.ColumnModel({
+                        defaults:
+                        {
+                            width: 150,
+                            sortable: true
+                        },
+                        columns: [
+                            sm,
+                            {
+                                header: _('Host Name'),
+                                dataIndex: 'host'
+                            },
+                            {
+                                header: _('Service Name'),
+                                dataIndex: 'service'
+                            },
+                            {
+                                header: _('Parent Service Name'),
+                                dataIndex: 'parent_service'
+                            },
+                            {
+                                header: _('Plot Name'),
+                                dataIndex: 'plot'
+                            }
+                        ]
+                    }),
+                    sm: sm,
+                    bbar: {
+                        xtype: 'paging',
+                        store: this.store,
                         displayInfo: true,
                         pageSize: 20
                     }

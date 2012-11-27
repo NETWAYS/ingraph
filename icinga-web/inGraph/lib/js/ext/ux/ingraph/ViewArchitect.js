@@ -64,7 +64,7 @@
                         var indexOf,
                             sm = this.gridToChooseFrom.getSelectionModel();
                         storeToChooseFrom.each(function (record) {
-                            indexOf = this.store.indexOf(record);
+                            indexOf = this.store.indexOfId(record.id);
                             if (indexOf !== -1) {
                                 sm.selectRow(indexOf, true);
                             }
@@ -85,14 +85,17 @@
                 listeners: {
                     scope: this,
                     add: function (store, records, index) {
-                        this.grid.getSelectionModel().selectAll(true);
+                        Ext.each(records, function (record) {
+                            this.grid.getSelectionModel().selectRow(
+                                store.indexOfId(record.id), true);
+                        }, this);
                     }
                 }
             });
         },
         // private
         rowselectOfGridToChooseFrom: function (sm, rowIndex, record) {
-            if (-1 === this.store.indexOf(record)) {
+            if (-1 === this.store.indexOfId(record.id)) {
                 this.store.add(record);
             }
         },
@@ -102,9 +105,9 @@
         },
         // private
         rowdeselect: function (sm, rowIndex, record) {
-            this.store.remove(record);
             this.gridToChooseFrom.getSelectionModel().deselectRow(
-                this.storeToChooseFrom.indexOf(record));
+                this.storeToChooseFrom.indexOfId(record.id));
+            this.store.remove(record);
         },
         // private
         buildItems: function (cfg) {

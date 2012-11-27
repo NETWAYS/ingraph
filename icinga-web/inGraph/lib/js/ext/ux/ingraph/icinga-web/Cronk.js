@@ -56,7 +56,9 @@
                         closable: true,
                         params: {
                             host: cfg.host,
-                            service: cfg.service
+                            service: cfg.service,
+                            module: 'inGraph',
+                            action: 'Cronk.View'
                         }
                     },
                     tabPanel = Ext.getCmp('cronk-tabs'),

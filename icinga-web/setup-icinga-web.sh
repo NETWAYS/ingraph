@@ -272,7 +272,7 @@ else
     do
         $INSTALL -m 755 -o $WEB_USER -g $WEB_GROUP -d $PREFIX/app/modules/inGraph${D##$SRC}
         
-        [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}" "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}-C${tab}-b"
+        [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}" "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}-b"
     done
     
     # If inGraph.xml does not exist install it

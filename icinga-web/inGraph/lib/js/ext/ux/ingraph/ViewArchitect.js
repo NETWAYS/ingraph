@@ -27,7 +27,7 @@
      * @author Eric Lippmann <eric.lippmann@netways.de>
      * @xtype xiviewarchitect
      */
-    Ext.ux.ingraph.ViewArchitect = Ext.extend(Ext.Container, {
+    Ext.ux.ingraph.ViewArchitect = Ext.extend(Ext.ux.wizard.Wizard, {
         /**
          * @cfg {String} dateText
          * The quicktip text displayed for the start and end datefield.
@@ -46,11 +46,6 @@
                         '<li>-1 month + 10 days</li>' +
                         '<li>3 October 2005</li>' +
                     '</ul>'),
-        layout: 'hbox',
-        layoutConfig: {
-            align: 'stretch',
-            pack: 'start'
-        },
         // private override
         initComponent: function () {
             this.buildStores();
@@ -58,6 +53,10 @@
             this.buildItems(cfg);
             Ext.apply(this, Ext.apply(this.initialConfig, cfg));
             Ext.ux.ingraph.ViewArchitect.superclass.initComponent.call(this);
+        },
+        // private override
+        onLast: function () {
+            
         },
         // private
         buildStores: function () {
@@ -144,173 +143,265 @@
                     rowdeselect: this.rowdeselect
                 }
             });
-            cfg.defaults = {
-                flex: 1
-            };
             cfg.items = [
                 {
-                    xtype: 'grid',
-                    ref: 'gridToChooseFrom',
-                    store: this.storeToChooseFrom,
-                    cm: new Ext.grid.ColumnModel({
-                        defaults:
+                    ref: 'selectionContainer',
+                    xtype: 'container',
+                    layout: 'hbox',
+                    layoutConfig: {
+                        align: 'stretch',
+                        pack: 'start'
+                    },
+                    defaults: {
+                        flex: 1
+                    },
+                    items: [
                         {
-                            width: 150,
-                            sortable: true
-                        },
-                        columns: [
-                            smOfGridToChooseFrom,
-                            {
-                                header: _('Host Name'),
-                                dataIndex: 'host'
-                            },
-                            {
-                                header: _('Service Name'),
-                                dataIndex: 'service'
-                            },
-                            {
-                                header: _('Parent Service Name'),
-                                dataIndex: 'parent_service'
-                            },
-                            {
-                                header: _('Plot Name'),
-                                dataIndex: 'plot'
+                            xtype: 'grid',
+                            ref: '../gridToChooseFrom',
+                            store: this.storeToChooseFrom,
+                            cm: new Ext.grid.ColumnModel({
+                                defaults:
+                                {
+                                    width: 150,
+                                    sortable: true
+                                },
+                                columns: [
+                                    smOfGridToChooseFrom,
+                                    {
+                                        header: _('Host Name'),
+                                        dataIndex: 'host'
+                                    },
+                                    {
+                                        header: _('Service Name'),
+                                        dataIndex: 'service'
+                                    },
+                                    {
+                                        header: _('Parent Service Name'),
+                                        dataIndex: 'parent_service'
+                                    },
+                                    {
+                                        header: _('Plot Name'),
+                                        dataIndex: 'plot'
+                                    }
+                                ]
+                            }),
+                            sm: smOfGridToChooseFrom,
+                            tbar: [
+                                _('Host:'),
+                                {
+                                    name: 'host',
+                                    xtype: 'xigautocombo',
+                                    ref: '../../hostCombo',
+                                    emptyText: _('Choose host'),
+                                    store: {
+                                        xtype: 'arraystore',
+                                        root: 'results',
+                                        fields: ['host'],
+                                        idProperty: 'host',
+                                        url: Ext.ux.ingraph.Urls.provider.hosts
+                                    },
+                                    displayField: 'host',
+                                    valueField: 'host',
+                                    plugins: [
+                                        new Ext.ux.StoreFilter({
+                                            store: this.storeToChooseFrom,
+                                            param: 'host'
+                                        })
+                                    ],
+                                    width: 150
+                                },
+                                {
+                                    xtype: 'box',
+                                    autoEl: {
+                                        tag: 'div',
+                                        style: 'height: 19px; width: 17px; ' +
+                                            'cursor: pointer; ' +
+                                            'border: 0; ' +
+                                            'background: transparent no-repeat 0 0; ' +
+                                            'border-bottom: 1px solid #B5B8C8; ' +
+                                            'background-image: url(js/ext3/resources/images/default/form/clear-trigger.gif);'
+                                    },
+                                    listeners: {
+                                        single: true,
+                                        scope: this,
+                                        afterrender: function (ct) {
+                                            ct.el.on({
+                                                scope: this,
+                                                click: function (e, el) {
+                                                    var oldValue = this.selectionContainer.hostCombo.getValue();
+                                                    this.selectionContainer.hostCombo.setValue('');
+                                                    this.selectionContainer.hostCombo.fireEvent(
+                                                        'change', this.selectionContainer.hostCombo, '', oldValue);
+                                                }
+                                            });
+                                        }
+                                    }
+                                },
+                                _('Service:'),
+                                {
+                                    name: 'service',
+                                    xtype: 'xigautocombo',
+                                    ref: '../../serviceCombo',
+                                    emptyText: _('Choose service'),
+                                    store: {
+                                        xtype: 'jsonstore',
+                                        root: 'results',
+                                        fields: [
+                                            'name',
+                                            'service',
+                                            'parentService'
+                                        ],
+                                        idProperty: 'name',
+                                        url: Ext.ux.ingraph.Urls.provider.services
+                                    },
+                                    displayField: 'name',
+                                    valueField: 'service',
+                                    plugins: [
+                                        new Ext.ux.ComboDependency({
+                                            ref: 'hostCombo',
+                                            param: 'host'
+                                        }),
+                                        new Ext.ux.StoreFilter({
+                                            store: this.storeToChooseFrom,
+                                            param: 'service'
+                                        })
+                                    ],
+                                    width: 150
+                                },
+                                {
+                                    xtype: 'box',
+                                    autoEl: {
+                                        tag: 'div',
+                                        style: 'height: 19px; width: 17px; ' +
+                                            'cursor: pointer; ' +
+                                            'border: 0; ' +
+                                            'background: transparent no-repeat 0 0; ' +
+                                            'border-bottom: 1px solid #B5B8C8; ' +
+                                            'background-image: url(js/ext3/resources/images/default/form/clear-trigger.gif);'
+                                    },
+                                    listeners: {
+                                        single: true,
+                                        scope: this,
+                                        afterrender: function (ct) {
+                                            ct.el.on({
+                                                scope: this,
+                                                click: function (e, el) {
+                                                    var oldValue = this.selectionContainer.serviceCombo.getValue();
+                                                    this.selectionContainer.serviceCombo.setValue('');
+                                                    this.selectionContainer.serviceCombo.fireEvent(
+                                                        'change', this.selectionContainer.serviceCombo, '', oldValue);
+                                                }
+                                            });
+                                        }
+                                    }
+                                },
+                                _('Plot:'),
+                                {
+                                    name: 'plot',
+                                    xtype: 'xigautocombo',
+                                    ref: '../../plotCombo',
+                                    emptyText: _('Choose plot'),
+                                    store: {
+                                        xtype: 'jsonstore',
+                                        root: 'plots',
+                                        fields: [
+                                            'id',
+                                            'host',
+                                            'service',
+                                            'parentService',
+                                            'plot'
+                                        ],
+                                        idProperty: 'plot',
+                                        url: Ext.ux.ingraph.Urls.provider.plots
+                                    },
+                                    displayField: 'plot',
+                                    valueField: 'plot',
+                                    queryParam: 'plot',
+                                    plugins: [
+                                        new Ext.ux.ComboDependency({
+                                            ref: 'hostCombo',
+                                            param: 'host'
+                                        }),
+                                        new Ext.ux.ComboDependency({
+                                            ref: 'serviceCombo',
+                                            param: 'service'
+                                        }),
+                                        new Ext.ux.StoreFilter({
+                                            store: this.storeToChooseFrom,
+                                            param: 'plot'
+                                        })
+                                    ],
+                                    width: 150
+                                },
+                                {
+                                    xtype: 'box',
+                                    autoEl: {
+                                        tag: 'div',
+                                        style: 'height: 19px; width: 17px; ' +
+                                            'cursor: pointer; ' +
+                                            'border: 0; ' +
+                                            'background: transparent no-repeat 0 0; ' +
+                                            'border-bottom: 1px solid #B5B8C8; ' +
+                                            'background-image: url(js/ext3/resources/images/default/form/clear-trigger.gif);'
+                                    },
+                                    listeners: {
+                                        single: true,
+                                        scope: this,
+                                        afterrender: function (ct) {
+                                            ct.el.on({
+                                                scope: this,
+                                                click: function (e, el) {
+                                                    var oldValue = this.selectionContainer.plotCombo.getValue();
+                                                    this.selectionContainer.plotCombo.setValue('');
+                                                    this.selectionContainer.plotCombo.fireEvent(
+                                                        'change', this.selectionContainer.plotCombo, '', oldValue);
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                            ],
+                            bbar: {
+                                xtype: 'paging',
+                                store: this.storeToChooseFrom,
+                                displayInfo: true,
+                                pageSize: 20
                             }
-                        ]
-                    }),
-                    sm: smOfGridToChooseFrom,
-                    tbar: [
-                        _('Host:'),
-                        {
-                            name: 'host',
-                            xtype: 'xigautocombo',
-                            ref: '../../hostCombo',
-                            emptyText: _('Choose host'),
-                            store: {
-                                xtype: 'arraystore',
-                                root: 'results',
-                                fields: ['host'],
-                                idProperty: 'host',
-                                url: Ext.ux.ingraph.Urls.provider.hosts
-                            },
-                            displayField: 'host',
-                            valueField: 'host',
-                            plugins: [
-                                new Ext.ux.StoreFilter({
-                                    store: this.storeToChooseFrom,
-                                    param: 'host'
-                                })
-                            ],
-                            width: 150
                         },
-                        _('Service:'),
                         {
-                            name: 'service',
-                            xtype: 'xigautocombo',
-                            ref: '../../serviceCombo',
-                            emptyText: _('Choose service'),
-                            store: {
-                                xtype: 'jsonstore',
-                                root: 'results',
-                                fields: [
-                                    'name',
-                                    'service',
-                                    'parentService'
-                                ],
-                                idProperty: 'name',
-                                url: Ext.ux.ingraph.Urls.provider.services
-                            },
-                            displayField: 'name',
-                            valueField: 'service',
-                            plugins: [
-                                new Ext.ux.ComboDependency({
-                                    ref: 'hostCombo',
-                                    param: 'host'
-                                }),
-                                new Ext.ux.StoreFilter({
-                                    store: this.storeToChooseFrom,
-                                    param: 'service'
-                                })
-                            ],
-                            width: 150
-                        },
-                        _('Plot:'),
-                        {
-                            name: 'plot',
-                            xtype: 'xigautocombo',
-                            ref: '../../plotCombo',
-                            emptyText: _('Choose plot'),
-                            store: {
-                                xtype: 'jsonstore',
-                                root: 'plots',
-                                fields: [
-                                    'id',
-                                    'host',
-                                    'service',
-                                    'parentService',
-                                    'plot'
-                                ],
-                                idProperty: 'plot',
-                                url: Ext.ux.ingraph.Urls.provider.plots
-                            },
-                            displayField: 'plot',
-                            valueField: 'plot',
-                            queryParam: 'plot',
-                            plugins: [
-                                new Ext.ux.ComboDependency({
-                                    ref: 'hostCombo',
-                                    param: 'host'
-                                }),
-                                new Ext.ux.ComboDependency({
-                                    ref: 'serviceCombo',
-                                    param: 'service'
-                                }),
-                                new Ext.ux.StoreFilter({
-                                    store: this.storeToChooseFrom,
-                                    param: 'plot'
-                                })
-                            ],
-                            width: 150
+                            xtype: 'grid',
+                            ref: '../grid',
+                            store: this.store,
+                            cm: new Ext.grid.ColumnModel({
+                                defaults:
+                                {
+                                    width: 150,
+                                    sortable: true
+                                },
+                                columns: [
+                                    sm,
+                                    {
+                                        header: _('Host Name'),
+                                        dataIndex: 'host'
+                                    },
+                                    {
+                                        header: _('Service Name'),
+                                        dataIndex: 'service'
+                                    },
+                                    {
+                                        header: _('Parent Service Name'),
+                                        dataIndex: 'parent_service'
+                                    },
+                                    {
+                                        header: _('Plot Name'),
+                                        dataIndex: 'plot'
+                                    }
+                                ]
+                            }),
+                            sm: sm
                         }
-                    ],
-                    bbar: {
-                        xtype: 'paging',
-                        store: this.storeToChooseFrom,
-                        displayInfo: true,
-                        pageSize: 20
-                    }
-                },
-                {
-                    xtype: 'grid',
-                    ref: 'grid',
-                    store: this.store,
-                    cm: new Ext.grid.ColumnModel({
-                        defaults:
-                        {
-                            width: 150,
-                            sortable: true
-                        },
-                        columns: [
-                            sm,
-                            {
-                                header: _('Host Name'),
-                                dataIndex: 'host'
-                            },
-                            {
-                                header: _('Service Name'),
-                                dataIndex: 'service'
-                            },
-                            {
-                                header: _('Parent Service Name'),
-                                dataIndex: 'parent_service'
-                            },
-                            {
-                                header: _('Plot Name'),
-                                dataIndex: 'plot'
-                            }
-                        ]
-                    }),
-                    sm: sm
+                    ]
                 },
                 {
                     xtype: 'form',

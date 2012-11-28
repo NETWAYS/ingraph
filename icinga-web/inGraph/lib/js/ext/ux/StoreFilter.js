@@ -38,9 +38,12 @@
         init: function (combo) {
             Ext.each(this.storesToFilter, function (cfg) {
                 combo.on('change', function (field, newValue, oldValue) {
-//                    if (newValue !== oldValue && combo.lastQuery) {
-//                        delete combo.lastQuery;
-//                    }
+                    if (newValue !== oldValue && combo.lastQuery) {
+                        delete combo.lastQuery;
+                    }
+                    if (newValue === oldValue) {
+                        return;
+                    }
                     var selectedRecord = combo.getSelectedRecord();
                     if (selectedRecord) {
                         newValue = selectedRecord.get(combo.valueField);

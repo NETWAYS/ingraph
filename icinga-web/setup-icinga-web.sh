@@ -2,7 +2,7 @@
 
 set -o nounset
 
-VERSION=1.0.1
+VERSION=1.0.2
 
 SCRIPT=$(readlink -f "$0")
 DIR=$(dirname "$SCRIPT")

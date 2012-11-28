@@ -102,6 +102,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
                                $parentServiceName=null, $plotName=null,
                                $offset=0, $limit=20
     ) {
+        // TODO(el): Security
         return $this->backend->fetchPlots($hostName, $serviceName,
                                           $parentServiceName, $plotName,
                                           $offset, $limit);

@@ -416,6 +416,47 @@
                     },
                     items: [
                         {
+                            title: _('View'),
+                            defaults: {
+                                xtype: 'container',
+                                layout: 'hbox',
+                                layoutConfig: {
+                                    align: 'pack',
+                                    stretch: 'start'
+                                }
+                            },
+                            items: [
+                                {
+                                    defaults: {
+                                        xtype: 'container',
+                                        layout: 'form',
+                                        flex: 1
+                                    },
+                                    items: [
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'title',
+                                                    xtype: 'textfield',
+                                                    fieldLabel: _('Title'),
+                                                    emptyText: _('Title'),
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    xtype: 'container',
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
                             title: _('Range'),
                             defaults: {
                                 xtype: 'container',
@@ -488,7 +529,8 @@
                                                         url: Ext.ux.ingraph.Urls.provider.intervals
                                                     },
                                                     displayField: 'interval',
-                                                    valueField: 'interval'
+                                                    valueField: 'interval',
+                                                    forceSelection: true
                                                 }
                                             ]
                                         },
@@ -501,7 +543,8 @@
                                                     emptyText: _('Auto-refresh'),
                                                     anchor: '95%',
                                                     mode: 'local',
-                                                    store: [1, 5]
+                                                    store: [1, 5],
+                                                    forceSelection: true
                                                 }
                                             ]
                                         }
@@ -537,7 +580,8 @@
                                                     anchor: '95%',
                                                     store: ['none',
                                                             'host',
-                                                            'service']
+                                                            'service'],
+                                                    forceSelection: true
                                                 }
                                             ]
                                         },
@@ -553,7 +597,8 @@
                                                     store: ['Line Chart',
                                                             'Bar Chart',
                                                             'Area Chart',
-                                                            'Bar Area Chart']
+                                                            'Bar Area Chart'],
+                                                    forceSelection: true
                                                 }
                                             ]
                                         }
@@ -576,7 +621,8 @@
                                                     anchor: '95%',
                                                     mode: 'local',
                                                     store: ['raw', 'avg', 'min',
-                                                            'max']
+                                                            'max'],
+                                                    forceSelection: true
                                                 }
                                             ]
                                         },

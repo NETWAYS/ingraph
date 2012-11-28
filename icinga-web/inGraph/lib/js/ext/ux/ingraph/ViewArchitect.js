@@ -28,6 +28,24 @@
      * @xtype xiviewarchitect
      */
     Ext.ux.ingraph.ViewArchitect = Ext.extend(Ext.Container, {
+        /**
+         * @cfg {String} dateText
+         * The quicktip text displayed for the start and end datefield.
+         * (defaults to help on english textual date or time).
+         * <b>Note</b>: quick tips must be initialized for the quicktip to show.
+         */
+        dateText: _('Either select date via the popup date picker or input an ' +
+                    'English textual date or time, e.g.<br />' +
+                    '<ul style="list-style-type:circle;' +
+                        'list-style-position:inside;">' +
+                        '<li>now</li>' +
+                        '<li>last month</li>' +
+                        '<li>last mon(day)</li>' +
+                        '<li>last year 6 months</li>' +
+                        '<li>-6 hours 30 minutes 10 secs</li>' +
+                        '<li>-1 month + 10 days</li>' +
+                        '<li>3 October 2005</li>' +
+                    '</ul>'),
         layout: 'hbox',
         layoutConfig: {
             align: 'stretch',
@@ -293,6 +311,168 @@
                         ]
                     }),
                     sm: sm
+                },
+                {
+                    xtype: 'form',
+                    labelAlign: 'top',
+                    labelWidth: 100,
+                    defaults: {
+                        xtype: 'fieldset',
+                        collapsible: true
+                    },
+                    items: [
+                        {
+                            title: _('Range'),
+                            defaults: {
+                                xtype: 'container',
+                                layout: 'hbox',
+                                layoutConfig: {
+                                    align: 'pack',
+                                    stretch: 'start'
+                                }
+                            },
+                            items: [
+                                {
+                                    defaults: {
+                                        xtype: 'container',
+                                        layout: 'form',
+                                        flex: 1
+                                    },
+                                    items: [
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'start',
+                                                    xtype: 'datefield',
+                                                    format: 'Y-m-d H:i:s',
+                                                    emptyText: _('Starttime'),
+                                                    qtip: this.dateText,
+                                                    fieldLabel: _('Starttime'),
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'end',
+                                                    xtype: 'datefield',
+                                                    format: 'Y-m-d H:i:s',
+                                                    emptyText: _('Endtime'),
+                                                    qtip: this.dateText,
+                                                    fieldLabel: _('Endtime'),
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    defaults: {
+                                        xtype: 'container',
+                                        layout: 'form',
+                                        flex: 1
+                                    },
+                                    items: [
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'interval',
+                                                    xtype: 'xigautocombo',
+                                                    fieldLabel: _('Interval'),
+                                                    emptyText: _('Interval'),
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'autorefresh',
+                                                    xtype: 'numberfield',
+                                                    fieldLabel: _('Auto-refresh'),
+                                                    emptyText: _('Auto-refresh'),
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            title: _('Plots'),
+                            defaults: {
+                                xtype: 'container',
+                                layout: 'hbox',
+                                layoutConfig: {
+                                    align: 'pack',
+                                    stretch: 'start'
+                                }
+                            },
+                            items: [
+                                {
+                                    defaults: {
+                                        xtype: 'container',
+                                        layout: 'form',
+                                        flex: 1
+                                    },
+                                    items: [
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'groupby',
+                                                    xtype: 'xigautocombo',
+                                                    emptyText: _('Group By'),
+                                                    fieldLabel: _('Group By'),
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'chartType',
+                                                    xtype: 'xigautocombo',
+                                                    emptyText: _('Chart Type'),
+                                                    fieldLabel: _('Chart Type'),
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    defaults: {
+                                        xtype: 'container',
+                                        layout: 'form',
+                                        flex: 1
+                                    },
+                                    items: [
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'function',
+                                                    xtype: 'xigautocombo',
+                                                    fieldLabel: _('Function'),
+                                                    emptyText: _('Function'),
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    xtype: 'container',
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
                 }
             ];
         }

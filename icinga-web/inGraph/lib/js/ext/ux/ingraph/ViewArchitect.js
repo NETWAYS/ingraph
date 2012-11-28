@@ -61,6 +61,8 @@
         // private
         buildStores: function () {
             this.storeToChooseFrom = new Ext.data.JsonStore({
+                autoDestroy: true,
+                autoLoad: true,
                 root: 'plots',
                 fields: [
                     'id',
@@ -94,6 +96,7 @@
                 }
             });
             this.store = new Ext.data.JsonStore({
+                autoDestroy: true,
                 fields: [
                     'id',
                     'host',
@@ -472,7 +475,20 @@
                                                     xtype: 'xigautocombo',
                                                     fieldLabel: _('Interval'),
                                                     emptyText: _('Interval'),
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    store: {
+                                                        xtype: 'jsonstore',
+                                                        root: 'results',
+                                                        fields: [
+                                                            'id',
+                                                            'interval',
+                                                            'retention-period'
+                                                        ],
+                                                        idProperty: 'id',
+                                                        url: Ext.ux.ingraph.Urls.provider.intervals
+                                                    },
+                                                    displayField: 'interval',
+                                                    valueField: 'interval'
                                                 }
                                             ]
                                         },
@@ -480,7 +496,7 @@
                                             items: [
                                                 {
                                                     name: 'autorefresh',
-                                                    xtype: 'numberfield',
+                                                    xtype: 'xigautocombo',
                                                     fieldLabel: _('Auto-refresh'),
                                                     emptyText: _('Auto-refresh'),
                                                     anchor: '95%',

@@ -483,7 +483,9 @@
                                                     xtype: 'numberfield',
                                                     fieldLabel: _('Auto-refresh'),
                                                     emptyText: _('Auto-refresh'),
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    mode: 'local',
+                                                    store: [1, 5]
                                                 }
                                             ]
                                         }
@@ -516,7 +518,10 @@
                                                     xtype: 'xigautocombo',
                                                     emptyText: _('Group By'),
                                                     fieldLabel: _('Group By'),
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    store: ['none',
+                                                            'host',
+                                                            'service']
                                                 }
                                             ]
                                         },
@@ -527,7 +532,12 @@
                                                     xtype: 'xigautocombo',
                                                     emptyText: _('Chart Type'),
                                                     fieldLabel: _('Chart Type'),
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    mode: 'local',
+                                                    store: ['Line Chart',
+                                                            'Bar Chart',
+                                                            'Area Chart',
+                                                            'Bar Area Chart']
                                                 }
                                             ]
                                         }
@@ -547,7 +557,10 @@
                                                     xtype: 'xigautocombo',
                                                     fieldLabel: _('Function'),
                                                     emptyText: _('Function'),
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    mode: 'local',
+                                                    store: ['raw', 'avg', 'min',
+                                                            'max']
                                                 }
                                             ]
                                         },

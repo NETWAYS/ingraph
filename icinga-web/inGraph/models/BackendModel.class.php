@@ -132,4 +132,13 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     public function deleteComment($id) {
         return $this->backend->deleteComment($id);
     }
+    
+    public function fetchIntervals()
+    {
+        $intervals = $this->backend->fetchIntervals();
+        return array(
+            'total' => count($intervals),
+            'results' => array_merge(array(), $intervals)
+        );
+    }
 }

@@ -12,7 +12,8 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                     'modules.ingraph.provider.template'); ?>",
                 values: "<?php echo $ro->gen(
                     'modules.ingraph.provider.values'); ?>",
-                view: "<?php echo $ro->gen('modules.ingraph.provider.view'); ?>"
+                view: "<?php echo $ro->gen('modules.ingraph.provider.view'); ?>",
+                intervals: "<?php echo $ro->gen('modules.ingraph.provider.intervals'); ?>"
             },
             comments: {
                 create: "<?php echo $ro->gen('modules.ingraph.comments.create'); ?>",

@@ -49,7 +49,7 @@ class inGraph_Backend
      * @return array
      * <ul style="list-style-type: none;">
      *     <li><b>int</b> <i>total</i> total number of records found</li>
-     *     <li><b>array[string]</b> <i>hosts</i> list of host names</li>
+     *     <li><b>string[]</b> <i>hosts</i> list of host names</li>
      * </ul>
      */
     public function fetchHosts()
@@ -68,7 +68,7 @@ class inGraph_Backend
      * @return array
      * <ul style="list-style-type: none;">
      *     <li><b>int</b> <i>total</i> number of records found</li>
-     *     <li><b>array[array]</b> <i>services</i>
+     *     <li><b>array</b> <i>services</i>
      *         <ul style="list-style-type: none;">
      *             <li><b>string</b> <i>service</i></li>
      *             <li><b>string</b> <i>parent_service</i></li>
@@ -85,12 +85,24 @@ class inGraph_Backend
     /**
      * Fetch plots
      *
-     * @param string $hostName
-     * @param string $serviceName
-     * @return array[array]
+     * @param string $hostNamePattern may contain '%' as wildcard character
+     * @param string $serviceNamePattern may contain '%' as wildcard character
+     * @param string $parentServiceNamePattern may contain '%' as wildcard character
+     * @param string $plotNamePattern may contain '%' as wildcard character
+     * @param int $offset optional offset of the first row to return
+     * @param int $limit optional constrain the number of rows returned
+     * @return array
      * <ul style="list-style-type: none;">
-     *     <li><b>string</b> <i>service</i></li>
-     *     <li><b>string</b> <i>plot</i></li>
+     *     <li><b>int</b> <i>total</i> number of records found</li>
+     *     <li><b>array</b> <i>plots</i>
+     *         <ul style="list-style-type: none;">
+     *             <li><b>int</b> <i>id</i></li>
+     *             <li><b>string</b> <i>host</i></li>* 
+     *             <li><b>string</b> <i>service</i></li>
+     *             <li><b>string</b> <i>parent_service</i></li>
+     *             <li><b>string</b> <i>plot</i></li>
+     *         </ul>
+     *     </li>
      * </ul>
      */
     public function fetchPlots()
@@ -179,5 +191,25 @@ class inGraph_Backend
     {
         $args = func_get_args();
         return $this->client->call('deleteComment', $args);
+    }
+    
+    /**
+     * Fetch intervals
+     *
+     * @return array
+     * <ul style="list-style-type: none;">
+     *     <li><b>string[]</b> <code>interval</code>
+     *         <ul style="list-style-type: none;">
+     *             <li><b>int</b> <i>id</i></li>
+     *             <li><b>int</b> <i>interval</i></li>* 
+     *             <li><b>int</b> <i>retention-period</i></li>
+     *         </ul>
+     *     </li>
+     * </ul>
+     */
+    public function fetchIntervals()
+    {
+        $args = func_get_args();
+        return $this->client->call('getTimeFrames', $args);
     }
 }

@@ -33,8 +33,6 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
         Ext.ux.ingraph.Urls.overwrite(urls);
     }
 
-    this.getParent().on('close', function() { console.log("closed"); });
-
     var host = "<?php echo $rd->getParameter('host'); ?>",
         service = "<?php echo $rd->getParameter('service'); ?>",
         view = "<?php echo $rd->getParameter('view'); ?>";

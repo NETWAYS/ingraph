@@ -56,7 +56,143 @@
         },
         // private override
         onLast: function () {
-            
+            var flotCfg = {
+                    series: {
+                        lines: {
+                            show: true,
+                            steps: false,
+                            lineWidth: 2,
+                            fill: false
+                        },
+                        stack: false
+                    },
+                    legend: {
+                        "position": "nw"
+                    }
+                },
+                values = this.viewConfig.getForm().getValues(),
+                groups = this.store.collect(values.groupby),
+                panels = [],
+                panel,
+                stateuid = Ext.id();
+            // Overwrite start and end
+            values.start = this.startDateField.strValue ||
+                           this.startDateField.getValue() ?
+                           this.startDateField.getValue().getTime() / 1000 : null;
+            values.end = this.endDateField.strValue ||
+                         this.endDateField.getValue() ?
+                         this.endDateField.getValue().getTime() / 1000 : null;
+            switch (values.chartType) {
+                case 'Bar Chart':
+                    Ext.apply(flotCfg.series.lines, {
+                        steps: true
+                    });
+                    break;
+                case 'Bar Area Chart':
+                    Ext.apply(flotCfg.series.lines, {
+                        steps: true,
+                        fill: true,
+                        fillColor: {
+                            colors: [
+                                {
+                                    opacity: 0.7
+                                },
+                                {
+                                    opacity: 0.9,
+                                    brightness: 0.9
+                                }
+                            ]
+                        }
+                    });
+                    break;
+                case 'Area Chart':
+                    Ext.apply(flotCfg.series.lines, {
+                        fill: true,
+                        fillColor: {
+                            colors: [
+                                {
+                                    opacity: 0.7
+                                },
+                                {
+                                    opacity: 0.9,
+                                    brightness: 0.9
+                                }
+                            ]
+                        }
+                    });
+                    break;
+            }
+            Ext.each(groups, function (group) {
+                panel = {
+                    series: []
+                };
+                this.store.query(values.groupby, group).each(function (series) {
+                    panel.series.push({
+                        host: series.data.host,
+                        service: series.data.service,
+                        parentService: series.data.parentService,
+                        plot: series.data.plot,
+                        type: values.type,
+                        start: values.start,
+                        end: values.end,
+                        interval: values.interval,
+                        title: group
+                    });
+                });
+                panels.push(panel);
+            }, this);
+            var cronk = {
+                    id: Ext.id(),
+                    title: values.title,
+                    crname: 'inGraph',
+                    iconCls: 'icinga-cronk-icon-stats2',
+                    closable: true,
+                    stateuid: stateuid,
+                    params: {
+                        hideMenu: true
+                    }
+                },
+                tabPanel = Ext.getCmp('cronk-tabs'),
+                cronkPanel = Cronk.factory(cronk);
+            var view = new Ext.ux.ingraph.View({
+                stateid: stateuid
+            });
+            cronkPanel.add(view);
+            view.setTitle(values.title);
+            view.view = {
+                name: values.title
+            };
+            view.panels = view.createPanelStore({
+                data: panels
+            });
+            var items = [];
+            view.panels.each(function (panel) {
+                var query = Ext.encode(
+                    Ext.ux.ingraph.Util.buildQuery(panel.json.series));
+
+                panel.json.flot = flotCfg;
+
+                var cfg = this.buildPanelCfg(
+                    panel.get('title'),
+                    panel.json,
+                    query,
+                    panel.get('overviewConfig'),
+                    panel.get('tbarConfig'),
+                    panel.get('start'),
+                    panel.get('end'),
+                    panel.get('legendConfig'),
+                    panel.get('interval')
+                );
+
+                items.push(cfg);
+            }, view); // Eof each panel
+
+            view.addViewTbarItems();
+
+            view.add(items);
+            view.doLayout();
+            tabPanel.add(cronkPanel);
+            tabPanel.setActiveTab(cronkPanel);
         },
         // private
         buildStores: function () {
@@ -408,6 +544,7 @@
                 },
                 {
                     xtype: 'form',
+                    ref: 'viewConfig',
                     labelAlign: 'top',
                     labelWidth: 100,
                     defaults: {
@@ -478,6 +615,7 @@
                                             items: [
                                                 {
                                                     name: 'start',
+                                                    ref: '../../../../startDateField',
                                                     xtype: 'datefield',
                                                     format: 'Y-m-d H:i:s',
                                                     emptyText: _('Starttime'),
@@ -491,6 +629,7 @@
                                             items: [
                                                 {
                                                     name: 'end',
+                                                    ref: '../../../../endDateField',
                                                     xtype: 'datefield',
                                                     format: 'Y-m-d H:i:s',
                                                     emptyText: _('Endtime'),
@@ -578,9 +717,11 @@
                                                     emptyText: _('Group By'),
                                                     fieldLabel: _('Group By'),
                                                     anchor: '95%',
-                                                    store: ['none',
+                                                    store: ['id',
                                                             'host',
-                                                            'service'],
+                                                            'service',
+                                                            'parentService',
+                                                            'plot'],
                                                     forceSelection: true
                                                 }
                                             ]
@@ -614,14 +755,13 @@
                                         {
                                             items: [
                                                 {
-                                                    name: 'function',
+                                                    name: 'type',
                                                     xtype: 'xigautocombo',
                                                     fieldLabel: _('Function'),
                                                     emptyText: _('Function'),
                                                     anchor: '95%',
                                                     mode: 'local',
-                                                    store: ['raw', 'avg', 'min',
-                                                            'max'],
+                                                    store: ['avg', 'min', 'max'],
                                                     forceSelection: true
                                                 }
                                             ]

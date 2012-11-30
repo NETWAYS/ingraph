@@ -36,6 +36,7 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
     var host = "<?php echo $rd->getParameter('host'); ?>",
         service = "<?php echo $rd->getParameter('service'); ?>",
         view = "<?php echo $rd->getParameter('view'); ?>";
+        hideMenu = "<?php echo $rd->getParameter('hideMenu'); ?>" ? true : false;
 
     var extState = Ext.state.Manager.getProvider().get(this.stateuid);
     var cronkState = this.state;
@@ -76,8 +77,8 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
         return view;
     };
 
-    if ( ! extState && ! cronkState) {
-        if ( ! host && ! service && ! view) {
+    if (!extState && !cronkState) {
+        if (!host && !service && !view && !hideMenu) {
             // Show inGraph menu in case this cronk is not preconfigured
             var menu = new Ext.ux.ingraph.Menu();
 

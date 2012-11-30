@@ -64,6 +64,8 @@
          */
         showDatapoints: true,
 
+        showPeriodAverage: true,
+
         /**
          * @cfg {Boolean} showSmooth
          * Whether to show the combobox to enable/disable spline.
@@ -457,6 +459,22 @@
                     hidden: !this.showDatapoints
                 },
                 {
+                    ref: 'periodAverage',
+                    xtype: 'checkbox',
+                    boxLabel: _('Show average'),
+                    disabled: true,
+                    scope: this,
+                    handler: this.periodAverageHandler,
+                    style: {
+                        marginTop: '0px'
+                    },
+                    hidden: !this.showPeriodAverage
+                },
+                {
+                    xtype: 'tbseparator',
+                    hidden: !this.showPeriodAverage
+                },
+                {
                     ref: 'smooth',
                     xtype: 'checkbox',
                     boxLabel: _('Smooth'),
@@ -661,6 +679,12 @@
         },
 
         // private
+        periodAverageHandler: function (box, checked) {
+            this.ownerCt.flot.periodAverage = checked;
+            this.ownerCt.flot.plot();
+        },
+
+        // private
         smoothHandler: function (box, checked) {
             // TODO(el): Use the template store
             this.store.each(function (rec) {
@@ -810,6 +834,7 @@
             this.sync.enable();
             this.datapoints.enable();
             this.smooth.enable();
+            this.periodAverage.enable();
             if (this.input.getValue()) {
                 if (this.store.getStartX() <= this.store.getMinX()) {
                     this.first.disable();

@@ -958,6 +958,40 @@
                     });
                 }
 
+                if (this.periodAverage) {
+                    this.store.query('type', 'avg').each(function (avgPlot) {
+                        var periodAvg = 0,
+                            valueChanged = false,
+                            i = 0,
+                            c = 0;
+                        Ext.each(avgPlot.data.data, function (xy, i) {
+                            if (!valueChanged && i > 0 &&
+                                xy[1] !== avgPlot.data.data[i - 1][1]
+                            ) {
+                                valueChanged = false;
+                            }
+                            if (null !== xy[1]) {
+                                periodAvg += xy[1];
+                                ++c;
+                            }
+                        });
+                        periodAvg /= c;
+                        var avgSeries = {
+                            label: _('Period average of') + ' ' + avgPlot.data.label,
+                            data: [],
+                            lines: {
+                                fill: false,
+                                show: true
+                            },
+                            stack: false
+                        };
+                        for (; i < avgPlot.data.data.length; ++i) {
+                            avgSeries.data.push([avgPlot.data.data[i][0],
+                                                 periodAvg]);
+                        }
+                        series.push(avgSeries);
+                    });
+                }
                 this.$plot = $.plot($('#' + id), series, this.$flotStyle);
 
                 if (this.loadMask) {

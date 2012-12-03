@@ -784,7 +784,7 @@
             new Ext.ux.flot.FormWindow({
                 title: _('Prediction'),
                 width: 640,
-                height: 380,
+                height: 450,
                 items: {
                     baseCls: 'x-plain',
                     xtype: 'form',
@@ -794,7 +794,7 @@
                     monitorValid: true,
                     defaults: {
                         xtype: 'fieldset',
-                        allowBlank: false
+                        collapsible: true
                     },
                     items: [
                         {
@@ -936,7 +936,6 @@
                         },
                         {
                             title: _('Smoothing Constants'),
-                            collapsed: true,
                             defaults: {
                                 xtype: 'container',
                                 layout: 'hbox',
@@ -998,11 +997,10 @@
                 listeners: {
                     scope: this,
                     apply: function (w, values) {
-                        this.store.prediction = {
+                        this.ownerCt.flot.prediction = {
                             plot: values.plot,
-                            end: w.form.endDateField.strValue ||
-                                w.form.endDateField.getValue() ?
-                                w.form.endDateField.getValue().getTime() / 1000 : null,
+                            end: w.form.endDateField.getValue() ?
+                                w.form.endDateField.getValue().getTime() : null,
                             color: values.color,
                             smoothingConstants: {
                                 alpha: values.alpha !== '' ? values.alpha : null,

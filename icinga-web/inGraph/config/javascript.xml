@@ -20,8 +20,8 @@
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph/portal</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph/icinga-web</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/forecastjs/</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/</ae:parameter>
-
         </javascript>
 
     </ae:configuration>

@@ -85,6 +85,8 @@
          */
         showComments: false,
 
+        showPrediction: true,
+        
         /**
          * @cfg {Boolean} showExport
          * Whether to show the export controls. Defaults to <tt>true</tt>.
@@ -216,6 +218,8 @@
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         commentsText: _('Add comment to this chart'),
+
+        predictionText: _(''),
 
         /**
          * @cfg {String} downloadText
@@ -509,6 +513,18 @@
                     scope: this,
                     handler: this.commentsHandler,
                     hidden: !this.showComments
+                },
+                {
+                    xtype: 'tbseparator',
+                    hidden: !this.showPrediction
+                },
+                {
+                    ref: 'prediction',
+                    tooltip: this.predictionText,
+                    iconCls: 'x-flot-forecast-icon',
+                    scope: this,
+                    handler: this.predictionHandler,
+                    hidden: !this.showPrediction
                 },
                 {
                     xtype: 'tbfill',

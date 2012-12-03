@@ -99,3 +99,9 @@
     background-repeat: no-repeat;
     background-position: center center;
 }
+
+.x-flot-forecast-icon {
+    background-image: url(../images/icons/weather-cloudy.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}

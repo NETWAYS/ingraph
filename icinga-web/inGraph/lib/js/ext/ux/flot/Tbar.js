@@ -780,6 +780,245 @@
         commentsHandler: Ext.emptyFn,
 
         // private
+        predictionHandler: function () {
+            new Ext.ux.flot.FormWindow({
+                title: _('Prediction'),
+                width: 640,
+                height: 380,
+                items: {
+                    baseCls: 'x-plain',
+                    xtype: 'form',
+                    ref: 'form',
+                    labelAlign: 'top',
+                    labelWidth: 100,
+                    monitorValid: true,
+                    defaults: {
+                        xtype: 'fieldset',
+                        allowBlank: false
+                    },
+                    items: [
+                        {
+                            title: _('Datasource'),
+                            defaults: {
+                                xtype: 'container',
+                                layout: 'hbox',
+                                layoutConfig: {
+                                    align: 'pack',
+                                    stretch: 'start'
+                                }
+                            },
+                            items: [
+                                {
+                                    defaults: {
+                                        xtype: 'container',
+                                        layout: 'form',
+                                        flex: 1
+                                    },
+                                    items: [
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'plot',
+                                                    xtype: 'xigautocombo',
+                                                    fieldLabel: _('Plot'),
+                                                    emptyText: _('Plot'),
+                                                    store: this.store.collect('id'),
+                                                    mode: 'local',
+                                                    anchor: '95%',
+                                                    allowBlank: false
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'label',
+                                                    fieldLabel: _('Title'),
+                                                    xtype: 'textfield',
+                                                    value: _('Forecast'),
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            title: _('Forecast'),
+                            defaults: {
+                                xtype: 'container',
+                                layout: 'hbox',
+                                layoutConfig: {
+                                    align: 'pack',
+                                    stretch: 'start'
+                                }
+                            },
+                            items: [
+                                {
+                                    defaults: {
+                                        xtype: 'container',
+                                        layout: 'form',
+                                        flex: 1
+                                    },
+                                    items: [
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'end',
+                                                    ref: '../../../endDateField',
+                                                    xtype: 'datefield',
+                                                    minValue: new Date(),
+                                                    format: 'Y-m-d H:i:s',
+                                                    emptyText: _('Endtime'),
+                                                    qtip: this.dateText,
+                                                    fieldLabel: _('Endtime'),
+                                                    anchor: '95%',
+                                                    allowBlank: false
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'seasons',
+                                                    fieldLabel: _('Seasons'),
+                                                    xtype: 'spinnerfield',
+                                                    minValue: 1,
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                 }
+                             ]
+                        },
+                        {
+                            title: _('Style'),
+                            defaults: {
+                                xtype: 'container',
+                                layout: 'hbox',
+                                layoutConfig: {
+                                    align: 'pack',
+                                    stretch: 'start'
+                                }
+                            },
+                            items: [
+                                {
+                                    defaults: {
+                                        xtype: 'container',
+                                        layout: 'form',
+                                        flex: 1
+                                    },
+                                    items: [
+                                        {
+                                            items: [
+                                                {
+                                                    xtype: 'xcolorfield',
+                                                    lazyInit: false,
+                                                    fieldLabel: _('Color'),
+                                                    name: 'color',
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    xtype: 'container',
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                 }
+                             ]
+                        },
+                        {
+                            title: _('Smoothing Constants'),
+                            collapsed: true,
+                            defaults: {
+                                xtype: 'container',
+                                layout: 'hbox',
+                                layoutConfig: {
+                                    align: 'pack',
+                                    stretch: 'start'
+                                }
+                            },
+                            items: [
+                                {
+                                    defaults: {
+                                        xtype: 'container',
+                                        layout: 'form',
+                                        flex: 1
+                                    },
+                                    items: [
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'alpha',
+                                                    fieldLabel: _('Alpha'),
+                                                    xtype: 'numberfield',
+                                                    min: 0,
+                                                    max: 1,
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'beta',
+                                                    fieldLabel: _('Beta'),
+                                                    xtype: 'numberfield',
+                                                    min: 0,
+                                                    max: 1,
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'gamma',
+                                                    fieldLabel: _('Gamma'),
+                                                    xtype: 'numberfield',
+                                                    min: 0,
+                                                    max: 1,
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                 }
+                             ]
+                         }
+                    ]
+                },
+                listeners: {
+                    scope: this,
+                    apply: function (w, values) {
+                        this.store.prediction = {
+                            plot: values.plot,
+                            end: w.form.endDateField.strValue ||
+                                w.form.endDateField.getValue() ?
+                                w.form.endDateField.getValue().getTime() / 1000 : null,
+                            color: values.color,
+                            smoothingConstants: {
+                                alpha: values.alpha !== '' ? values.alpha : null,
+                                beta: values.beta !== '' ? values.beta : null,
+                                gamma: values.gamma !== '' ? values.gamma : null
+                            },
+                            label: values.label,
+                            seasons: values.seasons !== '' ? values.seasons : null
+                        }
+                        this.ownerCt.flot.plot();
+                    }
+                }
+            }).show();
+        },
+
+        // private
         printHandler: function () {
             var flotPanel = this.ownerCt;
 

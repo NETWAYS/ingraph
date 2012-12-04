@@ -124,7 +124,11 @@
             }
             Ext.each(groups, function (group) {
                 panel = {
-                    series: []
+                    series: [],
+                    start: values.start,
+                    end: values.end,
+                    interval: values.interval,
+                    title: group
                 };
                 this.store.query(values.groupby, group).each(function (series) {
                     panel.series.push({
@@ -133,10 +137,18 @@
                         parentService: series.data.parentService,
                         plot: series.data.plot,
                         type: values.type,
-                        start: values.start,
-                        end: values.end,
-                        interval: values.interval,
-                        title: group
+                        group: series.data.host + ' - ' +
+                            (series.data.parentService ?
+                             series.data.parentService + ' - ' :
+                             ('' + series.data.service ?
+                              series.data.service + ' - ' :
+                              '')) + series.data.plot,
+                        plot_id: series.data.host + ' - ' +
+                            (series.data.parentService ?
+                             series.data.parentService + ' - ' :
+                             ('' + series.data.service ?
+                              series.data.service + ' - ' :
+                              '')) + series.data.plot + ' - ' + values.type
                     });
                 });
                 panels.push(panel);
@@ -155,7 +167,7 @@
                 tabPanel = Ext.getCmp('cronk-tabs'),
                 cronkPanel = Cronk.factory(cronk);
             var view = new Ext.ux.ingraph.View({
-                stateid: stateuid
+                stateId: stateuid
             });
             cronkPanel.add(view);
             view.setTitle(values.title);
@@ -193,6 +205,11 @@
             view.doLayout();
             tabPanel.add(cronkPanel);
             tabPanel.setActiveTab(cronkPanel);
+            // Manual handling of ext state
+            Ext.state.Manager.getProvider().set(view.stateId, view.getState());
+            cronkPanel.on('removed', function () {
+                Ext.state.Manager.getProvider().clear(view.stateId);
+            });
         },
         // private
         buildStores: function () {
@@ -633,6 +650,7 @@
                                                     xtype: 'datefield',
                                                     format: 'Y-m-d H:i:s',
                                                     emptyText: _('Endtime'),
+                                                    maxValue: new Date(),
                                                     qtip: this.dateText,
                                                     fieldLabel: _('Endtime'),
                                                     anchor: '95%'

@@ -564,6 +564,7 @@
                     ref: 'viewConfig',
                     labelAlign: 'top',
                     labelWidth: 100,
+                    monitorValid: true,
                     defaults: {
                         xtype: 'fieldset',
                         collapsible: true
@@ -594,7 +595,8 @@
                                                     xtype: 'textfield',
                                                     fieldLabel: _('Title'),
                                                     emptyText: _('Title'),
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    allowBlank: false
                                                 }
                                             ]
                                         },
@@ -638,7 +640,8 @@
                                                     emptyText: _('Starttime'),
                                                     qtip: this.dateText,
                                                     fieldLabel: _('Starttime'),
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    allowBlank: false
                                                 }
                                             ]
                                         },
@@ -653,7 +656,8 @@
                                                     maxValue: new Date(),
                                                     qtip: this.dateText,
                                                     fieldLabel: _('Endtime'),
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    allowBlank: false
                                                 }
                                             ]
                                         }
@@ -687,7 +691,8 @@
                                                     },
                                                     displayField: 'interval',
                                                     valueField: 'interval',
-                                                    forceSelection: true
+                                                    forceSelection: true,
+                                                    allowBlank: false
                                                 }
                                             ]
                                         },
@@ -701,7 +706,9 @@
                                                     anchor: '95%',
                                                     mode: 'local',
                                                     store: [1, 5],
-                                                    forceSelection: true
+                                                    forceSelection: true,
+                                                    allowBlank: false,
+                                                    disabled: true
                                                 }
                                             ]
                                         }
@@ -740,7 +747,8 @@
                                                             'service',
                                                             'parentService',
                                                             'plot'],
-                                                    forceSelection: true
+                                                    forceSelection: true,
+                                                    allowBlank: false
                                                 }
                                             ]
                                         },
@@ -757,7 +765,8 @@
                                                             'Bar Chart',
                                                             'Area Chart',
                                                             'Bar Area Chart'],
-                                                    forceSelection: true
+                                                    forceSelection: true,
+                                                    allowBlank: false
                                                 }
                                             ]
                                         }
@@ -780,7 +789,8 @@
                                                     anchor: '95%',
                                                     mode: 'local',
                                                     store: ['avg', 'min', 'max'],
-                                                    forceSelection: true
+                                                    forceSelection: true,
+                                                    allowBlank: false
                                                 }
                                             ]
                                         },

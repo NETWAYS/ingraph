@@ -91,21 +91,15 @@
         // private
         onCardShow: function (card) {
             if (true === card.monitorValid) {
-                card.on({
-                    scope: this,
-                    clientvalidation: this.onClientvalidation
-                });
+                card.on('clientvalidation', this.onClientvalidation, this);
                 this.next.setDisabled(true);
+            } else {
+                this.next.setDisabled(false);
             }
         },
         // private
         onCardHide: function (card) {
-            if (true === card.monitorValid) {
-                card.un({
-                    scope: this,
-                    clientvalidation: this.onClientvalidation
-                });
-            }
+            card.un('clientvalidation', this.onClientvalidation, this);
         },
         // private
         onClientvalidation: function (card, isValid) {

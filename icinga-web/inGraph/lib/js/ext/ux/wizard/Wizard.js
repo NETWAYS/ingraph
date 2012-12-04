@@ -79,6 +79,37 @@
                     this.prev.setDisabled(false);
                 }
             }
+        },
+        // private
+        onBeforeAdd: function (item) {
+            Ext.ux.wizard.Wizard.superclass.onBeforeAdd.call(this, item);
+            item.on({
+                activate: this.onCardShow.createDelegate(this),
+                deactivate: this.onCardHide.createDelegate(this),
+            });
+        },
+        // private
+        onCardShow: function (card) {
+            if (true === card.monitorValid) {
+                card.on({
+                    scope: this,
+                    clientvalidation: this.onClientvalidation
+                });
+                this.next.setDisabled(true);
+            }
+        },
+        // private
+        onCardHide: function (card) {
+            if (true === card.monitorValid) {
+                card.un({
+                    scope: this,
+                    clientvalidation: this.onClientvalidation
+                });
+            }
+        },
+        // private
+        onClientvalidation: function (card, isValid) {
+            this.next.setDisabled(!isValid);
         }
     });
     Ext.reg('xwizard', Ext.ux.wizard.Wizard);

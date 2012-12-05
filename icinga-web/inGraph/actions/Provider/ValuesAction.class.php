@@ -11,7 +11,7 @@ class inGraph_Provider_ValuesAction extends inGraphBaseAction
 //                $interval = $this->siftInterval($start, $end);
 //            }
 //        }
-        $interval = null;
+        $interval = $rd->getParameter('interval', null);
         $daemonConfig = AgaviConfig::get('modules.ingraph.daemon');
         try {
             $values = $this->getBackend()->fetchValues(

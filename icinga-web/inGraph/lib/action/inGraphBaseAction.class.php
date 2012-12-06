@@ -1,4 +1,29 @@
 <?php
+/**
+ * inGraphBaseAction.class.php
+ *
+ * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ *
+ * This file is part of inGraph.
+ *
+ * inGraph is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or any later version.
+ *
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *
+ * @link https://www.netways.org/projects/ingraph
+ * @author Eric Lippmann <eric.lippmann@netways.de>
+ * @copyright Copyright (c) 2012 NETWAYS GmbH (http.netways.de) <info@netways.de>
+ * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
+ * @package inGraph
+ */
 
 class inGraphBaseAction extends IcingaBaseAction
 {
@@ -40,11 +65,11 @@ class inGraphBaseAction extends IcingaBaseAction
     public function handleError(AgaviRequestDataHolder $rd)
     {
         $m = $this->getAttribute('errorMessage', false);
-        if($m === false) {
+        if (false === $m) {
             $m = array();
-            foreach($this->container->getValidationManager()
-                         ->getReport()->getErrorMessages() as $e)
-            {
+            foreach($this->container->getValidationManager()->getReport()
+                ->getErrorMessages() as $e
+            ) {
                 $m[] = $e;
             }
             $m = implode(' ', $m);
@@ -55,32 +80,12 @@ class inGraphBaseAction extends IcingaBaseAction
 
     public function getBackend()
     {
-        if($this->backend === null) {
+        if (null === $this->backend) {
             $this->backend = $this->getContext()->getModel(
                 'Backend', 'inGraph',
                 AgaviConfig::get('modules.ingraph.xmlrpc')
             );
         }
         return $this->backend;
-    }
-
-    /**
-     *
-     * @author Thomas Gelf <thomas.gelf@netways.de>
-     */
-    protected function siftInterval($start, $end)
-    {
-        return null;
-        $range = $end - $start;
-        if ($range <= 60 * 60 * 2) {
-            $interval = 60;
-        } elseif ($range <= 60 * 60 * 24) {
-            $interval = 60 * 5;
-        } elseif ($range <= 60 * 60 * 24 * 14) {
-            $interval = 60 * 30;
-        } else {
-            $interval = null;
-        }
-        return $interval;
     }
 }

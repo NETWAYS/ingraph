@@ -39,7 +39,7 @@ class inGraph_Renderer_NodeJs extends inGraph_Os_Process
 
     public function input($data)
     {
-        $pipes = $this->_getPipes();
+        $pipes = $this->getPipes();
         fwrite($pipes->stdin, $data);
         fclose($pipes->stdin);
     }

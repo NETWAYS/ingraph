@@ -1,3 +1,3 @@
-<?php 
+<?php
 
-inGraph_Loader::register();
+inGraph_Loader_SplAutoloader::getInstance()->register();

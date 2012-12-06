@@ -6,6 +6,7 @@
 
         <autoload name="inGraphBaseAction">%core.module_dir%/inGraph/lib/action/inGraphBaseAction.class.php</autoload>
         <autoload name="inGraphBaseModel">%core.module_dir%/inGraph/lib/model/inGraphBaseModel.class.php</autoload>
+        <autoload name="inGraphBaseView">%core.module_dir%/inGraph/lib/view/inGraphBaseView.class.php</autoload>
 
         <autoload name="inGraph_Loader_SplAutoloader">%core.module_dir%/inGraph/lib/php/inGraph/Loader/SplAutoloader.php</autoload>
 

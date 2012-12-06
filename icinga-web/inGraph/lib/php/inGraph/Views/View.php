@@ -1,14 +1,6 @@
 <?php
 
-/**
- * inGraph_View
- *
- * @copyright Copyright (c) 2012 Netways GmbH <support@netways.de>
- * @author Eric Lippmann <eric.lippmann@netways.de>
- * @package inGraph
- * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
- */
-class inGraph_View extends inGraph_AbstractTemplate
+class inGraph_Views_View extends inGraph_Templates_TemplateAbstract
 {
     /**
      * Compare template series with existing plots and add their information

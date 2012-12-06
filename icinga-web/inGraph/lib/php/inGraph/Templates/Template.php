@@ -1,14 +1,6 @@
 <?php
 
-/**
- * inGraph_Template
- *
- * @copyright Copyright (c) 2012 Netways GmbH <support@netways.de>
- * @author Eric Lippmann <eric.lippmann@netways.de>
- * @package inGraph
- * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
- */
-class inGraph_Template extends inGraph_AbstractTemplate
+class inGraph_Templates_Template extends inGraph_Templates_TemplateAbstract
 {
     /**
      * Check whether the regex of this template matches a service

@@ -23,7 +23,7 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
 
     public function executeWrite(AgaviRequestDataHolder $rd)
     {
-        $manager = new inGraph_View_Manager(
+        $manager = new inGraph_Views_Manager(
             AgaviConfig::get('modules.ingraph.views'));
 
         $view = $manager->fetchView($rd->getParameter('view'));

@@ -33,7 +33,7 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction
         // TODO(el): Throw exception in case we did not find any plots?
         // if (!$plots) { ... }
 
-        $manager = new inGraph_Template_Manager(
+        $manager = new inGraph_Templates_Manager(
             AgaviConfig::get('modules.ingraph.templates'));
 
         $template = $manager->fetchTemplate($service);

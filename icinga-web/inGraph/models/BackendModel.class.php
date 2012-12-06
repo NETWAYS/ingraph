@@ -1,14 +1,36 @@
 <?php
+/**
+ * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ *
+ * This file is part of inGraph.
+ *
+ * inGraph is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or any later version.
+ *
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *
+ * @link https://www.netways.org/projects/ingraph
+ * @author Eric Lippmann <eric.lippmann@netways.de>
+ * @copyright Copyright (c) 2012 NETWAYS GmbH (http.netways.de) <info@netways.de>
+ * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
+ * @package inGraph
+ */
 
 class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonModel
 {
-    protected $client = null;
+    protected $client;
 
     public function initialize(AgaviContext $ctx, array $params = array())
     {
         parent::initialize($ctx, $params);
-        $xmlRpcClient = new inGraph_XmlRpc_Client($params);
-        $this->backend = new inGraph_Backend($xmlRpcClient);
+        $this->client = new inGraph_Daemon_Client($params);
     }
 
     protected function icinga_fetchHosts($hostPattern)
@@ -34,7 +56,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     public function fetchHosts($hostPattern = '%', $offset = 0, $limit = 20)
     {
         $permittedHosts = $this->icinga_fetchHosts($hostPattern);
-        $availableHosts = $this->backend->fetchHosts($hostPattern);
+        $availableHosts = $this->client->fetchHosts($hostPattern);
         $hosts = array_intersect($permittedHosts, $availableHosts['hosts']);
         $total = count($hosts);
         return array(
@@ -70,7 +92,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     {
         $permittedServices = $this->icinga_fetchServices($hostPattern,
                                                          $servicePattern);
-        $availableServices = $this->backend->fetchServices($hostPattern,
+        $availableServices = $this->client->fetchServices($hostPattern,
                                                            $servicePattern);
         $services = array();
         foreach ($availableServices['services'] as $service) {
@@ -98,17 +120,17 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         );
     }
 
-    public function fetchPlots($hostName, $serviceName='',
-                               $parentService=null
+    public function fetchPlots($hostName, $serviceName = '',
+                               $parentService = null
     ) {
-        return $this->backend->fetchPlots($hostName, $serviceName,
+        return $this->client->fetchPlots($hostName, $serviceName,
                                           $parentService);
     }
 
     public function fetchValues($query, $start = null, $end = null,
                                 $interval = null, $nullTolerance = 0)
     {
-        return $this->backend->fetchValues($query, $start, $end, $interval,
+        return $this->client->fetchValues($query, $start, $end, $interval,
                                            $nullTolerance);
     }
 
@@ -116,18 +138,18 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     {
         $author = $this->getContext()->getUser()->getNsmUser()->user_name;
         // parent_service = null
-        return $this->backend->createComment($host, null, $service, $time,
+        return $this->client->createComment($host, null, $service, $time,
                                              $author, $comment);
     }
 
     public function updateComment($id, $host, $service, $time, $comment) {
         $author = $this->getContext()->getUser()->getNsmUser()->user_name;
         // parent_service = null
-        return $this->backend->updateComment($id, $host, null, $service, $time,
+        return $this->client->updateComment($id, $host, null, $service, $time,
                                              $author, $comment);
     }
 
     public function deleteComment($id) {
-        return $this->backend->deleteComment($id);
+        return $this->client->deleteComment($id);
     }
 }

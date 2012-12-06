@@ -1,35 +1,30 @@
 <?php
-
 /**
- * inGraph daemon access interface
+ * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * Collection of common interactions with the inGraph daemon
+ * This file is part of inGraph.
  *
- * @copyright Copyright (c) 2012 Netways GmbH <support@netways.de>
+ * inGraph is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or any later version.
+ *
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *
+ * @link https://www.netways.org/projects/ingraph
  * @author Eric Lippmann <eric.lippmann@netways.de>
- * @package inGraph
+ * @copyright Copyright (c) 2012 NETWAYS GmbH (http.netways.de) <info@netways.de>
  * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
+ * @package inGraph_Daemon
  */
-class inGraph_Backend
+
+class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
 {
-    /**
-     * XML-RPC Client to use for requests
-     *
-     * @var inGraph_XmlRpc_Client
-     */
-    protected $client = null;
-
-    /**
-     * Create a new inGraph daemon access interface
-     *
-     * @param inGraph_XmlRpc_Client $client XML-RPC Client to use for requests
-     * @return void
-     */
-    public function __construct(inGraph_XmlRpc_Client $client)
-    {
-        $this->client = $client;
-    }
-
     /**
      * Fetch hosts
      *
@@ -55,7 +50,7 @@ class inGraph_Backend
     public function fetchHosts()
     {
         $args = func_get_args();
-        return $this->client->call('getHostsFiltered', $args);
+        return $this->call('getHostsFiltered', $args);
     }
 
     /**
@@ -79,7 +74,7 @@ class inGraph_Backend
     public function fetchServices()
     {
         $args = func_get_args();
-        return $this->client->call('getServices', $args);
+        return $this->call('getServices', $args);
     }
 
     /**
@@ -96,7 +91,7 @@ class inGraph_Backend
     public function fetchPlots()
     {
         $args = func_get_args();
-        return $this->client->call('getPlots', $args);
+        return $this->call('getPlots', $args);
     }
 
     /**
@@ -119,7 +114,7 @@ class inGraph_Backend
     public function fetchValues()
     {
         $args = func_get_args();
-        $values = $this->client->call('getPlotValues2', $args);
+        $values = $this->call('getPlotValues2', $args);
 
         foreach ($values['charts'] as &$chart) {
             $chart['group'] = $chart['host'];
@@ -148,7 +143,7 @@ class inGraph_Backend
     public function createComment()
     {
         $args = func_get_args();
-        return $this->client->call('addComment', $args);
+        return $this->call('addComment', $args);
     }
 
     /**
@@ -166,7 +161,7 @@ class inGraph_Backend
     public function updateComment()
     {
         $args = func_get_args();
-        return $this->client->call('updateComment', $args);
+        return $this->call('updateComment', $args);
     }
 
     /**
@@ -178,6 +173,6 @@ class inGraph_Backend
     public function deleteComment()
     {
         $args = func_get_args();
-        return $this->client->call('deleteComment', $args);
+        return $this->call('deleteComment', $args);
     }
 }

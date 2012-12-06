@@ -76,10 +76,10 @@ install_files () (
     D=$1
     DEST=$2
     INSTALL_OPTS=${3-}
-    
+
     # Exclude .in suffixed files and inGraph.xml
     FILES=$(for F in $($FIND $D -maxdepth 1 -type f ! -name \*.in ! -path \*/config/inGraph.xml); do echo $F; done)
-    
+
     [ -n "$FILES" ] && $INSTALL -m 644 $INSTALL_OPTS -t $DEST $FILES
 )
 
@@ -90,17 +90,23 @@ install_common_directories () (
     # Remove trailing / from dest (if existing)
     DEST=${3%%/}
     INSTALL_OPTS=${4-}
-    
+
     for TD in $DIRS
     do
         if [ $INSTALL_DEV -eq 1 ]
         then
-            $LN -s $SRC/$TD $DEST/$TD
+            if [ -d "$DEST/$TD" ]
+            then
+                SUBDIRS=$(for SD in $($FIND $SRC/$TD -maxdepth 1 -type d); do echo ${SD##$SRC/$TD}; done)
+                install_common_directories "$SUBDIRS" "$SRC/$TD" "$DEST/$TD"
+            else
+                $LN -s "$SRC/$TD" -t "$DEST"
+            fi
         else
             for D in $($FIND $SRC/$TD -type d)
             do
-                $INSTALL -m 755 $INSTALL_OPTS -d $DEST${D##$SRC}
-                
+                $INSTALL -m 755 $INSTALL_OPTS -d "$DEST${D##$SRC}"
+
                 [ $? -eq 0 ] && install_files "$D" "$DEST${D##$SRC}" "$INSTALL_OPTS"
             done
         fi
@@ -214,14 +220,14 @@ fi
 $GETENT passwd $WEB_USER > /dev/null
 [ $? -ne 0 ] && {
     echo "ERROR: Web user $WEB_USER: no such user" >&2
-    
+
     usage
 }
 
 $GETENT group $WEB_GROUP > /dev/null
 [ $? -ne 0 ] && {
     echo "ERROR: Web group $WEB_GROUP: no such group" >&2
-    
+
     usage
 }
 
@@ -286,6 +292,7 @@ install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $C
 install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $COMMON_SRC/inGraph/views $PREFIX/app/modules/inGraph/views
 install_common_directories "js${tab}styles" $COMMON_SRC/inGraph/lib $PREFIX/pub
 install_common_directories "templates${tab}views" $COMMON_SRC/inGraph/config $PREFIX/app/modules/inGraph/config "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}-C${tab}-b"
+$INSTALL -m 755 -d $PREFIX/app/modules/inGraph/lib
 install_common_directories "action${tab}model${tab}nodejs${tab}php${tab}view" $COMMON_SRC/inGraph/lib $PREFIX/app/modules/inGraph/lib
 
 # Install config xmls

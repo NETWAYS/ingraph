@@ -48,8 +48,13 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         );
     }
 
-    public function fetchPlots($hostName, $serviceName = '') {
-        return $this->backend->fetchPlots($hostName, $serviceName);
+    public function fetchPlots($hostName='%', $serviceName='',
+                               $parentServiceName=null, $plotName=null,
+                               $offset=0, $limit=20
+    ) {
+        return $this->backend->fetchPlots($hostName, $serviceName,
+                                          $parentServiceName, $plotName,
+                                          $offset, $limit);
     }
 
     public function fetchValues($query, $start = null, $end = null,
@@ -76,5 +81,14 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
 
     public function deleteComment($id) {
         return $this->backend->deleteComment($id);
+    }
+    
+    public function fetchIntervals()
+    {
+        $intervals = $this->backend->fetchIntervals();
+        return array(
+            'total' => count($intervals),
+            'results' => array_merge(array(), $intervals)
+        );
     }
 }

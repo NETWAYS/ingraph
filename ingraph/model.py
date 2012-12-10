@@ -346,32 +346,25 @@ class HostService(ModelBase):
                 check_command=self.check_command)
             conn.execute(upd)
 
-    def getByID(conn, id):
-        obj = HostService.get(id)
-    
-        if obj == None:
-            sel = hostservice.select().where(hostservice.c.id==id)
-            res = conn.execute(sel)
-            row = res.fetchone()
-            
-            assert row != None
-
+    @staticmethod
+    def getByID(conn, id, row=None):
+        hostservice_ = HostService.get(id)
+        if not hostservice_:
+            if not row:
+                row = conn.execute(
+                    hostservice_.select().where(hostservice.c.id == id)).fetchone()
             host = Host.getByID(conn, row[hostservice.c.host_id])
             service = Service.getByID(conn, row[hostservice.c.service_id])
-
-            if row[hostservice.c.parent_hostservice_id] != None:
-                parent_hostservice = HostService.getByID(conn, row[hostservice.c.parent_hostservice_id])
+            if row[hostservice.c.parent_hostservice_id] :
+                parent_hostservice = HostService.getByID(
+                    conn, row[hostservice.c.parent_hostservice_id])
             else:
                 parent_hostservice = None
-
-            obj = HostService(host, service, parent_hostservice,
-                              row[hostservice.c.check_command])
-            obj.id = row[hostservice.c.id]
-            obj.activate()
-        
-        return obj
-    
-    getByID = staticmethod(getByID)
+            hostservice_ = HostService(host, service, parent_hostservice,
+                                      row[hostservice.c.check_command])
+            hostservice_.id = row[hostservice.c.id]
+            hostservice_.activate()
+        return hostservice_
     
     def getByHostAndService(conn, host, service, parent_hostservice):
         cond = hostservice.c.host_id==host.id
@@ -412,55 +405,44 @@ class HostService(ModelBase):
 
     getByHostAndService = staticmethod(getByHostAndService)
 
-    def getByHostAndServicePattern(conn, host_pattern, service_pattern, limit=None, offset=None):
-        if host_pattern == None or host_pattern == '':
-            host_pattern = '%'
-
-        if service_pattern == None or service_pattern == '':
-            service_pattern = '%'
-            
-        cond = and_(host.c.name.like(host_pattern), \
-                    service.c.name.like(service_pattern))
-
-        from_obj = hostservice.join(service).join(host)
-
-        sel = select([func.count()], from_obj=[from_obj]).where(cond)
-        total = conn.execute(sel).scalar()
-        
-        if limit == None and offset == None:
-            sel = hostservice.select(from_obj=[from_obj])
+    def getByHostAndServicePattern(conn, host_name_pattern=None,
+                                   service_name_pattern=None,
+                                   parent_hostservice_name_pattern=None,
+                                   limit=None, offset=None):
+        if not host_name_pattern:
+            host_name_pattern = '%'
+        if not service_name_pattern:
+            service_name_pattern = '%'
+        if not parent_hostservice_name_pattern:
+            countQuery = select(
+                [func.count()],
+                from_obj=[hostservice.join(service).join(host)]).where(
+                    and_(host.c.name.like(host_name_pattern),
+                         service.c.name.like(service_name_pattern)))
+            selectQuery = hostservice.select(
+                from_obj=[hostservice.join(service).join(host)],
+                limit=limit, offset=offset).where(
+                    and_(host.c.name.like(host_name_pattern),
+                         service.c.name.like(service_name_pattern)))
         else:
-            sel = hostservice.select(from_obj=[from_obj], limit=limit, offset=offset)
-            
-        # TODO: find matching sub-services with matching parent_service
-                    
-        sel = sel.where(cond)
-        result = conn.execute(sel)
-        
-        objs = []
-        
-        for row in result:
-            obj = HostService.get(row[hostservice.c.id])
-            
-            if obj == None:
-                hst = Host.getByID(conn, row[hostservice.c.host_id])
-                svc = Service.getByID(conn, row[hostservice.c.service_id])
-                    
-                if row[hostservice.c.parent_hostservice_id] != None:
-                    phs = HostService.getByID(conn, row[hostservice.c.parent_hostservice_id])
-                else:
-                    phs = None
-
-                obj = HostService(hst, svc, phs,
-                                  row[hostservice.c.check_command])
-                obj.id = row[hostservice.c.id]
-                obj.activate()
-                
-            objs.append(obj)
-
+            parent_hostservice_ids = [row[hostservice.c.id] for row in
+                                      conn.execute(select(
+                                          [hostservice.c.id],
+                                          from_obj=[hostservice.join(service)]).where(
+                                              service.c.name.like(parent_hostservice_name_pattern)))]
+            countQuery = select(
+                [func.count()],
+                from_obj=[hostservice]).where(
+                    hostervice.c.id.in_(parent_hostservice_ids))
+            selectQuery = hostservice.select(
+                from_obj=[hostservice],
+                limit=limit, offset=offset).where(
+                    hostervice.c.id.in_(parent_hostservice_ids))
         return {
-                'services': objs,
-                'total': total
+                'services': [HostService.getByID(conn,
+                                                 row[hostservice.c.id], row) for
+                             row in conn.execute(selectQuery)],
+                'total': conn.execute(countQuery).scalar()
         }
 
     getByHostAndServicePattern = staticmethod(getByHostAndServicePattern)
@@ -757,26 +739,20 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
                 conn.execute(datapoint.update().where(cond).values(update))
     
     executeUpdateQueries = staticmethod(executeUpdateQueries)
-
-    def getByID(conn, id):
-        obj = Plot.get(id)
-        
-        if obj == None:
-            sel = plot.select().where(plot.c.id==id)
-            res = conn.execute(sel)
-            row = res.fetchone()
-            
-            assert row != None
-
-            obj = Plot()
-            obj.id = row[plot.c.id]
-            obj.hostservice = HostService.getByID(conn, row[plot.c.hostservice_id])
-            obj.unit = row[plot.c.unit]
-            obj.activate()
-
-        return obj
-
-    getByID = staticmethod(getByID)
+    
+    @staticmethod
+    def getByID(conn, id, row=None):
+        plot_ = Plot.get(id)
+        if not plot_:
+            if not row:
+                row = conn.execute(
+                    plot_.select().where(plot.c.id == id)).fetchone()
+            plot_ = Plot(HostService.getByID(conn, row[plot.c.hostservice_id]),
+                         row[plot.c.name])
+            plot_.id = row[plot.c.id]
+            plot_.unit = row[plot.c.unit]
+            plot_.activate()
+        return plot_
     
     def getByHostServiceAndName(conn, hostservice, name):
         cond = plot.c.hostservice_id==hostservice.id
@@ -803,6 +779,20 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
         return objs
 
     getByHostServiceAndName = staticmethod(getByHostServiceAndName)
+
+    @staticmethod
+    def getByHostServiceIdsAndName(conn, ids, name=None, offset=None, limit=None):
+        whereCondition = plot.c.hostservice_id.in_(ids)
+        if name:
+            whereCondition = and_(whereCondition, plot.c.name.like(name)) 
+        selectQuery = plot.select(offset=offset, limit=limit).where(whereCondition)
+        countQuery = select([func.count()], from_obj=[plot]).where(whereCondition)
+        return {
+            'total': conn.execute(countQuery).scalar(),
+            'plots': [Plot.getByID(conn, row[plot.c.id], row) for
+                      row in
+                      conn.execute(selectQuery)]
+        }
 
     def getByHost(conn, hostname):
         sel = select([plot.c.id, plot.c.name, plot.c.unit, plot.c.hostservice_id], from_obj=[plot.join(hostservice).join(host)]) \

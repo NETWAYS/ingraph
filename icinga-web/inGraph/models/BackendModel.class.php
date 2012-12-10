@@ -4,7 +4,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
 {
     protected $client = null;
 
-    public function initialize(AgaviContext $ctx, array $params = array())
+    public function initialize(AgaviContext $ctx, array $params=array())
     {
         parent::initialize($ctx, $params);
         $xmlRpcClient = new inGraph_XmlRpc_Client($params);
@@ -31,7 +31,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         return $permittedHosts;
     }
 
-    public function fetchHosts($hostPattern = '%', $offset = 0, $limit = 20)
+    public function fetchHosts($hostPattern='%', $offset=0, $limit=20)
     {
         $permittedHosts = $this->icinga_fetchHosts($hostPattern);
         $availableHosts = $this->backend->fetchHosts($hostPattern);
@@ -65,8 +65,8 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         return $permittedServices;
     }
 
-    public function fetchServices($hostPattern = '%', $servicePattern = '%',
-                                  $offset = 0, $limit = 20)
+    public function fetchServices($hostPattern='%', $servicePattern='%',
+                                  $offset=0, $limit=20)
     {
         $permittedServices = $this->icinga_fetchServices($hostPattern,
                                                          $servicePattern);
@@ -98,15 +98,18 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         );
     }
 
-    public function fetchPlots($hostName, $serviceName='',
-                               $parentService=null
+    public function fetchPlots($hostName='%', $serviceName='',
+                               $parentServiceName=null, $plotName=null,
+                               $offset=0, $limit=20
     ) {
+        // TODO(el): Security
         return $this->backend->fetchPlots($hostName, $serviceName,
-                                          $parentService);
+                                          $parentServiceName, $plotName,
+                                          $offset, $limit);
     }
 
-    public function fetchValues($query, $start = null, $end = null,
-                                $interval = null, $nullTolerance = 0)
+    public function fetchValues($query, $start=null, $end=null,
+                                $interval=null, $nullTolerance=0)
     {
         return $this->backend->fetchValues($query, $start, $end, $interval,
                                            $nullTolerance);
@@ -129,5 +132,14 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
 
     public function deleteComment($id) {
         return $this->backend->deleteComment($id);
+    }
+    
+    public function fetchIntervals()
+    {
+        $intervals = $this->backend->fetchIntervals();
+        return array(
+            'total' => count($intervals),
+            'results' => array_merge(array(), $intervals)
+        );
     }
 }

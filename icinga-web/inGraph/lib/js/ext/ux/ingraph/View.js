@@ -881,7 +881,7 @@
                         query: query,
                         startx: startx,
                         endx: endx,
-                        interval: Ext.isNumber(interval) ? interval : null
+                        interval: Ext.isNumber(parseInt(interval)) ? interval : null
                     }
                 },
 

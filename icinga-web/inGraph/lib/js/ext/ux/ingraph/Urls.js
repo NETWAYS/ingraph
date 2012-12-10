@@ -41,7 +41,8 @@
                 template: baseProvider + 'template',
                 values: baseProvider + 'values',
                 view: baseProvider + 'view',
-                views: baseProvider + 'views'
+                views: baseProvider + 'views',
+                intervals: baseProvider + 'intervals',
             },
             comments: {
                 create: baseComments + 'create',

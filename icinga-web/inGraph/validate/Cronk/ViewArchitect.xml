@@ -17,18 +17,6 @@ parent="%core.module_dir%/Reporting/config/validators.xml">
             <validator class="string" name="state" required="false">
                 <argument>state</argument>
             </validator>
-            <validator class="string" name="host" required="false">
-                <argument>host</argument>
-            </validator>
-            <validator class="string" name="service" required="false">
-                <argument>service</argument>
-            </validator>
-            <validator class="string" name="view" required="false">
-                <argument>view</argument>
-            </validator>
-            <validator class="boolean" name="hideMenu" required="false">
-                <argument>hideMenu</argument>
-            </validator>
         </validators>
     </ae:configuration>
 </ae:configurations>

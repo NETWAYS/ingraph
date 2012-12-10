@@ -6,7 +6,7 @@ class inGraph_Provider_ServicesAction extends inGraphBaseAction
     {
         try {
             $services = $this->getBackend()->fetchServices(
-                $rd->getParameter('host'),
+                $rd->getParameter('host', '%'),
                 $rd->getParameter('query', '%'),
                 $rd->getParameter('start', 0),
                 $rd->getParameter('limit', 20)

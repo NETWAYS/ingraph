@@ -36,9 +36,9 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
 
                 $series = $seriesStub;
 
-                while ( ($matchedPlotIndex = $view->compileSingleSeries($series, $series['host'], $plots)) !== false) {
+                while ( ($matchedPlotIndex = $view->compileSingleSeries($series, $series['host'], $plots['plots'])) !== false) {
                     $compiled[] = $series;
-                    unset($plots[$matchedPlotIndex]);
+                    unset($plots['plots'][$matchedPlotIndex]);
                     $series = $seriesStub;
                 }
             }
@@ -59,14 +59,10 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
         $parentService = isset($series['parentService']) ?
             $series['parentService'] : null;
         $key = $series['host'] . $parentService . $series['service'];
-
-        if ( ! array_key_exists($key, $this->plots)) {
-            $plots = $this->getBackend()->fetchPlots(
+        if (!isset($this->plots[$key])) {
+            $this->plots[$key] = $this->getBackend()->fetchPlots(
                 $series['host'], $series['service'], $parentService);
-        } else {
-            $plots = $this->plots['key'];
         }
-
-        return $plots;
+        return $this->plots[$key];
     }
 }

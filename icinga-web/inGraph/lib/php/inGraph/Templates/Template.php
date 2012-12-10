@@ -115,7 +115,11 @@ class inGraph_Templates_Template extends inGraph_Templates_TemplateAbstract
                 'end' => $plot['end_timestamp'],
                 'interval' => $plot['granularity']
             );
-            $res[] = array_merge($defaults, $template[$id]);
+            if (isset($template[$id])) {
+                $res[] = array_merge($defaults, $template[$id]);
+            } else {
+                $res[] = $defaults;
+            }
         }
         return $res;
     }

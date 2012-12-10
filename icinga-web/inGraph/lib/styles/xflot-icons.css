@@ -105,3 +105,9 @@
     background-repeat: no-repeat;
     background-position: center center;
 }
+
+.x-flot-export-image-icon {
+    background-image: url(../images/icons/image.png) !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+}

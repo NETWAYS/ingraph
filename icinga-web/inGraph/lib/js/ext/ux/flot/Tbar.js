@@ -86,7 +86,7 @@
         showComments: false,
 
         showPrediction: true,
-        
+
         /**
          * @cfg {Boolean} showExport
          * Whether to show the export controls. Defaults to <tt>true</tt>.
@@ -535,23 +535,21 @@
                     tooltip: this.downloadText,
                     iconCls: 'xflot-icon-document-export',
                     menu: {
-                        defaults: {
-                            scope: this
-                        },
                         items: [
                             {
                                 text: 'XML',
                                 iconCls: 'xflot-icon-document-xml',
-                                handler: function () {
-                                    this.doDownload('xml');
-                                }
+                                handler: this.doDownload.createDelegate(this, ['xml'])
                             },
                             {
                                 text: 'CSV',
                                 iconCls: 'xflot-icon-document-csv',
-                                handler: function () {
-                                    this.doDownload('csv');
-                                }
+                                handler: this.doDownload.createDelegate(this, ['csv'])
+                            },
+                            {
+                                text: 'PNG',
+                                iconCls: 'x-flot-export-image-icon',
+                                handler: this.doDownload.createDelegate(this, ['png'])
                             }
                         ]
                     },
@@ -1200,7 +1198,7 @@
                 if (e > now) {
                     e = now; // Do not try to plot future values. ;-)
                 }
-                if ((e - s) < i) { 
+                if ((e - s) < i) {
                     s = e - i; // ALWAYS view full selected range.
                 }
                 this.store.load({

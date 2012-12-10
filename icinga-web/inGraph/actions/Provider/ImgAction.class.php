@@ -57,7 +57,6 @@ class inGraph_Provider_ImgAction extends inGraphBaseAction
             'width' => $rd->getParameter('width', 720),
             'height' => $rd->getParameter('height', 250)
         ));
-        xdebug_var_dump($options);die;
         $this->setAttribute('arguments', array(
             'data' => $data,
             'options' => $options

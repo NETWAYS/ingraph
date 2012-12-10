@@ -55,6 +55,16 @@ function streamPNG() {
             autoHighlight: false,
             backgroundColor: '#fff'
         });
+        args.options.xaxis = args.options.xaxis || {};
+        $.extend(args.options.xaxis, {
+            labelWidth: 50,
+            labelHeight: 20
+        });
+        args.options.yaxis = args.options.yaxis || {};
+        $.extend(args.options.yaxis, {
+            labelWidth: 50,
+            labelHeight: 20
+        });
         process.stderr.write(JSON.stringify(args.options));
         process.stdout.write(
             $.plot($('#chart'), args.data, args.options).getCanvas().toBuffer());

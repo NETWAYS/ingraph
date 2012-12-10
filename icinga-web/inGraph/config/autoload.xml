@@ -10,6 +10,8 @@
 
         <autoload name="inGraph_Loader_SplAutoloader">%core.module_dir%/inGraph/lib/php/inGraph/Loader/SplAutoloader.php</autoload>
 
+        <autoload name="JsonValidator">%core.module_dir%/inGraph/lib/validator/JsonValidator.class.php</autoload>
+        <autoload name="TimeValidator">%core.module_dir%/inGraph/lib/validator/TimeValidator.class.php</autoload>
     </ae:configuration>
 
 </ae:configurations>

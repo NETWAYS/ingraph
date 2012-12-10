@@ -21,38 +21,47 @@ class inGraph_Provider_ImgAction extends inGraphBaseAction
 {
     public function executeRead(AgaviRequestDataHolder $rd)
     {
-        $templaterd = new AgaviRequestDataHolder();
-        $templaterd->setParameters(array(
-            'host' => $rd->getParameter('host'),
-            'parentService' => $rd->getParameter('parentService', null),
-            'service' => $rd->getParameter('service', '') // Empty string for the host-graph
-        ));
-        $template = $this->container
-            ->createExecutionContainer('inGraph', 'Provider.Template',
-                                       $templaterd, 'json', 'write')
-            ->execute()
-            ->getContent();
-        $template = json_decode($template, true);
-        if (isset($template['errorMessage'])) {
-            return $this->setError($template['errorMessage']);
+        $query = $rd->getParameter('query', null);
+        if (null === $query) {
+            $templaterd = new AgaviRequestDataHolder();
+            $templaterd->setParameters(array(
+                'host' => $rd->getParameter('host'),
+                'parentService' => $rd->getParameter('parentService', null),
+                'service' => $rd->getParameter('service', '') // Empty string for the host-graph
+            ));
+            $template = $this->container
+                ->createExecutionContainer('inGraph', 'Provider.Template',
+                                           $templaterd, 'json', 'write')
+                ->execute()
+                ->getContent();
+            $template = json_decode($template, true);
+            if (isset($template['errorMessage'])) {
+                return $this->setError($template['errorMessage']);
+            }
+            $query = $template['query'];
+        } else {
+            $template = $rd->getParameter('template', array(
+                'options' => array(),
+                'data' => array()
+            ));
         }
-        $daemonConfig = AgaviConfig::get('modules.ingraph.daemon');
-        $charts = $this->getBackend()->fetchValues(
-            $template['query'],
-            $rd->getParameter('start', null), $rd->getParameter('end', null),
-            $rd->getParameter('interval', null),
-            (int) $daemonConfig['nullTolerance']);
+        $options = $template['content']['flot'];
         $templateseries = array();
         foreach ($template['content']['series'] as $id => $series) {
             $templateseries[$series['plot_id']] = $series;
         }
+        $daemonConfig = AgaviConfig::get('modules.ingraph.daemon');
+        $charts = $this->getBackend()->fetchValues(
+            $query,
+            $rd->getParameter('start', null), $rd->getParameter('end', null),
+            $rd->getParameter('interval', null),
+            (int) $daemonConfig['nullTolerance']);
         $chartsseries = array();
         foreach ($charts['charts'] as $id => $series) {
             $chartsseries[$series['plot_id']] = $series;
         }
         $data = inGraph_Templates_Template::apply($chartsseries,
                                                   $templateseries);
-        $options = $template['content']['flot'];
         $options = array_merge($options, array(
             'width' => $rd->getParameter('width', 720),
             'height' => $rd->getParameter('height', 250)

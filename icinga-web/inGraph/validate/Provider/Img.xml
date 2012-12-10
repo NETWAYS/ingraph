@@ -9,17 +9,50 @@
 
         <validators>
 
-            <validator name="host" class="string" required="true">
-                <argument>host</argument>
-                <error>Parameter host is mandatory.</error>
-            </validator>
+            <validator class="or" name="queryOrHostAndService" required="true">
 
-            <validator name="parentService" class="string" required="false">
-                <argument>parentService</argument>
-            </validator>
+                <validators>
 
-            <validator name="service" class="string" required="false">
-                <argument>service</argument>
+                    <validator class="and" name="queryAndTemplate">
+
+                        <validators>
+
+                            <validator name="query" class="JsonValidator" required="true">
+                                <argument>query</argument>
+                                <error>Parameter query is mandatory.</error>
+                            </validator>
+
+                            <validator name="template" class="JsonValidator" required="false">
+                                <argument>template</argument>
+                            </validator>
+
+                        </validators>
+
+                    </validator>
+
+                    <validator class="and" name="hostAndService">
+
+                        <validators>
+
+                            <validator name="host" class="string" required="true">
+                                <argument>host</argument>
+                                <error>Parameter host is mandatory.</error>
+                            </validator>
+
+                            <validator name="parentService" class="string" required="false">
+                                <argument>parentService</argument>
+                            </validator>
+
+                            <validator name="service" class="string" required="false">
+                                <argument>service</argument>
+                            </validator>
+
+                        </validators>
+
+                    </validator>
+
+                </validators>
+
             </validator>
 
             <validator name="width" class="number" required="false">
@@ -30,11 +63,11 @@
                 <argument>height</argument>
             </validator>
 
-            <validator name="start" class="number" required="false">
+            <validator name="start" class="TimeValidator" required="false">
                 <argument>start</argument>
             </validator>
 
-            <validator name="end" class="number" required="false">
+            <validator name="end" class="TimeValidator" required="false">
                 <argument>end</argument>
             </validator>
 

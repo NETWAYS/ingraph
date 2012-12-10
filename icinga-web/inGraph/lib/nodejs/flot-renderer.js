@@ -65,6 +65,12 @@ function streamPNG() {
             labelWidth: 50,
             labelHeight: 20
         });
+        args.options.legend = args.options.legend || {};
+        $.extend(args.options.legend, {
+            backgroundOpacity: 0,
+            container: null,
+            position: 'nw'
+        });
         process.stderr.write(JSON.stringify(args.options));
         process.stdout.write(
             $.plot($('#chart'), args.data, args.options).getCanvas().toBuffer());

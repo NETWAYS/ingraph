@@ -52,9 +52,15 @@ class inGraph_Provider_ImgAction extends inGraphBaseAction
         }
         $data = inGraph_Templates_Template::apply($chartsseries,
                                                   $templateseries);
+        $options = $template['content']['flot'];
+        $options = array_merge($options, array(
+            'width' => $rd->getParameter('width', 720),
+            'height' => $rd->getParameter('height', 250)
+        ));
+        xdebug_var_dump($options);die;
         $this->setAttribute('arguments', array(
             'data' => $data,
-            'options' => $template['content']['flot']
+            'options' => $options
         ));
         return $this->getDefaultViewName();
     }

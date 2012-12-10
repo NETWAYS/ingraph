@@ -43,15 +43,19 @@ function streamPNG() {
     process.stdin.on('end', function () {
         // Expect flcose on stdin
         args = JSON.parse(jsonIn);
-        args.options = {};
-        args.options.width = 640;
-        args.options.height = 480;
         args.options.grid = args.options.grid || {};
-        args.options.grid.canvasText = {
-            show: true
-        };
-        args.options.grid.backgroundColor = '#fff';
-        $.plot($('#chart'), args.data, args.options);
+        $.extend(args.options.grid, {
+            canvasText: {
+                show: true
+            },
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0)',
+            clickable: false,
+            hoverable: false,
+            autoHighlight: false,
+            backgroundColor: '#fff'
+        });
+        process.stderr.write(JSON.stringify(args.options));
         process.stdout.write(
             $.plot($('#chart'), args.data, args.options).getCanvas().toBuffer());
     });

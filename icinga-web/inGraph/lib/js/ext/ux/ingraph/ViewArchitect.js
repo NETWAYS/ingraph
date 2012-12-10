@@ -198,13 +198,11 @@
 
                 items.push(cfg);
             }, view); // Eof each panel
-
             view.addViewTbarItems();
-
             view.add(items);
-            view.doLayout();
             tabPanel.add(cronkPanel);
             tabPanel.setActiveTab(cronkPanel);
+            view.doLayout();
             // Manual handling of ext state
             Ext.state.Manager.getProvider().set(view.stateId, view.getState());
             cronkPanel.on('removed', function () {

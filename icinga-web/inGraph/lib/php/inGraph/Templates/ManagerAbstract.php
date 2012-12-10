@@ -84,7 +84,7 @@ abstract class inGraph_Templates_ManagerAbstract
      * Fetch template by file name
      *
      * @param string $fileName
-     * @return inGraph_AbstractTemplate
+     * @return inGraph_Templates_TemplateAbstract
      */
     public function fetchTemplateByFileName($fileName)
     {

@@ -87,4 +87,36 @@ class inGraph_Templates_Template extends inGraph_Templates_TemplateAbstract
             }
         }
     }
+
+    public function getQuery()
+    {
+        $query = array();
+        foreach ($this->content['series'] as $series) {
+            $query[] = array(
+                'host' => $series['host'],
+                'parent_service' => $series['parentService'],
+                'service' => $series['service'],
+                'plot' => $series['plot'],
+                'type' => $series['type']
+            );
+        }
+        return $query;
+    }
+
+    public static function apply($series, $template)
+    {
+        $res = array();
+        foreach ($series as $id => $plot) {
+            $defaults = array(
+                'label' => $plot['label'],
+                'unit' => $plot['unit'],
+                'data' => $plot['data'],
+                'start' => $plot['start_timestamp'],
+                'end' => $plot['end_timestamp'],
+                'interval' => $plot['granularity']
+            );
+            $res[] = array_merge($defaults, $template[$id]);
+        }
+        return $res;
+    }
 }

@@ -25,10 +25,10 @@ class inGraph_Renderer_NodeJs extends inGraph_Os_Process
         $process = $this->execute();
         $image = $process->stdout;
         $errors = $process->stderr;
-        $this->close();
         if (!self::isPng($image)) {
             throw new Exception($errors);
         }
+        $this->close();
         return $image;
     }
 

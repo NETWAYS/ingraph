@@ -19,7 +19,7 @@ var src = '';
 var plugins = require(__dirname + '/ingraph-plugins.js');
 
 require('jsdom').env({
-    html: '<html><body><div id="place" /></body></html>',
+    html: '<html><body></body></html>',
     src: src,
     done: function (err, window)
     {
@@ -89,3 +89,19 @@ function ready(win)
     initializeStdin();
 }
 
+var res = {
+    img: ''
+};
+stream = .getCanvas().pngStream();
+stream.on('data', function(data) {
+    res.image += data;
+    out(res);
+});
+stream.on('end', function() {
+    out(res);
+});
+stream.on('error', function(exception) {
+    throw exception;
+});
+if (data.charAt(data.length - 1) === '\n') {
+}

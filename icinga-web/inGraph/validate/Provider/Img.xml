@@ -4,17 +4,42 @@
     xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0"
     parent="%core.module_dir%/inGraph/config/validators.xml"
 >
-    
+
     <ae:configuration>
-        
+
         <validators>
-        
-            <validator name="param" class="string" required="true">
-                <argument>param</argument>
+
+            <validator name="host" class="string" required="true">
+                <argument>host</argument>
+                <error>Parameter host is mandatory.</error>
             </validator>
-            
+
+            <validator name="parentService" class="string" required="false">
+                <argument>parentService</argument>
+            </validator>
+
+            <validator name="service" class="string" required="false">
+                <argument>service</argument>
+            </validator>
+
+            <validator name="width" class="number" required="false">
+                <argument>width</argument>
+            </validator>
+
+            <validator name="height" class="number" required="false">
+                <argument>height</argument>
+            </validator>
+
+            <validator name="start" class="number" required="false">
+                <argument>start</argument>
+            </validator>
+
+            <validator name="end" class="number" required="false">
+                <argument>end</argument>
+            </validator>
+
         </validators>
-        
+
     </ae:configuration>
-    
+
 </ae:configurations>

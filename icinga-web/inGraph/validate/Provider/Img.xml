@@ -38,6 +38,10 @@
                 <argument>end</argument>
             </validator>
 
+            <validator name="interval" class="number" required="false">
+                <argument>interval</argument>
+            </validator>
+
         </validators>
 
     </ae:configuration>

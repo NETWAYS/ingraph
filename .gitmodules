@@ -1,0 +1,3 @@
+[submodule "icinga-web/inGraph/lib/js/flot"]
+	path = icinga-web/inGraph/lib/js/flot
+	url = https://github.com/lippser/flot.git

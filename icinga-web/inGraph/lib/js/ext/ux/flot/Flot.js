@@ -520,15 +520,15 @@
                     series.set(field.name, templateValue);
                 });
             }, this);
-            
+
             var hosts = [];
-            
+
             this.store.each(function (series) {
-                
+
                 if (-1 === hosts.indexOf(series.json.host)) {
                     hosts.push(series.json.host);
                 }
-                
+
                 var convert = series.get('convert');
 
                 if (!convert) {
@@ -694,7 +694,7 @@
 //                            yaxis.set('max', 100);
 //                        }
                     }
-                    
+
                     /*
                      * TODO(el): Set baseline on every load if not user-defined.
                      * Store needs sort of locking prior to that.
@@ -705,7 +705,7 @@
 //                    }
                 });
             }
-            
+
             if (hosts.length > 1) {
                 this.store.each(function (series) {
                     series.set(
@@ -1072,7 +1072,7 @@
                                  ranges[String.format('y{0}axis', series.yaxis.n)] :
                                  ranges.yaxis;
 
-                    var data = series.data.filter(function (xy) {
+                    var data = $.grep(series.data, function (xy) {
                         if (xy[0] >= xrange.from &&
                                 xy[0] <= xrange.to &&
                                 xy[1] >= yrange.from &&

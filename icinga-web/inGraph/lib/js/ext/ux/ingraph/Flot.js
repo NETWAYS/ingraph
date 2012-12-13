@@ -9,7 +9,7 @@
     var rebuildQuery = function () {
         // rebuild query based on template's series
         var series = Ext.pluck(this.template.getRange(), 'json'),
-            query = Ext.encode(Ext.ux.ingraph.Util.buildQuery(series));
+            query = Ext.encode(inGraph.format.query(series));
 
         this.store.setBaseParam('query', query);
 

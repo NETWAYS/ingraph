@@ -22,9 +22,9 @@
                     <route name=".values.csv" pattern="^/values.xml$" action=".Values" output_type="xml" />
                     <route name=".values.xml" pattern="^/values.csv$" action=".Values" output_type="csv" />
                     <route name=".view" pattern="^/view$" action=".View" />
-                    <route name=".img4" pattern="^/img/(host:\S+)/(parentService:\S+)/(service:\S+)$" action=".Img" output_type="image" />
-                    <route name=".img3" pattern="^/img/(host:\S+)/(service:\S+)$" action=".Img" output_type="image" />
-                    <route name=".img2" pattern="^/img/(host:\S+)$" action=".Img" output_type="image" />
+                    <route name=".img4" pattern="^/img/(host:[\S ]+)/(parentService:[\S ]+)/(service:[\S ]+)$" action=".Img" output_type="image" />
+                    <route name=".img3" pattern="^/img/(host:[\S ]+)/(service:[\S ]+)$" action=".Img" output_type="image" />
+                    <route name=".img2" pattern="^/img/(host:[\S ]+)$" action=".Img" output_type="image" />
                     <route name=".img" pattern="^/img$" action=".Img" output_type="image" />
                 </route>
 

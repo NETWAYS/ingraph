@@ -1,5 +1,10 @@
 .*
+!.gitignore
 *.pyc
-MANIFEST
+build/
+dist/
+contrib/init.d/ingraph
 contrib/init.d/ingraph-collector
+MANIFEST
 setup.py
+

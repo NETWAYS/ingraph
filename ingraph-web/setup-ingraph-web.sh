@@ -96,12 +96,19 @@ install_common_directories () (
     do
         if [ $INSTALL_DEV -eq 1 ]
         then
-            if [ -d "$DEST/$TD" ]
+            if [ ! -h "$DEST/$TD" ]
             then
-                SUBDIRS=$(for SD in $($FIND $SRC/$TD -maxdepth 1 -type d); do echo ${SD##$SRC/$TD}; done)
-                install_common_directories "$SUBDIRS" "$SRC/$TD" "$DEST/$TD"
-            else
-                $LN -s "$SRC/$TD" -t "$DEST"
+                if [ -d "$DEST/$TD" ]
+                then
+                    SUBDIRS=$(for SD in $($FIND $SRC/$TD -maxdepth 1 -type d); do echo ${SD##$SRC/$TD}; done)
+                    install_common_directories "$SUBDIRS" "$SRC/$TD" "$DEST/$TD"
+                    for F in $(for F in $($FIND $SRC/$TD -maxdepth 1 -type f); do echo $F; done)
+                    do
+                        $LN -s $F $DEST/$TD
+                    done
+                else
+                    $LN -s "$SRC/$TD" -t "$DEST"
+                fi
             fi
         else
             for D in $($FIND $SRC/$TD -type d)

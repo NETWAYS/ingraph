@@ -16,18 +16,26 @@
  * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
-var $;
+var $,
+    inGraph;
 
 require('jsdom').env({
     html: '<html><body><div id="chart"></div></body></html>',
-    scripts: ['../js/jquery/jquery-1.7.1.min.js',
-              'jquery.flot.node-canvas.js',
-              'jquery.flot.text.js'],
+    scripts: ['../js/jquery/jquery-1.8.3.min.js',
+              '../js/flot/jquery.flot.js',
+              '../js/flot/jquery.flot.time.js',
+              '../js/flot/jquery.flot.selection.js',
+              '../js/flot/jquery.flot.stack.js',
+              '../js/flot/jquery.flot.fillbetween.js',
+              '../js/flot/jquery.flot.canvaslegend.js',
+              '../js/Array.js',
+              '../js/inGraph.js'],
     done: function (exception, window) {
         if (exception) {
             throw exception;
         }
         $ = window.jQuery;
+        inGraph = window.inGraph;
         streamPNG();
     }
 });
@@ -45,34 +53,36 @@ function streamPNG() {
         args = JSON.parse(jsonIn);
         args.options.grid = args.options.grid || {};
         $.extend(args.options.grid, {
-            canvasText: {
-                show: true
-            },
             borderWidth: 1,
             borderColor: 'rgba(255, 255, 255, 0)',
             clickable: false,
-            hoverable: false,
-            autoHighlight: false,
-            backgroundColor: '#fff'
+            hoverable: false
         });
         args.options.xaxis = args.options.xaxis || {};
         $.extend(args.options.xaxis, {
             labelWidth: 50,
-            labelHeight: 20
+            labelHeight: 20,
+            tickFormatter: inGraph.flot.xTickFormatter
         });
         args.options.yaxis = args.options.yaxis || {};
         $.extend(args.options.yaxis, {
             labelWidth: 50,
-            labelHeight: 20
+            labelHeight: 20,
+            tickFormatter: inGraph.flot.yTickFormatter
         });
         args.options.legend = args.options.legend || {};
         $.extend(args.options.legend, {
-            backgroundOpacity: 0,
+            backgroundOpacity: 0.1,
             container: null,
             position: 'nw'
         });
-        process.stderr.write(JSON.stringify(args.options));
         process.stdout.write(
-            $.plot($('#chart'), args.data, args.options).getCanvas().toBuffer());
+            $.plot(
+                $('#chart').width(args.options.width)
+                    .height(args.options.height),
+                args.data,
+                args.options
+            ).getCanvas().toBuffer()
+        );
     });
 }

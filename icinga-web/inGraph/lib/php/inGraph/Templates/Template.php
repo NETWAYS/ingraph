@@ -107,6 +107,11 @@ class inGraph_Templates_Template extends inGraph_Templates_TemplateAbstract
     {
         $res = array();
         foreach ($series as $id => $plot) {
+            if (isset($template[$id]['enabled'])
+                && false === $template[$id]['enabled']
+            ) {
+                continue;
+            }
             $defaults = array(
                 'label' => $plot['label'],
                 'unit' => $plot['unit'],

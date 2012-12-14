@@ -66,7 +66,6 @@ function streamPNG() {
             labelWidth: 50,
             labelHeight: 20,
             tickFormatter: inGraph.flot.xTickFormatter,
-            axisLabel: 'Date',
             axisLabelUseCanvas: true
         });
         args.options.yaxis = args.options.yaxis || {};

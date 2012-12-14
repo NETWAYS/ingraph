@@ -93,6 +93,21 @@ abstract class inGraph_Templates_TemplateAbstract
      */
     public function getContent()
     {
+        if (isset($this->content['flot'])) {
+            if (isset($this->content['flot']['yaxis'])) {
+                $yaxis =& $this->content['flot']['yaxis'];
+                $yaxis['axisLabel'] = $yaxis['label'];
+                unset($yaxis['label']);
+            }
+            if (isset($this->content['flot']['yaxes'])) {
+                foreach ($this->content['flot']['yaxes'] as &$yaxis) {
+                    if (isset($yaxis['label'])) {
+                        $yaxis['axisLabel'] = $yaxis['label'];
+                        unset($yaxis['label']);
+                    }
+                }
+            }
+        }
         return $this->content;
     }
 

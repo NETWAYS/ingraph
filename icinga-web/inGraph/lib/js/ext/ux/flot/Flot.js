@@ -93,7 +93,7 @@
         zooms: [],
         autoRefreshInterval: 300,
 
-        autoYAxes: true,
+        autoYAxes: false,
 
         /**
          * @cfg {Ext.ux.flot.Store} store The {@link Ext.ux.flot.Store} the component
@@ -573,7 +573,7 @@
                 });
             }, this);
 
-            if (this.autoYAxes === true) {
+            if (this.autoYAxes === true && false) {
                 // All yaxes share the same baseline
                 var baseline = null,
                     unitToAxisMap = {},

@@ -822,7 +822,7 @@
                                                     xtype: 'xigautocombo',
                                                     fieldLabel: _('Plot'),
                                                     emptyText: _('Plot'),
-                                                    store: this.store.collect('id'),
+                                                    store: this.store.data.keys,
                                                     mode: 'local',
                                                     anchor: '95%',
                                                     allowBlank: false

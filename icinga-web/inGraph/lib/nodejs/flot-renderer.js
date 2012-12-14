@@ -28,6 +28,7 @@ require('jsdom').env({
               '../js/flot/jquery.flot.stack.js',
               '../js/flot/jquery.flot.fillbetween.js',
               '../js/flot/jquery.flot.canvaslegend.js',
+              '../js/flot-axislabels/jquery.flot.axislabels.js',
               '../js/Array.js',
               '../js/inGraph.js'],
     done: function (exception, window) {
@@ -54,21 +55,26 @@ function streamPNG() {
         args.options.grid = args.options.grid || {};
         $.extend(args.options.grid, {
             borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0)',
+            borderColor: 'rgba(0, 0, 0, 0)',
             clickable: false,
-            hoverable: false
+            hoverable: false,
+            backgroundColor: null,
+            color: '#000000'
         });
         args.options.xaxis = args.options.xaxis || {};
         $.extend(args.options.xaxis, {
             labelWidth: 50,
             labelHeight: 20,
-            tickFormatter: inGraph.flot.xTickFormatter
+            tickFormatter: inGraph.flot.xTickFormatter,
+            axisLabel: 'Date',
+            axisLabelUseCanvas: true
         });
         args.options.yaxis = args.options.yaxis || {};
         $.extend(args.options.yaxis, {
             labelWidth: 50,
             labelHeight: 20,
-            tickFormatter: inGraph.flot.yTickFormatter
+            tickFormatter: inGraph.flot.yTickFormatter,
+            axisLabelUseCanvas: true
         });
         args.options.legend = args.options.legend || {};
         $.extend(args.options.legend, {

@@ -243,7 +243,7 @@
                 defaultValue: false
             },
             {
-                name: 'label',
+                name: 'axisLabel',
                 defaultValue: null
             },
             {

@@ -7,8 +7,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     public function initialize(AgaviContext $ctx, array $params=array())
     {
         parent::initialize($ctx, $params);
-        $xmlRpcClient = new inGraph_XmlRpc_Client($params);
-        $this->backend = new inGraph_Backend($xmlRpcClient);
+        $this->backend = new inGraph_Daemon_Client($params);
     }
 
     protected function icinga_fetchHosts($hostPattern)

@@ -31,10 +31,14 @@
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/flot/AbstractStyleForm.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/flot/FormWindow.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/flot</ae:parameter>
+
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/wizard</ae:parameter>
+
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph/View.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph/portal</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph/icinga-web</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph</ae:parameter>
+
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/</ae:parameter>
 
             <ae:parameter>%core.module_dir%/inGraph/lib/js/forecastjs/</ae:parameter>

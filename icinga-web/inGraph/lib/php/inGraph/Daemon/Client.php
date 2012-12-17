@@ -84,15 +84,15 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
      * @param string $serviceNamePattern may contain '%' as wildcard character
      * @param string $parentServiceNamePattern may contain '%' as wildcard character
      * @param string $plotNamePattern may contain '%' as wildcard character
-     * @param int $offset optional offset of the first row to return
      * @param int $limit optional constrain the number of rows returned
+     * @param int $offset optional offset of the first row to return
      * @return array
      * <ul style="list-style-type: none;">
      *     <li><b>int</b> <i>total</i> number of records found</li>
      *     <li><b>array</b> <i>plots</i>
      *         <ul style="list-style-type: none;">
      *             <li><b>int</b> <i>id</i></li>
-     *             <li><b>string</b> <i>host</i></li>* 
+     *             <li><b>string</b> <i>host</i></li>*
      *             <li><b>string</b> <i>service</i></li>
      *             <li><b>string</b> <i>parent_service</i></li>
      *             <li><b>string</b> <i>plot</i></li>
@@ -187,7 +187,7 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
         $args = func_get_args();
         return $this->call('deleteComment', $args);
     }
-    
+
     /**
      * Fetch intervals
      *
@@ -196,7 +196,7 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
      *     <li><b>string[]</b> <code>interval</code>
      *         <ul style="list-style-type: none;">
      *             <li><b>int</b> <i>id</i></li>
-     *             <li><b>int</b> <i>interval</i></li>* 
+     *             <li><b>int</b> <i>interval</i></li>*
      *             <li><b>int</b> <i>retention-period</i></li>
      *         </ul>
      *     </li>

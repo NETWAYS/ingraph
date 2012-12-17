@@ -1,5 +1,4 @@
 ingraph.conf
 ingraph/pub/.htaccess
-ingraph/app/modules/inGraph/config/inGraph.xml
-ingraph/app/modules/inGraph/config/module.xml
 ingraph/bin/clearcache.sh
+

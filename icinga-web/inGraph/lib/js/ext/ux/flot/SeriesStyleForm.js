@@ -208,7 +208,9 @@
                                             Ext.util.Format.htmlEncode(this.linesSplineText),
                                             _('Smooth')
                                         ),
-                                        name: 'lines:spline'
+                                        name: 'lines:spline',
+                                        // Disabled until https://github.com/flot/flot/pull/872 got merged
+                                        disabled: true
                                     }
                                 ]
                             },

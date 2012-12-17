@@ -1,14 +1,6 @@
 <?php
 
-/**
- * inGraph_AbstractTemplate
- *
- * @copyright Copyright (c) 2012 Netways GmbH <support@netways.de>
- * @author Eric Lippmann <eric.lippmann@netways.de>
- * @package inGraph
- * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
- */
-abstract class inGraph_AbstractTemplate
+abstract class inGraph_Templates_TemplateAbstract
 {
     /**
      * Decoded content of this template
@@ -101,6 +93,21 @@ abstract class inGraph_AbstractTemplate
      */
     public function getContent()
     {
+        if (isset($this->content['flot'])) {
+            if (isset($this->content['flot']['yaxis'])) {
+                $yaxis =& $this->content['flot']['yaxis'];
+                $yaxis['axisLabel'] = $yaxis['label'];
+                unset($yaxis['label']);
+            }
+            if (isset($this->content['flot']['yaxes'])) {
+                foreach ($this->content['flot']['yaxes'] as &$yaxis) {
+                    if (isset($yaxis['label'])) {
+                        $yaxis['axisLabel'] = $yaxis['label'];
+                        unset($yaxis['label']);
+                    }
+                }
+            }
+        }
         return $this->content;
     }
 

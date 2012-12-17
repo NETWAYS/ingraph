@@ -93,7 +93,7 @@
         zooms: [],
         autoRefreshInterval: 300,
 
-        autoYAxes: true,
+        autoYAxes: false,
 
         /**
          * @cfg {Ext.ux.flot.Store} store The {@link Ext.ux.flot.Store} the component
@@ -573,7 +573,7 @@
                 });
             }, this);
 
-            if (this.autoYAxes === true) {
+            if (this.autoYAxes === true && false) {
                 // All yaxes share the same baseline
                 var baseline = null,
                     unitToAxisMap = {},
@@ -1072,7 +1072,7 @@
                                  ranges[String.format('y{0}axis', series.yaxis.n)] :
                                  ranges.yaxis;
 
-                    var data = series.data.filter(function (xy) {
+                    var data = $.grep(series.data, function (xy) {
                         if (xy[0] >= xrange.from &&
                                 xy[0] <= xrange.to &&
                                 xy[1] >= yrange.from &&

@@ -1,14 +1,6 @@
 <?php
 
-/**
- * inGraph_Template
- *
- * @copyright Copyright (c) 2012 Netways GmbH <support@netways.de>
- * @author Eric Lippmann <eric.lippmann@netways.de>
- * @package inGraph
- * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
- */
-class inGraph_Template extends inGraph_AbstractTemplate
+class inGraph_Templates_Template extends inGraph_Templates_TemplateAbstract
 {
     /**
      * Check whether the regex of this template matches a service
@@ -94,5 +86,46 @@ class inGraph_Template extends inGraph_AbstractTemplate
                 $this->compileSeries($panel['series'], $host, $plots);
             }
         }
+    }
+
+    public function getQuery()
+    {
+        $query = array();
+        foreach ($this->content['series'] as $series) {
+            $query[] = array(
+                'host' => $series['host'],
+                'parent_service' => $series['parentService'],
+                'service' => $series['service'],
+                'plot' => $series['plot'],
+                'type' => $series['type']
+            );
+        }
+        return $query;
+    }
+
+    public static function apply($series, $template)
+    {
+        $res = array();
+        foreach ($series as $id => $plot) {
+            if (isset($template[$id]['enabled'])
+                && false === $template[$id]['enabled']
+            ) {
+                continue;
+            }
+            $defaults = array(
+                'label' => $plot['label'],
+                'unit' => $plot['unit'],
+                'data' => $plot['data'],
+                'start' => $plot['start_timestamp'],
+                'end' => $plot['end_timestamp'],
+                'interval' => $plot['granularity']
+            );
+            if (isset($template[$id])) {
+                $res[] = array_merge($defaults, $template[$id]);
+            } else {
+                $res[] = $defaults;
+            }
+        }
+        return $res;
     }
 }

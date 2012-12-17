@@ -1,14 +1,6 @@
 <?php
 
-/**
- * inGraph_Template_AbstractManager
- *
- * @copyright Copyright (c) 2012 Netways GmbH <support@netways.de>
- * @author Eric Lippmann <eric.lippmann@netways.de>
- * @package inGraph_Template
- * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
- */
-abstract class inGraph_Template_AbstractManager
+abstract class inGraph_Templates_ManagerAbstract
 {
     /**
      * Path to search for tempaltes
@@ -92,7 +84,7 @@ abstract class inGraph_Template_AbstractManager
      * Fetch template by file name
      *
      * @param string $fileName
-     * @return inGraph_AbstractTemplate
+     * @return inGraph_Templates_TemplateAbstract
      */
     public function fetchTemplateByFileName($fileName)
     {
@@ -173,7 +165,7 @@ abstract class inGraph_Template_AbstractManager
      *
      * @return boolean
      */
-    public function isDefault(inGraph_AbstractTemplate $template)
+    public function isDefault(inGraph_Templates_TemplateAbstract $template)
     {
         return $template === $this->default;
     }

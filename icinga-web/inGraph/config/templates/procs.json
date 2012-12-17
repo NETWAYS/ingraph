@@ -30,7 +30,7 @@
     "series": [
         {
             "color": "#844798",
-            "re": "//", 
+            "re": "//",
             "type": "avg",
             "id": "avg",
             "yaxis": 1,
@@ -47,7 +47,7 @@
         },
         {
             "color": "#BDBDBD",
-            "re": "//", 
+            "re": "//",
             "type": "min",
             "id": "min",
             "yaxis": 1,
@@ -77,16 +77,16 @@
         },
         {
             "color": "#FF6E00",
-            "re": "//", 
+            "re": "//",
             "type": "warn_upper",
             "id": "warn",
             "fillBetween": "max",
             "label": "Warning",
             "yaxis": 1
-        }, 
+        },
         {
             "color": "#CB0C29",
-            "re": "//", 
+            "re": "//",
             "type": "crit_upper",
             "fillBetween": "warn",
             "label": "Critical",

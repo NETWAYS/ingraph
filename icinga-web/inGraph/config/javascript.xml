@@ -10,10 +10,24 @@
             <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/RowEditor.js</ae:parameter>
             <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/Spinner.js</ae:parameter>
             <ae:parameter>%core.root_dir%/lib/ext3/examples/ux/SpinnerField.js</ae:parameter>
+
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/Array.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/strtotime.js</ae:parameter>
+
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/excanvas/</ae:parameter>
+
             <ae:parameter>%core.module_dir%/inGraph/lib/js/jquery/</ae:parameter>
+
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/inGraph.js</ae:parameter>
+
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.js</ae:parameter>
-            <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/</ae:parameter>
-            <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/wizard</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.time.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.selection.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.stack.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.fillbetween.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.highlight.js</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/flot-axislabels/jquery.flot.axislabels.js</ae:parameter>
+
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/flot/AbstractStyleForm.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/flot/FormWindow.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/flot</ae:parameter>
@@ -21,8 +35,10 @@
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph/portal</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph/icinga-web</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/ux/ingraph</ae:parameter>
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/ext/</ae:parameter>
+
             <ae:parameter>%core.module_dir%/inGraph/lib/js/forecastjs/</ae:parameter>
-            <ae:parameter>%core.module_dir%/inGraph/lib/js/</ae:parameter>
+
         </javascript>
 
     </ae:configuration>

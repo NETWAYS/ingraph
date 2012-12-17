@@ -17,6 +17,7 @@ XMLRPC_PORT=${XMLRPC_PORT-5000}
 XMLRPC_USER=${XMLRPC_USER-ingraph}
 XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
 NULL_TOLERANCE=${NULL_TOLERANCE-2}
+NODE_BIN=
 
 FIND=${FIND-find}
 INSTALL=${INSTALL-install}
@@ -76,10 +77,10 @@ install_files () (
     D=$1
     DEST=$2
     INSTALL_OPTS=${3-}
-    
+
     # Exclude .in suffixed files and inGraph.xml
     FILES=$(for F in $($FIND $D -maxdepth 1 -type f ! -name \*.in ! -path \*/config/inGraph.xml); do echo $F; done)
-    
+
     [ -n "$FILES" ] && $INSTALL -m 644 $INSTALL_OPTS -t $DEST $FILES
 )
 
@@ -90,17 +91,30 @@ install_common_directories () (
     # Remove trailing / from dest (if existing)
     DEST=${3%%/}
     INSTALL_OPTS=${4-}
-    
+
     for TD in $DIRS
     do
         if [ $INSTALL_DEV -eq 1 ]
         then
-            $LN -s $SRC/$TD $DEST/$TD
+            if [ ! -h "$DEST/$TD" ]
+            then
+                if [ -d "$DEST/$TD" ]
+                then
+                    SUBDIRS=$(for SD in $($FIND $SRC/$TD -maxdepth 1 -type d); do echo ${SD##$SRC/$TD}; done)
+                    install_common_directories "$SUBDIRS" "$SRC/$TD" "$DEST/$TD"
+                    for F in $(for F in $($FIND $SRC/$TD -maxdepth 1 -type f); do echo $F; done)
+                    do
+                        $LN -s $F $DEST/$TD
+                    done
+                else
+                    $LN -s "$SRC/$TD" -t "$DEST"
+                fi
+            fi
         else
             for D in $($FIND $SRC/$TD -type d)
             do
-                $INSTALL -m 755 $INSTALL_OPTS -d $DEST${D##$SRC}
-                
+                $INSTALL -m 755 $INSTALL_OPTS -d "$DEST${D##$SRC}"
+
                 [ $? -eq 0 ] && install_files "$D" "$DEST${D##$SRC}" "$INSTALL_OPTS"
             done
         fi
@@ -192,6 +206,14 @@ do
                 exit 1
             }
             ;;
+        --with-node-bin*)
+            NODE_BIN=${ARG#--with-node-bin}
+            NODE_BIN=${NODE_BIN#=}
+            [ -z "$NODE_BIN" ] && {
+                echo "ERROR: expected an absolute directory name for --with-node-bin." >&2
+                exit 1
+            }
+            ;;
         --help | -h)
             usage
             ;;
@@ -214,14 +236,14 @@ fi
 $GETENT passwd $WEB_USER > /dev/null
 [ $? -ne 0 ] && {
     echo "ERROR: Web user $WEB_USER: no such user" >&2
-    
+
     usage
 }
 
 $GETENT group $WEB_GROUP > /dev/null
 [ $? -ne 0 ] && {
     echo "ERROR: Web group $WEB_GROUP: no such group" >&2
-    
+
     usage
 }
 
@@ -248,6 +270,7 @@ do
     $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
     $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
     $SED -i -e s,@NULL_TOLERANCE@,$NULL_TOLERANCE, $F
+    $SED -i -e s,@NODE_BIN@,$NODE_BIN, $F
 done
 
 # Install files from the ingraph directory
@@ -255,6 +278,8 @@ echo "(2/4) Installing directories and files..."
 
 SRC=$DIR/ingraph
 
+# Install all "base" files from the ingraph folder
+# Exclude bin files will since they will be installed separately
 for D in $($FIND $SRC -type d ! -path $SRC/bin)
 do
     $INSTALL -m 755 -d $PREFIX${D##$SRC}
@@ -262,15 +287,10 @@ do
     [ $? -eq 0 ] && install_files "$D" "$PREFIX${D##$SRC}"
 done
 
-# If inGraph.xml does not exist install it
-[ ! -r $PREFIX/app/modules/inGraph/config/inGraph.xml ] && {
-    $INSTALL -m 644 -t $PREFIX/app/modules/inGraph/config $SRC/app/modules/inGraph/config/inGraph.xml
-}
-
 # Install bin files
 $INSTALL -m 755 -d $PREFIX/bin
 BINFILES=$(for F in $($FIND $SRC/bin -maxdepth 1 -type f ! -name \*.in); do echo $F; done)
-$INSTALL -m 755 -t $PREFIX/bin $BINFILES
+[ -n "$BINFILES" ] && $INSTALL -m 755 -t $PREFIX/bin $BINFILES
 
 echo "(3/4) Installing cache and log directory..."
 
@@ -286,17 +306,44 @@ install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $C
 install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $COMMON_SRC/inGraph/views $PREFIX/app/modules/inGraph/views
 install_common_directories "js${tab}styles" $COMMON_SRC/inGraph/lib $PREFIX/pub
 install_common_directories "templates${tab}views" $COMMON_SRC/inGraph/config $PREFIX/app/modules/inGraph/config "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}-C${tab}-b"
-install_common_directories "action${tab}model${tab}nodejs${tab}php${tab}view" $COMMON_SRC/inGraph/lib $PREFIX/app/modules/inGraph/lib
+# mkdir $PREFIX/app/modules/inGraph/lib
+$INSTALL -m 755 -d $PREFIX/app/modules/inGraph/lib
+install_common_directories "action${tab}model${tab}nodejs${tab}php${tab}validator${tab}view" $COMMON_SRC/inGraph/lib $PREFIX/app/modules/inGraph/lib
 
 # Install config xmls
-CONFIGS="$COMMON_SRC/inGraph/config/autoload.xml${tab}$COMMON_SRC/inGraph/config/config_handlers.xml${tab}$COMMON_SRC/inGraph/config/validators.xml"
+CONFIGS="$COMMON_SRC/inGraph/config/autoload.xml${tab}\
+$COMMON_SRC/inGraph/config/config_handlers.xml${tab}\
+$COMMON_SRC/inGraph/config/validators.xml"
 $INSTALL -m 644 -t $PREFIX/app/modules/inGraph/config/ $CONFIGS
 
 # Install styles
-$INSTALL -m 644 $COMMON_SRC/inGraph/pub/styles/ingraphlogo.css $PREFIX/pub/styles/ingraphlogo.css
+STYLES=$(for F in $($FIND $COMMON_SRC/inGraph/pub/styles -maxdepth 1 -type f ! -name \*.in); do echo $F; done)
+[ -n "$STYLES" ] && $INSTALL -m 644 -t $PREFIX/pub/styles/ $STYLES
 
-# Install missing files
-$INSTALL -m 644 $COMMON_SRC/inGraph/config.php $PREFIX/app/modules/inGraph
+# Install images
+IMAGES=$(for F in $($FIND $COMMON_SRC/inGraph/pub/images -maxdepth 1 -type f ! -name \*.in); do echo $F; done)
+[ -n "$IMAGES" ] && $INSTALL -m 644 -t $PREFIX/pub/images/ $IMAGES
+
+# Install top-level files, e.g. config.php
+FILES=$(for F in $($FIND $COMMON_SRC/inGraph/ -maxdepth 1 -type f ! -name \*.in); do echo $F; done)
+[ -n "$FILES" ] && $INSTALL -m 644 -t $PREFIX/app/modules/inGraph $FILES
+
+# If inGraph.xml does not exist install it from the icinga-web module
+if [ ! -r $PREFIX/app/modules/inGraph/config/inGraph.xml ]
+then
+    # Duplicate code, maybe there's a nicer way
+    $INSTALL -m 644 $COMMON_SRC/inGraph/config/inGraph.xml.in $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@PREFIX@,$PREFIX, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@WEB_USER@,$WEB_USER, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@WEB_GROUP@,$WEB_GROUP, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@WEB_PATH@,$WEB_PATH, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@XMLRPC_HOST@,$XMLRPC_HOST, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@XMLRPC_PORT@,$XMLRPC_PORT, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@XMLRPC_USER@,$XMLRPC_USER, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@NULL_TOLERANCE@,$NULL_TOLERANCE, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@NODE_BIN@,$NODE_BIN, $PREFIX/app/modules/inGraph/config/inGraph.xml
+fi
 
 echo
 echo "The httpd config has been created."

@@ -37,4 +37,7 @@
         <ae:parameter name="default">default.json</ae:parameter>
     </setting>
 
+    <setting name="nodejs">
+        <ae:parameter name="bin">@NODE_BIN@</ae:parameter>
+    </setting>
 </settings>

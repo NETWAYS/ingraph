@@ -1,0 +1,6 @@
+[submodule "icinga-web/inGraph/lib/js/flot"]
+	path = icinga-web/inGraph/lib/js/flot
+	url = https://github.com/lippser/flot.git
+[submodule "icinga-web/inGraph/lib/js/flot-axislabels"]
+	path = icinga-web/inGraph/lib/js/flot-axislabels
+	url = https://github.com/lippser/flot-axislabels.git

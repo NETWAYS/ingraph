@@ -1,16 +1,8 @@
 <?php
 
-/**
- * inGraph Template Manager
- *
- * @copyright Copyright (c) 2012 Netways GmbH <support@netways.de>
- * @author Eric Lippmann <eric.lippmann@netways.de>
- * @package inGraph_Template
- * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
- */
-class inGraph_Template_Manager extends inGraph_Template_AbstractManager
+class inGraph_Templates_Manager extends inGraph_Templates_ManagerAbstract
 {
-    protected $templateClass = "inGraph_Template";
+    protected $templateClass = "inGraph_Templates_Template";
 
     /**
      * Fetch template for a service

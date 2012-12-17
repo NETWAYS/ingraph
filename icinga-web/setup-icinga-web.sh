@@ -17,6 +17,7 @@ XMLRPC_USER=${XMLRPC_USER-ingraph}
 XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
 NULL_TOLERANCE=${NULL_TOLERANCE-2}
 TEMPLATE_SUFFIX=
+NODE_BIN=
 
 FIND=${FIND-find}
 INSTALL=${INSTALL-install}
@@ -64,6 +65,8 @@ usage () {
     echo "                          [$XMLRPC_PASSWORD]"
     echo "--with-null-tolerance     null tolerance value"
     echo "                          [$NULL_TOLERANCE]"
+    echo "--with-node-bin           Path to Node.js binary"
+    echo "                          [$NODE_BIN]"
     echo
     exit 1
 }
@@ -78,10 +81,10 @@ install_files () (
     D=$1
     DEST=$2
     INSTALL_OPTS=${3-}
-    
+
     # Exclude .in suffixed files and inGraph.xml
     FILES=$(for F in $($FIND $D -maxdepth 1 -type f ! -name \*.in ! -path \*/config/inGraph.xml); do echo $F; done)
-    
+
     [ -n "$FILES" ] && $INSTALL -m 644 $INSTALL_OPTS -t $DEST $FILES
 )
 
@@ -162,6 +165,14 @@ do
                 exit 1
             }
             ;;
+        --with-node-bin*)
+            NODE_BIN=${ARG#--with-node-bin}
+            NODE_BIN=${NODE_BIN#=}
+            [ -z "$NODE_BIN" ] && {
+                echo "ERROR: expected an absolute directory name for --with-node-bin." >&2
+                exit 1
+            }
+            ;;
         --help | -h)
             usage
             ;;
@@ -184,14 +195,14 @@ fi
 $GETENT passwd $WEB_USER > /dev/null
 [ $? -ne 0 ] && {
     echo "ERROR: Web user $WEB_USER: no such user" >&2
-    
+
     usage
 }
 
 $GETENT group $WEB_GROUP > /dev/null
 [ $? -ne 0 ] && {
     echo "ERROR: Web group $WEB_GROUP: no such group" >&2
-    
+
     usage
 }
 
@@ -250,6 +261,7 @@ do
     $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
     $SED -i -e s,@NULL_TOLERANCE@,$NULL_TOLERANCE, $F
     $SED -i -e s,@TEMPLATE_SUFFIX@,$TEMPLATE_SUFFIX, $F
+    $SED -i -e s,@NODE_BIN@,$NODE_BIN, $F
 done
 
 # Install from the inGraph directory
@@ -264,17 +276,17 @@ else
     for D in $($FIND $SRC -type d ! -path $SRC/config/templates ! -path $SRC/config/views)
     do
         $INSTALL -m 755 -d $PREFIX/app/modules/inGraph${D##$SRC}
-    
+
         [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}"
     done
-    
+
     for D in $($FIND $SRC -type d -path $SRC/config/templates -o -path $SRC/config/views)
     do
         $INSTALL -m 755 -o $WEB_USER -g $WEB_GROUP -d $PREFIX/app/modules/inGraph${D##$SRC}
-        
+
         [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}" "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}-C${tab}-b"
     done
-    
+
     # If inGraph.xml does not exist install it
     [ ! -r $PREFIX/app/modules/inGraph/config/inGraph.xml ] && {
         $INSTALL -m 644 -t $PREFIX/app/modules/inGraph/config $SRC/config/inGraph.xml

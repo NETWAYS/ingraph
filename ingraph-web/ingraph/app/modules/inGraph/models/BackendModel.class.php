@@ -7,8 +7,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     public function initialize(AgaviContext $ctx, array $params = array())
     {
         parent::initialize($ctx, $params);
-        $xmlRpcClient = new inGraph_XmlRpc_Client($params);
-        $this->backend = new inGraph_Backend($xmlRpcClient);
+        $this->backend = new inGraph_Daemon_Client($params);
     }
 
     public function fetchHosts($hostPattern = '%', $offset = 0, $limit = 20)
@@ -38,7 +37,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
                 $flat[] = array(
                     'name' => $service['service'],
                     'service' => $service['service']
-                );              
+                );
             }
         }
 

@@ -8,10 +8,10 @@
         <autoload name="inGraphBaseModel">%core.module_dir%/inGraph/lib/model/inGraphBaseModel.class.php</autoload>
         <autoload name="inGraphBaseView">%core.module_dir%/inGraph/lib/view/inGraphBaseView.class.php</autoload>
 
-        <autoload name="NodeJs">%core.module_dir%/inGraph/lib/php/NodeJs.php</autoload>
-        <autoload name="Benchmark">%core.module_dir%/inGraph/lib/php/Benchmark.php</autoload>
-        <autoload name="inGraph_Loader">%core.module_dir%/inGraph/lib/php/inGraph/Loader.php</autoload>
+        <autoload name="inGraph_Loader_SplAutoloader">%core.module_dir%/inGraph/lib/php/inGraph/Loader/SplAutoloader.php</autoload>
 
+        <autoload name="JsonValidator">%core.module_dir%/inGraph/lib/validator/JsonValidator.class.php</autoload>
+        <autoload name="TimeValidator">%core.module_dir%/inGraph/lib/validator/TimeValidator.class.php</autoload>
     </ae:configuration>
 
 </ae:configurations>

@@ -4,23 +4,8 @@
     "flot": {
         "series": {
             "lines": {
-                "show": true,
                 "steps": true,
-                "lineWidth": 2
-            }
-        },
-        "legend": {
-            "position": "nw"
-        }
-    },
-
-    "series": [
-        {
-            "re": "//",
-            "type": "avg",
-            "lines": {
                 "fill": true,
-                "lineWidth": 2,
                 "fillColor": {
                     "colors": [
                         {
@@ -33,6 +18,16 @@
                     ]
                 }
             }
+        },
+        "legend": {
+            "position": "nw"
+        }
+    },
+
+    "series": [
+        {
+            "re": "//",
+            "type": "avg"
         }
     ],
 

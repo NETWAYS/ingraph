@@ -352,8 +352,8 @@
                                     ref: '../../hostCombo',
                                     emptyText: _('Choose host'),
                                     store: {
-                                        xtype: 'arraystore',
-                                        root: 'results',
+                                        xtype: 'jsonstore',
+                                        root: 'hosts',
                                         fields: ['host'],
                                         idProperty: 'host',
                                         url: Ext.ux.ingraph.Urls.provider.hosts,
@@ -406,7 +406,7 @@
                                     emptyText: _('Choose service'),
                                     store: {
                                         xtype: 'jsonstore',
-                                        root: 'results',
+                                        root: 'services',
                                         fields: [
                                             'name',
                                             'service',
@@ -690,7 +690,7 @@
                                                     anchor: '95%',
                                                     store: {
                                                         xtype: 'jsonstore',
-                                                        root: 'results',
+                                                        root: 'timeFrames',
                                                         fields: [
                                                             'id',
                                                             'interval',

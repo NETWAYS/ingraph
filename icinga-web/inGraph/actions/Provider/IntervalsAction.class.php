@@ -1,4 +1,4 @@
-<?php
+ <?php
 /*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *

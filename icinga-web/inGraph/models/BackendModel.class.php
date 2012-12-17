@@ -51,10 +51,15 @@ class inGraph_BackendModel extends inGraphBaseModel implements
     {
         $permittedHosts = $this->icinga_fetchHosts($hostPattern);
         $availableHosts = $this->backend->fetchHosts($hostPattern);
-        $hosts = array_intersect($permittedHosts, $availableHosts['hosts']);
+        $hosts = array();
+        foreach ($availableHosts['hosts'] as $host) {
+            if (in_array($host['host'], $permittedHosts)) {
+                $hosts[] = $host;
+            }
+        }
         $total = count($hosts);
         return array(
-            'results' => array_slice($hosts, $offset, $limit),
+            'hosts' => array_slice($hosts, $offset, $limit),
             'total' => $total
         );
     }
@@ -109,7 +114,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements
         }
         $total = count($services);
         return array(
-            'results' => array_slice($services, $offset, $limit),
+            'services' => array_slice($services, $offset, $limit),
             'total' => $total
         );
     }
@@ -154,10 +159,6 @@ class inGraph_BackendModel extends inGraphBaseModel implements
 
     public function fetchIntervals()
     {
-        $intervals = $this->backend->fetchIntervals();
-        return array(
-            'total' => count($intervals),
-            'results' => array_merge(array(), $intervals)
-        );
+        return $this->backend->fetchIntervals();
     }
 }

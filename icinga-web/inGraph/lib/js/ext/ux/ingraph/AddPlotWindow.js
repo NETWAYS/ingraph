@@ -80,8 +80,8 @@
                             fieldLabel: _('Host'),
                             emptyText: _('Choose Host'),
                             store: {
-                                xtype: 'arraystore',
-                                root: 'results',
+                                xtype: 'jsonstore',
+                                root: 'hosts',
                                 fields: ['host'],
                                 idProperty: 'host',
                                 url: Ext.ux.ingraph.Urls.provider.hosts
@@ -103,7 +103,7 @@
                             disabled: true,
                             store: {
                                 xtype: 'jsonstore',
-                                root: 'results',
+                                root: 'services',
                                 fields: [
                                     'name',
                                     'service',
@@ -172,7 +172,7 @@
                 } // Eof form
             ]; // Eof items
         },
-        
+
         getValues: function () {
             var values = Ext.ux.ingraph.AddPlotWindow.superclass.getValues
                 .call(this);

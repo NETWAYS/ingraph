@@ -175,26 +175,13 @@ class BackendRPCMethods(object):
 
         return True
 
-    def getHosts(self):
-        hosts = model.Host.getAll(self.engine)
-
-        items = []
-
-        for host in hosts:
-            items.append(host.name)
-
-        return items
-
-    def getHostsFiltered(self, pattern, limit=None, offset=None):
-        result = model.Host.getByPattern(self.engine,
-                                         pattern.replace('*', '%'),
-                                         limit, offset)
-        items = []
-
-        for host in result['hosts']:
-            items.append(host.name)
-
-        return {'total': result['total'], 'hosts': items}
+    def getHosts(self, pattern, limit=None, offset=None):
+        result = model.Host.getByPattern(
+            self.engine, pattern.replace('*', '%'), limit, offset)
+        return {
+            'total': result['total'],
+            'hosts': [{'host': host.name} for host in result['hosts']]
+        }
 
     def getServices(self, host_pattern, service_pattern=None, limit=None,
                     offset=None):

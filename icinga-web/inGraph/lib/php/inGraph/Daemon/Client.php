@@ -44,7 +44,7 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
     public function fetchHosts()
     {
         $args = func_get_args();
-        return $this->call('getHostsFiltered', $args);
+        return $this->call('getHosts', $args);
     }
 
     /**
@@ -199,6 +199,10 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
     public function fetchIntervals()
     {
         $args = func_get_args();
-        return $this->client->call('getTimeFrames', $args);
+        $tfs = $this->client->call('getTimeFrames', $args);
+        return array(
+            'timeFrames' => array_values($tfs),
+            'total' => count($tfs)
+        );
     }
 }

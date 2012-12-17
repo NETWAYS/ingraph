@@ -29,7 +29,8 @@
  */
 class TimeValidator extends AgaviValidator
 {
-    protected function validate() {
+    protected function validate()
+    {
         $time =& $this->getData($this->getArgument());
         if (!is_scalar($time)) {
             $this->throwError();

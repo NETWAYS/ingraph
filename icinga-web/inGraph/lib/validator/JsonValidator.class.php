@@ -38,7 +38,8 @@
  */
 class JsonValidator extends AgaviStringValidator
 {
-    protected function validate() {
+    protected function validate()
+    {
         if (!parent::validate()) {
             $this->throwError();
             return false;

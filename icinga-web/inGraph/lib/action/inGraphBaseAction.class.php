@@ -1,7 +1,5 @@
 <?php
-/**
- * inGraphBaseAction.class.php
- *
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
@@ -12,17 +10,11 @@
  *
  * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for mor
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
  * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
- *
- * @link https://www.netways.org/projects/ingraph
- * @author Eric Lippmann <eric.lippmann@netways.de>
- * @copyright Copyright (c) 2012 NETWAYS GmbH (http.netways.de) <info@netways.de>
- * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
- * @package inGraph
  */
 
 class inGraphBaseAction extends IcingaBaseAction

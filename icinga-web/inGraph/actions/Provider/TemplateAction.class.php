@@ -31,14 +31,15 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction
         }
         // TODO(el): Throw exception in case we did not find any plots?
         // if (!$plots['total']) { ... }
-        $manager = new inGraph_Template_Manager(
+        $manager = new inGraph_Templates_Manager(
             AgaviConfig::get('modules.ingraph.templates'));
         $template = $manager->fetchTemplate($service);
         $template->compile($host, $plots['plots']);
         $this->setAttribute('template', array(
             'name' => $template->getInfo()->getBasename(),
             'content' => $template->getContent(),
-            'isDefault' => $manager->isDefault($template)
+            'isDefault' => $manager->isDefault($template),
+            'query' => $template->getQuery()
         ));
         return $this->getDefaultViewName();
     }

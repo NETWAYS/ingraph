@@ -177,7 +177,7 @@
                     {
                         xtype: 'container',
                         id: legendContainerId,
-                        cls: 'xflot-legend',
+                        cls: 'x-flot-legend',
                         autoScroll: true
                     }
                 ));
@@ -202,7 +202,7 @@
                     {
                         xtype: 'spacer',
                         height: 1,
-                        cls: 'xflot-spacer'
+                        cls: 'x-flot-spacer'
                     },
                     Ext.apply(
                         {},
@@ -349,11 +349,11 @@
             var id = String.format('{0}-print', this.id),
                 el = Ext.DomHelper.append(Ext.getBody(), {
                     tag: 'div',
-                    cls: 'flot-print-container',
+                    cls: 'x-flot-print-ct',
                     children: [
                         {
                             tag: 'div',
-                            cls: 'flot-print-title',
+                            cls: 'x-flot-print-title',
                             html: this.title
                         },
                         {

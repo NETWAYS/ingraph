@@ -374,13 +374,13 @@
                     menu: [
                         {
                             text: _('Save'),
-                            iconCls: 'xflot-icon-save',
+                            iconCls: 'x-flot-save-icon',
                             scope: this,
                             handler: this.saveViewHandler
                         },
                         {
                             text: _('Save As...'),
-                            iconCls: 'xflot-icon-save-new',
+                            iconCls: 'x-flot-save-icon-new',
                             scope: this,
                             handler: this.saveAsViewHandler
                         }
@@ -399,7 +399,7 @@
                 },
                 {
                     tooltip: this.printText,
-                    iconCls: 'xflot-icon-print',
+                    iconCls: 'x-flot-print-icon',
                     scope: this,
                     handler: this.printHandler
                 }
@@ -422,14 +422,14 @@
                     menu: [
 //                        {
 //                            text: _('Save'),
-//                            iconCls: 'xflot-icon-save',
+//                            iconCls: 'x-flot-save-icon',
 //                            scope: this,
 //                            disabled: true,
 //                            handler: this.saveTemplateHandler
 //                        },
                         {
                             text: _('Save As View'),
-                            iconCls: 'xflot-icon-save-new',
+                            iconCls: 'x-flot-save-icon-new',
                             scope: this,
                             handler: this.saveAsViewHandler
                         }
@@ -448,7 +448,7 @@
                 },
                 {
                     tooltip: this.printText,
-                    iconCls: 'xflot-icon-print',
+                    iconCls: 'x-flot-print-icon',
                     scope: this,
                     handler: this.printHandler
                 }
@@ -549,7 +549,7 @@
                 buttons: [
                     {
                         text: _('Save'),
-                        iconCls: 'xflot-icon-save',
+                        iconCls: 'x-flot-save-icon',
                         ref: '../saveBtn',
                         disabled: true,
                         handler: function (btn) {
@@ -568,7 +568,7 @@
                     },
                     {
                         text: _('Cancel'),
-                        iconCls: 'xflot-icon-cancel',
+                        iconCls: 'x-flot-cancel-icon',
                         handler: function (btn) {
                             // btn -> bbar -> window
                             var win = btn.ownerCt.ownerCt;
@@ -719,7 +719,7 @@
 
         // private
         printHandler: function () {
-            var printContainer = Ext.getBody().select('div.flot-print-container');
+            var printContainer = Ext.getBody().select('div.x-flot-print-ct');
             printContainer.each(function (ct) {
                 ct.destroy();
             });

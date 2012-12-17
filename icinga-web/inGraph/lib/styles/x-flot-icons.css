@@ -1,100 +1,88 @@
-.xflot-icon-print {
+.x-flot-print-icon {
     background-image: url(../images/icons/printer.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-zoom-in {
-    background-image: url(../images/icons/magnifier-zoom-in.png) !important;
-    background-repeat: no-repeat;
-    background-position: center center;
-}
-
-.xflot-icon-zoom-out {
-    background-image: url(../images/icons/magnifier-zoom-out.png) !important;
-    background-repeat: no-repeat;
-    background-position: center center;
-}
-
-.xflot-icon-document-export {
+.x-flot-document-export-icon {
     background-image: url(../images/icons/document-export.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-document-csv {
+.x-flot-document-csv-icon {
     background-image: url(../images/icons/document-excel-csv.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-document-xml {
+.x-flot-document-xml-icon {
     background-image: url(../images/icons/document-list.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-add {
+.x-flot-add-icon {
     background-image: url(../images/icons/add.gif) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-save {
+.x-flot-save-icon {
     background-image: url(../images/icons/disk.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-save-new {
+.x-flot-save-icon-new {
     background-image: url(../images/icons/disk--plus.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-accept {
+.x-flot-accept-icon {
     background-image: url(../images/icons/tick-circle-frame.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-cancel {
+.x-flot-cancel-icon {
     background-image: url(../images/icons/cross-circle-frame.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-sync {
+.x-flot-sync-icon {
     background-image: url(../images/icons/chart--arrow.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-comment {
+.x-flot-comment-icon {
     background-image: url(../images/icons/balloon-ellipsis.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-delete {
+.x-flot-delete-icon {
     background-image: url(../images/icons/minus-circle-frame.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-settings {
+.x-flot-settings-icon {
     background-image: url(../images/icons/cog.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-reset {
+.x-flot-reset-icon {
     background-image: url(../images/icons/gear--minus.png) !important;
     background-repeat: no-repeat;
     background-position: center center;
 }
 
-.xflot-icon-calendar {
+.x-flot-calendar-icon {
     background-image: url(../images/icons/calendar--pencil.png) !important;
     background-repeat: no-repeat;
     background-position: center center;

@@ -153,14 +153,14 @@
                     bbar: [
                         {
                             text: _('Add Axis'),
-                            iconCls: 'xflot-icon-add',
+                            iconCls: 'x-flot-add-icon',
                             scope: this,
                             handler: this.addAxisHandler
                         },
                         {
                             text: _('Edit Axis'),
                             disabled: true,
-                            iconCls: 'xflot-icon-settings',
+                            iconCls: 'x-flot-settings-icon',
                             scope: this,
                             handler: this.editAxisHandler,
                             ref: '../../editAxisBtn'
@@ -168,7 +168,7 @@
                         {
                             text: _('Remove Axis'),
                             disabled: true,
-                            iconCls: 'xflot-icon-delete',
+                            iconCls: 'x-flot-delete-icon',
                             scope: this,
                             handler: this.removeAxisHandler,
                             ref: '../../removeAxisBtn'
@@ -218,7 +218,7 @@
                 buttons: [
                     {
                         text: _('Reset'),
-                        iconCls: 'xflot-icon-reset',
+                        iconCls: 'x-flot-reset-icon',
                         scope: this,
                         handler: function (btn) {
                             selectedRecord.reject(true); // Don't notify store

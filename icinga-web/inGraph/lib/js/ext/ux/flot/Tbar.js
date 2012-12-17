@@ -410,7 +410,7 @@
                     hidden: !this.showDataView
                 },
                 {
-                    iconCls: 'xflot-icon-calendar',
+                    iconCls: 'x-flot-calendar-icon',
                     tooltip: this.calendarText,
                     scope: this,
                     handler: this.calendarHandler,
@@ -436,7 +436,7 @@
                 {
                     ref: 'sync',
                     tooltip: this.syncText,
-                    iconCls: 'xflot-icon-sync',
+                    iconCls: 'x-flot-sync-icon',
                     disabled: true,
                     handler: this.syncHandler,
                     scope: this,
@@ -497,7 +497,7 @@
                 {
                     ref: 'settings',
                     tooltip: this.settingsText,
-                    iconCls: 'xflot-icon-settings',
+                    iconCls: 'x-flot-settings-icon',
                     scope: this,
                     handler: this.settingsHandler,
                     hidden: !this.showSettings
@@ -509,7 +509,7 @@
                 {
                     ref: 'comments',
                     tooltip: this.commentsText,
-                    iconCls: 'xflot-icon-comment',
+                    iconCls: 'x-flot-comment-icon',
                     scope: this,
                     handler: this.commentsHandler,
                     hidden: !this.showComments
@@ -533,17 +533,17 @@
                 {
                     ref: 'download',
                     tooltip: this.downloadText,
-                    iconCls: 'xflot-icon-document-export',
+                    iconCls: 'x-flot-document-export-icon',
                     menu: {
                         items: [
                             {
                                 text: 'XML',
-                                iconCls: 'xflot-icon-document-xml',
+                                iconCls: 'x-flot-document-xml-icon',
                                 handler: this.doDownload.createDelegate(this, ['xml'])
                             },
                             {
                                 text: 'CSV',
-                                iconCls: 'xflot-icon-document-csv',
+                                iconCls: 'x-flot-document-csv-icon',
                                 handler: this.doDownload.createDelegate(this, ['csv'])
                             },
                             {
@@ -558,7 +558,7 @@
                 {
                     ref: 'print',
                     tooltip: this.printText,
-                    iconCls: 'xflot-icon-print',
+                    iconCls: 'x-flot-print-icon',
                     scope: this,
                     handler: this.printHandler,
                     hidden: !this.showExport
@@ -633,7 +633,7 @@
                 buttons: [
                     {
                         text: _('Apply'),
-                        iconCls: 'xflot-icon-accept',
+                        iconCls: 'x-flot-accept-icon',
                         ref: '../applyBtn',
                         disabled: true,
                         scope: this,
@@ -668,7 +668,7 @@
                     },
                     {
                         text: _('Cancel'),
-                        iconCls: 'xflot-icon-cancel',
+                        iconCls: 'x-flot-cancel-icon',
                         scope: this,
                         handler: function (btn) {
                             // Button -> Tbar -> Window
@@ -726,7 +726,7 @@
                 buttons: [
                     {
                         text: _('Apply'),
-                        iconCls: 'xflot-icon-accept',
+                        iconCls: 'x-flot-accept-icon',
                         scope: this,
                         handler: function (btn) {
                             // Button -> Tbar -> Window
@@ -742,7 +742,7 @@
                     },
                     {
                         text: _('Cancel'),
-                        iconCls: 'xflot-icon-cancel',
+                        iconCls: 'x-flot-cancel-icon',
                         scope: this,
                         handler: function (btn) {
                             // TODO(el): Check for unapplied changes
@@ -756,7 +756,7 @@
                     },
                     {
                         text: _('Reset'),
-                        iconCls: 'xflot-icon-reset',
+                        iconCls: 'x-flot-reset-icon',
                         scope: this,
                         handler: function (btn) {
                             // TODO(el): Check for unapplied changes
@@ -1018,7 +1018,7 @@
         printHandler: function () {
             var flotPanel = this.ownerCt;
 
-            var printContainer = Ext.getBody().select('div.flot-print-container');
+            var printContainer = Ext.getBody().select('div.x-flot-print-ct');
             printContainer.each(function (ct) {
                 ct.destroy();
             });

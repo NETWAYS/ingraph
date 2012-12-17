@@ -42,7 +42,7 @@ function () {
                         <parameter name="model"></parameter>
                         <parameter name="xtype">igridicon</parameter>
                         <parameter name="menuid">ingraph_tip</parameter>
-                        <parameter name="iconCls">ingraph-icon-chart-pie</parameter>
+                        <parameter name="iconCls">x-ingraph-chart-pie-icon</parameter>
                     </parameter>
                     <parameter>
                         <parameter name="target">sub</parameter>
@@ -79,7 +79,7 @@ function () {
                         <parameter name="model"></parameter>
                         <parameter name="xtype">grideventbutton</parameter>
                         <parameter name="menuid">ingraph_window</parameter>
-                        <parameter name="iconCls">ingraph-icon-chart-bar</parameter>
+                        <parameter name="iconCls">x-ingraph-chart-bar-icon</parameter>
                         <parameter name="text">Preview</parameter>
                     </parameter>
                 </parameter>

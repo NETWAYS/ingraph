@@ -149,14 +149,14 @@
                     bbar: [
                         {
                             text: _('Add Plot'),
-                            iconCls: 'xflot-icon-add',
+                            iconCls: 'x-flot-add-icon',
                             scope: this,
                             handler: this.addPlotHandler
                         },
                         {
                             text: _('Edit Plot'),
                             disabled: true,
-                            iconCls: 'xflot-icon-settings',
+                            iconCls: 'x-flot-settings-icon',
                             scope: this,
                             handler: this.editPlotHandler,
                             ref: '../../editPlotBtn'
@@ -164,7 +164,7 @@
                         {
                             text: _('Remove Plot'),
                             disabled: true,
-                            iconCls: 'xflot-icon-delete',
+                            iconCls: 'x-flot-delete-icon',
                             scope: this,
                             handler: this.removePlotHandler,
                             ref: '../../removePlotBtn'
@@ -199,7 +199,7 @@
                 buttons: [
                     {
                         text: _('Reset'),
-                        iconCls: 'xflot-icon-reset',
+                        iconCls: 'x-flot-reset-icon',
                         scope: this,
                         handler: function (btn) {
                             selectedRecord.reject(true); // Don't notify store

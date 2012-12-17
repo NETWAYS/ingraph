@@ -35,9 +35,9 @@
     Ext.ux.ingraph.portal.MenuItem = Ext.extend(Ext.Container, {
        /**
         * @cfg {String} cls
-        * Extra CSS class. Defaults to <tt>xingraph-portal-item</tt>.
+        * Extra CSS class. Defaults to <tt>x-ingraph-portal-item</tt>.
         */
-        cls: 'xingraph-portal-item',
+        cls: 'x-ingraph-portal-item',
 
         /**
          * @cfg {Object} layout

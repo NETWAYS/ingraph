@@ -138,13 +138,13 @@
                     text: _('Save'),
                     // bbar -> window
                     ref: '../saveBtn',
-                    iconCls: 'xflot-icon-save',
+                    iconCls: 'x-flot-save-icon',
                     scope: this,
                     handler: this.saveHandler
                 },
                 {
                     text: _('Cancel'),
-                    iconCls: 'xflot-icon-cancel',
+                    iconCls: 'x-flot-cancel-icon',
                     scope: this,
                     handler: this.cancelHandler
                 }
@@ -153,7 +153,7 @@
             if (this.comment_id !== undefined) {
                 buttons.splice(1, 0, {
                     text: _('Delete'),
-                    iconCls: 'xflot-icon-delete',
+                    iconCls: 'x-flot-delete-icon',
                     scope: this,
                     handler: this.deleteHandler
                 });

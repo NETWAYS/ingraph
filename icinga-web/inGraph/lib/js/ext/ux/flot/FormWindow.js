@@ -110,7 +110,7 @@
                     text: _('Apply'),
                     // bbar -> window
                     ref: '../applyBtn',
-                    iconCls: 'xflot-icon-accept',
+                    iconCls: 'x-flot-accept-icon',
                     scope: this,
                     handler: function () {
                         this.applyHandler();
@@ -119,7 +119,7 @@
                 },
                 {
                     text: _('Cancel'),
-                    iconCls: 'xflot-icon-cancel',
+                    iconCls: 'x-flot-cancel-icon',
                     scope: this,
                     handler: function () {
                         this.cancelHandler();

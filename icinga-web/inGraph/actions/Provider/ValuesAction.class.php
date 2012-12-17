@@ -31,8 +31,8 @@ class inGraph_Provider_ValuesAction extends inGraphBaseAction
                 $start,
                 $end,
                 $interval,
-                (int) $rd->getParameter('nullTolerance',
-                                        $daemonConfig['nullTolerance'])
+                $rd->getParameter('nullTolerance',
+                                  (int) $daemonConfig['nullTolerance'])
             );
         } catch (inGraph_XmlRpc_Exception $e) {
             return $this->setError($e->getMessage());

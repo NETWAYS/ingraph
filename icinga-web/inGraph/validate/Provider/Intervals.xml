@@ -5,6 +5,6 @@
     parent="%core.module_dir%/inGraph/config/validators.xml"
 >
     <ae:configuration>
-        <validators />
+        <validators></validators>
     </ae:configuration>
 </ae:configurations>

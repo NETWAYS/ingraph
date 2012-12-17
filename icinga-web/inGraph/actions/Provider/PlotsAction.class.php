@@ -27,8 +27,8 @@ class inGraph_Provider_PlotsAction extends inGraphBaseAction
                 $rd->getParameter('service', ''),
                 $rd->getParameter('parentService', null),
                 $rd->getParameter('plot', null),
-                $rd->getParameter('limit', 20),
-                $rd->getParameter('start', 0)
+                $rd->getParameter('offset', null),
+                $rd->getParameter('limit', null)
             );
         } catch (inGraph_XmlRpc_Exception $e) {
             return $this->setError($e->getMessage());

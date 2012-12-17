@@ -128,7 +128,10 @@
                                         root: 'results',
                                         fields: ['host'],
                                         idProperty: 'host',
-                                        url: Ext.ux.ingraph.Urls.provider.hosts
+                                        url: Ext.ux.ingraph.Urls.provider.hosts,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'host',
                                     valueField: 'host',
@@ -155,7 +158,10 @@
                                             'parentService'
                                         ],
                                         idProperty: 'name',
-                                        url: Ext.ux.ingraph.Urls.provider.services
+                                        url: Ext.ux.ingraph.Urls.provider.services,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'name',
                                     valueField: 'service',
@@ -236,7 +242,10 @@
                                         root: 'results',
                                         fields: ['view'],
                                         idProperty: 'view',
-                                        url: Ext.ux.ingraph.Urls.provider.views
+                                        url: Ext.ux.ingraph.Urls.provider.views,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'view',
                                     valueField: 'view',

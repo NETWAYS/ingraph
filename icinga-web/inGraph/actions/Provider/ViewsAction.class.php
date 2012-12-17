@@ -26,7 +26,7 @@ class inGraph_Provider_ViewsAction extends inGraphBaseAction
         $this->setAttribute('views', array(
             'total' => $manager->getCount(),
             'results' => $manager->getViewNames(
-                $rd->getParameter('start', 0),
+                $rd->getParameter('offset', 0),
                 $rd->getParameter('limit', 20)
             )
         ));

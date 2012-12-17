@@ -224,8 +224,11 @@
                 ],
                 idProperty: 'id',
                 url: Ext.ux.ingraph.Urls.provider.plots,
+                paramNames: {
+                    start: 'offset'
+                },
                 baseParams: {
-                    start: 0,
+                    offset: 0,
                     limit: 20
                 },
                 listeners: {
@@ -353,7 +356,10 @@
                                         root: 'results',
                                         fields: ['host'],
                                         idProperty: 'host',
-                                        url: Ext.ux.ingraph.Urls.provider.hosts
+                                        url: Ext.ux.ingraph.Urls.provider.hosts,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'host',
                                     valueField: 'host',
@@ -407,7 +413,10 @@
                                             'parentService'
                                         ],
                                         idProperty: 'name',
-                                        url: Ext.ux.ingraph.Urls.provider.services
+                                        url: Ext.ux.ingraph.Urls.provider.services,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'name',
                                     valueField: 'service',
@@ -467,7 +476,10 @@
                                             'plot'
                                         ],
                                         idProperty: 'plot',
-                                        url: Ext.ux.ingraph.Urls.provider.plots
+                                        url: Ext.ux.ingraph.Urls.provider.plots,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'plot',
                                     valueField: 'plot',

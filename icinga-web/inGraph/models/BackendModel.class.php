@@ -116,7 +116,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements
 
     public function fetchPlots($hostName = '%', $serviceName = '',
                                $parentServiceName = null, $plotName = null,
-                               $limit = 20, $offset = 0
+                               $offset = 0, $limit = 20
     ) {
         // TODO(el): Security
         return $this->backend->fetchPlots($hostName, $serviceName,

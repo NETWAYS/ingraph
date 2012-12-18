@@ -1,54 +1,44 @@
-/**
- * Ext.ux.flot.SeriesConfiguration
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.flot.
+ * This file is part of inGraph.
  *
- * Ext.ux.flot is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.flot is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.flot. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global _, Ext */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.flot.SeriesConfiguration');
-
     /**
-     * @class Ext.ux.flot.SeriesConfiguration
-     * @extends Ext.Panel
-     * @namespace Ext.ux.flot
-     * @author Eric Lippmann <eric.lippmann@netways.de>
      * Configuration panel for series <tt>{@link Ext.ux.flot.Template}</tt>.
-     * @constructor
-     * @param {Object} cfg
-     * A config object.
-     * @xtype xflotseriesconfig
+     * @author Eric Lippmann <eric.lippmann@netways.de>
      */
     Ext.ux.flot.SeriesConfiguration = Ext.extend(Ext.Panel, {
         layout: 'fit',
-
         /**
          * @cfg {Ext.ux.flot.Template} store The {@link Ext.ux.flot.Template}
          * the component should use as its data source <b>(required)</b>.
          */
 
-        // private
+        // private override
         initComponent: function () {
             var cfg = {};
             this.buildItems(cfg);
             Ext.apply(this, Ext.apply(this.initialConfig, cfg));
             Ext.ux.flot.SeriesConfiguration.superclass.initComponent.call(this);
         },
-
         // private
         buildItems: function (cfg) {
             cfg.items = [
@@ -133,19 +123,17 @@
                                     store: this.store.yaxes,
                                     getValue: function () {
                                         var v = Ext.ux.ingraph.AutoComboBox.prototype.getValue.call(this);
-
                                         // Ext returns '' on invalid / empty values
                                         if (v === '') {
                                             // Flot requires null for auto-detect
                                             return null;
                                         }
-
                                         return v;
                                     }
                                 }
                             }
-                        ] // Eof columns
-                    }), // Eof column model
+                        ]
+                    }),
                     bbar: [
                         {
                             text: _('Add Plot'),
@@ -169,19 +157,16 @@
                             handler: this.removePlotHandler,
                             ref: '../../removePlotBtn'
                         }
-                    ] // Eof bbar
-                } // Eof series editor grid
-            ]; // Eof items
+                    ]
+                }
+            ];
         },
-
         // private
         addPlotHandler: Ext.emptyFn,
-
         // private
         editPlotHandler: function () {
             var selectedRecord = this.seriesGrid.getSelectionModel().getSelected();
-
-            var editPlotWindow = new Ext.ux.flot.FormWindow({
+            new Ext.ux.flot.FormWindow({
                 title: _('Series Options'),
                 width: 700,
                 height: 525,
@@ -203,27 +188,20 @@
                         scope: this,
                         handler: function (btn) {
                             selectedRecord.reject(true); // Don't notify store
-
                             // Button -> Tbar -> Window
                             var win = btn.ownerCt.ownerCt;
-
                             win.form.getForm().loadRecord(selectedRecord);
                         }
                     }
-                ] // Eof buttons
-            }); // Eof new edit plot window
-
-            editPlotWindow.show();
+                ]
+            }).show();
         },
-
         // private
         removePlotHandler: function () {
             var sm = this.seriesGrid.getSelectionModel(),
                 selectedRecords = sm.getSelections();
-
             if (selectedRecords) {
                 this.store.remove(selectedRecords);
-
                 sm.clearSelections();
             }
         }

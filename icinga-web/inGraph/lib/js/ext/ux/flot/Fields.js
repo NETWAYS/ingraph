@@ -1,33 +1,29 @@
-/**
- * Ext.ux.flot.Fields
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.flot.
+ * This file is part of inGraph.
  *
- * Ext.ux.flot is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.flot is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.flot. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global Ext */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.flot');
-
     /**
-     * @class Ext.ux.flot.Fields
-     * @namespace Ext.ux.flot
-     * @singleton
-     * @author Eric Lippmann <eric.lippmann@netways.de>
      * Field definitions for jquery.flot configuration/style objects.
+     * @author Eric Lippmann <eric.lippmann@netways.de>
      */
     Ext.ux.flot.Fields = (function () {
         var legendFields = new Ext.util.MixedCollection(true, function (field) {
@@ -64,14 +60,13 @@
             },
             {
                 name: 'backgroundColor',
-                defaultValue: null // null to auto-detect
+                defaultValue: null
             },
             {
                 name: 'backgroundOpacity',
-                defaultValue: 0.85 // 0 avoids background
+                defaultValue: 0.85
             }
-        ]); // Eof legend fields
-
+        ]);
         var gridFields = new Ext.util.MixedCollection(true, function (field) {
             return field.name;
         });
@@ -90,11 +85,11 @@
             },
             {
                 name: 'backgroundColor',
-                defaultValue: null // null for transparent
+                defaultValue: null
             },
             {
                 name: 'borderColor',
-                defaultValue: null // null to default to 'color'
+                defaultValue: null
             },
             {
                 name: 'tickColor',
@@ -142,9 +137,9 @@
             },
             {
                 name: 'mouseActiveRadius',
-                defaultValue: 10 // how far the mouse can be away to activate an item
+                defaultValue: 10
             }
-        ]); // Eof grid fields
+        ]);
 
         var xaxisFields = new Ext.util.MixedCollection(true, function (field) {
             return field.name;
@@ -156,11 +151,11 @@
             },
             {
                 name: 'position',
-                defaultValue: 'bottom' // or 'top'
+                defaultValue: 'bottom'
             },
             {
                 name: 'mode',
-                defaultvalue: 'time' // or null
+                defaultvalue: 'time'
             },
             {
                 name: 'color',
@@ -250,7 +245,7 @@
                 name: 'unit',
                 defaultValue: null
             }
-        ]); // Eof xaxis fields
+        ]);
 
         var yaxisFields = xaxisFields.clone();
         yaxisFields.replace('autoscaleMargin', {
@@ -468,7 +463,7 @@
                 name: 'shadowSize',
                 defaultValue: 3
             }
-        ]); // Eof generic series template fields
+        ]);
 
         var seriesTemplateFields = genericSeriesTemplateFields.clone();
         seriesTemplateFields.addAll([
@@ -536,7 +531,7 @@
                 name: 'stack',
                 defaultValue: null
             }
-        ]); // Eof series tempplate fields
+        ]);
 
         var seriesFields = seriesTemplateFields.clone();
         seriesFields.addAll([
@@ -552,7 +547,6 @@
              * @property {Array} seriesTemplateFields
              */
             seriesTemplateFields: seriesTemplateFields.getRange(),
-
             /**
              * @property {Function} seriesFields
              */
@@ -563,24 +557,19 @@
 
                 Ext.iterate(cfg, function (fieldName, spec) {
                     var originalSpec = fields.get(fieldName);
-
                     if (!originalSpec) {
                         // Skip if field not found
                         return true;
                     }
-
                     if (!Ext.isObject(spec)) {
                         spec = {
                             defaultValue: spec
                         };
                     }
-
                     fields.replace(fieldName, Ext.apply(originalSpec, spec));
                 });
-
                 return fields.getRange();
             },
-
             /**
              * @property {Array} legendFields
              */
@@ -590,12 +579,10 @@
              * @property {Array} gridFields
              */
             gridFields: gridFields.getRange(),
-
             /**
              * @property {Array} yaxisFields
              */
             yaxisFields: yaxisFields.getRange(),
-
             /**
              * @property {Array} xaxisFields
              */

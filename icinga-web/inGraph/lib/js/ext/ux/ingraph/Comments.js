@@ -1,29 +1,29 @@
-/**
- * Ext.ux.ingraph.Comments
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.ingraph.
+ * This file is part of inGraph.
  *
- * Ext.ux.ingraph is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.ingraph is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.ingraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global _, Ext */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.ingraph.comments');
-
     Ext.ux.ingraph.comments.CommentMgr = (function () {
         var comments = [];
+        // public
         return {
             register: function (id, el) {
                 comments.push({
@@ -43,28 +43,20 @@
             }
         };
     }());
-
     Ext.ux.ingraph.comments.CommentFormWindow = Ext.extend(Ext.Window, {
         /**
          * @cfg {Ext.ux.flot.Flot} flot
          */
 
         layout: 'fit',
-
         width: 300,
-
         height: 230,
-
         bodyStyle: 'padding: 5px;',
-
         collapsible: true,
-
         modal: true,
-
         title: _('Comment'),
-
         waitMsg: _('Saving...'),
-
+        // private override
         initComponent: function () {
             var cfg = {};
             this.buildItems(cfg);
@@ -72,7 +64,7 @@
             Ext.apply(this, Ext.apply(this.initialConfig, cfg));
             Ext.ux.ingraph.comments.CommentFormWindow.superclass.initComponent.call(this);
         },
-
+        // private
         buildItems: function (cfg) {
             cfg.items = [
                 {
@@ -81,12 +73,10 @@
                     baseCls: 'x-plain',
                     labelWidth: 60,
                     monitorValid: true,
-
                     defaults: {
                         xtype: 'combo',
                         width: 210
                     },
-
                     items: [
                         {
                             xtype: 'xdatetime',
@@ -131,7 +121,7 @@
                 }
             ];
         },
-
+        // private
         buildButtons: function (cfg) {
             var buttons = [
                 {
@@ -149,72 +139,68 @@
                     handler: this.cancelHandler
                 }
             ];
-
             if (this.comment_id !== undefined) {
-                buttons.splice(1, 0, {
-                    text: _('Delete'),
-                    iconCls: 'x-flot-delete-icon',
-                    scope: this,
-                    handler: this.deleteHandler
-                });
+                buttons.splice(
+                    1,
+                    0,
+                    {
+                        text: _('Delete'),
+                        iconCls: 'x-flot-delete-icon',
+                        scope: this,
+                        handler: this.deleteHandler
+                    }
+                );
             }
-
             cfg.buttons = buttons;
         },
-
-        // private
+        // private override
         onBeforeAdd: function (item) {
-            Ext.ux.ingraph.comments.CommentFormWindow.superclass.onBeforeAdd.call(this, item);
-
+            Ext.ux.ingraph.comments.CommentFormWindow.superclass.onBeforeAdd
+                .call(this, item);
             if (true === item.monitorValid) {
                 item.on({
                     clientvalidation: function (form, valid) {
                         // form -> window -> ref of saveBtn
-                        var saveBtn = form.ownerCt.saveBtn;
-
-                        saveBtn.setDisabled(!valid);
+                        form.ownerCt.saveBtn.setDisabled(!valid);
                     }
                 });
             }
         },
-
+        // private override
         onLayout: function () {
-            Ext.ux.ingraph.comments.CommentFormWindow.superclass.onLayout.apply(this, arguments);
+            Ext.ux.ingraph.comments.CommentFormWindow.superclass.onLayout
+                .apply(this, arguments);
             // Fix missing 'submitValue' config option
             // of saki's DateTime extension.
             if (this.form.dateCmp.submitValue === false) {
                 this.form.dateCmp.el.dom.removeAttribute('name');
             }
         },
-
+        // private
         handleFailure: function (me, action) {
-            var error = action.response.status + ' - ' + action.response.statusText;
-
             Ext.Msg.show({
                 title: _('Error'),
-                msg: error,
+                msg: action.response.status + ' - ' + action.response.statusText,
                 modal: true,
                 icon: Ext.Msg.ERROR,
                 buttons: Ext.Msg.OK
             });
         },
-
+        // private
         saveHandler: function () {
             this.form.dateCmp.updateDate();
             this.form.dateCmp.updateTime();
-
             var params = {
-                timestamp: Math.floor(this.form.dateCmp.getValue().getTime() / 1000)
-            };
-
-            var url;
+                    timestamp: Math.floor(
+                        this.form.dateCmp.getValue().getTime() / 1000)
+                },
+                url;
             if (this.comment_id !== undefined) {
                 params.id = this.comment_id;
                 url = Ext.ux.ingraph.Urls.comments.update;
             } else {
                 url = Ext.ux.ingraph.Urls.comments.create;
             }
-
             this.form.getForm().submit({
                 url: url,
                 scope: this,
@@ -224,23 +210,20 @@
                 waitMsg: this.waitMsg
             });
         },
-
+        // private
         onSave: function () {
             this.flot.store.reload();
-
             // Hide or destroy this based on config/hideMode
             this[this.closeAction]();
         },
-
+        // private
         deleteHandler: function () {
             // Submit a form within a hidden iframe
             var body = Ext.getBody(),
-
                 frame = body.createChild({
                     tag: 'iframe',
                     cls: 'x-hidden'
                 }),
-
                 form = body.createChild({
                     tag: 'form',
                     cls: 'x-hidden',
@@ -253,18 +236,14 @@
                         }
                     ]
                 }),
-
                 basicForm = new Ext.form.BasicForm(form);
-
             frame.appendChild(form);
-
             Ext.each(form.query('input'), function (inputEl) {
                 var field = new Ext.form.TextField({
                     applyTo: inputEl
                 });
                 basicForm.add(field);
             });
-
             basicForm.submit({
                 url: Ext.ux.ingraph.Urls.comments.remove,
                 method: 'POST',
@@ -277,14 +256,13 @@
                 }
             });
         },
-
+        // private
         onDelete: function () {
             Ext.ux.ingraph.comments.CommentMgr.unregister(this.comment_id);
-
             // Hide or destroy this based on config/hideMode
             this[this.closeAction]();
         },
-
+        // private
         cancelHandler: function () {
             // Hide or destroy this based on config/hideMode
             this[this.closeAction]();
@@ -293,7 +271,6 @@
 
     Ext.override(Ext.ux.flot.Tbar, {
         showComments: true,
-
         commentsHandler: function (btn) {
             var tip = new Ext.ToolTip({
                 title: _('Comments'),
@@ -307,9 +284,7 @@
                     }
                 }
             });
-
             tip.show();
-
             this.ownerCt.flot.commentCtxEnabled = true;
         }
     });
@@ -318,17 +293,16 @@
         onPlotclick: function (item, pos) {
             if (this.commentCtxEnabled === true) {
                 var hosts = [],
-                    services = [];
+                    services = [],
+                    cfg;
                 this.store.getHostsAndServices(hosts, services);
-
-                var cfg = {
+                cfg = {
                     flot: this,
                     minDate: new Date(this.store.getStartX() * 1000),
                     maxDate: new Date(this.store.getEndX() * 1000),
                     hosts: hosts,
                     services: services
                 };
-
                 if (item) {
                     Ext.apply(cfg, {
                         comment_host: item.series.host,
@@ -342,19 +316,13 @@
                         comment_timestamp: pos.x
                     });
                 }
-
-                var cfw = new Ext.ux.ingraph.comments.CommentFormWindow(cfg);
-
-                cfw.show();
-
+                new Ext.ux.ingraph.comments.CommentFormWindow(cfg).show();
                 this.commentCtxEnabled = false;
             }
         },
-
         annotate: function () {
             var yaxis = this.$plot.getYAxes()[0],
                 y = (yaxis.min + yaxis.max) * 0.75;
-
             Ext.each(this.store.getComments(), function (comment) {
                 var o = this.$plot.pointOffset({
                         x: comment.timestamp * 1000,
@@ -370,17 +338,15 @@
                             cursor: 'pointer'
                         }
                     });
-
                 Ext.ux.ingraph.comments.CommentMgr.register(comment.id, el);
-
                 el.on({
                     scope: this,
                     click: function () {
                         var hosts = [],
-                            services = [];
+                            services = [],
+                            cfg;
                         this.store.getHostsAndServices(hosts, services);
-
-                        var cfg = {
+                        cfg = {
                             flot: this,
                             minDate: new Date(this.store.getStartX() * 1000),
                             maxDate: new Date(this.store.getEndX() * 1000),
@@ -392,13 +358,10 @@
                             comment_timestamp: comment.timestamp * 1000,
                             comment_text: comment.text
                         };
-
-                        var cfw = new Ext.ux.ingraph.comments.CommentFormWindow(cfg);
-
-                        cfw.show();
+                        new Ext.ux.ingraph.comments.CommentFormWindow(cfg).show();
                     },
                     mouseover: function (e) {
-                        var tip = new Ext.ToolTip({
+                        new Ext.ToolTip({
                             title: comment.host + ' - ' + comment.service +
                                 ' (' +
                                 Ext.util.Format.date(new Date(comment.timestamp * 1000),
@@ -413,14 +376,11 @@
                                     me.destroy.createDelegate(me, [], 1000);
                                 }
                             }
-                        });
-
-                        tip.show();
+                        }).show();
                     }
                 });
             }, this);
         },
-
         plot: Ext.ux.flot.Flot.prototype.plot.createSequence(function () {
             this.annotate();
         })

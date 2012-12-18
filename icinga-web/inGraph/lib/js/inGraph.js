@@ -25,6 +25,7 @@
 
     function inGraph () {
         if (!(this instanceof inGraph)) {
+            /*jshint newcap: false */
             return new inGraph();
         }
     }
@@ -112,19 +113,19 @@
             },
             query: function (series) {
                 var query = [];
-                Ext.each(series, function (item) {
+                $.each(series, function (i, item) {
                     var qpart = {
                         host: item.host,
                         service: item.service,
                         plot: item.plot,
                         parent_service: item.parentService
                     };
-                    if (!Ext.isArray(item.type)) {
+                    if (!$.isArray(item.type)) {
                         item.type = [item.type];
                     } else {
-                        item.type = Ext.unique(item.type)
+                        item.type = $.unique(item.type);
                     }
-                    Ext.each(item.type, function (type) {
+                    $.each(item.type, function (i, type) {
                         qpart.type = type;
                         query.push(qpart);
                     });
@@ -144,9 +145,9 @@
                 d = new Date(v - d.getTimezoneOffset() * 60 * 1000);
                 var fmt = '%b %d %y %H:%M';
                 if (this.lastDate) {
-                    if (this.lastDate.getFullYear() === d.getFullYear()
-                        && this.lastDate.getMonth() === d.getMonth()
-                        && this.lastDate.getDate() === d.getDate()
+                    if (this.lastDate.getFullYear() === d.getFullYear() &&
+                        this.lastDate.getMonth() === d.getMonth() &&
+                        this.lastDate.getDate() === d.getDate()
                     ) {
                         fmt = '%H:%M';
                     }
@@ -157,9 +158,7 @@
                 return $.plot.formatDate(d, fmt, this.monthNames);
             },
             yTickFormatter: function (v, axis) {
-                /*!
-                 * TODO(el): Move this into a plugin like jquery.flot.time
-                 */
+                // TODO(el): Move this into a plugin like jquery.flot.time
                 if (!this.format) {
                     this.format = {
                         byte: $.proxy(inGraph.format.byte, this),
@@ -168,13 +167,11 @@
                         c: $.proxy(inGraph.format.counter, this)
                     };
                 }
-                if (v > 0
-                    && this.format[this.unit]
+                if (v > 0 &&
+                    this.format[this.unit]
                 ) {
                     var arg = this.format[this.unit](v);
-                    return arg.value.toFixed(axis.tickDecimals)
-                        + ' '
-                        + arg.unit;
+                    return arg.value.toFixed(axis.tickDecimals) + ' ' + arg.unit;
                 }
                 return v.toFixed(axis.tickDecimals);
             }

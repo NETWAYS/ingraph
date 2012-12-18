@@ -101,7 +101,8 @@ function createPNG() {
         position: 'nw'
     });
     $.plot(
-        $('#chart').width(args.options.width)
+        $('#chart')
+            .width(args.options.width)
             .height(args.options.height),
         args.data,
         args.options

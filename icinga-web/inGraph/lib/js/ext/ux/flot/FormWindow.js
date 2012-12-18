@@ -1,49 +1,37 @@
-/**
- * Ext.ux.flot.FormWindow
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.flot.
+ * This file is part of inGraph.
  *
- * Ext.ux.flot is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.flot is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.flot. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global _, Ext */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.flot');
-
     /**
-     * @class Ext.ux.flot.FormWindow
-     * @extends Ext.Window
-     * @namespace Ext.ux.flot
-     * @author Eric Lippmann <eric.lippmann@netways.de>
-     * @constructor
      * Base class for Windows containing only one direct child item, the form.
-     * @param {Object} cfg
-     * A config object.
-     * @xtype xflotformwindow
+     * @author Eric Lippmann <eric.lippmann@netways.de>
      */
     Ext.ux.flot.FormWindow = Ext.extend(Ext.Window, {
         // Expect only one direct child item (the form)
         layout: 'fit',
-
         collapsible: true,
-
         modal: true,
-
         bodyStyle: 'padding: 5px;',
-
-        // private
+        // private override
         initComponent: function () {
             var cfg = {};
             this.buildItems(cfg);
@@ -59,25 +47,21 @@
                  * Form values by default or custom implementation via
                  * {@link #getValues}.
                  */
+                'apply'
             );
         },
-
-        // private
+        // private override
         onBeforeAdd: function (item) {
             Ext.ux.flot.FormWindow.superclass.onBeforeAdd.call(this, item);
-
             if (true === item.monitorValid) {
                 item.on({
                     clientvalidation: function (form, valid) {
                         // form -> window -> ref of applyBtn
-                        var applyBtn = form.ownerCt.applyBtn;
-
-                        applyBtn.setDisabled(!valid);
+                        form.ownerCt.applyBtn.setDisabled(!valid);
                     }
                 });
             }
         },
-
         /**
          * Overwrite this method to add items to the window.
          * Function body may contain for example:
@@ -101,8 +85,7 @@
          * A config object applied to this and this' initialConfig later
          * @private
          */
-        buildItems: Ext.emptyFn, // Template method
-
+        buildItems: Ext.emptyFn,
         // private
         buildButtons: function (cfg) {
             var buttons = [
@@ -127,7 +110,6 @@
                     }
                 }
             ];
-
             var userButtons = this.buttons;
             if (Ext.isArray(userButtons)) {
                 if (this.prependButtons) {
@@ -137,34 +119,26 @@
                 }
             }
             delete this.buttons;
-
             cfg.buttons = buttons;
         },
-
         /**
-         * Get values of the wrapped form.
-         * @method getValues
+         * Gets values of the wrapped form.
          * @return {Objecŧ} values
          * The form values
          */
         getValues: function () {
             return this.form.getForm().getFieldValues();
         },
-
         // private
-        applyHandler: Ext.emptyFn, // Template method
-
+        applyHandler: Ext.emptyFn,
         // private
         onApply: function () {
             this.fireEvent('apply', this, this.getValues());
-
             // Hide or destroy this based on config/hideMode
             this[this.closeAction]();
         },
-
         // private
-        cancelHandler: Ext.emptyFn, // Template method
-
+        cancelHandler: Ext.emptyFn,
         // private
         onCancel: function () {
             // Hide or destroy this based on config/hideMode

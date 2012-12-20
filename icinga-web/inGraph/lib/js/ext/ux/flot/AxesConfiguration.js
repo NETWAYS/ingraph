@@ -104,17 +104,7 @@
                                 dataIndex: 'min',
                                 width: 50,
                                 editor: {
-                                    xtype: 'numberfield',
-                                    getValue: function () {
-                                        var v = Ext.form.NumberField.prototype.getValue.call(this);
-                                        // Ext returns '' on invalid / empty values
-                                        if (v === '') {
-                                            // Flot requires null for auto-detect
-                                            return null;
-                                        }
-
-                                        return v;
-                                    }
+                                    xtype: 'xflotnumberfield'
                                 }
                             },
                             {
@@ -122,17 +112,7 @@
                                 dataIndex: 'max',
                                 width: 50,
                                 editor: {
-                                    xtype: 'numberfield',
-                                    getValue: function () {
-                                        var v = Ext.form.NumberField.prototype.getValue.call(this);
-                                        // Ext returns '' on invalid / empty values
-                                        if (v === '') {
-                                            // Flot requires null for auto-detect
-                                            return null;
-                                        }
-
-                                        return v;
-                                    }
+                                    xtype: 'xflotnumberfield'
                                 }
                             }
                         ] // Eof columns

@@ -20,6 +20,7 @@
 
 (function () {
     'use strict';
+    var qtippedFieldLabel = Ext.ux.flot.AbstractStyleForm.qtippedFieldlabel;
     Ext.ns('Ext.ux.flot');
     Ext.ux.flot.AxisStyleForm = Ext.extend(Ext.ux.flot.AbstractStyleForm, {
         /**
@@ -94,20 +95,14 @@
                                     {
                                         xtype: 'checkbox',
                                         name: 'show',
-                                        fieldLabel: String.format(
-                                            '<span ext:qtip="{0}">{1}</span>',
-                                            Ext.util.Format.htmlEncode(this.showText),
-                                            _('Show')
-                                        )
+                                        fieldLabel: _('Show'),
+                                        qtip: this.showText
                                     },
                                     {
                                         xtype: 'textfield',
                                         name: 'label',
-                                        fieldLabel: String.format(
-                                            '<span ext:qtip="{0}">{1}</span>',
-                                            Ext.util.Format.htmlEncode(this.labelText),
-                                            _('Label')
-                                        ),
+                                        fieldLabel: _('Label'),
+                                        qtip: this.labelText,
                                         getValue: function () {
                                             var v = Ext.form.TextField.prototype.getValue.call(this);
                                             return v.split(',').map(function (label) {
@@ -118,11 +113,8 @@
                                     {
                                         xtype: 'combo',
                                         name: 'position',
-                                        fieldLabel: String.format(
-                                            '<span ext:qtip="{0}">{1}</span>',
-                                            Ext.util.Format.htmlEncode(this.positionText),
-                                            _('Position')
-                                        ),
+                                        fieldLabel: _('Position'),
+                                        qtip: this.positionText,
                                         triggerAction: 'all',
                                         hideTrigger: true,
                                         editable: true,
@@ -145,104 +137,50 @@
                             {
                                 defaults: {
                                     anchor: '95%',
-                                    xtype: 'numberfield'
+                                    xtype: 'xflotnumberfield'
                                 },
                                 items: [
                                     {
                                         name: 'min',
-                                        fieldLabel: String.format(
-                                            '<span ext:qtip="{0}">{1}</span>',
-                                            Ext.util.Format.htmlEncode(this.minText),
-                                            _('Min')
-                                        ),
-                                        getValue: function () {
-                                            var v = Ext.form.NumberField.prototype.getValue.call(this);
-                                            // Ext returns '' on invalid / empty values
-                                            if (v === '') {
-                                                // Flot requires null for auto-detect
-                                                return null;
-                                            }
-                                            return v;
-                                        }
+                                        fieldLabel: _('Min'),
+                                        qtip: this.minText
                                     },
                                     {
                                         name: 'labelWidth',
-                                        fieldLabel: String.format(
-                                            '<span ext:qtip="{0}">{1}</span>',
-                                            Ext.util.Format.htmlEncode(this.labelWidthText),
-                                            _('Label Width')
-                                        ),
-                                        getValue: function () {
-                                            var v = Ext.form.NumberField.prototype.getValue.call(this);
-                                            // Ext returns '' on invalid / empty values
-                                            if (v === '') {
-                                                // Flot requires null for auto-detect
-                                                return null;
-                                            }
-                                            return v;
-                                        }
+                                        fieldLabel: _('Label Width'),
+                                        qtip: this.labelWidthText
                                     },
                                     {
                                         xtype: 'xcolorfield',
                                         lazyInit: false,
                                         name: 'color',
-                                        fieldLabel: String.format(
-                                            '<span ext:qtip="{0}">{1}</span>',
-                                            Ext.util.Format.htmlEncode(this.colorText),
-                                            _('Color')
-                                        )
+                                        fieldLabel: _('Color'),
+                                        qtip: this.colorText
                                     }
                                 ]
                             }, // Eof column 2
                             {
                                 defaults: {
                                     anchor: '95%',
-                                    xtype: 'numberfield'
+                                    xtype: 'xflotnumberfield'
                                 },
                                 items: [
                                     {
                                         name: 'max',
-                                        fieldLabel: String.format(
-                                            '<span ext:qtip="{0}">{1}</span>',
-                                            Ext.util.Format.htmlEncode(this.maxText),
-                                            _('Max')
-                                        ),
-                                        getValue: function () {
-                                            var v = Ext.form.NumberField.prototype.getValue.call(this);
-                                            // Ext returns '' on invalid / empty values
-                                            if (v === '') {
-                                                // Flot requires null for auto-detect
-                                                return null;
-                                            }
-                                            return v;
-                                        }
+                                        fieldLabel: _('Max'),
+                                        qtip: this.maxText
                                     },
                                     {
                                         name: 'labelHeight',
-                                        fieldLabel: String.format(
-                                            '<span ext:qtip="{0}">{1}</span>',
-                                            Ext.util.Format.htmlEncode(this.labelHeightText),
-                                            _('Label Height')
-                                        ),
-                                        getValue: function () {
-                                            var v = Ext.form.NumberField.prototype.getValue.call(this);
-                                            // Ext returns '' on invalid / empty values
-                                            if (v === '') {
-                                                // Flot requires null for auto-detect
-                                                return null;
-                                            }
-                                            return v;
-                                        }
+                                        fieldLabel: _('Label Height'),
+                                        qtip: this.labelHeightText
                                     },
                                     {
                                         xtype: 'xcolorfield',
                                         lazyInit: false,
                                         name: 'tickColor',
-                                        fieldLabel: String.format(
-                                            '<span ext:qtip="{0}">{1}</span>',
-                                            Ext.util.Format.htmlEncode(this.tickColorText),
-                                            _('Tick Color')
-                                        )
+                                        fieldLabel: _('Tick Color'),
+                                        qtip: this.tickColorText
                                     }
                                 ]
                             } // Eof column 3

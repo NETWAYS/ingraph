@@ -16,26 +16,28 @@
  * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
-/*global Ext, strtotime */
+/*global Ext */
 
 (function () {
     'use strict';
-    var _parseDate = Ext.form.DateField.prototype.parseDate;
-    Ext.override(Ext.form.DateField, {
-        parseDate: function (value) {
-            var d = _parseDate.call(this, value),
-                t;
-            if (!d) {
-                // Try strtotime if the original parse fails
-                t = strtotime(value);
-                if (t !== false) {
-                    this.strValue = value;
-                    t = Math.ceil(t * 1000);
-                    return new Date(t);
-                }
-                return "";
+    Ext.ns('Ext.ux.flot');
+    Ext.ux.flot.SpinnerField = Ext.extend(Ext.ux.form.SpinnerField, {
+        /**
+         * Returns the normalized data value. As opposed to the
+         * Ext version which returns '' on undefined or emptyText
+         * this one will return null since Flot requires that
+         * for auto-setting the property later.
+         * @return {Mixed} value The field value
+         */
+        getValue: function() {
+            var v = Ext.ux.flot.SpinnerField.superclass.getValue.call(this);
+            // Ext returns '' on invalid / empty values
+            if (v === '') {
+                // Flot requires null for auto-setting
+                return null;
             }
-            return d;
+            return v;
         }
     });
+    Ext.reg('xflotspinnerfield', Ext.ux.flot.SpinnerField);
 }());

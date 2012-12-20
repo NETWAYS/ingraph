@@ -119,53 +119,43 @@
                             },
                             items: [
                                 {
+                                    labelWidth: 70,
                                     defaults: {
                                         xtype: 'checkbox',
                                         anchor: '95%'
                                     },
                                     items: [
                                         {
-                                            fieldLabel: String.format(
-                                                '<span ext:qtip="{0}">{1}</span>',
-                                                Ext.util.Format.htmlEncode(this.linesShowText),
-                                                _('Show')
-                                            ),
-                                            name: 'lines:show'
+                                            name: 'lines:show',
+                                            fieldLabel: _('Show'),
+                                            qtip: this.linesShowText
                                         },
                                         {
-                                            fieldLabel: String.format(
-                                                '<span ext:qtip="{0}">{1}</span>',
-                                                Ext.util.Format.htmlEncode(this.linesSplineText),
-                                                _('Smooth')
-                                            ),
                                             name: 'lines:spline',
                                             // Disabled until https://github.com/flot/flot/pull/872 got merged
-                                            disabled: true
+                                            disabled: true,
+                                            fieldLabel: _('Smooth'),
+                                            qtip: this.linesSplineText
                                         }
                                     ]
                                 },
                                 {
                                     labelWidth: 70,
                                     defaults: {
-                                        anchor: '95%',
-                                        xtype: 'checkbox'
+                                        xtype: 'checkbox',
+                                        anchor: '95%'
                                     },
                                     items: [
                                         {
-                                            fieldLabel: String.format(
-                                                '<span ext:qtip="{0}">{1}</span>',
-                                                Ext.util.Format.htmlEncode(this.linesStepsText),
-                                                _('Steps')
-                                            ),
-                                            name: 'lines:steps'
+                                            name: 'lines:steps',
+                                            fieldLabel: _('Steps'),
+                                            qtip: this.linesStepsText
                                         },
                                         {
-                                            fieldLabel: String.format(
-                                                '<span ext:qtip="{0}">{1}</span>',
-                                                Ext.util.Format.htmlEncode(this.linesFillText),
-                                                _('Fill')
-                                            ),
-                                            name: 'lines:fill'
+                                            name: 'lines:fill',
+                                            fieldLabel: _('Fill'),
+                                            qtip: this.linesFillText
+
                                         }
                                     ]
                                 },
@@ -176,36 +166,20 @@
                                     },
                                     items: [
                                         {
-                                            xtype: 'spinnerfield',
-                                            fieldLabel: String.format(
-                                                '<span ext:qtip="{0}">{1}</span>',
-                                                Ext.util.Format.htmlEncode(this.linesWidthText),
-                                                _('Line Width')
-                                            ),
+                                            name: 'lines:lineWidth',
+                                            xtype: 'xflotspinnerfield',
                                             minValue: 0,
                                             maxValue: 100,
-                                            name: 'lines:lineWidth',
-                                            getValue: function () {
-                                                var v = Ext.form.NumberField.prototype.getValue.call(this);
-
-                                                // Ext returns '' on invalid / empty values
-                                                if (v === '') {
-                                                    // Flot requires null for auto-detect
-                                                    return null;
-                                                }
-
-                                                return v;
-                                            }
+                                            fieldLabel: _('Line Width'),
+                                            qtip: this.linesWidthText
                                         },
                                         {
+                                            name: 'lines:fillColor',
                                             xtype: 'xcolorfield',
                                             lazyInit: false,
-                                            fieldLabel: String.format(
-                                                '<span ext:qtip="{0}">{1}</span>',
-                                                Ext.util.Format.htmlEncode(this.fillColorText),
-                                                _('Fill Color')
-                                            ),
-                                            name: 'lines:fillColor'
+                                            fieldLabel: _('Fill Color'),
+                                            qtip: this.fillColorText
+
                                         }
                                     ]
                                 }
@@ -226,6 +200,7 @@
                             },
                             items: [
                                 {
+                                    labelWidth: 70,
                                     defaults: {
                                         xtype: 'checkbox',
                                         anchor: '95%'
@@ -248,20 +223,11 @@
                                     },
                                     items: [
                                         {
-                                            xtype: 'spinnerfield',
-                                            fieldLabel: _('Radius'),
+                                            name: 'points:radius',
+                                            xtype: 'xflotspinnerfield',
                                             minValue: 0,
                                             maxValue: 100,
-                                            name: 'points:radius',
-                                            getValue: function () {
-                                                var v = Ext.form.NumberField.prototype.getValue.call(this);
-                                                // Ext returns '' on invalid / empty values
-                                                if (v === '') {
-                                                    // Flot requires null for auto-detect
-                                                    return null;
-                                                }
-                                                return v;
-                                            }
+                                            fieldLabel: _('Radius')
                                         },
                                         {
                                             xtype: 'xcolorfield',
@@ -273,23 +239,16 @@
                                 },
                                 {
                                     labelWidth: 70,
+                                    defaults: {
+                                        anchor: '95%'
+                                    },
                                     items: [
                                         {
-                                            xtype: 'spinnerfield',
-                                            fieldLabel: _('Line Width'),
+                                            name: 'points:lineWidth',
+                                            xtype: 'xflotspinnerfield',
                                             minValue: 0,
                                             maxValue: 100,
-                                            name: 'points:lineWidth',
-                                            anchor: '95%',
-                                            getValue: function () {
-                                                var v = Ext.form.NumberField.prototype.getValue.call(this);
-                                                // Ext returns '' on invalid / empty values
-                                                if (v === '') {
-                                                    // Flot requires null for auto-detect
-                                                    return null;
-                                                }
-                                                return v;
-                                            }
+                                            fieldLabel: _('Line Width')
                                         }
                                     ]
                                 }
@@ -310,25 +269,26 @@
                             },
                             items: [
                                 {
+                                    labelWidth: 70,
                                     defaults: {
                                         anchor: '95%',
                                         xtype: 'checkbox'
                                     },
                                     items: [
                                         {
-                                            fieldLabel: _('Show'),
-                                            name: 'bars:show'
+                                            name: 'bars:show',
+                                            fieldLabel: _('Show')
                                         },
                                         {
-                                            fieldLabel: _('Fill'),
-                                            name: 'bars:fill'
+                                            name: 'bars:fill',
+                                            fieldLabel: _('Fill')
                                         },
                                         {
+                                            name: 'bars:align',
                                             xtype: 'xigautocombo',
                                             mode: 'local',
                                             store: ['left', 'center'],
-                                            fieldLabel: _('Align'),
-                                            name: 'bars:align'
+                                            fieldLabel: _('Align')
                                         }
                                     ]
                                 },
@@ -339,32 +299,22 @@
                                     },
                                     items: [
                                         {
-                                            xtype: 'spinnerfield',
-                                            fieldLabel: _('Line Width'),
+                                            name: 'bars:lineWidth',
+                                            xtype: 'xflotspinnerfield',
                                             minValue: 0,
                                             maxValue: 100,
-                                            name: 'bars:lineWidth',
-                                            anchor: '95%',
-                                            getValue: function () {
-                                                var v = Ext.form.NumberField.prototype.getValue.call(this);
-                                                // Ext returns '' on invalid / empty values
-                                                if (v === '') {
-                                                    // Flot requires null for auto-detect
-                                                    return null;
-                                                }
-                                                return v;
-                                            }
+                                            fieldLabel: _('Line Width')
                                         },
                                         {
+                                            name: 'bars:fillColor',
                                             xtype: 'xcolorfield',
                                             lazyInit: false,
-                                            fieldLabel: _('Fill Color'),
-                                            name: 'bars:fillColor'
+                                            fieldLabel: _('Fill Color')
                                         },
                                         {
-                                            fieldLabel: _('Horizontal'),
                                             name: 'bars:horizontal',
-                                            xtype: 'checkbox'
+                                            xtype: 'checkbox',
+                                            fieldLabel: _('Horizontal')
                                         }
                                     ]
                                 },
@@ -375,20 +325,11 @@
                                     },
                                     items: [
                                         {
-                                            xtype: 'spinnerfield',
-                                            fieldLabel: _('Bar Width'),
+                                            name: 'bars:barWidth',
+                                            xtype: 'xflotspinnerfield',
                                             minValue: 0,
                                             maxValue: 100,
-                                            name: 'bars:barWidth',
-                                            getValue: function () {
-                                                var v = Ext.form.NumberField.prototype.getValue.call(this);
-                                                // Ext returns '' on invalid / empty values
-                                                if (v === '') {
-                                                    // Flot requires null for auto-detect
-                                                    return null;
-                                                }
-                                                return v;
-                                            }
+                                            fieldLabel: _('Bar Width')
                                         }
                                     ]
                                 }

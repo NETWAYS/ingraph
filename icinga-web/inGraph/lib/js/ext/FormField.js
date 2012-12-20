@@ -16,26 +16,29 @@
  * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
-/*global Ext, strtotime */
+/*global Ext */
 
 (function () {
     'use strict';
-    var _parseDate = Ext.form.DateField.prototype.parseDate;
-    Ext.override(Ext.form.DateField, {
-        parseDate: function (value) {
-            var d = _parseDate.call(this, value),
-                t;
-            if (!d) {
-                // Try strtotime if the original parse fails
-                t = strtotime(value);
-                if (t !== false) {
-                    this.strValue = value;
-                    t = Math.ceil(t * 1000);
-                    return new Date(t);
-                }
-                return "";
+    function qtippedFieldlabel (qtip, label) {
+        return String.format(
+            '<span ext:qtip="{0}">{1}</span>',
+            qtip,
+            label
+        );
+    }
+    Ext.override(Ext.form.Field, {
+        /**
+         * @cfg {String} qtip
+         */
+
+        initComponent: Ext.form.Field.prototype.initComponent.createInterceptor(function () {
+            if (this.fieldLabel && this.qtip) {
+                this.fieldLabel = qtippedFieldlabel(
+                    this.qtip,
+                    this.fieldLabel
+                );
             }
-            return d;
-        }
+        })
     });
 }());

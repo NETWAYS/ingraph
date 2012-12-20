@@ -822,6 +822,10 @@
                 }
                 if (this.periodAverage) {
                     this.store.query('type', 'avg').each(function (avgPlot) {
+                        if (!avgPlot.data.enabled) {
+                            // continue
+                            return;
+                        }
                         var periodAvg = 0,
                             valueChanged = false,
                             i = 0,

@@ -57,7 +57,10 @@ class inGraph_Provider_ImgAction extends inGraphBaseAction
             $rd->getParameter('interval', null),
             (int) $daemonConfig['nullTolerance']);
         $chartsseries = array();
-        foreach ($charts['charts'] as $id => $series) {
+        foreach ($charts['charts'] as $id => &$series) {
+            foreach ($series['data'] as &$xy) {
+                $xy[0] *= 1000;
+            }
             $chartsseries[$series['plot_id']] = $series;
         }
         $data = inGraph_Templates_Template::apply($chartsseries,

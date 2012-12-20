@@ -18,8 +18,8 @@
             <validator name="plot" class="string" required="false">
                 <argument>plot</argument>
             </validator>
-            <validator name="start" class="number" required="false">
-                <argument>start</argument>
+            <validator name="offset" class="number" required="false">
+                <argument>offset</argument>
             </validator>
             <validator name="limit" class="number" required="false">
                 <argument>limit</argument>

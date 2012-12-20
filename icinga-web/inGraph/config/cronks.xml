@@ -1,20 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ae:configurations xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0"
-    xmlns="http://icinga.org/cronks/config/parts/cronks/1.0">
-
+                   xmlns="http://icinga.org/cronks/config/parts/cronks/1.0">
     <ae:configuration>
-
         <categories>
-
             <category name="inGraph">
                 <ae:parameter name="title">inGraph</ae:parameter>
                 <ae:parameter name="position">30</ae:parameter>
             </category>
-
         </categories>
-
         <cronks>
-
             <cronk name="inGraph">
                 <ae:parameter name="name">inGraph</ae:parameter>
                 <ae:parameter name="description">inGraph</ae:parameter>
@@ -23,7 +17,6 @@
                 <ae:parameter name="action">Cronk.View</ae:parameter>
                 <ae:parameter name="image">cronks.Stats2</ae:parameter>
             </cronk>
-
             <cronk name="Portal">
                 <ae:parameter name="name">Portal</ae:parameter>
                 <ae:parameter name="description">inGraph</ae:parameter>
@@ -32,7 +25,6 @@
                 <ae:parameter name="action">Cronk.Portal</ae:parameter>
                 <ae:parameter name="image">cronks.Stats2</ae:parameter>
             </cronk>
-
             <cronk name="ViewArchitect">
                 <ae:parameter name="name">ViewArchitect</ae:parameter>
                 <ae:parameter name="description">inGraph</ae:parameter>
@@ -41,9 +33,6 @@
                 <ae:parameter name="action">Cronk.ViewArchitect</ae:parameter>
                 <ae:parameter name="image">cronks.Stats2</ae:parameter>
             </cronk>
-
         </cronks>
-
     </ae:configuration>
-
 </ae:configurations>

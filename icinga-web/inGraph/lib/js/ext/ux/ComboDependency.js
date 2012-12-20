@@ -1,42 +1,32 @@
-/**
- * Ext.ux.ComboDependency
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * Ext.ux.ComboDependency is licensed under the terms of the
- *             GNU Open Source GPL 3.0
- * license.
+ * This file is part of inGraph.
  *
- * This program is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global Ext */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux');
-
-    /**
-     * @class Ext.ux.ComboDependency
-     * @extends Object
-     * @namespace Ext.ux
-     * @author Eric Lippmann <eric.lippmann@netways.de>
-     * @constructor
-     * @param {Object [, Object [, Object ...]]}
-     */
     Ext.ux.ComboDependency = Ext.extend(Object, {
+        // private override
         constructor: function () {
             this.dependencies = Array.prototype.slice.call(arguments, 0);
         },
-
+        // private
         init: function (combo) {
             combo.on({
                 scope: this,
@@ -45,7 +35,6 @@
                     Ext.each(this.dependencies, function (dependency) {
                         var scope = dependency.scope || me.refOwner,
                             cmp = scope[dependency.ref];
-
                         if (cmp) {
                             cmp.on({
                                 change: function (field, newValue, oldValue) {
@@ -58,7 +47,6 @@
                     });
                 }
             });
-
             combo.getStore().on({
                 scope: this,
                 beforeload: function (store, options) {
@@ -66,7 +54,6 @@
                         var scope = dependency.scope || combo.refOwner,
                             cmp = scope[dependency.ref],
                             selectedRecord = cmp.getSelectedRecord();
-
                         if (cmp) {
                             if (Ext.isArray(dependency.param)) {
                                 Ext.each(dependency.param, function (param) {

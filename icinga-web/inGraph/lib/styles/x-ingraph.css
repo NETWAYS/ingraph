@@ -1,0 +1,16 @@
+.x-ingraph-portal-item {
+    border: 1px #C0C0C0 solid;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+}
+
+.x-ingraph-chart-bar-icon {
+    background-image: url(../images/icons/chart_bar.png) !important;
+    background-repeat: no-repeat;
+}
+
+.x-ingraph-chart-pie-icon {
+    background-image: url(../images/icons/chart-pie.png) !important;
+    background-repeat: no-repeat;
+}

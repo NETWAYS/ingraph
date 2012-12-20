@@ -1,37 +1,29 @@
-/**
- * Ext.ux.ingraph.ViewArchitect
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.ingraph.
+ * This file is part of inGraph.
  *
- * Ext.ux.ingraph is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.ingraph is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.ingraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global _, Cronk, Ext */
+
 (function () {
-    "use strict";
+    'use strict';
     Ext.ns('Ext.ux.ingraph');
-    /**
-     * @class Ext.ux.ingraph.ViewArchitect
-     * @extends Ext.Container
-     * @namespace Ext.ux.ingraph
-     * @author Eric Lippmann <eric.lippmann@netways.de>
-     * @xtype xiviewarchitect
-     */
     Ext.ux.ingraph.ViewArchitect = Ext.extend(Ext.ux.wizard.Wizard, {
         /**
-         * @cfg {String} dateText
          * The quicktip text displayed for the start and end datefield.
-         * (defaults to help on english textual date or time).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         dateText: _('Either select date via the popup date picker or input an ' +
@@ -67,7 +59,7 @@
                         stack: false
                     },
                     legend: {
-                        "position": "nw"
+                        position: 'nw'
                     }
                 },
                 values = this.viewConfig.getForm().getValues(),
@@ -224,8 +216,11 @@
                 ],
                 idProperty: 'id',
                 url: Ext.ux.ingraph.Urls.provider.plots,
+                paramNames: {
+                    start: 'offset'
+                },
                 baseParams: {
-                    start: 0,
+                    offset: 0,
                     limit: 20
                 },
                 listeners: {
@@ -349,11 +344,14 @@
                                     ref: '../../hostCombo',
                                     emptyText: _('Choose host'),
                                     store: {
-                                        xtype: 'arraystore',
-                                        root: 'results',
+                                        xtype: 'jsonstore',
+                                        root: 'hosts',
                                         fields: ['host'],
                                         idProperty: 'host',
-                                        url: Ext.ux.ingraph.Urls.provider.hosts
+                                        url: Ext.ux.ingraph.Urls.provider.hosts,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'host',
                                     valueField: 'host',
@@ -400,14 +398,17 @@
                                     emptyText: _('Choose service'),
                                     store: {
                                         xtype: 'jsonstore',
-                                        root: 'results',
+                                        root: 'services',
                                         fields: [
                                             'name',
                                             'service',
                                             'parentService'
                                         ],
                                         idProperty: 'name',
-                                        url: Ext.ux.ingraph.Urls.provider.services
+                                        url: Ext.ux.ingraph.Urls.provider.services,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'name',
                                     valueField: 'service',
@@ -467,7 +468,10 @@
                                             'plot'
                                         ],
                                         idProperty: 'plot',
-                                        url: Ext.ux.ingraph.Urls.provider.plots
+                                        url: Ext.ux.ingraph.Urls.provider.plots,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'plot',
                                     valueField: 'plot',
@@ -678,7 +682,7 @@
                                                     anchor: '95%',
                                                     store: {
                                                         xtype: 'jsonstore',
-                                                        root: 'results',
+                                                        root: 'timeFrames',
                                                         fields: [
                                                             'id',
                                                             'interval',

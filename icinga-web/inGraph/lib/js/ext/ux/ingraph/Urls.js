@@ -1,32 +1,26 @@
-/**
- * Ext.ux.ingraph.Urls
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.ingraph.
+ * This file is part of inGraph.
  *
- * Ext.ux.ingraph is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.ingraph is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.ingraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global AppKit, Ext */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.ingraph.Urls');
-
-    /**
-     * @class Ext.ux.ingraph.Urls
-     * @extends Object
-     * @singleton
-     */
     Ext.ux.ingraph.Urls = (function () {
         var base = AppKit.util.Config.getBaseUrl() + '/modules/ingraph/',
             baseProvider = base + 'provider/',
@@ -42,7 +36,7 @@
                 values: baseProvider + 'values',
                 view: baseProvider + 'view',
                 views: baseProvider + 'views',
-                intervals: baseProvider + 'intervals',
+                intervals: baseProvider + 'intervals'
             },
             comments: {
                 create: baseComments + 'create',

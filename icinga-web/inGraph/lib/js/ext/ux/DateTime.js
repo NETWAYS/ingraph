@@ -4,29 +4,16 @@
  *
  * DateTime field, combination of DateField and TimeField
  *
- * @author      Ing. Jozef Sakáloš
+ * @author Ing. Jozef Sakáloš
  * @copyright (c) 2008, Ing. Jozef Sakáloš
- * @version   2.0
- * @revision  $Id: Ext.ux.form.DateTime.js 813 2010-01-29 23:32:36Z jozo $
+ * @version 2.0
+ * @revision $Id: Ext.ux.form.DateTime.js 813 2010-01-29 23:32:36Z jozo $
  *
  * @license Ext.ux.form.DateTime is licensed under the terms of
- * the Open Source LGPL 3.0 license.  Commercial use is permitted to the extent
- * that the code/component(s) do NOT become part of another Open Source or Commercially
- * licensed development library or toolkit without explicit permission.
- * 
- * <p>License details: <a href="http://www.gnu.org/licenses/lgpl.html"
- * target="_blank">http://www.gnu.org/licenses/lgpl.html</a></p>
- *
- * @forum      22661
- *
- * @donate
- * <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
- * <input type="hidden" name="cmd" value="_s-xclick">
- * <input type="hidden" name="hosted_button_id" value="3430419">
- * <input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-butcc-donate.gif" 
- * border="0" name="submit" alt="PayPal - The safer, easier way to pay online.">
- * <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
- * </form>
+ * the Open Source LGPL 3.0 license (http://www.gnu.org/licenses/lgpl.html).
+ * Commercial use is permitted to the extent that the code/component(s) do NOT
+ * become part of another Open Source or Commercially licensed development
+ * library or toolkit without explicit permission.
  */
 
 Ext.ns('Ext.ux.form');
@@ -268,7 +255,7 @@ Ext.ux.form.DateTime = Ext.extend(Ext.form.Field, {
     // {{{
     /**
      * @private
-     * called from Component::destroy. 
+     * called from Component::destroy.
      * Destroys all elements and removes all listeners we've created.
      */
     ,beforeDestroy:function() {
@@ -362,14 +349,14 @@ Ext.ux.form.DateTime = Ext.extend(Ext.form.Field, {
     // {{{
     /**
      * Returns true if this component is visible
-     * @return {boolean} 
+     * @return {boolean}
      */
     ,isVisible : function(){
         return this.df.rendered && this.df.getActionEl().isVisible();
     } // eo function isVisible
     // }}}
     // {{{
-    /** 
+    /**
      * @private Handles blur event
      */
     ,onBlur:function(f) {
@@ -455,7 +442,7 @@ Ext.ux.form.DateTime = Ext.extend(Ext.form.Field, {
     // }}}
     // {{{
     /**
-     * Resets the current field value to the originally loaded value 
+     * Resets the current field value to the originally loaded value
      * and clears any validation messages. See Ext.form.BasicForm.trackResetOnLoad
      */
     ,reset:function() {
@@ -472,7 +459,7 @@ Ext.ux.form.DateTime = Ext.extend(Ext.form.Field, {
     } // eo function setDate
     // }}}
     // {{{
-    /** 
+    /**
      * @private Sets the value of TimeField
      */
     ,setTime:function(date) {

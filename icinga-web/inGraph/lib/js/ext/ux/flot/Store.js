@@ -1,111 +1,74 @@
-/**
- * Ext.ux.flot.Store
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.flot.
+ * This file is part of inGraph.
  *
- * Ext.ux.flot is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.flot is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.flot. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*jshint browser: true */
+/*global Ext, strtotime */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.flot');
-
     /**
-     * @class Ext.ux.flot.Store
-     * @extends Ext.data.Store
-     * @namespace Ext.ux.flot
-     * @author Eric Lippmann <eric.lippmann@netways.de>
      * Data source for both {@link Ext.ux.flot.Flot} and {@link Ext.ux.flot.Panel}.
      * Noticeable enhancements to {@link Ext.data.Store} are auto-refresh and
      * record modification persistence.
-     * @constructor
-     * @param {Object} cfg
-     * A config object.
-     * @xtype xflotstore
+     * @author Eric Lippmann <eric.lippmann@netways.de>
      */
     Ext.ux.flot.Store = Ext.extend(Ext.data.Store, {
         /**
-         * @cfg {Boolean} keepModifications
          * Whether to persist modifications of records over load operations. This
          * does not affect the <tt>data</tt> field. Useful if you apply flot style
          * information to records once and update the store with pure data later on.
-         * Defaults to <tt>true</tt>
          */
         keepModifications: true,
-
         /**
-         * @cfg {String} minxProperty
          * Name of the property from which to retrieve the start point of
-         * available data <b>(required)</b>. Defaults to <tt>'min_timestamp'</tt>.
+         * available data <b>(required)</b>.
          */
         minxProperty: 'min_timestamp',
-
         /**
-         * @cfg {String} maxxProperty
          * Name of the property from which to retrieve the end point of
-         * available data <b>(required)</b>. Defaults to <tt>'max_timestamp'</tt>.
+         * available data <b>(required)</b>.
          */
         maxxProperty: 'max_timestamp',
-
         /**
          * @cfg {Number} refreshInterval
          * Autoload store each time the <tt>refreshInterval</tt> in milliseconds elapses.
          * The interval starts once the store is loaded for the first time.
-         * Defaults to <tt>undefined</tt>.
          */
-
         /**
          * @cfg {Ext.data.DataReader} reader
          * Defaults to <tt>Ext.data.JsonReader</tt>.
          */
 
-        /**
-         * @cfg {Boolean/Object} autoLoad
-         * Defaults to <tt>true</tt>.
-         */
-
-        /**
-         * @cfg {String} root
-         * Defaults to <tt>charts</tt>.
-         */
-
-        /**
-         * @cfg {Boolean} autoDestroy
-         * Defaults to <tt>true</tt>.
-         */
-
-        /**
-         * @cfg {Array} fields
-         * Defaults to <tt>{@link Ext.ux.flot.Fields.seriesFields}</tt>.
-         */
+        autoDestroy: true,
+        autoLoad: true,
 
         constructor: function (cfg) {
             Ext.applyIf(cfg, {
-                autoDestroy: true,
+                idProperty: 'plot_id',
                 root: 'charts',
-                fields: Ext.ux.flot.Fields.seriesFields(),
-                autoLoad: true,
-                idProperty: 'plot_id'
+                fields: Ext.ux.flot.Fields.seriesFields()
             });
             if (!cfg.reader) {
                 cfg.reader = new Ext.data.JsonReader(cfg);
             }
             Ext.ux.flot.Store.superclass.constructor.call(this, cfg);
-
             this.on('beforeload', this.onBeforeLoad, this);
-
             this.addEvents(
                 /**
                  * @event beforeautorefresh
@@ -114,7 +77,6 @@
                  */
                 'beforeautorefresh'
             );
-
             if (Ext.isNumber(this.refreshInterval)) {
                 this.on({
                     scope: this,
@@ -124,7 +86,6 @@
                     }
                 });
             }
-
             if (this.keepModifications === true) {
                 this.on({
                     datachanged: function (store) {
@@ -147,29 +108,28 @@
                 });
             }
         },
-
         /**
-         * Dump data.
-         * @method toJson
+         * Dumps data.
          * @return {Array}
          */
         toJson: function () {
             var separator = ':',
                 json = [];
-
             this.each(function (rec) {
-                var series = {};
-
+                var series = {},
+                    value,
+                    path,
+                    last,
+                    seriesPath;
                 Ext.iterate(rec.fields.map, function (key, field) {
-                    var value = rec.get(field.name);
-
+                    value = rec.get(field.name);
                     if (value === field.defaultValue) {
-                        // Skip
+                        // Continue
                         return true;
                     }
-                    var path = field.name.split(separator),
-                        last = path.pop(),
-                        seriesPath = series;
+                    path = field.name.split(separator);
+                    last = path.pop();
+                    seriesPath = series;
                     Ext.each(path, function (key, i) {
                         if (!Ext.isObject(seriesPath[key])) {
                             seriesPath[key] = {};
@@ -178,17 +138,17 @@
                     });
                     seriesPath[last] = value;
                 });
-
-                Ext.copyTo(series, rec.json, ['host', 'service', 'plot',
-                                              'type']);
-
+                Ext.copyTo(
+                    series,
+                    rec.json,
+                    ['host', 'service', 'plot', 'type']
+                );
                 json.push(series);
             });
             return json;
         },
-
         /**
-         * Reload this store. Fires the {@link #beforeautorefresh} event.
+         * Reloads this store. Fires the {@link #beforeautorefresh} event.
          * A handler may return <tt>false</tt> to cancel loading.
          */
         autorefresh: function () {
@@ -196,10 +156,8 @@
                 this.reload();
             }
         },
-
         /**
-         * (Re)set autoloading.
-         * @method startRefresh
+         * (Re)sets autoloading.
          * @param {Number} interval
          * The interval in milliseconds.
          */
@@ -208,13 +166,14 @@
                 this.refreshInterval = interval;
             }
             this.stopRefresh();
-            this.refreshId = setInterval(this.autorefresh.createDelegate(this, []),
-                this.refreshInterval * 1000);
+            this.refreshId = setInterval(
+                this.autorefresh.createDelegate(this, []),
+                this.refreshInterval * 1000
+            );
             // TODO(el): Call startRefresh if this.refreshId on every load?
         },
-
         /**
-         * Stop autoloading if set.
+         * Stops autoloading if set.
          * @method stopRefresh
          */
         stopRefresh: function () {
@@ -240,17 +199,15 @@
         },
 
         /**
-         * Determine whether this store is empty. Returns <tt>true</tt> if it
+         * Determines whether this store is empty. Returns <tt>true</tt> if it
          * does not contain any record or if the {@link #root} property of
          * all records is empty.
-         * @method isEmpty 
          * @returns {Boolean} empty
          */
         isEmpty: function () {
             if (this.data.length === 0) {
                 return true;
             }
-
             var empty = true;
             Ext.each(this.data.items, function (chart) {
                 // Data property is the series array
@@ -261,8 +218,7 @@
             });
             return empty;
         },
-
-        // private
+        // private override
         onBeforeLoad: function (self, options) {
             if (options.params.startx === undefined &&
                 Ext.isString(self.baseParams.startx))
@@ -271,7 +227,6 @@
             } else if (Ext.isString(options.params.startx)) {
                 options.params.startx = Math.ceil(strtotime(options.params.startx));
             }
-
             if (options.params.endx === undefined &&
                 Ext.isString(self.baseParams.endx))
             {
@@ -279,12 +234,10 @@
             } else if (Ext.isString(options.params.endx)) {
                 options.params.endx = Math.ceil(strtotime(options.params.endx));
             }
-
             this.lastStart = options.params.startx || self.baseParams.startx;
             this.lastEnd = options.params.endx || self.baseParams.endx;
         },
-
-        // private
+        // private override
         destroy: function () {
             this.stopRefresh(); // Clear auto-refresh interval if any
             Ext.ux.flot.Store.superclass.destroy.call(this);

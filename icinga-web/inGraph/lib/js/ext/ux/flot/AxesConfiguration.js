@@ -1,49 +1,39 @@
-/**
- * Ext.ux.flot.AxesConfiguration
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.flot.
+ * This file is part of inGraph.
  *
- * Ext.ux.flot is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.flot is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.flot. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global _, Ext */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.flot.AxesConfiguration');
-
     /**
-     * @class Ext.ux.flot.AxesConfiguration
-     * @extends Ext.Panel
-     * @namespace Ext.ux.flot
-     * @author Eric Lippmann <eric.lippmann@netways.de>
      * Configuration panel for axes of <tt>{@link Ext.ux.flot.Template}</tt>.
-     * @constructor
-     * @param {Object} cfg
-     * A config object.
-     * @xtype xflotaxesconfig
+     * @author Eric Lippmann <eric.lippmann@netways.de>
      */
     Ext.ux.flot.AxesConfiguration = Ext.extend(Ext.Panel, {
         layout: 'fit',
-
-        // private
+        // private override
         initComponent: function () {
             var cfg = {};
             this.buildItems(cfg);
             Ext.apply(this, Ext.apply(this.initialConfig, cfg));
             Ext.ux.flot.AxesConfiguration.superclass.initComponent.call(this);
         },
-
         // private
         buildItems: function (cfg) {
             cfg.items = [
@@ -64,7 +54,7 @@
                                 }
                             }
                         }
-                    }), // Eof selection model
+                    }),
                     cm: new Ext.grid.ColumnModel({
                         defaults: {
                             sortable: true,
@@ -85,7 +75,6 @@
                                     xtype: 'textfield',
                                     getValue: function () {
                                         var v = Ext.form.TextField.prototype.getValue.call(this);
-
                                         return v.split(',').map(function (label) {
                                             return Ext.util.Format.trim(label);
                                         });
@@ -115,18 +104,7 @@
                                 dataIndex: 'min',
                                 width: 50,
                                 editor: {
-                                    xtype: 'numberfield',
-                                    getValue: function () {
-                                        var v = Ext.form.NumberField.prototype.getValue.call(this);
-
-                                        // Ext returns '' on invalid / empty values
-                                        if (v === '') {
-                                            // Flot requires null for auto-detect
-                                            return null;
-                                        }
-
-                                        return v;
-                                    }
+                                    xtype: 'xflotnumberfield'
                                 }
                             },
                             {
@@ -134,18 +112,7 @@
                                 dataIndex: 'max',
                                 width: 50,
                                 editor: {
-                                    xtype: 'numberfield',
-                                    getValue: function () {
-                                        var v = Ext.form.NumberField.prototype.getValue.call(this);
-
-                                        // Ext returns '' on invalid / empty values
-                                        if (v === '') {
-                                            // Flot requires null for auto-detect
-                                            return null;
-                                        }
-
-                                        return v;
-                                    }
+                                    xtype: 'xflotnumberfield'
                                 }
                             }
                         ] // Eof columns
@@ -153,14 +120,14 @@
                     bbar: [
                         {
                             text: _('Add Axis'),
-                            iconCls: 'xflot-icon-add',
+                            iconCls: 'x-flot-add-icon',
                             scope: this,
                             handler: this.addAxisHandler
                         },
                         {
                             text: _('Edit Axis'),
                             disabled: true,
-                            iconCls: 'xflot-icon-settings',
+                            iconCls: 'x-flot-settings-icon',
                             scope: this,
                             handler: this.editAxisHandler,
                             ref: '../../editAxisBtn'
@@ -168,39 +135,32 @@
                         {
                             text: _('Remove Axis'),
                             disabled: true,
-                            iconCls: 'xflot-icon-delete',
+                            iconCls: 'x-flot-delete-icon',
                             scope: this,
                             handler: this.removeAxisHandler,
                             ref: '../../removeAxisBtn'
                         }
-                    ] // Eof bbar
-                } // Eof series editor grid
-            ]; // Eof items
+                    ]
+                }
+            ];
         },
-
         // private
         addAxisHandler: function () {
-            // TODO(el): Duplicate code, see Flot.js:applyTemplate
-            var recordData = {};
-
+            var recordData = {},
+                record;
             // Use default values of fields
             Ext.iterate(this.store.fields.map, function (key, field) {
                 recordData[field.name] = field.defaultValue;
             });
-
             // Overwrite index
             recordData.index = this.store.data.length + 1;
-
-            var record = new this.store.recordType(recordData, recordData.index);
-
+            record = new this.store.recordType(recordData, recordData.index);
             this.store.add(record);
         },
-
         // private
         editAxisHandler: function () {
             var selectedRecord = this.axesGrid.getSelectionModel().getSelected();
-
-            var editAxisWindow = new Ext.ux.flot.FormWindow({
+            new Ext.ux.flot.FormWindow({
                 title: _('Axis Options'),
                 width: 700,
                 height: 200,
@@ -218,31 +178,23 @@
                 buttons: [
                     {
                         text: _('Reset'),
-                        iconCls: 'xflot-icon-reset',
+                        iconCls: 'x-flot-reset-icon',
                         scope: this,
                         handler: function (btn) {
-                            selectedRecord.reject(true); // Don't notify store
-
+                            selectedRecord.reject(true); // True to don't notify store
                             // Button -> Tbar -> Window
-                            var win = btn.ownerCt.ownerCt;
-
-                            win.form.getForm().loadRecord(selectedRecord);
+                            btn.ownerCt.ownerCt.form.getForm().loadRecord(selectedRecord);
                         }
                     }
-                ] // Eof buttons
-            }); // Eof new edit plot window
-
-            editAxisWindow.show();
+                ]
+            }).show();
         },
-
         // private
         removeAxisHandler: function () {
             var sm = this.axesGrid.getSelectionModel(),
                 selectedRecords = sm.getSelections();
-
             if (selectedRecords) {
                 this.store.remove(selectedRecords);
-
                 sm.clearSelections();
             }
         }

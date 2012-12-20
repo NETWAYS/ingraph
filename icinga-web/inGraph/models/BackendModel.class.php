@@ -1,6 +1,24 @@
 <?php
+/*
+ * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ *
+ * This file is part of inGraph.
+ *
+ * inGraph is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or any later version.
+ *
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for mor
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ */
 
-class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonModel
+class inGraph_BackendModel extends inGraphBaseModel implements
+    AgaviISingletonModel
 {
     protected $client = null;
 
@@ -23,21 +41,25 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
             ->setResultType(IcingaApiConstants::RESULT_ARRAY);
         IcingaPrincipalTargetTool::applyApiSecurityPrincipals($search);
         $permittedHosts = $api->fetch()->getAll();
-
         $i = new RecursiveIteratorIterator(
             new RecursiveArrayIterator($permittedHosts));
         $permittedHosts = iterator_to_array($i, false);
         return $permittedHosts;
     }
 
-    public function fetchHosts($hostPattern='%', $offset=0, $limit=20)
+    public function fetchHosts($hostPattern = '%', $offset = 0, $limit = 20)
     {
         $permittedHosts = $this->icinga_fetchHosts($hostPattern);
         $availableHosts = $this->backend->fetchHosts($hostPattern);
-        $hosts = array_intersect($permittedHosts, $availableHosts['hosts']);
+        $hosts = array();
+        foreach ($availableHosts['hosts'] as $host) {
+            if (in_array($host['host'], $permittedHosts)) {
+                $hosts[] = $host;
+            }
+        }
         $total = count($hosts);
         return array(
-            'results' => array_slice($hosts, $offset, $limit),
+            'hosts' => array_slice($hosts, $offset, $limit),
             'total' => $total
         );
     }
@@ -64,9 +86,9 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         return $permittedServices;
     }
 
-    public function fetchServices($hostPattern='%', $servicePattern='%',
-                                  $offset=0, $limit=20)
-    {
+    public function fetchServices($hostPattern = '%', $servicePattern = '%',
+                                  $offset = 0, $limit = 20
+    ) {
         $permittedServices = $this->icinga_fetchServices($hostPattern,
                                                          $servicePattern);
         $availableServices = $this->backend->fetchServices($hostPattern,
@@ -92,25 +114,25 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         }
         $total = count($services);
         return array(
-            'results' => array_slice($services, $offset, $limit),
+            'services' => array_slice($services, $offset, $limit),
             'total' => $total
         );
     }
 
-    public function fetchPlots($hostName='%', $serviceName='',
-                               $parentServiceName=null, $plotName=null,
-                               $offset=0, $limit=20
+    public function fetchPlots($hostName = '%', $serviceName = '',
+                               $parentServiceName = null, $plotName = null,
+                               $offset = 0, $limit = 20
     ) {
         // TODO(el): Security
         return $this->backend->fetchPlots($hostName, $serviceName,
                                           $parentServiceName, $plotName,
-                                          $offset, $limit);
+                                          $limit, $offset);
     }
 
-    public function fetchValues($query, $start=null, $end=null,
-                                $interval=null, $nullTolerance=0)
-    {
-        return $this->backend->fetchValues($query, $start, $end, $interval,
+    public function fetchValues($query, $offset = null, $end = null,
+                                $interval = null, $nullTolerance = 0
+    ) {
+        return $this->backend->fetchValues($query, $offset, $end, $interval,
                                            $nullTolerance);
     }
 
@@ -122,23 +144,21 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
                                              $author, $comment);
     }
 
-    public function updateComment($id, $host, $service, $time, $comment) {
+    public function updateComment($id, $host, $service, $time, $comment)
+    {
         $author = $this->getContext()->getUser()->getNsmUser()->user_name;
         // parent_service = null
         return $this->backend->updateComment($id, $host, null, $service, $time,
                                              $author, $comment);
     }
 
-    public function deleteComment($id) {
+    public function deleteComment($id)
+    {
         return $this->backend->deleteComment($id);
     }
-    
+
     public function fetchIntervals()
     {
-        $intervals = $this->backend->fetchIntervals();
-        return array(
-            'total' => count($intervals),
-            'results' => array_merge(array(), $intervals)
-        );
+        return $this->backend->fetchIntervals();
     }
 }

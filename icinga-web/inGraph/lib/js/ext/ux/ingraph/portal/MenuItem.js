@@ -1,70 +1,52 @@
-/**
- * Ext.ux.ingraph.portal.MenuItem
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.ingraph.
+ * This file is part of inGraph.
  *
- * Ext.ux.ingraph is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.ingraph is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.ingraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global _, Ext */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.ingraph.portal');
-
-    /**
-     * @class Ext.ux.ingraph.portal.MenuItem
-     * @extends Ext.Container
-     * @namespace Ext.ux.ingraph.portal
-     * @author Eric Lippmann <eric.lippmann@netways.de>
-     * @constructor
-     * @param {Object} cfg
-     * A config object.
-     * @xtype xigportalmenuitem
-     */
     Ext.ux.ingraph.portal.MenuItem = Ext.extend(Ext.Container, {
-       /**
-        * @cfg {String} cls
-        * Extra CSS class. Defaults to <tt>xingraph-portal-item</tt>.
-        */
-        cls: 'xingraph-portal-item',
-
         /**
-         * @cfg {Object} layout
+         * @hide
+         */
+        cls: 'x-ingraph-portal-item',
+        /**
          * @hide
          */
         layout: 'hbox',
-
         /**
-         * @cfg {Object} layoutConfig
          * @hide
          */
         layoutConfig: {
             align: 'middle',
             pack: 'center'
         },
-
-        // private
+        // private override
         initComponent: function () {
             var cfg = {};
             this.buildItems(cfg);
             Ext.apply(this, Ext.apply(this.initialConfig, cfg));
             Ext.ux.ingraph.portal.MenuItem.superclass.initComponent.call(this);
         },
-
         // private
         buildItems: function (cfg) {
-            var items = [
+            cfg.items = [
                 {
                     xtype: 'box',
                     autoEl: {
@@ -85,19 +67,15 @@
                                             modal: true,
                                             items: menu
                                         });
-
                                     menu.on('plot', function (cb, cfg) {
                                         cfg.xtype = 'xigportalview';
                                         this.replaceWith(cfg);
-
                                         menuWindow.destroy();
                                     }, this);
-
                                     menuWindow.show();
                                 },
                                 contextmenu: function (e) {
                                     e.stopEvent();
-
                                     var contextMenu = new Ext.menu.Menu({
                                         items: [
                                             {
@@ -125,38 +103,29 @@
                         }
                     }
                 }
-            ]; // Eof items
-
-            cfg.items = items;
+            ];
         },
-
+        // private
         replaceWith: function (cfg) {
             cfg = cfg || {};
-
             var rowCt = this.ownerCt;
-
             rowCt.items.each(function (column, columnIndex) {
                 if (column === this) {
                     rowCt.remove(column); // Destroys this
-
                     Ext.apply(cfg, {
                         row: column.row,
                         flex: column.flex,
                         rowHeight: column.rowHeight
                     });
-
                     rowCt.insert(columnIndex, cfg);
                     rowCt.doLayout();
-
-                    // Stop iteration
+                    // Break
                     return false;
                 }
             }, this);
         },
-
         /**
-         * Get this component's state.
-         * @method getState
+         * Returns this component's state.
          * @return {Object}
          */
         getState: function () {

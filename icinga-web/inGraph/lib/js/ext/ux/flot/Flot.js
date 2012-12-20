@@ -1,51 +1,35 @@
-/**
- * Ext.ux.flot.Flot
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.flot.
+ * This file is part of inGraph.
  *
- * Ext.ux.flot is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.flot is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.flot. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global _, $, AppKit, Ext, forecast */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.flot');
-
-    /**
-     * @class Ext.ux.flot.Flot
-     * @extends Ext.BoxComponent
-     * @namespace Ext.ux.flot
-     * @author Eric Lippmann <eric.lippmann@netways.de>
-     * @constructor
-     * @param {Object} cfg
-     * A config object.
-     * @xtype xflot
-     */
     Ext.ux.flot.Flot = Ext.extend(Ext.BoxComponent, {
         /**
-         * @cfg {Number} refreshBuffer
          * Milliseconds to delay plot refresh on store's update event.
-         * Defaults to <tt>200</tt>.
          */
         refreshBuffer: 200,
-
         /**
-         * @cfg {Boolean} loadMask
          * Whether to mask the element while loading.
          */
         loadMask: false,
-
         /**
          * @cfg {Object} tips
          * Configuration object for both data tooltips and selection tooltips with
@@ -66,61 +50,42 @@
          * <li><b>datapointTemplate</b> : Ext.Template<div class="sub-desc">
          * Template for the datapoint tooltip.</div></li></ul>
          */
-
-       /**
-        * @cfg {String} cls
-        * Extra CSS class. Defaults to <tt>xflot</tt>.
-        */
         cls: 'xflot',
-
         /**
-         * @cfg {Object} flotStyle
          * Force style for flot's legend, grid, axes and series defaults.
          * Each key-value pair <tt>overrides</tt> its corresponding template member.
          * See <a href="http://flot.googlecode.com/svn/trunk/API.txt">Flot Reference</a>
-         * for possible parameters. Defaults to <tt>undefined</tt>.
+         * for possible parameters.
          */
         flotStyle: {},
-
         /**
-         * @cfg {Boolean} absolute
-         * <tt>true</tt> to always (event on no data) view full x-axis range.
-         * Defaults to <tt>true</tt>.
+         * View full x-axis range even on no data.
          */
         absolute: true,
-
         // private
         zooms: [],
         autoRefreshInterval: 300,
-
         autoYAxes: false,
-
         /**
          * @cfg {Ext.ux.flot.Store} store The {@link Ext.ux.flot.Store} the component
          * should use as its data source <b>(required)</b>.
          */
-
         /**
          * @cfg {Ext.ux.flot.Template} template The {@link Ext.ux.flot.Template}
          * the component should use as its template <b>(required)</b>.
          */
-
         /**
          * @property {jquery.flot plot object} $plot
          * Reference to the jquery.flot plot object.
          */
-
         /**
          * @property {Object} $flotStyle
          * Merged style.
          */
-
-        // private
+        // private override
         initComponent: function () {
             this.injectDefaults();
-
             Ext.ux.flot.Flot.superclass.initComponent.call(this);
-
             this.addEvents(
                 /**
                  * @event beforeplot
@@ -214,11 +179,9 @@
                  */
                 'contextmenu'
             );
-
             this.bindStore(this.store, true);
             this.bindTemplate(this.template, true);
         },
-
         // private
         injectDefaults: function () {
             this.tips = Ext.applyIf(
@@ -257,17 +220,13 @@
                     )
                 }
             );
-
-            // TODO(el): Apply to initialConfig?
         },
-
-        // private
+        // private override
         afterRender: function () {
             Ext.ux.flot.Flot.superclass.afterRender.call(this);
             // Bind events once the element becomes ready
             this.bindEvents();
         },
-
         // private
         bindEvents: function () {
             if (this.loadMask === true) {
@@ -276,49 +235,26 @@
                     removeMask: true
                 }, this.loadMask));
             }
-
             var self = this;
-
             // Forward flot's jquery events
             $('#' + this.id).bind('plothover', function ($event, pos, item) {
                 self.fireEvent('plothover', self, item, pos);
-
                 self.onPlothover(item, pos);
             });
-
             // Plotselecting only fires if the selection plugin of flot is loaded
             $('#' + this.id).bind('plotselecting', function ($event, ranges, pos) {
-//                var e = window.event,
-//                    pos = {};
-//
-//                if (Ext.isIE) {
-//                    pos.pageX = e.clientX + document.body.scrollLeft +
-//                                document.documentElement.scrollLeft;
-//
-//                    pos.pageY = e.clientY + document.body.scrollTop +
-//                                document.documentElement.scrollTop;
-//                } else {
-//                    pos.pageX = e.pageX;
-//                    pos.pageY = e.pageY;
-//                }
                 self.fireEvent('plotselecting', self, ranges, pos);
-
                 self.onPlotselecting(ranges, pos);
             });
-
             // Plotselected only fires if the selection plugin of flot is loaded
             $('#' + this.id).bind('plotselected', function ($event, ranges) {
                 self.fireEvent('plotselected', self, ranges);
-
                 self.onPlotselected(ranges);
             });
-
             $('#' + this.id).bind('plotclick', function ($event, pos, item) {
                 self.fireEvent('plotclick', self, item, pos);
-
                 self.onPlotclick(item, pos);
             });
-
             if (this.tips.enable === true) {
                 this.showDatapointTipTask = new Ext.util.DelayedTask(
                     this.showDatapointTip, this);
@@ -334,7 +270,6 @@
                         }
                     }
                 });
-
                 // Show selection tooltip on plotselecting
                 this.on('plotselecting', function (me, ranges, pos) {
                     if (ranges) {
@@ -344,23 +279,18 @@
                     }
                 });
             }
-
             this.el.on({
                 scope: this,
                 contextmenu: function (e) {
                     this.fireEvent('contextmenu', this, e);
-
                     this.onContextmenu(e);
                 }
             });
         },
-
         // private
         onPlothover: Ext.emptyFn,
-
         // private
         onPlotselecting: Ext.emptyFn,
-
         // private
         onPlotselected: function (ranges) {
             this.clip(ranges);
@@ -369,16 +299,13 @@
                     this.zoomin(ranges);
                 }
             }
-
             // Hide selection tooltip if any
             if (this.selTip) {
                 this.selTip.hide();
             }
         },
-
         // private
         onPlotclick: Ext.emptyFn,
-
         // private
         onContextmenu: function (e) {
             if (this.fireEvent('beforezoomout', this) !== false) {
@@ -387,10 +314,8 @@
                 this.zoomout();
             }
         },
-
         /**
-         * Change the data store bound to this component and refresh it.
-         * @method bindStore
+         * Changes the data store bound to this component and refreshes it.
          * @param {Store} store The store to bind to this component.
          * @param {Boolean} initial (Optional) <tt>true</tt> to not remove listeners.
          */
@@ -398,12 +323,18 @@
             if (store) {
                 store = Ext.StoreMgr.lookup(store);
             }
-
             if (!initial && this.store) {
                 if (store !== this.store && this.store.autoDestroy) {
                     this.store.destroy();
                 } else {
-                    this.store.purgeListeners();
+                    this.store.on({
+                        scope: this,
+                        datachanged: this.onDatachanged,
+                        update: this.onUpdate,
+                        beforeload: this.onBeforeload,
+                        add: this.onAdd,
+                        remove: this.onRemove
+                    });
                 }
                 if (!store) {
                     this.store = null;
@@ -422,17 +353,14 @@
                 this.store.startRefresh(this.autoRefreshInterval);
             }
         },
-
         // private
         onDatachanged: function () {
             this.plot();
         },
-
         // private
         onUpdate: function () {
             this.delayPlot();
         },
-
         // private
         onBeforeload: function () {
             var ownerCt = this;
@@ -444,16 +372,12 @@
                 ownerCt = ownerCt.ownerCt;
             } while (ownerCt);
         },
-
         // private
         onAdd: Ext.emptyFn,
-
         // private
         onRemove: Ext.emptyFn,
-
         /**
-         * Change the template store bound to this component and refresh it.
-         * @method bindTemplate
+         * Changes the template store bound to this component and refreshes it.
          * @param {Store} store The store to bind to this component.
          * @param {Boolean} initial (Optional) <tt>true</tt> to not remove listeners.
          */
@@ -461,12 +385,20 @@
             if (template) {
                 template = Ext.StoreMgr.lookup(template);
             }
-
             if (!initial && this.template) {
                 if (template !== this.template && this.template.autoDestroy) {
                     this.template.destroy();
                 } else {
-                    this.template.purgeListeners();
+                    this.template.un({
+                        scope: this,
+                        datachanged: this.onTemplatechanged,
+                        update: this.onTemplateupdate,
+                        add: this.onTemplateadd,
+                        remove: this.onTemplateremove,
+                        axisadd: this.onTemplateupdate,
+                        axisupdate: this.onTemplateupdate,
+                        axisremove: this.onTemplateupdate
+                    });
                 }
                 if (!template) {
                     this.template = null;
@@ -490,15 +422,12 @@
                 this.template = template;
             }
         },
-
         /**
-         * Persist template information into this component's data store.
-         * @method applyTemplate
+         * Persists template information into this component's data store.
          */
         applyTemplate: function () {
             this.template.suspendEvents();
             this.store.suspendEvents();
-
             this.template.each(function (seriesTemplate) {
                 var series = this.store.getById(seriesTemplate.id);
                 if (!series) {
@@ -507,59 +436,56 @@
                     return true;
                 }
                 Ext.iterate(seriesTemplate.fields.map, function (key, field) {
-                    var seriesValue = series.get(field.name);
-                    var templateValue = seriesTemplate.get(field.name);
-
+                    var seriesValue = series.get(field.name),
+                        templateValue = seriesTemplate.get(field.name);
                     if (seriesTemplate.isModified(field.name) === false &&
-                            (seriesValue === templateValue ||
-                            templateValue === field.defaultValue)) {
-                        // Skip
+                        (seriesValue === templateValue ||
+                            templateValue === field.defaultValue)
+                    ) {
+                        // Continue
                         return true;
                     }
-
                     series.set(field.name, templateValue);
                 });
             }, this);
-
             var hosts = [];
-
             this.store.each(function (series) {
-
                 if (-1 === hosts.indexOf(series.json.host)) {
                     hosts.push(series.json.host);
                 }
-
-                var convert = series.get('convert');
-
+                var convert = series.get('convert'),
+                    convertFn;
                 if (!convert) {
-                    // Skip
+                    // Continue
                     return true;
                 }
-
                 try {
-                    var convertFn = Ext.decode(convert);
+                    convertFn = Ext.decode(convert);
                 } catch (e) {
                     // TODO(el): Notify
                     AppKit.log(e);
-                    // Skip
+                    // Continue
                     return true;
                 }
-
                 if (!Ext.isFunction(convertFn)) {
                     // TODO(el): Notify
-                    // Skip
+                    // v
                     return true;
                 }
-
                 var scope = {},
-                    snapshot = Ext.pluck(this.store.getRange(),
-                                         'data');
-
+                    snapshot = Ext.pluck(
+                        this.store.getRange(),
+                        'data'
+                    );
                 Ext.each(series.get('data'), function (xy) {
                     var y;
                     try {
-                        y = convertFn.call(scope, xy[1],
-                                           xy[0], snapshot);
+                        y = convertFn.call(
+                            scope,
+                            xy[1],
+                            xy[0],
+                            snapshot
+                        );
                     } catch (e) {
                         // TODO(el): Notify
                         AppKit.log(e);
@@ -567,24 +493,22 @@
                         return false;
                     }
                     if (y !== xy[1] &&
-                            (Ext.isNumber(y) || y === null)) {
+                        (Ext.isNumber(y) || y === null)
+                    ) {
                         xy[1] = y;
                     }
                 });
             }, this);
-
             if (this.autoYAxes === true && false) {
                 // All yaxes share the same baseline
                 var baseline = null,
                     unitToAxisMap = {},
                     skyline = null;
-
                 this.store.each(function (series) {
                     if (series.get('enabled') !== true) {
-                        // Skip
+                        // Continue
                         return;
                     }
-
                     // Collect yvalues with null eliminated
                     var yvalues = [],
                         y,
@@ -601,7 +525,6 @@
                             (baseline === null || seriesmin < baseline)) {
                         baseline = seriesmin;
                     }
-
                     var yaxisIndex = series.get('yaxis'),
                         yaxis;
                     if (Ext.isNumber(yaxisIndex)) {
@@ -613,16 +536,12 @@
                             return;
                         }
                     }
-
                     var seriesUnit = series.get('unit'),
                         seriesLabel = series.get('label'),
                         yaxisLabel;
-
                     if (yaxis) {
                         var yaxisUnit = yaxis.get('unit');
-
                         yaxisLabel = yaxis.get('label');
-
                         if (yaxisUnit === null) {
                             yaxis.set('unit', seriesUnit);
                             yaxisUnit = seriesUnit;
@@ -638,15 +557,12 @@
                         }
                     } else {
                         yaxis = unitToAxisMap[seriesUnit];
-
                         if (yaxis === undefined) {
-                            // TODO(el): Duplicate code, see AxesConfiguration:addAxisHandler
                             var recordData = {
                                 label: [],
                                 unit: seriesUnit,
                                 index: this.template.yaxes.data.length + 1
                             };
-
                             // Use default values of fields
                             Ext.iterate(this.template.yaxes.fields.map, function (key, field) {
                                 if (recordData[field.name] !== undefined) {
@@ -655,22 +571,17 @@
                                 }
                                 recordData[field.name] = field.defaultValue;
                             });
-
                             yaxis = new this.template.yaxes.recordType(recordData, recordData.index);
-
                             this.template.yaxes.add(yaxis);
-
                             unitToAxisMap[seriesUnit] = yaxis.get('index');
                         } else {
                             yaxis = this.template.yaxes.getById(yaxis);
                         }
-
                         yaxisLabel = yaxis.get('label');
                         if (Ext.isArray(yaxisLabel) &&
                                 yaxisLabel.indexOf(seriesLabel) === -1) {
                             yaxisLabel.push(seriesLabel);
                         }
-
                         series.set('yaxis', yaxis.id);
                     }
 
@@ -682,7 +593,6 @@
                         seriesTemplate.set('unit', series.get('unit'));
                     }
                 }, this);
-
                 this.template.yaxes.each(function (yaxis) {
                     if (yaxis.get('unit') === 'percent') {
                         if (yaxis.isModified('min') === false &&
@@ -694,8 +604,7 @@
 //                            yaxis.set('max', 100);
 //                        }
                     }
-
-                    /*
+                    /*!
                      * TODO(el): Set baseline on every load if not user-defined.
                      * Store needs sort of locking prior to that.
                      */
@@ -705,7 +614,6 @@
 //                    }
                 });
             }
-
             if (hosts.length > 1) {
                 this.store.each(function (series) {
                     series.set(
@@ -713,15 +621,12 @@
                         series.json.host + ': ' + series.get('label'));
                 });
             }
-
             // Recursive merge objects
             this.$flotStyle = $.extend(true, {}, this.template.getStyle(),
                                        this.flotStyle);
-
             this.template.resumeEvents();
             this.store.resumeEvents();
         },
-
         // private
         delayApplyTemplate: function () {
             if (!this.templateRefreshTask) {
@@ -732,23 +637,18 @@
             }
             this.templateRefreshTask.delay(this.refreshBuffer);
         },
-
         // private
         onTemplatechanged: function () {
             this.plot();
         },
-
         // private
         onTemplateupdate: function () {
             this.delayApplyTemplate();
         },
-
         // private
         onTemplateadd: Ext.emptyFn,
-
         // private
         onTemplateremove: Ext.emptyFn,
-
         // private
         showDatapointTip: function (item, pos) {
             if (!this.dpTip) {
@@ -758,14 +658,11 @@
                     constrainPosition: true
                 });
             }
-
             var x = item.datapoint[0],
                 series = item.series.data,
                 seriesXY = series[item.dataIndex],
                 y;
-
             // TODO(el): Include nearby series
-
             // Since flot options like steps, stack and fillBetween modify/insert
             // datapoints, try to use the vanilla series value
             if (seriesXY === undefined || seriesXY[0] !== x) {
@@ -787,11 +684,9 @@
                 // Vanilla value
                 y = seriesXY[1];
             }
-
             if (y !== null) {
                 var xaxis = item.series.xaxis,
                     yaxis = item.series.yaxis,
-
                     tipContent = this.tips.datapointTemplate.apply(Ext.apply(
                         {
                             x: xaxis.tickFormatter(x, xaxis),
@@ -799,16 +694,12 @@
                         },
                         item.series
                     ));
-
                 this.dpTip.update(tipContent);
-
                 // Offset tooltip
                 this.dpTip.showAt([pos.pageX + 10, pos.pageY + 10]);
-
                 // TODO(el): Constrain
             }
         },
-
         // private
         showSelectionTip: function (ranges, pos) {
             if (!this.selTip) {
@@ -817,10 +708,8 @@
                     renderTo: Ext.getBody()
                 });
             }
-
             var axes = this.$plot.getAxes(),
                 templateData = [];
-
             Ext.iterate(axes, function (axisName, axis) {
                 // TODO(el): ?
                 if (!Ext.isObject(ranges[axisName])) {
@@ -828,84 +717,65 @@
                 }
                 var start = ranges[axisName].from,
                     end = ranges[axisName].to;
-
                 if (!Ext.isFunction(axis.tickFormatter)) {
                     // The axis lacks the tick formatter if it's hidden
                     return true;
                 }
-
                 templateData.push({
                     start: axis.tickFormatter(start, axis),
                     end: axis.tickFormatter(end, axis),
                     axis: axisName
                 });
             });
-
             var tipContent = this.tips.selectionTemplate.apply(templateData);
-
             this.selTip.update(tipContent);
-
             // Offset tooltip
             this.selTip.showAt([pos.pageX + 10, pos.pageY + 10]);
-
             // TODO(el): Constrain
         },
-
         /**
-         * Load this component's data store from ranges.
-         * @method zoomin
+         * Loads this component's data store from ranges.
          * @param {Object} ranges
          */
         zoomin: function (ranges) {
             this.zooms.push(ranges);
-
             var params = {
                 interval: null
             };
-
             Ext.iterate(ranges, function (axisName, range) {
                 // Axis identifiers are direction + index, f.e. x, x2, y, y2
                 var axisIdentifier = axisName.replace('axis', '');
-
                 params['start' + axisIdentifier] = range.from;
                 params['end' + axisIdentifier] = range.to;
             });
-
             if (this.$flotStyle.xaxis.mode === 'time') {
                 params.startx = Math.ceil(params.startx / 1000);
                 params.endx = Math.ceil(params.endx / 1000);
             }
-
             this.store.load({
                 params: params
             });
-
             this.fireEvent('zoomin', this, ranges);
         },
-
         /**
-         * Load this component's data store from ranges passed to <tt>{@link #zoomin}</tt>.
-         * @method zoomout
+         * Loads this component's data store from ranges passed to
+         * <tt>{@link #zoomin}</tt>.
          */
         zoomout: function () {
             if (this.zooms.pop()) {
                 var ranges = this.zooms.last();
                 if (ranges) {
                     var params = {};
-
                     Ext.iterate(ranges, function (axisName, range) {
                         // Axis identifiers are direction + index, f.e. x, x2, y, y2
                         var axisIdentifier = axisName.replace('axis', '');
-
                         params['start' + axisIdentifier] = range.from;
                         params['end' + axisIdentifier] = range.to;
                     });
-
                     if (this.$flotStyle.xaxis.mode === 'time') {
                         params.startx = Math.ceil(params.startx / 1000);
                         params.endx = Math.ceil(params.endx / 1000);
                     }
-
                     this.store.load({
                         params: params
                     });
@@ -915,12 +785,10 @@
                 this.fireEvent('zoomout', this, ranges);
             }
         },
-
        /**
-        * Plot a chart using Flot, a Javascript plotting library for jQuery.
+        * Plots a chart using Flot, a Javascript plotting library for jQuery.
         * Listen to the {@link #beforeplot} event and return <tt>false</tt>
         * to cancel plotting. Fires the {@link #plot} event after completion.
-        * @method plot
         * @param {Number} id Id of the container to plot to. Defaults to this
         * component's element if undefined or null.
         * @param {Array} series Collection of series objects. Defaults to this
@@ -929,35 +797,29 @@
         */
         plot: function (id, series) {
             if (this.fireEvent('beforeplot', this) !== false) {
-
                 if (id === undefined || id === null) {
                     id = this.id;
                 }
-
                 if (series === undefined) {
                     this.store.suspendEvents();
                     this.store.filter('enabled', true);
                     series = this.store.toJson();
                     this.store.clearFilter();
                     this.store.resumeEvents();
-                } // Eof no series undefined
-
+                }
                 if (this.absolute) {
                     // Force full view of x-axis range even if there's no data
                     var min = this.store.getStartX(),
                         max = this.store.getEndX();
-
                     if (this.$flotStyle.xaxis.mode === 'time') {
                         min *= 1000;
                         max *= 1000;
                     }
-
                     Ext.apply(this.$flotStyle.xaxis, {
                         min: min,
                         max: max
                     });
                 }
-
                 if (this.periodAverage) {
                     this.store.query('type', 'avg').each(function (avgPlot) {
                         var periodAvg = 0,
@@ -992,7 +854,6 @@
                         series.push(avgSeries);
                     });
                 }
-
                 if (this.prediction && 0 === this.zooms.length) {
                     var observations = this.store.getById(this.prediction.plot),
                         Yt = [],
@@ -1031,20 +892,15 @@
                         this.$flotStyle.xaxis.max = null;
                     }
                 }
-
                 this.$plot = $.plot($('#' + id), series, this.$flotStyle);
-
                 if (this.loadMask) {
                     // TODO(el): Obsolete?
                     this.el.setStyle('position', 'relative');
                 }
-
                 this.fireEvent('plot', this);
             }
-
             return this;
         },
-
         // private
         delayPlot: function () {
             if (!this.refreshTask) {
@@ -1052,35 +908,30 @@
             }
             this.refreshTask.delay(this.refreshBuffer);
         },
-
         /**
-         * Extract flot's data from ranges.
-         * @method clip
+         * Extracts flot's data from ranges.
          * @param {Object} ranges
          * @returns {Array} Flot series records.
          */
         clip: function (ranges) {
             var clipped = [];
-
             if (this.$plot) {
                 Ext.each(this.$plot.getData(), function (series) {
                     var xrange = series.xaxis.n > 1 ?
                                  ranges[String.format('x{0}axis', series.xaxis.n)] :
-                                 ranges.xaxis;
-
-                    var yrange = series.yaxis.n > 1 ?
+                                 ranges.xaxis,
+                        yrange = series.yaxis.n > 1 ?
                                  ranges[String.format('y{0}axis', series.yaxis.n)] :
-                                 ranges.yaxis;
-
-                    var data = $.grep(series.data, function (xy) {
-                        if (xy[0] >= xrange.from &&
-                                xy[0] <= xrange.to &&
-                                xy[1] >= yrange.from &&
-                                xy[1] <= yrange.to) {
-                            return true;
-                        }
-                        return false;
-                    });
+                                 ranges.yaxis,
+                        data = $.grep(series.data, function (xy) {
+                            if (xy[0] >= xrange.from &&
+                                    xy[0] <= xrange.to &&
+                                    xy[1] >= yrange.from &&
+                                    xy[1] <= yrange.to) {
+                                return true;
+                            }
+                            return false;
+                        });
                     if (data.length) {
                         clipped.push(Ext.apply(
                             {},
@@ -1092,11 +943,9 @@
                     }
                 });
             }
-
             return clipped;
         },
-
-        // private
+        // private override
         onResize: function (adjWidth, adjHeight, rawWidth, rawHeight) {
             if (this.$plot) {
                 this.$plot.resize();
@@ -1104,8 +953,7 @@
                 this.$plot.draw();
             }
         },
-
-        // private
+        // private override
         onDestroy: function () {
             if (this.refreshTask && this.refreshTask.cancel) {
                 this.refreshTask.cancel();
@@ -1113,10 +961,8 @@
             if (this.templateRefreshTask && this.templateRefreshTask.cancel) {
                 this.templateRefreshTask.cancel();
             }
-
             this.bindStore(null);
             this.bindTemplate(null);
-
             if (this.dpTip) {
                 this.dpTip.destroy();
                 this.dpTip = null;
@@ -1125,12 +971,10 @@
                 this.showDatapointTipTask.cancel();
                 this.showDatapointTipTask = null;
             }
-
             if (this.selTip) {
                 this.selTip.destroy();
                 this.selTip = null;
             }
-
             Ext.ux.flot.Flot.superclass.onDestroy.call(this);
         }
     });

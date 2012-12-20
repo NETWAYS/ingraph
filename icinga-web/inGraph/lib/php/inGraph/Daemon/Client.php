@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
@@ -10,17 +10,11 @@
  *
  * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for mor
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
  * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
- *
- * @link https://www.netways.org/projects/ingraph
- * @author Eric Lippmann <eric.lippmann@netways.de>
- * @copyright Copyright (c) 2012 NETWAYS GmbH (http.netways.de) <info@netways.de>
- * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
- * @package inGraph_Daemon
  */
 
 class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
@@ -50,7 +44,7 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
     public function fetchHosts()
     {
         $args = func_get_args();
-        return $this->call('getHostsFiltered', $args);
+        return $this->call('getHosts', $args);
     }
 
     /**
@@ -84,15 +78,15 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
      * @param string $serviceNamePattern may contain '%' as wildcard character
      * @param string $parentServiceNamePattern may contain '%' as wildcard character
      * @param string $plotNamePattern may contain '%' as wildcard character
-     * @param int $offset optional offset of the first row to return
      * @param int $limit optional constrain the number of rows returned
+     * @param int $offset optional offset of the first row to return
      * @return array
      * <ul style="list-style-type: none;">
      *     <li><b>int</b> <i>total</i> number of records found</li>
      *     <li><b>array</b> <i>plots</i>
      *         <ul style="list-style-type: none;">
      *             <li><b>int</b> <i>id</i></li>
-     *             <li><b>string</b> <i>host</i></li>* 
+     *             <li><b>string</b> <i>host</i></li>*
      *             <li><b>string</b> <i>service</i></li>
      *             <li><b>string</b> <i>parent_service</i></li>
      *             <li><b>string</b> <i>plot</i></li>
@@ -187,7 +181,7 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
         $args = func_get_args();
         return $this->call('deleteComment', $args);
     }
-    
+
     /**
      * Fetch intervals
      *
@@ -196,7 +190,7 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
      *     <li><b>string[]</b> <code>interval</code>
      *         <ul style="list-style-type: none;">
      *             <li><b>int</b> <i>id</i></li>
-     *             <li><b>int</b> <i>interval</i></li>* 
+     *             <li><b>int</b> <i>interval</i></li>*
      *             <li><b>int</b> <i>retention-period</i></li>
      *         </ul>
      *     </li>
@@ -205,6 +199,10 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
     public function fetchIntervals()
     {
         $args = func_get_args();
-        return $this->client->call('getTimeFrames', $args);
+        $tfs = $this->client->call('getTimeFrames', $args);
+        return array(
+            'timeFrames' => array_values($tfs),
+            'total' => count($tfs)
+        );
     }
 }

@@ -1,176 +1,128 @@
-/**
- * Ext.ux.flot.Tbar
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.flot.
+ * This file is part of inGraph.
  *
- * Ext.ux.flot is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.flot is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.flot. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*jshint browser: true */
+/*global _, Ext, strtotime */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.flot');
-
-    /**
-     * @class Ext.ux.flot.Tbar
-     * @extends Ext.Toolbar
-     * @namespace Ext.ux.flot
-     * @author Eric Lippmann <eric.lippmann@netways.de>
-     * @constructor
-     * @param {Object} cfg
-     * A config object.
-     * @xtype xflottbar
-     */
     Ext.ux.flot.Tbar = Ext.extend(Ext.Toolbar, {
         /**
-         * @cfg {Boolean} showDataView
-         * Whether to show the paging controls. Defaults to <tt>true</tt>.
+         * Whether to show the paging controls.
          */
         showDataView: true,
-
         /**
-         * @cfg {Boolean} showCalendar
-         * Whether to show the calendar button. Defaults to <tt>true</tt>.
+         * Whether to show the calendar button.
          */
         showCalendar: true,
-
         /**
-         * @cfg {Boolean} showRefresh
-         * Whether to show the refresh button. Defaults to <tt>true</tt>.
+         * Whether to show the refresh button.
          */
         showRefresh: true,
-
         /**
-         * @cfg {Boolean} showSync
-         * Whether to show the sync button. Defaults to <tt>true</tt>.
+         * Whether to show the sync button.
          */
         showSync: true,
-
         /**
-         * @cfg {Boolean} showDatapoints
          * Whether to show the combobox to enable/disable datapoints.
-         * Defaults to <tt>true</tt>.
          */
         showDatapoints: true,
-
-        showPeriodAverage: true,
-
         /**
-         * @cfg {Boolean} showSmooth
+         * Whether to show the combobox to enable/disable period averages.
+         */
+        showPeriodAverage: true,
+        /**
          * Whether to show the combobox to enable/disable spline.
-         * Defaults to <tt>false</tt>.
          */
         showSmooth: false,
-
         /**
-         * @cfg {Boolean} showSettings
-         * Whether to show the settings button. Defaults to <tt>true</tt>.
+         * Whether to show the settings button.
          */
         showSettings: true,
-
         /**
-         * @cfg {Boolean} showComments
-         * Whether to show the comments button. Defaults to <tt>true</tt>.
+         * Whether to show the comments button.
          */
         showComments: false,
-
-        showPrediction: true,
-
         /**
-         * @cfg {Boolean} showExport
-         * Whether to show the export controls. Defaults to <tt>true</tt>.
+         * Whether to show the prediction button.
+         */
+        showPrediction: true,
+        /**
+         * Whether to show the export controls.
          */
         showExport: true,
-
         /**
          * @cfg {Boolean} prependButtons
          * Whether to insert any configured <tt>items</tt> or <tt>buttons</tt>
          * <i>before</i> the built-in controls. Defaults to <tt>false</tt>.
          */
-
         /**
-         * @cfg {String} pageTextIfDisabled
          * The quicktip text displayed for the paging controls if no data view selected.
-         * (defaults to <tt>'Please choose a data view first'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         pageTextIfDisabled: _('Please choose a data view first'),
 
         /**
-         * @cfg {String} prevTextIfMin
          * The quicktip text displayed for the paging controls if older data not available.
-         * (defaults to <tt>'Older data not available'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         prevTextIfMin: _('Older data not available'),
-
         /**
-         * @cfg {String|Ext.XTemplate} firstText
          * The quicktip text displayed for the start of availabe data button
-         * (defaults to <tt>'Start of available {adv} data'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         firstText: new Ext.XTemplate(
-            _('Start of available {adv} data'), {compiled: true}),
-
+            _('Start of available {adv} data'), {compiled: true}
+        ),
         /**
-         * @cfg {String|Ext.XTemplate} prevText
          * The quicktip text displayed for the backward button
-         * (defaults to <tt>'Back {[values.name.toLowerCase()]}'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         prevText: new Ext.XTemplate(
-            _('Back {[values.name.toLowerCase()]}'), {compiled: true}),
-
+            _('Back {[values.name.toLowerCase()]}'), {compiled: true}
+        ),
         /**
-         * @cfg {String} inputText
          * The quicktip text displayed for the input combobox
-         * (defaults to <tt>'Choose data view'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         inputText: _('Choose data view'),
-
         /**
-         * @cfg {String|Ext.XTemplate} nextText
          * The quicktip text displayed for the forward button
-         * (defaults to <tt>'Forward {[values.name.toLowerCase()]}'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         nextText: new Ext.XTemplate(
-            _('Forward {[values.name.toLowerCase()]}'), {compiled: true}),
-
+            _('Forward {[values.name.toLowerCase()]}'), {compiled: true}
+        ),
         /**
-         * @cfg {String|Ext.XTemplate} lastText
          * The quicktip text displayed for the last available data button
-         * (defaults to <tt>'Latest available {adv} data'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         lastText: new Ext.XTemplate(
-            _('Latest available {adv} data'), {compiled: true}),
-
+            _('Latest available {adv} data'), {compiled: true}
+        ),
         /**
-         * @cfg {String} calendarText
          * The quicktip text displayed for the calendar button
-         * (defaults to <tt>'Change start and end point'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         calendarText: _('Change start and end point'),
-
         /**
-         * @cfg {String} dateText
          * The quicktip text displayed for the start and end datefield.
-         * (defaults to help on english textual date or time).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         dateText: _('Either select date via the popup date picker or input an ' +
@@ -185,66 +137,44 @@
                         '<li>-1 month + 10 days</li>' +
                         '<li>3 October 2005</li>' +
                     '</ul>'),
-
         /**
-         * @cfg {String} refreshText
          * The quicktip text displayed for the refresh button
-         * (defaults to <tt>'Reload chart'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         refreshText: _('Reload chart'),
-
         /**
-         * @cfg {String} syncText
          * The quicktip text displayed for the sync button (defaults to
-         * <tt>'Synchronize start and end points of all charts with this chart'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         syncText: _('Synchronize start and end points of all charts with this ' +
-                    'chart'),
-
+            'chart'),
         /**
-         * @cfg {String} settingsText
          * The quicktip text displayed for the settings button
-         * (defaults to <tt>'Change settings of this chart'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         settingsText: _('Change settings of this chart'),
-
         /**
-         * @cfg {String} commentsText
          * The quicktip text displayed for the comments button
-         * (defaults to <tt>'Add comment to this chart'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         commentsText: _('Add comment to this chart'),
-
-        predictionText: _(''),
-
         /**
-         * @cfg {String} downloadText
+         * The quicktip text displayed for the prediction button
+         * <b>Note</b>: quick tips must be initialized for the quicktip to show.
+         */
+        predictionText: _(''),
+        /**
          * The quicktip text displayed for the download button
-         * (defaults to <tt>'Export data'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         downloadText: _('Export data'),
-
         /**
-         * @cfg {String} printText
          * The quicktip text displayed for the print button
-         * (defaults to <tt>'Print chart'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         printText: _('Print chart'),
-
-        /**
-         * @cfg {Array} bubbleEvents
-         * An array of events that, when fired, should be bubbled to any parent container.
-         * Defaults to <tt>['sync', 'add', 'remove']</tt>.
-         */
         bubbleEvents: ['sync', 'add', 'remove'],
-
-        // private
+        // private override
         initComponent: function () {
             var cfg = {};
             this.buildItems(cfg);
@@ -262,7 +192,6 @@
             );
             this.bindStore(this.store, true);
         },
-
         // private
         buildItems: function (cfg) {
             var items = [
@@ -349,8 +278,8 @@
                                     start: '-1 year',
                                     adv: _('yearly')
                                 }
-                            ] // Eof frames
-                        }, // Eof data
+                            ]
+                        },
                         listeners: {
                             single: true,
                             load: function (store) {
@@ -360,7 +289,7 @@
                                 });
                             }
                         }
-                    }, // Eof store
+                    },
                     valueField: 'name',
                     displayField: 'name',
                     mode: 'local',
@@ -382,7 +311,7 @@
                         }
                     },
                     hidden: !this.showDataView
-                }, // Eof data view combo
+                },
                 {
                     xtype: 'tbseparator',
                     hidden: !this.showDataView
@@ -410,7 +339,7 @@
                     hidden: !this.showDataView
                 },
                 {
-                    iconCls: 'xflot-icon-calendar',
+                    iconCls: 'x-flot-calendar-icon',
                     tooltip: this.calendarText,
                     scope: this,
                     handler: this.calendarHandler,
@@ -436,7 +365,7 @@
                 {
                     ref: 'sync',
                     tooltip: this.syncText,
-                    iconCls: 'xflot-icon-sync',
+                    iconCls: 'x-flot-sync-icon',
                     disabled: true,
                     handler: this.syncHandler,
                     scope: this,
@@ -497,7 +426,7 @@
                 {
                     ref: 'settings',
                     tooltip: this.settingsText,
-                    iconCls: 'xflot-icon-settings',
+                    iconCls: 'x-flot-settings-icon',
                     scope: this,
                     handler: this.settingsHandler,
                     hidden: !this.showSettings
@@ -509,7 +438,7 @@
                 {
                     ref: 'comments',
                     tooltip: this.commentsText,
-                    iconCls: 'xflot-icon-comment',
+                    iconCls: 'x-flot-comment-icon',
                     scope: this,
                     handler: this.commentsHandler,
                     hidden: !this.showComments
@@ -533,17 +462,17 @@
                 {
                     ref: 'download',
                     tooltip: this.downloadText,
-                    iconCls: 'xflot-icon-document-export',
+                    iconCls: 'x-flot-document-export-icon',
                     menu: {
                         items: [
                             {
                                 text: 'XML',
-                                iconCls: 'xflot-icon-document-xml',
+                                iconCls: 'x-flot-document-xml-icon',
                                 handler: this.doDownload.createDelegate(this, ['xml'])
                             },
                             {
                                 text: 'CSV',
-                                iconCls: 'xflot-icon-document-csv',
+                                iconCls: 'x-flot-document-csv-icon',
                                 handler: this.doDownload.createDelegate(this, ['csv'])
                             },
                             {
@@ -558,13 +487,12 @@
                 {
                     ref: 'print',
                     tooltip: this.printText,
-                    iconCls: 'xflot-icon-print',
+                    iconCls: 'x-flot-print-icon',
                     scope: this,
                     handler: this.printHandler,
                     hidden: !this.showExport
                 }
-            ]; // Eof items
-
+            ];
             var userItems = this.items || this.buttons;
             if (Ext.isArray(userItems)) {
                 if (this.prependButtons) {
@@ -574,13 +502,11 @@
                 }
             }
             delete this.buttons;
-
             cfg.items = items;
         },
-
         // private
         calendarHandler: function () {
-            var win = new Ext.Window({
+            new Ext.Window({
                 title: _('Start, End'),
                 layout: 'fit',
                 width: 250,
@@ -623,17 +549,15 @@
                         listeners: {
                             clientvalidation: function (form, valid) {
                                 // form -> window -> ref of apply
-                                var applyBtn = form.ownerCt.applyBtn;
-
-                                applyBtn.setDisabled(!valid);
+                                form.ownerCt.applyBtn.setDisabled(!valid);
                             }
                         }
-                    } // Eof form
-                ], // Eof window items
+                    }
+                ],
                 buttons: [
                     {
                         text: _('Apply'),
-                        iconCls: 'xflot-icon-accept',
+                        iconCls: 'x-flot-accept-icon',
                         ref: '../applyBtn',
                         disabled: true,
                         scope: this,
@@ -641,49 +565,40 @@
                             // Button -> Tbar -> Window
                             var win = btn.ownerCt.ownerCt,
                                 form = win.form.getForm(),
-
                                 startDateField = form.findField('startx'),
                                 endDateField = form.findField('endx'),
-
                                 start = startDateField.strValue ||
                                         startDateField.getValue() ?
                                             startDateField.getValue().getTime() / 1000 :
                                             null,
-
                                 end = endDateField.strValue ||
                                         endDateField.getValue() ?
                                             endDateField.getValue().getTime() / 1000 :
                                             null;
-
                             this.store.load({
                                 params: {
                                     startx: start,
                                     endx: end
                                 }
                             });
-
                             // Hide or destroy window based on its config
                             win[win.closeAction]();
                         }
                     },
                     {
                         text: _('Cancel'),
-                        iconCls: 'xflot-icon-cancel',
+                        iconCls: 'x-flot-cancel-icon',
                         scope: this,
                         handler: function (btn) {
                             // Button -> Tbar -> Window
                             var win = btn.ownerCt.ownerCt;
-
                             // Hide or destroy window based on its config
                             win[win.closeAction]();
                         }
                     }
                 ]
-            });
-
-            win.show();
+            }).show();
         },
-
         // private
         datapointsHandler: function (box, checked) {
             // TODO(el): Use the template store
@@ -691,13 +606,11 @@
                 rec.set('points:show', checked);
             });
         },
-
         // private
         periodAverageHandler: function (box, checked) {
             this.ownerCt.flot.periodAverage = checked;
             this.ownerCt.flot.plot();
         },
-
         // private
         smoothHandler: function (box, checked) {
             // TODO(el): Use the template store
@@ -705,10 +618,9 @@
                 rec.set('lines:spline', checked);
             });
         },
-
         // private
         settingsHandler: function () {
-            var settingsWindow = new Ext.Window({
+            new Ext.Window({
                 title: _('Settings'),
                 layout: 'fit',
                 width: 560,
@@ -726,57 +638,48 @@
                 buttons: [
                     {
                         text: _('Apply'),
-                        iconCls: 'xflot-icon-accept',
+                        iconCls: 'x-flot-accept-icon',
                         scope: this,
                         handler: function (btn) {
                             // Button -> Tbar -> Window
                             var win = btn.ownerCt.ownerCt,
                                 store = win.flotConfiguration.store;
-
                             store.commitChanges();
                             store.yaxes.commitChanges();
-
                             // Hide or destroy window based on its config
                             win[win.closeAction]();
                         }
                     },
                     {
                         text: _('Cancel'),
-                        iconCls: 'xflot-icon-cancel',
+                        iconCls: 'x-flot-cancel-icon',
                         scope: this,
                         handler: function (btn) {
                             // TODO(el): Check for unapplied changes
-
                             // Button -> Tbar -> Window
                             var win = btn.ownerCt.ownerCt;
-
                             // Hide or destroy window based on its config
                             win[win.closeAction]();
                         }
                     },
                     {
                         text: _('Reset'),
-                        iconCls: 'xflot-icon-reset',
+                        iconCls: 'x-flot-reset-icon',
                         scope: this,
                         handler: function (btn) {
                             // TODO(el): Check for unapplied changes
-
                             // Button -> Tbar -> Window
                             var win = btn.ownerCt.ownerCt,
                                 store = win.flotConfiguration.store;
-
                             store.rejectChanges();
                             store.yaxes.rejectChanges();
                         }
                     }
-                ] // Eof buttons
-            }); // Eof new settings window
-            settingsWindow.show();
+                ]
+            }).show();
         },
-
         // private
         commentsHandler: Ext.emptyFn,
-
         // private
         predictionHandler: function () {
             new Ext.ux.flot.FormWindow({
@@ -1007,27 +910,22 @@
                             },
                             label: values.label,
                             seasons: values.seasons !== '' ? values.seasons : null
-                        }
+                        };
                         this.ownerCt.flot.plot();
                     }
                 }
             }).show();
         },
-
         // private
         printHandler: function () {
-            var flotPanel = this.ownerCt;
-
-            var printContainer = Ext.getBody().select('div.flot-print-container');
+            var flotPanel = this.ownerCt,
+                printContainer = Ext.getBody().select('div.x-flot-print-ct');
             printContainer.each(function (ct) {
                 ct.destroy();
             });
-
             flotPanel.preparePrint();
-
             window.print();
         },
-
         // private
         syncHandler: function () {
             var startx = (this.store.lastOptions.params &&
@@ -1038,10 +936,8 @@
                         this.store.baseParams.endx;
             this.fireEvent('sync', this, startx, endx);
         },
-
         /**
-         * Change the data store bound to this toolbar and refresh it.
-         * @method bindStore
+         * Changes the data store bound to this toolbar and refreshes it.
          * @param {Store} store The store to bind to this toolbar.
          * @param {Boolean} initial (Optional) <tt>true</tt> to not remove listeners.
          */
@@ -1049,12 +945,16 @@
             if (store) {
                 store = Ext.StoreMgr.lookup(store);
             }
-
             if (!initial && this.store) {
                 if (store !== this.store && this.store.autoDestroy) {
                     this.store.destroy();
                 } else {
-                    this.store.purgeListeners();
+                    this.store.un({
+                        scope: this,
+                        beforeload: this.onBeforeLoad,
+                        load: this.onLoad,
+                        exception: this.onLoadError
+                    });
                 }
                 if (!store) {
                     this.store = null;
@@ -1070,7 +970,6 @@
                 this.store = store;
             }
         },
-
         // private
         onBeforeLoad: function () {
             if (this.rendered && this.refresh) {
@@ -1078,7 +977,6 @@
             }
             this.lastFrame = this.input.getValue();
         },
-
         // private
         onLoad: function () {
             this.refresh.enable();
@@ -1096,31 +994,25 @@
                     this.first.enable();
                     this.prev.enable();
                 }
-
                 this.next.enable();
                 this.last.enable();
             }
         },
-
         // private
         onLoadError: function () {
             if (this.rendered) {
                 this.refresh.enable();
             }
         },
-
         /**
-         * Reload the store. Has the same effect as clicking the 'refresh' button.
-         * @method doRefresh
+         * Reloads the store. Has the same effect as clicking the 'refresh' button.
          */
         doRefresh: function () {
             this.store.reload();
         },
-
         /**
-         * Move to the start of available data based on the selected data view.
+         * Moves to the start of available data based on the selected data view.
          * Has the same effect as clicking the 'first' button.
-         * @method moveFirst
          */
         moveFirst: function () {
             var rec = this.input.store.getById(this.input.getValue());
@@ -1139,9 +1031,8 @@
         },
 
         /**
-         * Backward based on the selected data view.
+         * Backwards based on the selected data view.
          * Has the same effect as clicking the 'previous' button.
-         * @method movePrevious
          */
         movePrevious: function () {
             var rec = this.input.store.getById(this.input.getValue());
@@ -1163,7 +1054,6 @@
                 });
             }
         },
-
         // private
         onSelectDataView: function (c, rec, doLoad) {
             if (rec.get('name') !== this.lastFrame) {
@@ -1182,11 +1072,9 @@
                 });
             }
         },
-
         /**
-         * Forward based on the selected data view.
+         * Forwards based on the selected data view.
          * Has the same effect as clicking the 'next' button.
-         * @method moveNext
          */
         moveNext: function () {
             var rec = this.input.store.getById(this.input.getValue());
@@ -1210,11 +1098,9 @@
                 });
             }
         },
-
         /**
-         * Move to latest available data based on the selected data view.
+         * Moves to latest available data based on the selected data view.
          * Has the same effect as clicking the 'last' button.
-         * @method moveLast
          */
         moveLast: function () {
             var rec = this.input.store.getById(this.input.getValue());
@@ -1228,16 +1114,13 @@
                 });
             }
         },
-
         /**
-         * Download values.
-         * @method doDownload
+         * Downloads values.
          * @param {String} ot Output type of the download.
-         * <b>Node</b>: This is a template method and should be overwritten.
+         * <b>Note</b>: This is a template method and should be overwritten.
          */
         doDownload: Ext.emptyFn,
-
-        // private
+        // private override
         onDestroy: function () {
             this.bindStore(null);
             Ext.ux.flot.Tbar.superclass.onDestroy.call(this);

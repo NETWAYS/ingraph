@@ -1,49 +1,38 @@
-/**
- * Ext.ux.ingraph.View
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.ingraph.
+ * This file is part of inGraph.
  *
- * Ext.ux.ingraph is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.ingraph is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.ingraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*jshint browser: true */
+/*global _, $, AppKit, Ext, inGraph */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.ingraph');
-
     /**
-     * @class Ext.ux.ingraph.View
-     * @extends Ext.Panel
-     * @namespace Ext.ux.ingraph
-     * @author Eric Lippmann <eric.lippmann@netways.de>
-     * Container for <tt>{@link Ext.ux.flot.Panel}<tt>s. Based on
-     * a passed configuration object this component decides which strategy to use
+     * Container for <tt>{@link Ext.ux.flot.Panel}<tt>s. Based on the passed
+     * configuration object this component decides which strategy to use
      * to add child items.
-     * @constructor
-     * @param {Object} cfg
-     * A config object.
-     * @xtype xigview
+     * @author Eric Lippmann <eric.lippmann@netways.de>
      */
     Ext.ux.ingraph.View = Ext.extend(Ext.Panel, {
         autoScroll: true,
-
         layout: 'anchor',
-
         baseCls: 'x-plain',
-
         printText: _('Print all charts of this view'),
-
         saveText: _('Save...'),
 
         /**
@@ -67,12 +56,10 @@
                     id: 'gear',
                     qtip: _('Change panel settings'),
                     handler: function (e, toolEl, flotPanel) {
-                        var panelSettings = new Ext.ux.flot.PanelSettingsWindow({
+                        new Ext.ux.flot.PanelSettingsWindow({
                             flotPanel: flotPanel
-                        });
-
-                        panelSettings.show();
-                    } // Eof handler
+                        }).show();
+                    }
                 },
                 {
                     id: 'plus',
@@ -80,20 +67,18 @@
                     handler: function (e, toolEl, flotPanel) {
                         var view = flotPanel.ownerCt,
                             index = view.items.indexOfKey(flotPanel.id),
-                            panelConfig = flotPanel.getState();
-
-                        var cfg = view.buildPanelCfg(
-                            panelConfig.title,
-                            panelConfig.templateContent,
-                            panelConfig.baseParams.query,
-                            panelConfig.overviewConfig,
-                            panelConfig.tbarConfig,
-                            panelConfig.baseParams.startx,
-                            panelConfig.baseParams.endx,
-                            panelConfig.legendConfig,
-                            panelConfig.baseParams.interval
-                        );
-
+                            panelConfig = flotPanel.getState(),
+                            cfg = view.buildPanelCfg(
+                                panelConfig.title,
+                                panelConfig.templateContent,
+                                panelConfig.baseParams.query,
+                                panelConfig.overviewConfig,
+                                panelConfig.tbarConfig,
+                                panelConfig.baseParams.startx,
+                                panelConfig.baseParams.endx,
+                                panelConfig.legendConfig,
+                                panelConfig.baseParams.interval
+                            );
                         view.insert(index, cfg);
                         view.doLayout();
                     }
@@ -106,7 +91,8 @@
                             // Do not remove last panel
                             AppKit.notifyMessage(
                                 _('Sorry'),
-                                _('Could not remove the last panel!'));
+                                _('Could not remove the last panel!')
+                            );
                         } else {
                             flotPanel.destroy();
                         }
@@ -114,8 +100,7 @@
                 }
             ]
         },
-
-        // private
+        // private override
         initComponent: function () {
             var cfg = {};
             this.injectDefaults();
@@ -141,7 +126,6 @@
             );
             this.initEvents();
         },
-
         // private
         injectDefaults: function (cf) {
             var defaults = {
@@ -154,20 +138,17 @@
             };
             Ext.apply(this, Ext.apply(this.initialConfig, defaults));
         },
-
-        // private
+        // private override
         initEvents: function () {
             this.on({
                 scope: this,
                 sync: function (tbar, startx, endx) {
                     var triggeringPanel = tbar.ownerCt;
-
                     this.items.each(function (panel) {
                         if (triggeringPanel === panel) {
                             // Do not update the source panel
                             return true;
                         }
-
                         panel.store.load({
                             params: {
                                 startx: startx,
@@ -179,35 +160,29 @@
                 }
             });
         },
-
         // private
-        buildTools: Ext.emptyFn, // Template method
-
+        buildTools: Ext.emptyFn,
         // private
         fromView: function (cfg) {
             if (!this.view) {
                 return false;
             }
-
             var items = [];
-
             var callback = function (view) {
                 this.setTitle(view.content.title);
-
                 this.view = view;
-
                 this.panels = this.createPanelStore({
                     data: view.content.panels
                 });
-
                 this.panels.each(function (panel) {
                     var query = Ext.encode(
                         inGraph.format.query(panel.json.series));
-
-                    panel.json.flot = $.extend(true, {},
-                                               view.content.flot || {},
-                                               panel.json.flot || {});
-
+                    panel.json.flot = $.extend(
+                        true,
+                        {},
+                        view.content.flot || {},
+                        panel.json.flot || {}
+                    );
                     var cfg = this.buildPanelCfg(
                         panel.get('title'),
                         panel.json,
@@ -219,16 +194,12 @@
                         panel.get('legendConfig'),
                         panel.get('interval')
                     );
-
                     items.push(cfg);
                 }, this); // Eof each panel
-
                 this.addViewTbarItems();
-
                 this.add(items);
                 this.doLayout();
-            }; // Eof callback
-
+            };
             this.doRequest(
                 Ext.ux.ingraph.Urls.provider.view,
                 {
@@ -236,23 +207,18 @@
                 },
                 callback
             );
-
             return true;
         },
-
         // private
         fromHostService: function (cfg) {
             // This strategy is responsible for both host and host-service charts
             if (!this.host) {
                 return false;
             }
-
             var callback = function (template) {
+                var items = [];
                 this.template = template;
                 this.template.re = template.content.re;
-
-                var items = [];
-
                 if (this.start || this.end) {
                     this.panels = this.createPanelStore({
                         data: [
@@ -268,37 +234,32 @@
                         data: template.content.panels
                     });
                 }
-
                 this.panels.each(function (panel) {
                     var query = Ext.encode(
                             inGraph.format.query(
                                 panel.get('series') || template.content.series)),
-                        titleTemplate = new Ext.XTemplate(panel.get('title'));
-
-                    var cfg = this.buildPanelCfg(
-                        titleTemplate.apply({
-                            host: this.host,
-                            service: this.service
-                        }),
-                        template.content,
-                        query,
-                        panel.get('overviewConfig'),
-                        panel.get('tbarConfig'),
-                        panel.get('start'),
-                        panel.get('end'),
-                        panel.get('legendconfig'),
-                        panel.get('interval')
-                    );
+                        titleTemplate = new Ext.XTemplate(panel.get('title')),
+                        cfg = this.buildPanelCfg(
+                            titleTemplate.apply({
+                                host: this.host,
+                                service: this.service
+                            }),
+                            template.content,
+                            query,
+                            panel.get('overviewConfig'),
+                            panel.get('tbarConfig'),
+                            panel.get('start'),
+                            panel.get('end'),
+                            panel.get('legendconfig'),
+                            panel.get('interval')
+                        );
 
                     items.push(cfg);
-                }, this); // Eof each panel
-
+                }, this);
                 this.addTemplateTbarItems();
-
                 this.add(items);
                 this.doLayout();
-            }; // Eof callback
-
+            };
             this.doRequest(
                 Ext.ux.ingraph.Urls.provider.template,
                 {
@@ -308,18 +269,14 @@
                 },
                 callback
             );
-
             return true;
         },
-
         // private
         fromPanels: function (cfg) {
             if (!this.panels) {
                 return false;
             }
-
             var items = [];
-
             Ext.each(this.panels, function (panelConfig) {
                 var itemConfig = this.buildPanelCfg(
                     panelConfig.title,
@@ -332,17 +289,12 @@
                     panelConfig.legendConfig,
                     panelConfig.baseParams.interval
                 );
-
                 items.push(itemConfig);
             }, this);
-
             cfg.items = items;
-
             delete this.panels;
-
             return true;
         },
-
         // private
         buildItems: function (cfg) {
             var strategies = [this.fromPanels, this.fromHostService, this.fromView];
@@ -352,35 +304,31 @@
                 return !strategy.call(this, cfg);
             }, this);
         },
-
         // private
         buildTbar: function (cfg) {
             if (this.tbarConfig.enable === true && !this.tbar) {
                 cfg.tbar = {};
             }
         },
-
         // private
         addViewTbarItems: function () {
             var tbar = this.getTopToolbar();
-
             if (!tbar) {
                 return;
             }
-
             tbar.add([
                 {
                     text: _('View'),
                     menu: [
                         {
                             text: _('Save'),
-                            iconCls: 'xflot-icon-save',
+                            iconCls: 'x-flot-save-icon',
                             scope: this,
                             handler: this.saveViewHandler
                         },
                         {
                             text: _('Save As...'),
-                            iconCls: 'xflot-icon-save-new',
+                            iconCls: 'x-flot-save-icon-new',
                             scope: this,
                             handler: this.saveAsViewHandler
                         }
@@ -399,37 +347,33 @@
                 },
                 {
                     tooltip: this.printText,
-                    iconCls: 'xflot-icon-print',
+                    iconCls: 'x-flot-print-icon',
                     scope: this,
                     handler: this.printHandler
                 }
             ]);
-
             tbar.doLayout();
         },
-
         // private
         addTemplateTbarItems: function () {
             var tbar = this.getTopToolbar();
-
             if (!tbar) {
                 return;
             }
-
             tbar.add([
                 {
                     text: _('Template'),
                     menu: [
 //                        {
 //                            text: _('Save'),
-//                            iconCls: 'xflot-icon-save',
+//                            iconCls: 'x-flot-save-icon',
 //                            scope: this,
 //                            disabled: true,
 //                            handler: this.saveTemplateHandler
 //                        },
                         {
                             text: _('Save As View'),
-                            iconCls: 'xflot-icon-save-new',
+                            iconCls: 'x-flot-save-icon-new',
                             scope: this,
                             handler: this.saveAsViewHandler
                         }
@@ -448,27 +392,25 @@
                 },
                 {
                     tooltip: this.printText,
-                    iconCls: 'xflot-icon-print',
+                    iconCls: 'x-flot-print-icon',
                     scope: this,
                     handler: this.printHandler
                 }
             ]);
-
             tbar.doLayout();
         },
-
+        // private
         saveView: function (viewTitle, url, fileName) {
             var view = {
                 title: viewTitle,
                 panels: []
             };
-
             this.items.each(function (panel) {
                 var panelConfig = {};
-
-                panelConfig.series = panel.template.toJson(['host', 'service',
-                                                            'parentService', 'plot',
-                                                            'type', 'plot_id']);
+                panelConfig.series = panel.template.toJson(
+                    ['host', 'service', 'parentService', 'plot', 'type',
+                     'plot_id']
+                );
                 Ext.each(panelConfig.series, function (series) {
                     series.re = '/^' + series.plot + '$/';
                 });
@@ -476,16 +418,16 @@
                 panelConfig.flot = panel.template.getStyle();
                 panelConfig.tbarConfig = panel.tbarConfig;
 //                panelConfig.flotConfig = panel.flotConfig;
-                panelConfig.overviewConfig = Ext.copyTo({},
-                                                        panel.overviewConfig,
-                                                        ['enable', 'height']);
+                panelConfig.overviewConfig = Ext.copyTo(
+                    {},
+                    panel.overviewConfig,
+                    ['enable', 'height']
+                );
                 panelConfig.start = panel.store.baseParams.startx;
                 panelConfig.end = panel.store.baseParams.endx;
                 panelConfig.interval = panel.store.baseParams.interval;
-
                 view.panels.push(panelConfig);
             }, this);
-
             Ext.Ajax.request({
                 url: url,
                 params: {
@@ -493,15 +435,19 @@
                     name: fileName
                 },
                 scope: this
-//                ,success: function () { console.log(arguments);},
+//                success: function () { console.log(arguments);}
 //                failure: function () { console.log(arguments);}
             });
         },
-
+        // private
         saveViewHandler: function () {
-            this.saveView(this.title, Ext.ux.ingraph.Urls.views.update, this.view.name);
+            this.saveView(
+                this.title,
+                Ext.ux.ingraph.Urls.views.update,
+                this.view.name
+            );
         },
-
+        // private
         saveAsViewHandler: function () {
             var viewDialog = new Ext.Window({
                 title: _('View'),
@@ -539,9 +485,7 @@
                     listeners: {
                         clientvalidation: function (form, valid) {
                             // form -> window -> ref of save
-                            var saveBtn = form.ownerCt.saveBtn;
-
-                            saveBtn.setDisabled(!valid);
+                            form.ownerCt.saveBtn.setDisabled(!valid);
                         }
                     }
                 },
@@ -549,30 +493,30 @@
                 buttons: [
                     {
                         text: _('Save'),
-                        iconCls: 'xflot-icon-save',
+                        iconCls: 'x-flot-save-icon',
                         ref: '../saveBtn',
                         disabled: true,
                         handler: function (btn) {
                             // btn -> bbar -> window
                             var win = btn.ownerCt.ownerCt,
-                                form = win.viewConfigForm.getForm();
-
-                            var viewTitle = form.findField('viewTitle').getValue();
-                            var fileName = form.findField('fileName').getValue();
-
-                            this.saveView(viewTitle, Ext.ux.ingraph.Urls.views.create, fileName);
-
+                                form = win.viewConfigForm.getForm(),
+                                viewTitle = form.findField('viewTitle').getValue(),
+                                fileName = form.findField('fileName').getValue();
+                            this.saveView(
+                                viewTitle,
+                                Ext.ux.ingraph.Urls.views.create,
+                                fileName
+                            );
                             win[win.closeAction]();
                         },
                         scope: this
                     },
                     {
                         text: _('Cancel'),
-                        iconCls: 'xflot-icon-cancel',
+                        iconCls: 'x-flot-cancel-icon',
                         handler: function (btn) {
                             // btn -> bbar -> window
                             var win = btn.ownerCt.ownerCt;
-
                             win[win.closeAction]();
                         }
                     }
@@ -581,36 +525,32 @@
                     this.items.get(0).items.get(0).focus('', 50);
                 }
             });
-
             viewDialog.show();
         },
-
+        // private
         saveTemplate: function (re, url, fileName) {
             var template = {
                 re: re,
                 panels: []
             };
-
             this.items.each(function (panel) {
                 var panelConfig = {};
-
                 panelConfig.series = panel.template.toJson('type', 'plot');
                 panelConfig.title = panel.initialConfig.title;
                 panelConfig.flot = panel.template.getStyle();
                 panelConfig.tbarConfig = panel.tbarConfig;
 //                panelConfig.flotConfig = panel.flotConfig;
-                panelConfig.overviewConfig = Ext.copyTo({},
-                                                        panel.overviewConfig,
-                                                        ['enable', 'height']);
+                panelConfig.overviewConfig = Ext.copyTo(
+                    {},
+                    panel.overviewConfig,
+                    ['enable', 'height']
+                );
                 panelConfig.start = panel.store.baseParams.startx;
                 panelConfig.end = panel.store.baseParams.endx;
                 panelConfig.interval = panel.store.baseParams.interval;
-
                 delete panelConfig.group;
-
                 template.panels.push(panelConfig);
             }, this);
-
             Ext.Ajax.request({
                 url: url,
                 params: {
@@ -618,22 +558,14 @@
                     name: fileName
                 },
                 scope: this
-//                ,success: function () { console.log(arguments);},
+//                success: function () { console.log(arguments);}
 //                failure: function () { console.log(arguments);}
             });
         },
-
-        saveTemplateHandler: function () {
-            if (this.template.isDefault === true) {
-                url = Ext.ux.ingraph.Urls.templates.create;
-            } else {
-                this.saveTemplate(this.template.re, Ext.ux.ingraph.Urls.templates.update, this.template.name);
-            }
-        },
-
+        // private
+        saveTemplateHandler: Ext.emptyFn,
         /**
-         * Get this component's state.
-         * @method getState
+         * Return this component's state.
          * @return {Object}
          */
         getState: function () {
@@ -651,30 +583,23 @@
                 view: this.view ? Ext.copyTo({}, this.view, 'name') : null
             };
         },
-
         /**
-         * Apply state to this component.
-         * @method applyState
+         * Applies state to this component.
          * @param {Object} state
          */
         applyState: function (state) {
             if (state.title) {
                 this.setTitle(state.title);
             }
-
             var items = [];
-
             this.tbarConfig = state.tbarConfig;
-
             this.template = state.template;
             this.view = state.view;
-
             if (this.template) {
                 this.addTemplateTbarItems();
             } else if (this.view) {
                 this.addViewTbarItems();
             }
-
             Ext.each(state.panels, function (panelConfig) {
                 var cfg = this.buildPanelCfg(
                     panelConfig.title,
@@ -687,14 +612,11 @@
                     panelConfig.legendConfig,
                     panelConfig.baseParams.interval
                 );
-
                 items.push(cfg);
             }, this);
-
             this.add(items);
             this.doLayout();
         },
-
         // private
         doRequest: function (url, params, callback) {
             Ext.Ajax.request({
@@ -716,22 +638,18 @@
                 params: params
             });
         },
-
         // private
         printHandler: function () {
-            var printContainer = Ext.getBody().select('div.flot-print-container');
+            var printContainer = Ext.getBody().select('div.x-flot-print-ct');
             printContainer.each(function (ct) {
                 ct.destroy();
             });
-
             this.items.each(function (flotPanel) {
                 flotPanel.preparePrint();
             });
-
             window.print();
         },
-
-        // private
+        // public
         createPanelStore: function (cfg) {
             cfg = cfg || {};
             Ext.applyIf(cfg, {
@@ -769,21 +687,20 @@
                         name: 'interval',
                         defaultValue: null
                     }
-                ] // Eof fields
-            }); // Eof applyIf
+                ]
+            });
             return new Ext.data.JsonStore(cfg);
         },
-
-        // private
+        // public
         buildPanelCfg: function (title, templateContent, query, overviewConfig,
-                                 tbarConfig, startx, endx, legendConfig, interval) {
+                                 tbarConfig, startx, endx, legendConfig,
+                                 interval
+        ) {
             var cfg = {
                 title: Ext.util.Format.htmlEncode(title),
-
                 template: new Ext.ux.flot.Template({
                     data: templateContent
                 }),
-
                 flotConfig: {
                     flotStyle: {
                         xaxis: {
@@ -810,7 +727,6 @@
                         }
                     }
                 },
-
                 overviewConfig: Ext.apply(
                     {},
                     overviewConfig,
@@ -861,11 +777,8 @@
                         }
                     }
                 ),
-
                 tbarConfig: tbarConfig,
-
                 legendConfig: legendConfig,
-
                 store: {
                     xtype: 'xflotstore',
                     url: Ext.ux.ingraph.Urls.provider.values,
@@ -883,38 +796,37 @@
                         query: query,
                         startx: startx,
                         endx: endx,
-                        interval: Ext.isNumber(parseInt(interval)) ? interval : null
+                        interval: Ext.isNumber(parseInt(interval, 10)) ? interval : null
                     }
                 },
-
                 getState: function () {
                     var templateData = {};
                     templateData[this.template.root] = this.template.toJson(
-                        ['host', 'service', 'parentService', 're', 'plot', 'type', 'plot_id']);
+                        ['host', 'service', 'parentService', 're', 'plot',
+                         'type', 'plot_id']
+                    );
                     templateData.flot = this.template.getStyle();
-
                     return {
                         title: this.initialConfig.title,
 
                         tbarConfig: this.tbarConfig,
 //                        flotConfig: this.flotConfig,
-                        overviewConfig: Ext.copyTo({}, this.overviewConfig,
-                                                   ['enable', 'height']),
+                        overviewConfig: Ext.copyTo(
+                            {},
+                            this.overviewConfig,
+                            ['enable', 'height']
+                        ),
                         legendConfig: this.legendConfig,
-
                         baseParams: Ext.apply(
                             {},
                             this.store.lastOptions,
                             this.store.baseParams
                         ),
-
                         templateContent: templateData
                     };
                 }
             };
-
             cfg = $.extend(true, {}, cfg, this.panelConfig);
-
             return cfg;
         }
     });

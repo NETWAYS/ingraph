@@ -6,7 +6,7 @@
                 <parameter name="type">viewready</parameter>
                 <parameter name="function">Ext.ux.ingraph.icingaweb.ColumnRenderer.init</parameter>
                 <parameter name="arguments">
-                    <parameter name="iconCls">ingraph-icon-chart-bar</parameter>
+                    <parameter name="iconCls">x-ingraph-chart-bar-icon</parameter>
                     <parameter name="host">host_name</parameter>
                     <parameter name="service">service_name</parameter>
                     <parameter name="start"></parameter>
@@ -49,7 +49,7 @@
                         <parameter name="type">renderer</parameter>
                         <parameter name="arguments">
                             <parameter name="hideIfZero">process_performance_data</parameter>
-                            <parameter name="iconCls">ingraph-icon-chart-bar</parameter>
+                            <parameter name="iconCls">x-ingraph-chart-bar-icon</parameter>
                         </parameter>
                     </parameter>
                 </parameter>

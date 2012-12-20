@@ -21,18 +21,18 @@ class inGraph_Provider_ValuesAction extends inGraphBaseAction
 {
     public function executeWrite(AgaviRequestDataHolder $rd)
     {
-        $start = $start = $rd->getParameter('startx', null);
-        $end = $rd->getParameter('endx', time());
+        $startx = $rd->getParameter('startx', null);
+        $endx = $rd->getParameter('endx', time());
         $interval = $rd->getParameter('interval', null);
         $daemonConfig = AgaviConfig::get('modules.ingraph.daemon');
         try {
             $values = $this->getBackend()->fetchValues(
                 json_decode($rd->getParameter('query'), true),
-                $start,
-                $end,
+                $startx,
+                $endx,
                 $interval,
-                (int) $rd->getParameter('nullTolerance',
-                                        $daemonConfig['nullTolerance'])
+                $rd->getParameter('nullTolerance',
+                                  (int) $daemonConfig['nullTolerance'])
             );
         } catch (inGraph_XmlRpc_Exception $e) {
             return $this->setError($e->getMessage());

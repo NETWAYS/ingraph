@@ -1,59 +1,43 @@
-/**
- * Ext.ux.ingraph.Menu
+/*
  * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
  *
- * This file is part of Ext.ux.ingraph.
+ * This file is part of inGraph.
  *
- * Ext.ux.ingraph is free software: you can redistribute it and/or modify it under
+ * inGraph is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * Ext.ux.ingraph is distributed in the hope that it will be useful, but WITHOUT
+ * inGraph is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Ext.ux.ingraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
+/*global _, Ext */
+
 (function () {
-    "use strict";
-
+    'use strict';
     Ext.ns('Ext.ux.ingraph');
-
     /**
-     * @class Ext.ux.ingraph.Menu
-     * @extends Ext.FormPanel
-     * @namespace Ext.ux.ingraph
-     * @author Eric Lippmann <eric.lippmann@netways.de>
-     * @constructor
      * Form to choose a host, host-service or view to plot. Listen to the
      * <tt>plot</tt> event to handle plotting.
-     * @param {Object} cfg
-     * A config object.
-     * @xtype xigmenu
+     * @author Eric Lippmann <eric.lippmann@netways.de>
      */
     Ext.ux.ingraph.Menu = Ext.extend(Ext.FormPanel, {
         frame: true,
-
         // This component contains only one direct child item (table)
         layout: 'fit',
-
         bodyStyle: 'padding: 5px;',
-
         /**
-         * @cfg {String} serviceText
          * The quicktip text displayed for the service combobox.
-         * (defaults to <tt>'Leave this field empty if you want display the host graph'</tt>).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         serviceText: _('Leave this field empty if you want display the host graph'),
-
         /**
-         * @cfg {String} dateText
          * The quicktip text displayed for the start and end datefield.
-         * (defaults to help on english textual date or time).
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         dateText: _('Either select date via the popup date picker or input an ' +
@@ -68,8 +52,7 @@
                         '<li>-1 month + 10 days</li>' +
                         '<li>3 October 2005</li>' +
                     '</ul>'),
-
-        // private
+        // private override
         initComponent: function () {
             var cfg = {};
             this.buildItems(cfg);
@@ -86,7 +69,6 @@
                 'plot'
            );
         },
-
         // private
         buildItems: function (cfg) {
             cfg.items = [
@@ -124,11 +106,14 @@
                                     ref: '../../hostCombo',
                                     emptyText: _('Choose host'),
                                     store: {
-                                        xtype: 'arraystore',
-                                        root: 'results',
+                                        xtype: 'jsonstore',
+                                        root: 'hosts',
                                         fields: ['host'],
                                         idProperty: 'host',
-                                        url: Ext.ux.ingraph.Urls.provider.hosts
+                                        url: Ext.ux.ingraph.Urls.provider.hosts,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'host',
                                     valueField: 'host',
@@ -148,14 +133,17 @@
                                     emptyText: _('Choose service'),
                                     store: {
                                         xtype: 'jsonstore',
-                                        root: 'results',
+                                        root: 'services',
                                         fields: [
                                             'name',
                                             'service',
                                             'parentService'
                                         ],
                                         idProperty: 'name',
-                                        url: Ext.ux.ingraph.Urls.provider.services
+                                        url: Ext.ux.ingraph.Urls.provider.services,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'name',
                                     valueField: 'service',
@@ -233,10 +221,13 @@
                                     width: 490,
                                     store: {
                                         xtype: 'arraystore',
-                                        root: 'results',
+                                        root: 'views',
                                         fields: ['view'],
                                         idProperty: 'view',
-                                        url: Ext.ux.ingraph.Urls.provider.views
+                                        url: Ext.ux.ingraph.Urls.provider.views,
+                                        paramNames: {
+                                            start: 'offset'
+                                        }
                                     },
                                     displayField: 'view',
                                     valueField: 'view',
@@ -262,17 +253,14 @@
                             ]
                         }
                     ]
-                } // Eof table
-            ]; // Eof items
+                }
+            ];
         },
-
         // private
         displayGraphHandler: function () {
             var values = this.getForm().getFieldValues();
-
             // View value not needed for host / service graphs
             delete values.view;
-
             // Overwrite start and end
             values.start = this.startDateField.strValue ||
                            this.startDateField.getValue() ?
@@ -285,14 +273,15 @@
                 null;
             this.fireEvent('plot', this, values);
         },
-
         // private
         displayViewHandler: function () {
-            var values = {
-                view: this.viewCombo.getValue()
-            };
-
-            this.fireEvent('plot', this, values);
+            this.fireEvent(
+                'plot',
+                this,
+                {
+                    view: this.viewCombo.getValue()
+                }
+            );
         }
     });
     Ext.reg('xigmenu', Ext.ux.ingraph.Menu);

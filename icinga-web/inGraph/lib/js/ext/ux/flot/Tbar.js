@@ -949,7 +949,12 @@
                 if (store !== this.store && this.store.autoDestroy) {
                     this.store.destroy();
                 } else {
-                    this.store.purgeListeners();
+                    this.store.un({
+                        scope: this,
+                        beforeload: this.onBeforeLoad,
+                        load: this.onLoad,
+                        exception: this.onLoadError
+                    });
                 }
                 if (!store) {
                     this.store = null;

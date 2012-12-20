@@ -327,7 +327,14 @@
                 if (store !== this.store && this.store.autoDestroy) {
                     this.store.destroy();
                 } else {
-                    this.store.purgeListeners();
+                    this.store.on({
+                        scope: this,
+                        datachanged: this.onDatachanged,
+                        update: this.onUpdate,
+                        beforeload: this.onBeforeload,
+                        add: this.onAdd,
+                        remove: this.onRemove
+                    });
                 }
                 if (!store) {
                     this.store = null;
@@ -382,7 +389,16 @@
                 if (template !== this.template && this.template.autoDestroy) {
                     this.template.destroy();
                 } else {
-                    this.template.purgeListeners();
+                    this.template.un({
+                        scope: this,
+                        datachanged: this.onTemplatechanged,
+                        update: this.onTemplateupdate,
+                        add: this.onTemplateadd,
+                        remove: this.onTemplateremove,
+                        axisadd: this.onTemplateupdate,
+                        axisupdate: this.onTemplateupdate,
+                        axisremove: this.onTemplateupdate
+                    });
                 }
                 if (!template) {
                     this.template = null;

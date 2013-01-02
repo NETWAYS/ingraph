@@ -31,6 +31,10 @@
     Ext.ux.ingraph.View = Ext.extend(Ext.Panel, {
         autoScroll: true,
         layout: 'anchor',
+        anchorSize: {
+            width: 800,
+            height: 600
+        },
         baseCls: 'x-plain',
         printText: _('Print all charts of this view'),
         saveText: _('Save...'),

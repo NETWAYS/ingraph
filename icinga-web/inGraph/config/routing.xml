@@ -31,6 +31,7 @@
                            action=".Img" output_type="image" />
                     <route name=".img" pattern="^/img$" action=".Img"
                            output_type="image" />
+                    <route name=".intervals" pattern="^/intervals$" action=".Intervals" />
                 </route>
                 <route name=".comments" pattern="^/comments" stop="false"
                        action="Comments" output_type="json">

@@ -199,7 +199,7 @@ class inGraph_Daemon_Client extends inGraph_XmlRpc_Client
     public function fetchIntervals()
     {
         $args = func_get_args();
-        $tfs = $this->client->call('getTimeFrames', $args);
+        $tfs = $this->call('getTimeFrames', $args);
         return array(
             'timeFrames' => array_values($tfs),
             'total' => count($tfs)

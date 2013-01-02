@@ -60,7 +60,8 @@
                     },
                     legend: {
                         position: 'nw'
-                    }
+                    },
+                    yaxis: {}
                 },
                 values = this.viewConfig.getForm().getValues(),
                 groups = this.store.collect(values.groupby),
@@ -74,6 +75,12 @@
             values.end = this.endDateField.strValue ||
                          this.endDateField.getValue() ?
                          this.endDateField.getValue().getTime() / 1000 : null;
+            if (values.ymin !== null) {
+                flotCfg.yaxis.min = values.ymin;
+            }
+            if (values.ymax !== null) {
+                flotCfg.yaxis.max = values.ymax;
+            }
             switch (values.chartType) {
                 case 'Bar Chart':
                     Ext.apply(flotCfg.series.lines, {
@@ -807,6 +814,50 @@
                                             items: [
                                                 {
                                                     xtype: 'container',
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            title: _('Y-Axis'),
+                            defaults: {
+                                xtype: 'container',
+                                layout: 'hbox',
+                                layoutConfig: {
+                                    align: 'pack',
+                                    stretch: 'start'
+                                }
+                            },
+                            items: [
+                                {
+                                    defaults: {
+                                        xtype: 'container',
+                                        layout: 'form',
+                                        flex: 1
+                                    },
+                                    items: [
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'ymin',
+                                                    fieldLabel: _('Min'),
+                                                    emptyText: _('Min'),
+                                                    xtype: 'xflotnumberfield',
+                                                    anchor: '95%'
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            items: [
+                                                {
+                                                    name: 'ymax',
+                                                    fieldLabel: _('Max'),
+                                                    emptyText: _('Max'),
+                                                    xtype: 'xflotnumberfield',
                                                     anchor: '95%'
                                                 }
                                             ]

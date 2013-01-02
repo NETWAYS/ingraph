@@ -248,6 +248,23 @@
                 } else {
                     AppKit.log("iG:  No tabEl:  ", this, cronkTabs);
                 }
+            },
+            local: function (cfg) {
+                var tabPanel = Ext.getCmp('cronk-tabs'),
+                    cronk = new Ext.Container(cfg);
+                tabPanel.add(cronk);
+                tabPanel.setActiveTab(cronk);
+                Cronk.Registry.add(
+                    cfg.id,
+                    Ext.copyTo(
+                        {
+                            xtype: 'cronk'
+                        },
+                        cfg,
+                        ['title', 'crname', 'params', 'stateuid', 'closable', 'id']
+                    )
+                );
+                return cronk;
             }
         };
     }());

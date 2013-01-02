@@ -145,23 +145,22 @@
                 });
                 panels.push(panel);
             }, this);
-            var cronk = {
+            var view = new Ext.ux.ingraph.View({
+                    stateId: stateuid
+                }),
+                cronk = {
                     id: Ext.id(),
                     title: values.title,
                     crname: 'inGraph',
                     iconCls: 'icinga-cronk-icon-stats2',
                     closable: true,
-                    stateuid: stateuid,
                     params: {
-                        hideMenu: true
-                    }
+                        module: 'inGraph',
+                        action: 'Cronk.View'
+                    },
+                    stateuid: stateuid
                 },
-                tabPanel = Ext.getCmp('cronk-tabs'),
-                cronkPanel = Cronk.factory(cronk);
-            var view = new Ext.ux.ingraph.View({
-                stateId: stateuid
-            });
-            cronkPanel.add(view);
+                tabPanel = Ext.getCmp('cronk-tabs');
             view.setTitle(values.title);
             view.view = {
                 name: values.title
@@ -172,10 +171,8 @@
             var items = [];
             view.panels.each(function (panel) {
                 var query = Ext.encode(
-                    Ext.ux.ingraph.Util.buildQuery(panel.json.series));
-
+                    inGraph.format.query(panel.json.series));
                 panel.json.flot = flotCfg;
-
                 var cfg = this.buildPanelCfg(
                     panel.get('title'),
                     panel.json,
@@ -192,12 +189,11 @@
             }, view); // Eof each panel
             view.addViewTbarItems();
             view.add(items);
-            tabPanel.add(cronkPanel);
-            tabPanel.setActiveTab(cronkPanel);
-            view.doLayout();
+            cronk.items = view;
+            cronk = Ext.ux.ingraph.icingaweb.Cronk.local(cronk);
             // Manual handling of ext state
             Ext.state.Manager.getProvider().set(view.stateId, view.getState());
-            cronkPanel.on('removed', function () {
+            cronk.on('removed', function () {
                 Ext.state.Manager.getProvider().clear(view.stateId);
             });
         },
@@ -643,7 +639,13 @@
                                                     qtip: this.dateText,
                                                     fieldLabel: _('Starttime'),
                                                     anchor: '95%',
-                                                    allowBlank: false
+                                                    allowBlank: false,
+                                                    vtype: 'daterange',
+                                                    maxValue: (function () {
+                                                        var date = new Date();
+                                                        date.setDate(date.getDate() + 1);
+                                                        return date;
+                                                    }())
                                                 }
                                             ]
                                         },
@@ -655,11 +657,16 @@
                                                     xtype: 'datefield',
                                                     format: 'Y-m-d H:i:s',
                                                     emptyText: _('Endtime'),
-                                                    maxValue: new Date(),
                                                     qtip: this.dateText,
                                                     fieldLabel: _('Endtime'),
                                                     anchor: '95%',
-                                                    allowBlank: false
+                                                    allowBlank: false,
+                                                    vtype: 'daterange',
+                                                    maxValue: (function () {
+                                                        var date = new Date();
+                                                        date.setDate(date.getDate() + 1);
+                                                        return date;
+                                                    }())
                                                 }
                                             ]
                                         }

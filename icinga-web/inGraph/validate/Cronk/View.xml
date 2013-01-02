@@ -27,9 +27,6 @@
             <validator class="string" name="view" required="false">
                 <argument>view</argument>
             </validator>
-            <validator class="boolean" name="hideMenu" required="false">
-                <argument>hideMenu</argument>
-            </validator>
         </validators>
     </ae:configuration>
 </ae:configurations>

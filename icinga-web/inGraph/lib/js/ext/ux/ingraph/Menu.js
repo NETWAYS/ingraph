@@ -181,7 +181,9 @@
                                     format: 'Y-m-d H:i:s',
                                     emptyText: _('Starttime'),
                                     width: 150,
-                                    qtip: this.dateText
+                                    qtip: this.dateText,
+                                    vtype: 'daterange',
+                                    maxValue: new Date()
                                 }
                             ]
                         },
@@ -194,7 +196,9 @@
                                     format: 'Y-m-d H:i:s',
                                     emptyText: _('Endtime'),
                                     width: 150,
-                                    qtip: this.dateText
+                                    qtip: this.dateText,
+                                    vtype: 'daterange',
+                                    maxValue: new Date()
                                 }
                             ]
                         },

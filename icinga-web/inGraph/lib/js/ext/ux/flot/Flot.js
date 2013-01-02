@@ -327,14 +327,11 @@
                 if (store !== this.store && this.store.autoDestroy) {
                     this.store.destroy();
                 } else {
-                    this.store.on({
-                        scope: this,
-                        datachanged: this.onDatachanged,
-                        update: this.onUpdate,
-                        beforeload: this.onBeforeload,
-                        add: this.onAdd,
-                        remove: this.onRemove
-                    });
+                    this.store.un('datachanged', this.onDatachanged, this);
+                    this.store.un('update', this.onUpdate, this);
+                    this.store.un('beforeload', this.onBeforeload, this);
+                    this.store.un('add', this.onAdd, this);
+                    this.store.un('remove', this.onRemove, this);
                 }
                 if (!store) {
                     this.store = null;
@@ -389,16 +386,13 @@
                 if (template !== this.template && this.template.autoDestroy) {
                     this.template.destroy();
                 } else {
-                    this.template.un({
-                        scope: this,
-                        datachanged: this.onTemplatechanged,
-                        update: this.onTemplateupdate,
-                        add: this.onTemplateadd,
-                        remove: this.onTemplateremove,
-                        axisadd: this.onTemplateupdate,
-                        axisupdate: this.onTemplateupdate,
-                        axisremove: this.onTemplateupdate
-                    });
+                    this.template.un('datachanged', this.onTemplatechanged, this);
+                    this.template.un('update', this.onTemplateupdate, this);
+                    this.template.un('add', this.onTemplateadd, this);
+                    this.template.un('remove', this.onTemplateremove, this);
+                    this.template.un('axisadd', this.onTemplateupdate, this);
+                    this.template.un('axisupdate', this.onTemplateupdate, this);
+                    this.template.un('axisremove', this.onTemplateupdate, this);
                 }
                 if (!template) {
                     this.template = null;

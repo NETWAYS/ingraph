@@ -60,7 +60,7 @@
             },
             {
                 name: 'backgroundColor',
-                defaultValue: null
+                defaultValue: 'rgba(0, 0, 0, 0)'
             },
             {
                 name: 'backgroundOpacity',

@@ -23,7 +23,7 @@
     function qtippedFieldlabel (qtip, label) {
         return String.format(
             '<span ext:qtip="{0}">{1}</span>',
-            qtip,
+            Ext.util.Format.htmlEncode(qtip),
             label
         );
     }

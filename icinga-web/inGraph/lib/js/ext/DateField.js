@@ -23,9 +23,9 @@
     var _parseDate = Ext.form.DateField.prototype.parseDate;
     Ext.override(Ext.form.DateField, {
         parseDate: function (value) {
-            var d = _parseDate.call(this, value),
+            var date = _parseDate.call(this, value),
                 t;
-            if (!d) {
+            if (!date) {
                 // Try strtotime if the original parse fails
                 t = strtotime(value);
                 if (t !== false) {
@@ -33,9 +33,9 @@
                     t = Math.ceil(t * 1000);
                     return new Date(t);
                 }
-                return "";
+                return '';
             }
-            return d;
+            return date;
         }
     });
 }());

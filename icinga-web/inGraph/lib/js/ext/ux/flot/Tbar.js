@@ -949,12 +949,9 @@
                 if (store !== this.store && this.store.autoDestroy) {
                     this.store.destroy();
                 } else {
-                    this.store.un({
-                        scope: this,
-                        beforeload: this.onBeforeLoad,
-                        load: this.onLoad,
-                        exception: this.onLoadError
-                    });
+                    this.store.un('beforeload', this.onBeforeLoad, this);
+                    this.store.un('load', this.onLoad, this);
+                    this.store.un('exception', this.onLoadError, this);
                 }
                 if (!store) {
                     this.store = null;

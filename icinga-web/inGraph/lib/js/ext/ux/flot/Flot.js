@@ -853,41 +853,43 @@
                     });
                 }
                 if (this.prediction && 0 === this.zooms.length) {
-                    var observations = this.store.getById(this.prediction.plot),
-                        Yt = [],
-                        Fth = [],
-                        i = 0,
-                        Fthy,
-                        Xlast = observations.data.data[observations.data.data.length-1][0],
-                        c = Math.ceil((this.prediction.end - Xlast) / (observations.json.granularity*1000)),
-                        p;
-                    Ext.each(observations.data.data, function (xy, i) {
-                        if (null !== xy[1]) {
-                            Yt.push(xy[1]);
+                    var observations = this.store.getById(this.prediction.plot);
+                    if (observations && observations.data.data.length) {
+                        var Yt = [],
+                            Fth = [],
+                            i = 0,
+                            Fthy,
+                            Xlast = observations.data.data[observations.data.data.length-1][0],
+                            c = Math.ceil((this.prediction.end - Xlast) / (observations.json.granularity*1000)),
+                            p;
+                        Ext.each(observations.data.data, function (xy, i) {
+                            if (null !== xy[1]) {
+                                Yt.push(xy[1]);
+                            }
+                        });
+                        p = Math.ceil(this.prediction.seasons !== null ?
+                            (this.prediction.seasons < Yt.length/2 ?
+                                this.prediction.seasons : Yt.length/4) :
+                                Yt.length/2);
+                        Fthy = forecast.HoltWinters(
+                            Yt, p, c, this.prediction.smoothingConstants);
+                        for (; i < Fthy.length; ++i) {
+                            Fth.push([Xlast + observations.json.granularity * 1000 * i,
+                                      Fthy[i]]);
                         }
-                    });
-                    p = Math.ceil(this.prediction.seasons !== null ?
-                        (this.prediction.seasons < Yt.length/2 ?
-                            this.prediction.seasons : Yt.length/4) :
-                            Yt.length/2);
-                    Fthy = forecast.HoltWinters(
-                        Yt, p, c, this.prediction.smoothingConstants);
-                    for (; i < Fthy.length; ++i) {
-                        Fth.push([Xlast + observations.json.granularity * 1000 * i,
-                                  Fthy[i]]);
-                    }
-                    series.push({
-                        label: this.prediction.label,
-                        color: this.prediction.color,
-                        data: Fth,
-                        lines: {
-                            fill: false,
-                            show: true
-                        },
-                        stack: false
-                    });
-                    if (this.absolute) {
-                        this.$flotStyle.xaxis.max = null;
+                        series.push({
+                            label: this.prediction.label,
+                            color: this.prediction.color,
+                            data: Fth,
+                            lines: {
+                                fill: false,
+                                show: true
+                            },
+                            stack: false
+                        });
+                        if (this.absolute) {
+                            this.$flotStyle.xaxis.max = null;
+                        }
                     }
                 }
                 this.$plot = $.plot($('#' + id), series, this.$flotStyle);

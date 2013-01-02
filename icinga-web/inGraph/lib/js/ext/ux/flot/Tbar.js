@@ -861,7 +861,9 @@
                                                     xtype: 'numberfield',
                                                     min: 0,
                                                     max: 1,
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    decimalPrecision: -1,
+                                                    value: 0.1
                                                 }
                                             ]
                                         },
@@ -873,7 +875,9 @@
                                                     xtype: 'numberfield',
                                                     min: 0,
                                                     max: 1,
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    decimalPrecision: -1,
+                                                    value: 0.1
                                                 }
                                             ]
                                         },
@@ -885,7 +889,9 @@
                                                     xtype: 'numberfield',
                                                     min: 0,
                                                     max: 1,
-                                                    anchor: '95%'
+                                                    anchor: '95%',
+                                                    decimalPrecision: -1,
+                                                    value: 0.0035
                                                 }
                                             ]
                                         }

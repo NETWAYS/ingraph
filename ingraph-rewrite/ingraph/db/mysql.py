@@ -200,7 +200,7 @@ class MySQLDb(object):
 
     def drop_partition(self, tablename, partitionname):
         try:
-            self._curs.execute("""ALTER TABLE `%s` DROP PARTITION %s""" % (tablename, partitionname))
+            self._curs.execute("""ALTER TABLE `%s` DROP PARTITION `%s`""" % (tablename, partitionname))
         except:
             self._conn.rollback()
             raise

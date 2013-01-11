@@ -93,7 +93,7 @@ class Db(object):
         return self._conn.fetch_partitions(tablename)
 
     def add_partition(self, tablename, values_less_than, absolute=False):
-        return self._conn.add_partition(tablename, values_less_than, absolute=False)
+        return self._conn.add_partition(tablename, values_less_than, absolute)
 
     def drop_partition(self, tablename, partitionname):
         return self._conn.drop_partition(tablename, partitionname)

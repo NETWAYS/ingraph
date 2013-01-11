@@ -66,23 +66,26 @@ class IngraphDaemon(UnixDaemon):
                 log.info("Creating table %s.." % datapoint_table)
                 self._conn.create_datapoint_table(datapoint_table, aggregate['retention-period'])
             self._schedule_rotation(datapoint_table)
+        # TODO(el): How to maintain no longer active tables
         self._scheduler.start()
 
     def _rotate(self, tablename, threshold, retention_period, absolute=False):
-        log.info("Rotating %s:%i since they hit their retention period.." % (tablename, threshold))
+        log.info("Rotating partition %d from %s.." % (threshold, tablename))
         self._conn.drop_partition(tablename, threshold)
         self._conn.add_partition(tablename, retention_period, absolute)
 
     def _schedule_rotation(self, tablename):
         partitions = self._conn.fetch_partitions(tablename)
-        present, ahead = int(partitions[0]['partition_name']), int(partitions[1]['partition_name'])
+        present, ahead = (int(float(partitions[0]['partition_name'].encode('ascii', 'ignore'))),
+                          int(float(partitions[1]['partition_name'].encode('ascii', 'ignore'))))
         retention_period = ahead - present
         now = int(time())
-        if now > ahead:
-            self._rotate(tablename, ahead, retention_period)
-        if now - retention_period > present:
+        if now - retention_period > ahead:
             self._rotate(tablename, present, now, absolute=True)
-        self._scheduler.add("%s-rotation every %ds" % (tablename, retention_period), retention_period, self._rotate, tablename, retention_period)
+            self._rotate(tablename, ahead, now + retention_period, absolute=True)
+        elif now > ahead:
+            self._rotate(tablename, present, ahead + retention_period, absolute=True)
+        # TODO(el): Schedule job
 
     def before_daemonize(self):
         log.info("Starting inGraph daemon..")
@@ -176,6 +179,7 @@ class IngraphDaemon(UnixDaemon):
         self._dismissed.set()
         log.info("Waiting for daemon to complete processing open performance data files..")
         self._process_performancedata_thread.join()
+
 
 def add_optparse_ingraph_options(parser):
     ingraph_group = OptionGroup(parser, "inGraph",

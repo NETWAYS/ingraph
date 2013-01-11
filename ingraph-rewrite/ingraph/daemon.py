@@ -39,6 +39,7 @@ try:
     MAXFD = os.sysconf('SC_OPEN_MAX')
 except:
     MAXFD = 1024
+
 log = logging.getLogger(__name__)
 
 

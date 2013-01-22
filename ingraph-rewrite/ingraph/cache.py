@@ -19,7 +19,7 @@ import logging
 
 from functools import wraps, partial
 
-__all__ = ['memoize', 'LRUCache']
+__all__ = ['memoize']
 
 log = logging.getLogger(__name__)
 
@@ -37,8 +37,3 @@ def memoize(f=None, cache={}):
             res = cache[key] = f(*args, **kwargs)
         return res
     return wrapper
-
-
-class LRUCache:
-    """Least-recently-used cache."""
-    pass

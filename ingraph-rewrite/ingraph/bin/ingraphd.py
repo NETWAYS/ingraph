@@ -36,7 +36,7 @@ from ingraph.config import file_config
 from ingraph.db import connect
 from ingraph.parser import PerfdataParser, InvalidPerfdata
 from ingraph.log import add_optparse_logging_options
-from ingraph.scheduler import Scheduler, Rotation
+from ingraph.scheduler import Scheduler
 
 log = logging.getLogger(__name__)
 
@@ -154,11 +154,12 @@ class IngraphDaemon(UnixDaemon):
                 try:
                     observation, perfdata = parser.parse(line)
                 except InvalidPerfdata, e:
-                    log.erorr("%s %s:%i" % (e, input.filename(), input.filelineno()))
+                    log.error("%s %s:%i" % (e, input.filename(), input.filelineno()))
                     continue
                 host_service_record = self._conn.fetch_host_service(observation['host'], observation['service'])
-                for plot, value in perfdata.iteritems():
-                    plot_record = self._conn.fetch_plot(host_service_record['id'], plot)
+                for plot, values in perfdata.iteritems():
+                    value, uom, min, max = values
+                    plot_record = self._conn.fetch_plot(host_service_record['id'], plot, uom)
                     for aggregate in self._aggregates:
                         params = (plot_record['id'],
                                   observation['timestamp'] - observation['timestamp'] % aggregate['interval'],

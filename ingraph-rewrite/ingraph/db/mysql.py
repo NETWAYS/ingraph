@@ -50,8 +50,7 @@ class MySQLAPI(object):
         except oursql.PermissionsError as e:
             log.critical("ERROR %d: %s" % (e[0], e[1]))
             sys.exit(0)
-        else:
-            return connection
+        return connection
 
     def fetch_host(self, connection, name):
         cursor = connection.cursor(oursql.DictCursor)
@@ -85,9 +84,9 @@ class MySQLAPI(object):
             raise
         else:
             connection.commit()
-            return self.fetch_service(connection, name)
         finally:
             cursor.close()
+        return self.fetch_service(connection, name)
 
     def fetch_host_service(self, connection, host_id, service_id):
         cursor = connection.cursor(oursql.DictCursor)
@@ -105,29 +104,29 @@ class MySQLAPI(object):
             raise
         else:
             connection.commit()
-            return self.fetch_host_service(connection, host_id, service_id)
         finally:
             cursor.close()
+        return self.fetch_host_service(connection, host_id, service_id)
 
-    def fetch_plot(self, connection, host_service_id, name):
+    def fetch_plot(self, connection, host_service_id, name, uom):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('SELECT * FROM `plot` WHERE `hostservice_id` = ? AND `name` = ?',
-                       (host_service_id, name))
+        cursor.execute('SELECT * FROM `plot` WHERE `hostservice_id` = ? AND `name` = ? AND `unit` = ?',
+                       (host_service_id, name, uom))
         return cursor.fetchone()
 
-    def insert_plot(self, connection, host_service_id, name):
+    def insert_plot(self, connection, host_service_id, name, uom):
         cursor = connection.cursor(oursql.DictCursor)
         try:
-            cursor.execute('INSERT INTO `plot` (`id`, `hostservice_id`, `name`) VALUES (?, ?, ?)',
-                           (None, host_service_id, name))
+            cursor.execute('INSERT INTO `plot` (`id`, `hostservice_id`, `name`, `unit`) VALUES (?, ?, ?, ?)',
+                           (None, host_service_id, name, uom    ))
         except:
             connection.rollback()
             raise
         else:
             connection.commit()
-            return self.fetch_plot(connection, host_service_id, name)
         finally:
             cursor.close()
+        return self.fetch_plot(connection, host_service_id, name, uom)
 
     def fetch_datapoint_tables(self, connection):
         cursor = connection.cursor(oursql.DictCursor)
@@ -161,9 +160,9 @@ class MySQLAPI(object):
             raise
         else:
             connection.commit()
-            return True
         finally:
             cursor.close()
+        return True
 
     def insert_datapoint(self, connection, tablename, params):
         cursor = connection.cursor(oursql.DictCursor)
@@ -183,9 +182,9 @@ class MySQLAPI(object):
             raise
         else:
             connection.commit()
-            return True
         finally:
             cursor.close()
+        return True
 
     def fetch_partitions(self, connection, tablename):
         cursor = connection.cursor(oursql.DictCursor)
@@ -204,9 +203,9 @@ class MySQLAPI(object):
             raise
         else:
             connection.commit()
-            return True
         finally:
             cursor.close()
+        return True
 
     def drop_partition(self, connection, tablename, partitionname):
         cursor = connection.cursor(oursql.DictCursor)
@@ -217,6 +216,6 @@ class MySQLAPI(object):
             raise
         else:
             connection.commit()
-            return True
         finally:
             cursor.close()
+        return True

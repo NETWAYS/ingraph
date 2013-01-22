@@ -71,10 +71,10 @@ class Database(object):
         return res
 
     @memoize
-    def fetch_plot(self, host_service_id, name):
-        res = self.connection.fetch_plot(self.connection.connect(), host_service_id, name)
+    def fetch_plot(self, host_service_id, name, uom):
+        res = self.connection.fetch_plot(self.connection.connect(), host_service_id, name, uom)
         if not res:
-            res = self.connection.insert_plot(self.connection.connect(), host_service_id, name)
+            res = self.connection.insert_plot(self.connection.connect(), host_service_id, name, uom)
         return res
 
     def fetch_datapoint_tables(self):

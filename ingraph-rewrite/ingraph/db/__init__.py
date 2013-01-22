@@ -17,20 +17,20 @@
 
 import re
 
-from ingraph.db.mysql import MySQLDb
+from ingraph.db.mysql import MySQLAPI
 from ingraph.cache import memoize
 
 __all__ = ['connect']
 
 
 def connect(dsn):
-    return Db(dsn)
+    return Database(dsn)
 
 
-class Db(object):
+class Database(object):
 
     _dialects = {
-        'mysql': MySQLDb
+        'mysql': MySQLAPI
     }
 
     def __init__(self, dsn):
@@ -45,55 +45,55 @@ class Db(object):
             user, passwd = user.split(':', 1)
         except ValueError:
             passwd = None
-        self._conn = self.__class__._dialects[dialect.lower()](user, passwd, host, port, db)
-
-    def close(self):
-        return self._conn.close()
+        self.connection = self.__class__._dialects[dialect.lower()](user, passwd, host, port, db)
 
     @memoize
     def fetch_host(self, name):
-        res = self._conn.fetch_host(name)
+        res = self.connection.fetch_host(self.connection.connect(), name)
         if not res:
-            res = self._conn.insert_host(name)
+            res = self.connection.insert_host(self.connection.connect(), name)
         return res
 
     @memoize
     def fetch_service(self, name):
-        res = self._conn.fetch_service(name)
+        res = self.connection.fetch_service(self.connection.connect(), name)
         if not res:
-            res = self._conn.insert_service(name)
+            res = self.connection.insert_service(self.connection.connect(), name)
         return res
 
     @memoize
     def fetch_host_service(self, host_name, service_name):
         host = self.fetch_host(host_name)
         service = self.fetch_service(service_name)
-        res = self._conn.fetch_host_service(host['id'], service['id'])
+        res = self.connection.fetch_host_service(self.connection.connect(), host['id'], service['id'])
         if not res:
-            res = self._conn.insert_host_service(host['id'], service['id'])
+            res = self.connection.insert_host_service(self.connection.connect(), host['id'], service['id'])
         return res
 
     @memoize
     def fetch_plot(self, host_service_id, name):
-        res = self._conn.fetch_plot(host_service_id, name)
+        res = self.connection.fetch_plot(self.connection.connect(), host_service_id, name)
         if not res:
-            res = self._conn.insert_plot(host_service_id, name)
+            res = self.connection.insert_plot(self.connection.connect(), host_service_id, name)
         return res
 
     def fetch_datapoint_tables(self):
-        return self._conn.fetch_datapoint_tables()
+        return self.connection.fetch_datapoint_tables(self.connection.connect())
 
     def create_datapoint_table(self, tablename, retention_period):
-        return self._conn.create_datapoint_table(tablename, retention_period)
+        return self.connection.create_datapoint_table(self.connection.connect(), tablename, retention_period)
 
     def insert_datapoint(self, tablename, params):
-        return self._conn.insert_datapoint(tablename, params)
+        return self.connection.insert_datapoint(self.connection.connect(), tablename, params)
 
     def fetch_partitions(self, tablename):
-        return self._conn.fetch_partitions(tablename)
+        return self.connection.fetch_partitions(self.connection.connect(), tablename)
 
-    def add_partition(self, tablename, values_less_than, absolute=False):
-        return self._conn.add_partition(tablename, values_less_than, absolute)
+    def add_partition(self, tablename, values_less_than):
+        return self.connection.add_partition(self.connection.connect(), tablename, values_less_than)
 
     def drop_partition(self, tablename, partitionname):
-        return self._conn.drop_partition(tablename, partitionname)
+        return self.connection.drop_partition(self.connection.connect(), tablename, partitionname)
+
+    def __getattr__(self, key):
+        return getattr(self.connection, key)

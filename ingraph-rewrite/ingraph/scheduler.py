@@ -15,17 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#import shelve
-#import pickle
 import logging
 import sys
 
-from time import time, sleep
 from random import randint
 from threading import Event, Lock, Thread, Timer
 from functools import wraps
 
-__all__ = ['Scheduler']
+__all__ = ['Rotation', 'Scheduler']
 
 log = logging.getLogger(__name__)
 
@@ -48,14 +45,13 @@ def synchronized(lock):
 class Store(object):
     """Job store."""
     def __init__(self):
-#        self._db = shelve.open(path, protocol=pickle.HIGHEST_PROTOCOL)
-        self._db = {}
+        self.db = {}
 
     def _generate_id(self):
         while True:
             id = '%i' % randint(1, 100)
             try:
-                self._db[id]
+                self.db[id]
             except KeyError:
                 return id
             else:
@@ -63,38 +59,41 @@ class Store(object):
 
     def add(self, item):
         item.id = self._generate_id()
-        self._db[item.id] = item
+        self.db[item.id] = item
 
-    def iteritems(self):
-        for key in self._db:
-            yield (key, self._db[key])
-
-    def close(self):
-#        self._db.close()
-        pass
+    def __getattr__(self, key):
+        return getattr(self.db, key)
 
 
-class RecurringJob(object):
-    """Recurring job."""
-    def __init__(self, jobname, interval, f, *args, **kwargs):
+class Rotation(object):
+    """Recurring rotation job."""
+    def __init__(self, jobname, timeout, interval, rotation_f, tablename, values_less_than, slope):
         self.pending = True
-        self._timer = None
         self.jobname = jobname
+        self._timer = None
         self._interval = interval
-        self._f = f
-        self._args = args
-        self._kwargs = kwargs
+        self._timeout = timeout
+        self._rotation_f = rotation_f
+        self._tablename = tablename
+        self._values_less_than = values_less_than
+        self._slope = slope
         self._dismissed = Event()
 
     def run(self):
         self.start()
-        log.debug("Exectuing job '%s'.." % self.jobname)
-        self._f(*self._args, **self._kwargs)
+        log.debug("Exectuing job `%s`.." % self.jobname)
+        self._rotation_f(self._tablename, self._values_less_than, self._values_less_than + self._slope)
+        self._values_less_than += self._slope
 
     def start(self):
         if not self._dismissed.isSet():
             self.pending = False
-            self._timer = Timer(self._interval, self.run)
+            if self._timeout:
+                log.debug("%s: Job's first execution delayed %ds.." % (self.jobname, self._timeout))
+                self._timer = Timer(self._timeout, self.run)
+                self._timeout = 0
+            else:
+                self._timer = Timer(self._interval, self.run)
             self._timer.start()
 
     def stop(self):
@@ -103,19 +102,7 @@ class RecurringJob(object):
             self._timer.cancel()
             self._timer.join()
         except:
-            pass
-
-    def __call__(self, *args, **kwargs):
-        self.start()
-
-#    def __getstate__(self):
-#        state = self.__dict__.copy()
-#        state.pop('_dismissed', None)
-#        return state
-
-#    def __setstate__(self, state):
-#        state['_dismissed'] = Event()
-#        self.__dict__ = state
+            raise
 
 
 class Scheduler(object):
@@ -130,45 +117,41 @@ class Scheduler(object):
     def __init__(self, daemonic=True):
         self._daemonic = daemonic
         self._dismissed = Event()
-        self._store = Store()
+        self.store = Store()
         self._wakeup = Event()
         self._thread = None
 
     @synchronized(lock)
-    def add(self, jobname, interval, f, *args, **kwargs):
-        log.debug("Adding yet pending job '%s'.." % jobname)
-        job = RecurringJob(jobname, interval, f, *args, **kwargs)
-        self._store.add(job)
+    def add(self, jobname, timeout, interval, rotation_f, tablename, values_less_than, slope):
+        log.debug("Adding yet pending job `%s`.." % jobname)
+        job = Rotation(jobname, timeout, interval, rotation_f, tablename, values_less_than, slope)
+        self.store.add(job)
         self._wakeup.set()
 
     @synchronized(lock)
     def _schedule(self):
-        log.debug("Scheduling peding jobs..")
-        for _, job in self._store.iteritems():
+        for job in self.store.itervalues():
             if job.pending:
                 job.start()
 
     def run(self):
         self._wakeup.clear()
-        try:
-            while not self._dismissed.isSet():
-                self._schedule()
-                self._wakeup.wait(sys.maxint) # A call to wait() without a timeout never raises KeyboardInterrupt
-        except KeyboardInterrupt:
-            self.stop()
+        while not self._dismissed.isSet():
+            self._schedule()
+            self._wakeup.wait(sys.maxint) # A call to wait() without a timeout never raises KeyboardInterrupt
+
 
     @synchronized(lock)
     def stop(self):
+        log.info("Waiting for active jobs to finish..")
         self._dismissed.set()
         self._wakeup.set()
-        for _, job in self._store.iteritems():
+        for _, job in self.store.iteritems():
             job.stop()
         if self._thread:
             self._thread.join()
-        self._store.close()
 
     def start(self):
-        log.debug("Starting scheduler..")
         self._thread = Thread(target=self.run, name=__name__)
         self._thread.setDaemon(self._daemonic)
         self._thread.start()

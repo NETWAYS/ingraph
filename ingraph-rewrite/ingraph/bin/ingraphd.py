@@ -36,7 +36,7 @@ from ingraph.config import file_config
 from ingraph.db import connect
 from ingraph.parser import PerfdataParser, InvalidPerfdata
 from ingraph.log import add_optparse_logging_options
-from ingraph.scheduler import Scheduler
+from ingraph.scheduler import Scheduler, Rotation
 
 log = logging.getLogger(__name__)
 
@@ -69,23 +69,32 @@ class IngraphDaemon(UnixDaemon):
         # TODO(el): How to maintain no longer active tables
         self._scheduler.start()
 
-    def _rotate(self, tablename, threshold, retention_period, absolute=False):
-        log.info("Rotating partition %d from %s.." % (threshold, tablename))
-        self._conn.drop_partition(tablename, threshold)
-        self._conn.add_partition(tablename, retention_period, absolute)
+    def _rotate(self, tablename, partitionname, next_values_less_than):
+        log.debug("Dropping partition %d from %s.." % (partitionname, tablename))
+        self._conn.drop_partition(tablename, partitionname)
+        log.debug("Adding partition %d to %s.." % (next_values_less_than, tablename))
+        self._conn.add_partition(tablename, next_values_less_than)
 
     def _schedule_rotation(self, tablename):
         partitions = self._conn.fetch_partitions(tablename)
         present, ahead = (int(float(partitions[0]['partition_name'].encode('ascii', 'ignore'))),
                           int(float(partitions[1]['partition_name'].encode('ascii', 'ignore'))))
         retention_period = ahead - present
+        log.debug("%s: Detected retention period %d.." % (tablename, retention_period))
         now = int(time())
         if now - retention_period > ahead:
-            self._rotate(tablename, present, now, absolute=True)
-            self._rotate(tablename, ahead, now + retention_period, absolute=True)
+            self._rotate(tablename, present, now)
+            self._rotate(tablename, ahead, now + retention_period)
+            present = ahead
+            ahead = now + retention_period
         elif now > ahead:
-            self._rotate(tablename, present, ahead + retention_period, absolute=True)
-        # TODO(el): Schedule job
+            self._rotate(tablename, present, ahead + retention_period)
+            present = ahead
+            ahead += retention_period
+        self._scheduler.add("Rotate first partition of %s" % tablename, now - present, retention_period,
+                             self._rotate, tablename, present, retention_period * 2)
+        self._scheduler.add("Rotate second partition of %s" % tablename, ahead + retention_period - now, retention_period,
+                            self._rotate, tablename, ahead, retention_period * 2)
 
     def before_daemonize(self):
         log.info("Starting inGraph daemon..")
@@ -124,15 +133,18 @@ class IngraphDaemon(UnixDaemon):
             # Not a permission error
             raise
         self._setup_database_schema()
-        # We'll reconnect later since all open fds will be closed on daemonization, see _before_run
-        self._conn.close()
+
+    def _find_perfdata_files(self, pathname):
+        files = iglob(pathname)
+        # Process new performance data first
+        return sorted(files, key=lambda file: os.path.getmtime(file))
 
     def _process_performancedata(self):
         pathname = os.path.join(self._perfdata_dir, self._perfdata_pattern)
         parser = PerfdataParser()
         while not self._dismissed.isSet():
-            perfdata_files = self._find_perfdata_files(pathname)[:1]
-            input = fileinput.input(perfdata_files)
+            files = self._find_perfdata_files(pathname)[:1]
+            input = fileinput.input(files)
             input.last_processed_file = None
             for line in input:
                 input.current_file = input.filename()
@@ -153,13 +165,9 @@ class IngraphDaemon(UnixDaemon):
                                   0, 0, value, 1)
                         self._conn.insert_datapoint('datapoint_%i' % aggregate['interval'], params)
             # TODO(el): Implement delete mode
-            map(lambda file: shutil.move(file, '%s.bak' % file), perfdata_files)
-
-    def _before_run(self):
-        self._conn = connect(self._dsn)
+            map(lambda file: shutil.move(file, '%s.bak' % file), files)
 
     def run(self):
-        self._before_run()
         self._process_performancedata_thread = Thread(target=self._process_performancedata, name=__name__)
         self._process_performancedata_thread.setDaemon(True)
         self._process_performancedata_thread.start()
@@ -170,15 +178,11 @@ class IngraphDaemon(UnixDaemon):
         except KeyboardInterrupt:
             sys.exit(0)
 
-    def _find_perfdata_files(self, pathname):
-        ifiles = iglob(pathname)
-        # Process new performance data first
-        return sorted(ifiles, key=lambda f: os.path.getmtime(f))
-
     def cleanup(self):
         self._dismissed.set()
         log.info("Waiting for daemon to complete processing open performance data files..")
         self._process_performancedata_thread.join()
+        self._scheduler.stop()
 
 
 def add_optparse_ingraph_options(parser):

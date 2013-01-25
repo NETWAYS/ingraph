@@ -18,13 +18,16 @@
 import oursql
 import sys
 import logging
-
 from time import time
+from threading import Lock
 
 from sqlalchemy import pool
 
+from ingraph.scheduler import Scheduler, synchronized
+
 __all__ = ['MySQLAPI']
 
+lock = Lock()
 log = logging.getLogger(__name__)
 
 
@@ -43,6 +46,7 @@ class MySQLAPI(object):
             oursql_kwargs['passwd'] = passwd
         self.oursql_kwargs = oursql_kwargs
         pool.manage(oursql)
+        self._scheduler = Scheduler()
 
     def connect(self):
         try:
@@ -51,6 +55,51 @@ class MySQLAPI(object):
             log.critical("ERROR %d: %s" % (e[0], e[1]))
             sys.exit(0)
         return connection
+
+    def setup_database_schema(self, aggregates):
+        # TODO(el): Track aggregates for changes
+        log.debug("Checking database schema..")
+        connection = self.connect()
+        existing_datapoint_tables = self.fetch_datapoint_tables(connection)
+        configured_datapoint_tables = []
+        for aggregate in aggregates:
+            datapoint_table = 'datapoint_%i' % aggregate['interval']
+            configured_datapoint_tables.append(datapoint_table)
+            if datapoint_table not in existing_datapoint_tables:
+                log.info("Creating table %s.." % datapoint_table)
+                self.create_datapoint_table(connection, datapoint_table, aggregate['retention-period'])
+            self._schedule_rotation(connection, datapoint_table)
+            # TODO(el): How to maintain no longer active tables
+        self._scheduler.start()
+
+    # Prevent 'Cannot remove all partitions, use DROP TABLE instead'
+    @synchronized(lock)
+    def _rotate_partition(self, tablename, partitionname, next_values_less_than):
+        log.debug("Dropping partition %d from %s.." % (partitionname, tablename))
+        self.drop_partition(self.connect(), tablename, partitionname)
+        log.debug("Adding partition %d to %s.." % (next_values_less_than, tablename))
+        self.add_partition(self.connect(), tablename, next_values_less_than)
+
+    def _schedule_rotation(self, connection, tablename):
+        partitions = self.fetch_partitions(connection, tablename)
+        present, ahead = (int(float(partitions[0]['partition_name'].encode('ascii', 'ignore'))),
+                          int(float(partitions[1]['partition_name'].encode('ascii', 'ignore'))))
+        retention_period = ahead - present
+        log.debug("%s: Detected retention period %d.." % (tablename, retention_period))
+        now = int(time())
+        if now - retention_period > ahead:
+            self._rotate_partition(tablename, present, now)
+            self._rotate_partition(tablename, ahead, now + retention_period)
+            present = ahead
+            ahead = now + retention_period
+        elif now > ahead:
+            self._rotate_partition(tablename, present, ahead + retention_period)
+            present = ahead
+            ahead += retention_period
+        self._scheduler.add("Rotate first partition of %s" % tablename, now - present, retention_period,
+            self._rotate_partition, tablename, present, retention_period * 2)
+        self._scheduler.add("Rotate second partition of %s" % tablename, ahead + retention_period - now, retention_period,
+            self._rotate_partition, tablename, ahead, retention_period * 2)
 
     def fetch_host(self, connection, name):
         cursor = connection.cursor(oursql.DictCursor)
@@ -219,3 +268,6 @@ class MySQLAPI(object):
         finally:
             cursor.close()
         return True
+
+    def close(self):
+        self._scheduler.stop()

@@ -36,7 +36,6 @@ from ingraph.config import file_config
 from ingraph.db import connect
 from ingraph.parser import PerfdataParser, InvalidPerfdata
 from ingraph.log import add_optparse_logging_options
-from ingraph.scheduler import Scheduler
 
 log = logging.getLogger(__name__)
 
@@ -48,53 +47,10 @@ class IngraphDaemon(UnixDaemon):
     def __init__(self, **kwargs):
         self._perfdata_dir = kwargs.pop('perfdata_dir')
         self._perfdata_pattern = kwargs.pop('perfdata_pattern')
-        self._conn = None
-        self._scheduler = Scheduler()
+        self.connection = None
         self._dismissed = Event()
         self._process_performancedata_thread = None
         super(IngraphDaemon, self).__init__(**kwargs)
-
-    def _setup_database_schema(self):
-        # TODO(el): Track aggregates for changes
-        log.debug("Checking database schema..")
-        existing_datapoint_tables = self._conn.fetch_datapoint_tables()
-        configured_datapoint_tables = []
-        for aggregate in self._aggregates:
-            datapoint_table = 'datapoint_%i' % aggregate['interval']
-            configured_datapoint_tables.append(datapoint_table)
-            if datapoint_table not in existing_datapoint_tables:
-                log.info("Creating table %s.." % datapoint_table)
-                self._conn.create_datapoint_table(datapoint_table, aggregate['retention-period'])
-            self._schedule_rotation(datapoint_table)
-        # TODO(el): How to maintain no longer active tables
-        self._scheduler.start()
-
-    def _rotate(self, tablename, partitionname, next_values_less_than):
-        log.debug("Dropping partition %d from %s.." % (partitionname, tablename))
-        self._conn.drop_partition(tablename, partitionname)
-        log.debug("Adding partition %d to %s.." % (next_values_less_than, tablename))
-        self._conn.add_partition(tablename, next_values_less_than)
-
-    def _schedule_rotation(self, tablename):
-        partitions = self._conn.fetch_partitions(tablename)
-        present, ahead = (int(float(partitions[0]['partition_name'].encode('ascii', 'ignore'))),
-                          int(float(partitions[1]['partition_name'].encode('ascii', 'ignore'))))
-        retention_period = ahead - present
-        log.debug("%s: Detected retention period %d.." % (tablename, retention_period))
-        now = int(time())
-        if now - retention_period > ahead:
-            self._rotate(tablename, present, now)
-            self._rotate(tablename, ahead, now + retention_period)
-            present = ahead
-            ahead = now + retention_period
-        elif now > ahead:
-            self._rotate(tablename, present, ahead + retention_period)
-            present = ahead
-            ahead += retention_period
-        self._scheduler.add("Rotate first partition of %s" % tablename, now - present, retention_period,
-                             self._rotate, tablename, present, retention_period * 2)
-        self._scheduler.add("Rotate second partition of %s" % tablename, ahead + retention_period - now, retention_period,
-                            self._rotate, tablename, ahead, retention_period * 2)
 
     def before_daemonize(self):
         log.info("Starting inGraph daemon..")
@@ -106,7 +62,7 @@ class IngraphDaemon(UnixDaemon):
         log.debug("Connecting to the database..")
         try:
             self._dsn = databse_config['dsn']
-            self._conn = connect(databse_config['dsn'])
+            self.connection = connect(databse_config['dsn'])
         except KeyError:
             log.critical("You need to set a database connection string (`dsn` setting) in your database configuration file.")
             sys.exit(1)
@@ -132,7 +88,7 @@ class IngraphDaemon(UnixDaemon):
                 sys.exit(1)
             # Not a permission error
             raise
-        self._setup_database_schema()
+        self.connection.setup_database_schema(self._aggregates)
 
     def _find_perfdata_files(self, pathname):
         files = iglob(pathname)
@@ -156,15 +112,15 @@ class IngraphDaemon(UnixDaemon):
                 except InvalidPerfdata, e:
                     log.error("%s %s:%i" % (e, input.filename(), input.filelineno()))
                     continue
-                host_service_record = self._conn.fetch_host_service(observation['host'], observation['service'])
+                host_service_record = self.connection.fetch_host_service(observation['host'], observation['service'])
                 for plot, values in perfdata.iteritems():
                     value, uom, min, max = values
-                    plot_record = self._conn.fetch_plot(host_service_record['id'], plot, uom)
+                    plot_record = self.connection.fetch_plot(host_service_record['id'], plot, uom)
                     for aggregate in self._aggregates:
                         params = (plot_record['id'],
                                   observation['timestamp'] - observation['timestamp'] % aggregate['interval'],
                                   0, 0, value, 1)
-                        self._conn.insert_datapoint('datapoint_%i' % aggregate['interval'], params)
+                        self.connection.insert_datapoint('datapoint_%i' % aggregate['interval'], params)
             # TODO(el): Implement delete mode
             map(lambda file: shutil.move(file, '%s.bak' % file), files)
 
@@ -183,7 +139,7 @@ class IngraphDaemon(UnixDaemon):
         self._dismissed.set()
         log.info("Waiting for daemon to complete processing open performance data files..")
         self._process_performancedata_thread.join()
-        self._scheduler.stop()
+        self.connection.close()
 
 
 def add_optparse_ingraph_options(parser):

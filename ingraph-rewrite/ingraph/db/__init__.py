@@ -77,23 +77,8 @@ class Database(object):
             res = self.connection.insert_plot(self.connection.connect(), host_service_id, name, uom)
         return res
 
-    def fetch_datapoint_tables(self):
-        return self.connection.fetch_datapoint_tables(self.connection.connect())
-
-    def create_datapoint_table(self, tablename, retention_period):
-        return self.connection.create_datapoint_table(self.connection.connect(), tablename, retention_period)
-
     def insert_datapoint(self, tablename, params):
         return self.connection.insert_datapoint(self.connection.connect(), tablename, params)
-
-    def fetch_partitions(self, tablename):
-        return self.connection.fetch_partitions(self.connection.connect(), tablename)
-
-    def add_partition(self, tablename, values_less_than):
-        return self.connection.add_partition(self.connection.connect(), tablename, values_less_than)
-
-    def drop_partition(self, tablename, partitionname):
-        return self.connection.drop_partition(self.connection.connect(), tablename, partitionname)
 
     def __getattr__(self, key):
         return getattr(self.connection, key)

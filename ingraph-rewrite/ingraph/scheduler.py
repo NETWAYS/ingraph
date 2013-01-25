@@ -22,7 +22,7 @@ from random import randint
 from threading import Event, Lock, Thread, Timer
 from functools import wraps
 
-__all__ = ['Scheduler']
+__all__ = ['synchronized', 'Scheduler']
 
 log = logging.getLogger(__name__)
 

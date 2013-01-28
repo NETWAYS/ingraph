@@ -16,11 +16,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import re
-import logging
 
 __all__ = ['PerfdataParser', 'InvalidPerfdata']
-
-log = logging.getLogger(__name__)
 
 
 class InvalidPerfdata(Exception): pass

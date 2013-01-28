@@ -15,20 +15,73 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division
 import oursql
 import sys
 import logging
 from time import time
 from threading import Lock
+from decimal import Decimal
 
 from sqlalchemy import pool
 
-from ingraph.scheduler import Scheduler, synchronized
+from ingraph.scheduler import Scheduler, synchronized, RotationJob, RecurringJob
 
 __all__ = ['MySQLAPI']
 
-lock = Lock()
 log = logging.getLogger(__name__)
+partition_lock = Lock()
+datapoint_lock = Lock()
+
+
+class Datapoint(object):
+
+    __slots__ = ('min', 'max', 'avg', 'count')
+
+    def __init__(self, avg=0, min=None, max=None, count=0):
+        self.avg = avg
+        self.min = min
+        self.max = max
+        self.count = count
+
+    def update(self, value):
+        value = Decimal(repr(value))
+        self.avg = (self.avg + value) / 2
+        self.min = value if self.min == None else min(self.min, value)
+        self.max = value if self.max == None else max(self.max, value)
+        self.count += 1
+
+
+class DatapointCache(dict):
+
+    def __init__(self, dbapi, aggregates):
+        self.dbapi = dbapi
+        dict.__init__(self, dict.fromkeys((aggregate['interval'] for aggregate in aggregates), {}))
+
+    def __getitem__(self, key):
+        interval, plot_id, timestamp = key
+        subcache = dict.__getitem__(self, interval)
+        try:
+            item = subcache[(plot_id, timestamp)]
+        except KeyError:
+            interval, plot_id, timestamp = key
+            datapoint = self.dbapi.fetch_datapoint(self.dbapi.connect(), interval, plot_id, timestamp)
+            if datapoint:
+                item = Datapoint(avg=datapoint['avg'], min=datapoint['min'], max=datapoint['max'],
+                                 count=datapoint['count'])
+            else:
+                item = Datapoint()
+            subcache[(plot_id, timestamp)] = item
+        return item
+
+    def generate_parambatch(self, interval):
+        interval_cache = dict.__getitem__(self, interval)
+        for key, datapoint in sorted(interval_cache.iteritems()):
+            plot_id, timestamp = key
+            yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max, datapoint.count
+
+    def clear_interval(self, interval):
+        dict.__getitem__(self, interval).clear()
 
 
 class MySQLAPI(object):
@@ -53,7 +106,7 @@ class MySQLAPI(object):
             connection = oursql.connect(**self.oursql_kwargs)
         except oursql.PermissionsError as e:
             log.critical("ERROR %d: %s" % (e[0], e[1]))
-            sys.exit(0)
+            sys.exit(1)
         return connection
 
     def setup_database_schema(self, aggregates):
@@ -70,15 +123,26 @@ class MySQLAPI(object):
                 self.create_datapoint_table(connection, datapoint_table, aggregate['retention-period'])
             self._schedule_rotation(connection, datapoint_table)
             # TODO(el): How to maintain no longer active tables
+        self._scheduler.add(RecurringJob("Insert datapoints", 0, 10, self._insert_datapoints))
         self._scheduler.start()
+        self._aggregates = aggregates
+        self._datapoint_cache = DatapointCache(self, aggregates)
 
-    # Prevent 'Cannot remove all partitions, use DROP TABLE instead'
-    @synchronized(lock)
+    @synchronized(partition_lock)
     def _rotate_partition(self, tablename, partitionname, next_values_less_than):
-        log.debug("Dropping partition %d from %s.." % (partitionname, tablename))
-        self.drop_partition(self.connect(), tablename, partitionname)
-        log.debug("Adding partition %d to %s.." % (next_values_less_than, tablename))
-        self.add_partition(self.connect(), tablename, next_values_less_than)
+        # TODO(el): VALUES LESS THAN value must be strictly increasing for each partition
+        #           Cannot remove all partitions, use DROP TABLE instead
+        connection = self.connect()
+        try:
+            log.debug("Dropping partition %d from %s.." % (partitionname, tablename))
+            self.drop_partition(connection, tablename, partitionname)
+            log.debug("Adding partition %d to %s.." % (next_values_less_than, tablename))
+            self.add_partition(connection, tablename, next_values_less_than)
+        except Exception:
+            connection.rollback()
+            raise
+        else:
+            connection.commit()
 
     def _schedule_rotation(self, connection, tablename):
         partitions = self.fetch_partitions(connection, tablename)
@@ -90,16 +154,16 @@ class MySQLAPI(object):
         if now - retention_period > ahead:
             self._rotate_partition(tablename, present, now)
             self._rotate_partition(tablename, ahead, now + retention_period)
-            present = ahead
+            present = now
             ahead = now + retention_period
         elif now > ahead:
             self._rotate_partition(tablename, present, ahead + retention_period)
             present = ahead
             ahead += retention_period
-        self._scheduler.add("Rotate first partition of %s" % tablename, now - present, retention_period,
-            self._rotate_partition, tablename, present, retention_period * 2)
-        self._scheduler.add("Rotate second partition of %s" % tablename, ahead + retention_period - now, retention_period,
-            self._rotate_partition, tablename, ahead, retention_period * 2)
+        self._scheduler.add(RotationJob("Deleting datapoints which exceed their lead time", present + retention_period - now, retention_period,
+                                        self._rotate_partition, tablename, present, retention_period * 2))
+        self._scheduler.add(RotationJob("Deleting datapoints which exceed their lead time", ahead + retention_period - now, retention_period,
+                                        self._rotate_partition, tablename, ahead, retention_period * 2))
 
     def fetch_host(self, connection, name):
         cursor = connection.cursor(oursql.DictCursor)
@@ -167,7 +231,7 @@ class MySQLAPI(object):
         cursor = connection.cursor(oursql.DictCursor)
         try:
             cursor.execute('INSERT INTO `plot` (`id`, `hostservice_id`, `name`, `unit`) VALUES (?, ?, ?, ?)',
-                           (None, host_service_id, name, uom    ))
+                           (None, host_service_id, name, uom))
         except:
             connection.rollback()
             raise
@@ -213,27 +277,45 @@ class MySQLAPI(object):
             cursor.close()
         return True
 
-    def insert_datapoint(self, connection, tablename, params):
+    @synchronized(partition_lock)
+    @synchronized(datapoint_lock)
+    def _insert_datapoints(self):
+        connection = self.connect()
+        for interval in self._datapoint_cache.iterkeys():
+            cursor = connection.cursor(oursql.DictCursor)
+            try:
+                cursor.executemany(
+                    '''INSERT INTO `datapoint_%d` (`plot_id`, `timestamp`, `avg`, `min`, `max`, `count`)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE
+                    avg = (avg + VALUES(avg)) / 2,
+                    count = count + VALUES(count),
+                    min = IF(min < VALUES(min), min, VALUES(min)),
+                    max = IF(max > VALUES(max), max, VALUES(max))''' % interval,
+                    self._datapoint_cache.generate_parambatch(interval))
+            except:
+                connection.rollback()
+                raise
+            else:
+                connection.commit()
+            finally:
+                self._datapoint_cache.clear_interval(interval)
+                cursor.close()
+
+    @synchronized(datapoint_lock)
+    def insert_datapoint(self, connection, plot_id, timestamp, value):
+        for aggregate in self._aggregates:
+            params = (plot_id,
+                      timestamp - timestamp % aggregate['interval'],
+                      value, value, value, 1)
+            datapoint = self._datapoint_cache[aggregate['interval'], plot_id, timestamp % aggregate['interval']]
+            datapoint.update(value)
+
+    def fetch_datapoint(self, connection, interval, plot_id, timestamp):
         cursor = connection.cursor(oursql.DictCursor)
-        # TODO(el): Aggregate in RAM
-        try:
-            cursor.execute(
-                '''INSERT INTO `%s` (`plot_id`, `timestamp`, `min`, `max`, `avg`, `count`)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                avg = count * (avg / (count + 1)) + VALUES(avg) / (count + 1),
-                count = count + 1,
-                min = IF(min < VALUES(min), min, VALUES(min)),
-                max = IF(max > VALUES(max), max, VALUES(max))''' % tablename,
-                params)
-        except:
-            connection.rollback()
-            raise
-        else:
-            connection.commit()
-        finally:
-            cursor.close()
-        return True
+        cursor.execute('SELECT * FROM  `datapoint_%d` WHERE `plot_id` = ? AND `timestamp` = ?' % interval,
+                       (plot_id, timestamp))
+        return cursor.fetchone()
 
     def fetch_partitions(self, connection, tablename):
         cursor = connection.cursor(oursql.DictCursor)
@@ -271,3 +353,5 @@ class MySQLAPI(object):
 
     def close(self):
         self._scheduler.stop()
+        log.info("Inserting datapoints currently hold in memory..")
+        self._insert_datapoints()

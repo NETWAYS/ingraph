@@ -52,5 +52,5 @@ def add_optparse_logging_options(parser):
 
 
 channel = logging.StreamHandler()
-channel.setFormatter(LogFormatter())
+channel.setFormatter(LogFormatter(fmt='[%(levelname)s] (%(threadName)-10s) %(message)s'))
 logging.getLogger().addHandler(channel)

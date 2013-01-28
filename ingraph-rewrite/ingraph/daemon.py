@@ -39,7 +39,6 @@ try:
     MAXFD = os.sysconf('SC_OPEN_MAX')
 except:
     MAXFD = 1024
-
 log = logging.getLogger(__name__)
 
 
@@ -90,7 +89,7 @@ class UnixDaemon(object):
         except OSError, e:
             raise Exception("fork #2 failed: %d (%s)" % (e.errno, e.strerror))
 
-    def _sigterm_handler(self, signum, stack_frame):
+    def _sigterm_handler(self):
         sys.exit(0)
 
     def _atexit(self):

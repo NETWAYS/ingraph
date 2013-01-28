@@ -22,11 +22,10 @@ from random import randint
 from threading import Event, Lock, Thread, Timer
 from functools import wraps
 
-__all__ = ['synchronized', 'Scheduler']
+__all__ = ['synchronized', 'Scheduler', 'RecurringJob', 'RotationJob']
 
 log = logging.getLogger(__name__)
-
-lock = Lock()
+job_lock = Lock()
 
 
 def synchronized(lock):
@@ -65,34 +64,33 @@ class Store(object):
         return getattr(self.db, key)
 
 
-class Rotation(object):
-    """Recurring rotation job."""
-    def __init__(self, jobname, timeout, interval, rotation_f, tablename, values_less_than, slope):
-        self.pending = True
+class RecurringJob(object):
+    """Recurring job."""
+    def __init__(self, jobname, delay, interval, f, *args, **kwargs):
         self.jobname = jobname
-        self._timer = None
+        self._delay = delay
         self._interval = interval
-        self._timeout = timeout
-        self._rotation_f = rotation_f
-        self._tablename = tablename
-        self._values_less_than = values_less_than
-        self._slope = slope
+        self._f = f
+        self._args = args
+        self._kwargs = kwargs
+        self.pending = True
         self._dismissed = Event()
+        self._timer = None
 
     def run(self):
         self.start()
-        log.debug("Exectuing job `%s`.." % self.jobname)
-        self._rotation_f(self._tablename, self._values_less_than, self._values_less_than + self._slope)
-        self._values_less_than += self._slope
+        log.debug("%s.." % self.jobname)
+        self._f(*self._args, **self._kwargs)
 
     def start(self):
         if not self._dismissed.isSet():
             self.pending = False
-            if self._timeout:
-                log.debug("%s: Job's first execution delayed %ds.." % (self.jobname, self._timeout))
-                self._timer = Timer(self._timeout, self.run)
-                self._timeout = 0
+            if self._delay:
+                log.debug("%s first execution delayed %ds.." % (self.jobname, self._delay))
+                self._timer = Timer(self._delay, self.run)
+                self._delay = 0
             else:
+                # TODO(el): !
                 self._timer = Timer(self._interval, self.run)
             self._timer.start()
 
@@ -101,8 +99,24 @@ class Rotation(object):
         try:
             self._timer.cancel()
             self._timer.join()
-        except:
-            raise
+        except AttributeError:
+            # Catch 'NoneType' object has no attribute 'cancel' for not yet created timers
+            pass
+
+
+class RotationJob(RecurringJob):
+    """Recurring rotation job."""
+    def __init__(self, jobname, delay, interval, rotation_f, tablename, values_less_than, slope):
+        self._tablename = tablename
+        self._values_less_than = values_less_than
+        self._slope = slope
+        RecurringJob.__init__(self, jobname, delay, interval, rotation_f)
+
+    def run(self):
+        self.start()
+        log.debug("%s.." % self.jobname)
+        self._f(self._tablename, self._values_less_than, self._values_less_than + self._slope)
+        self._values_less_than += self._slope
 
 
 class Scheduler(object):
@@ -121,14 +135,12 @@ class Scheduler(object):
         self._wakeup = Event()
         self._thread = None
 
-    @synchronized(lock)
-    def add(self, jobname, timeout, interval, rotation_f, tablename, values_less_than, slope):
-        log.debug("Adding yet pending job `%s`.." % jobname)
-        job = Rotation(jobname, timeout, interval, rotation_f, tablename, values_less_than, slope)
+    @synchronized(job_lock)
+    def add(self, job):
         self.store.add(job)
         self._wakeup.set()
 
-    @synchronized(lock)
+    @synchronized(job_lock)
     def _schedule(self):
         for job in self.store.itervalues():
             if job.pending:
@@ -140,8 +152,7 @@ class Scheduler(object):
             self._schedule()
             self._wakeup.wait(sys.maxint) # A call to wait() without a timeout never raises KeyboardInterrupt
 
-
-    @synchronized(lock)
+    @synchronized(job_lock)
     def stop(self):
         log.info("Waiting for active jobs to finish..")
         self._dismissed.set()

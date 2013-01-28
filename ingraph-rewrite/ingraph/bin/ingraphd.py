@@ -28,6 +28,8 @@ from threading import Thread, Event
 from tempfile import NamedTemporaryFile
 import errno
 import shutil
+from threading import Lock
+from Queue import Queue
 
 import ingraph
 
@@ -36,8 +38,10 @@ from ingraph.config import file_config
 from ingraph.db import connect
 from ingraph.parser import PerfdataParser, InvalidPerfdata
 from ingraph.log import add_optparse_logging_options
+from ingraph.scheduler import synchronized
 
 log = logging.getLogger(__name__)
+perfdata_lock = Lock()
 
 
 class IngraphDaemon(UnixDaemon):
@@ -45,11 +49,13 @@ class IngraphDaemon(UnixDaemon):
     name = "inGraph"
 
     def __init__(self, **kwargs):
+        self._perfdata_mode = kwargs.pop('perfdata_mode')
         self._perfdata_dir = kwargs.pop('perfdata_dir')
         self._perfdata_pattern = kwargs.pop('perfdata_pattern')
+        self._perfdata_pathname = os.path.join(self._perfdata_dir, self._perfdata_pattern)
         self.connection = None
         self._dismissed = Event()
-        self._process_performancedata_thread = None
+        self._remaining_perfdata = None
         super(IngraphDaemon, self).__init__(**kwargs)
 
     def before_daemonize(self):
@@ -90,23 +96,21 @@ class IngraphDaemon(UnixDaemon):
             raise
         self.connection.setup_database_schema(self._aggregates)
 
-    def _find_perfdata_files(self, pathname):
-        files = iglob(pathname)
-        # Process new performance data first
-        return sorted(files, key=lambda file: os.path.getmtime(file))
+    @synchronized(perfdata_lock)
+    def _consume_perfdata_file(self):
+        if not self._remaining_perfdata:
+            files = iglob(self._perfdata_pathname)
+            # TODO(el): Synchronize with active threads
+            self._remaining_perfdata = sorted(files, key=lambda file: os.path.getmtime(file))
+        perfdata_to_process = self._remaining_perfdata.pop()
+        return perfdata_to_process
 
     def _process_performancedata(self):
-        pathname = os.path.join(self._perfdata_dir, self._perfdata_pattern)
         parser = PerfdataParser()
         while not self._dismissed.isSet():
-            files = self._find_perfdata_files(pathname)[:1]
-            input = fileinput.input(files)
-            input.last_processed_file = None
-            for line in input:
-                input.current_file = input.filename()
-                if input.last_processed_file is None or input.last_processed_file != input.current_file:
-                    log.debug("Parsing performance data file %s.." % input.current_file)
-                    input.last_processed_file = input.current_file
+            file = self._consume_perfdata_file()
+            log.debug("Parsing performance data file %s.." % file)
+            for line in open(file):
                 try:
                     observation, perfdata = parser.parse(line)
                 except InvalidPerfdata, e:
@@ -116,18 +120,22 @@ class IngraphDaemon(UnixDaemon):
                 for plot, values in perfdata.iteritems():
                     value, uom, min, max = values
                     plot_record = self.connection.fetch_plot(host_service_record['id'], plot, uom)
-                    for aggregate in self._aggregates:
-                        params = (plot_record['id'],
-                                  observation['timestamp'] - observation['timestamp'] % aggregate['interval'],
-                                  0, 0, value, 1)
-                        self.connection.insert_datapoint('datapoint_%i' % aggregate['interval'], params)
-            # TODO(el): Implement delete mode
-            map(lambda file: shutil.move(file, '%s.bak' % file), files)
+                    self.connection.insert_datapoint(plot_record['id'], observation['timestamp'], value)
+            #if self._perfdata_mode == 'BACKUP':
+            #    shutil.move(file, '%s.bak' % file)
+            #elif self._perfdata_mode == 'REMOVE':
+            #    os.remove(file)
 
     def run(self):
-        self._process_performancedata_thread = Thread(target=self._process_performancedata, name=__name__)
-        self._process_performancedata_thread.setDaemon(True)
-        self._process_performancedata_thread.start()
+        #self._process_performancedata_thread = Thread(target=self._process_performancedata, name=__name__)
+        #self._process_performancedata_thread.setDaemon(True)
+        #self._process_performancedata_thread.start()
+        self._pool = []
+        for i in xrange(1, 11):
+            t = Thread(target=self._process_performancedata, name=i)
+            self._pool.append(t)
+            t.setDaemon(True)
+            t.start()
         try:
             while not self._dismissed.isSet():
                 # TODO(el): Serve requests
@@ -138,17 +146,22 @@ class IngraphDaemon(UnixDaemon):
     def cleanup(self):
         self._dismissed.set()
         log.info("Waiting for daemon to complete processing open performance data files..")
-        self._process_performancedata_thread.join()
+        #self._process_performancedata_thread.join()
+        for t in self._pool:
+            t.join()
         self.connection.close()
 
 
 def add_optparse_ingraph_options(parser):
+    PERFDATA_MODES = ('BACKUP', 'REMOVE')
     ingraph_group = OptionGroup(parser, "inGraph",
                                 "These are the options to specify the inGraph daemon:")
     ingraph_group.add_option('-P', '--perfdata-dir', dest='perfdata_dir', default='/var/lib/icinga/perfdata', metavar='DIR',
                              help="Set the performance data directory DIR. [default: %default]")
     ingraph_group.add_option('-e', '--pattern', dest='perfdata_pattern', default='*-perfdata.*[0-9]', metavar='PATTERN',
                              help="Find all performance data files matching the shell pattern PATTERN. [default: %default]")
+    ingraph_group.add_option('-m', '--mode', dest='perfdata_mode', default='BACKUP', choices=PERFDATA_MODES,
+                             help="perfdata files post processing, one of: %s [default: %%default]" % ', '.join(PERFDATA_MODES))
     parser.add_option_group(ingraph_group)
 
 

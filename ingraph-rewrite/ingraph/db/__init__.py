@@ -45,40 +45,40 @@ class Database(object):
             user, passwd = user.split(':', 1)
         except ValueError:
             passwd = None
-        self.connection = self.__class__._dialects[dialect.lower()](user, passwd, host, port, db)
+        self.dbapi = self.__class__._dialects[dialect.lower()](user, passwd, host, port, db)
 
     @memoize
     def fetch_host(self, name):
-        res = self.connection.fetch_host(self.connection.connect(), name)
+        res = self.dbapi.fetch_host(self.dbapi.connect(), name)
         if not res:
-            res = self.connection.insert_host(self.connection.connect(), name)
+            res = self.dbapi.insert_host(self.dbapi.connect(), name)
         return res
 
     @memoize
     def fetch_service(self, name):
-        res = self.connection.fetch_service(self.connection.connect(), name)
+        res = self.dbapi.fetch_service(self.dbapi.connect(), name)
         if not res:
-            res = self.connection.insert_service(self.connection.connect(), name)
+            res = self.dbapi.insert_service(self.dbapi.connect(), name)
         return res
 
     @memoize
     def fetch_host_service(self, host_name, service_name):
         host = self.fetch_host(host_name)
         service = self.fetch_service(service_name)
-        res = self.connection.fetch_host_service(self.connection.connect(), host['id'], service['id'])
+        res = self.dbapi.fetch_host_service(self.dbapi.connect(), host['id'], service['id'])
         if not res:
-            res = self.connection.insert_host_service(self.connection.connect(), host['id'], service['id'])
+            res = self.dbapi.insert_host_service(self.dbapi.connect(), host['id'], service['id'])
         return res
 
     @memoize
     def fetch_plot(self, host_service_id, name, uom):
-        res = self.connection.fetch_plot(self.connection.connect(), host_service_id, name, uom)
+        res = self.dbapi.fetch_plot(self.dbapi.connect(), host_service_id, name, uom)
         if not res:
-            res = self.connection.insert_plot(self.connection.connect(), host_service_id, name, uom)
+            res = self.dbapi.insert_plot(self.dbapi.connect(), host_service_id, name, uom)
         return res
 
-    def insert_datapoint(self, tablename, params):
-        return self.connection.insert_datapoint(self.connection.connect(), tablename, params)
+    def insert_datapoint(self, plot_id, timestamp, value):
+        return self.dbapi.insert_datapoint(self.dbapi.connect(), plot_id, timestamp, value)
 
     def __getattr__(self, key):
-        return getattr(self.connection, key)
+        return getattr(self.dbapi, key)

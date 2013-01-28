@@ -20,7 +20,7 @@ import oursql
 import sys
 import logging
 from time import time
-from threading import Lock
+from threading import Lock, Event
 from decimal import Decimal
 
 from sqlalchemy import pool
@@ -100,6 +100,7 @@ class MySQLAPI(object):
         self.oursql_kwargs = oursql_kwargs
         pool.manage(oursql)
         self._scheduler = Scheduler()
+        self._partitions = {}
 
     def connect(self):
         try:
@@ -123,26 +124,18 @@ class MySQLAPI(object):
                 self.create_datapoint_table(connection, datapoint_table, aggregate['retention-period'])
             self._schedule_rotation(connection, datapoint_table)
             # TODO(el): How to maintain no longer active tables
-        self._scheduler.add(RecurringJob("Insert datapoints", 0, 10, self._insert_datapoints))
+        self._scheduler.add(RecurringJob("Inserting datapoints", 0, 10, self._insert_datapoints))
         self._scheduler.start()
         self._aggregates = aggregates
         self._datapoint_cache = DatapointCache(self, aggregates)
 
     @synchronized(partition_lock)
     def _rotate_partition(self, tablename, partitionname, next_values_less_than):
-        # TODO(el): VALUES LESS THAN value must be strictly increasing for each partition
-        #           Cannot remove all partitions, use DROP TABLE instead
         connection = self.connect()
-        try:
-            log.debug("Dropping partition %d from %s.." % (partitionname, tablename))
-            self.drop_partition(connection, tablename, partitionname)
-            log.debug("Adding partition %d to %s.." % (next_values_less_than, tablename))
-            self.add_partition(connection, tablename, next_values_less_than)
-        except Exception:
-            connection.rollback()
-            raise
-        else:
-            connection.commit()
+        log.debug("Dropping partition %d from %s.." % (partitionname, tablename))
+        self.drop_partition(connection, tablename, partitionname)
+        log.debug("Adding partition %d to %s.." % (next_values_less_than, tablename))
+        self.add_partition(connection, tablename, next_values_less_than)
 
     def _schedule_rotation(self, connection, tablename):
         partitions = self.fetch_partitions(connection, tablename)
@@ -160,9 +153,9 @@ class MySQLAPI(object):
             self._rotate_partition(tablename, present, ahead + retention_period)
             present = ahead
             ahead += retention_period
-        self._scheduler.add(RotationJob("Deleting datapoints which exceed their lead time", present + retention_period - now, retention_period,
+        self._scheduler.add(RotationJob("Deleting datapoints which exceed their lead time", present + retention_period - now, retention_period * 2,
                                         self._rotate_partition, tablename, present, retention_period * 2))
-        self._scheduler.add(RotationJob("Deleting datapoints which exceed their lead time", ahead + retention_period - now, retention_period,
+        self._scheduler.add(RotationJob("Deleting datapoints which exceed their lead time", ahead + retention_period - now, retention_period * 2,
                                         self._rotate_partition, tablename, ahead, retention_period * 2))
 
     def fetch_host(self, connection, name):
@@ -190,15 +183,7 @@ class MySQLAPI(object):
 
     def insert_service(self, connection, name):
         cursor = connection.cursor(oursql.DictCursor)
-        try:
-            cursor.execute('INSERT INTO `service` (`id`, `name`) VALUES (?, ?)', (None, name))
-        except:
-            connection.rollback()
-            raise
-        else:
-            connection.commit()
-        finally:
-            cursor.close()
+        cursor.execute('INSERT INTO `service` (`id`, `name`) VALUES (?, ?)', (None, name))
         return self.fetch_service(connection, name)
 
     def fetch_host_service(self, connection, host_id, service_id):
@@ -209,16 +194,8 @@ class MySQLAPI(object):
 
     def insert_host_service(self, connection, host_id, service_id):
         cursor = connection.cursor(oursql.DictCursor)
-        try:
-            cursor.execute('INSERT INTO `hostservice` (`id`, `host_id`, `service_id`) VALUES (?, ?, ?)',
-                           (None, host_id, service_id))
-        except:
-            connection.rollback()
-            raise
-        else:
-            connection.commit()
-        finally:
-            cursor.close()
+        cursor.execute('INSERT INTO `hostservice` (`id`, `host_id`, `service_id`) VALUES (?, ?, ?)',
+                       (None, host_id, service_id))
         return self.fetch_host_service(connection, host_id, service_id)
 
     def fetch_plot(self, connection, host_service_id, name, uom):
@@ -229,16 +206,8 @@ class MySQLAPI(object):
 
     def insert_plot(self, connection, host_service_id, name, uom):
         cursor = connection.cursor(oursql.DictCursor)
-        try:
-            cursor.execute('INSERT INTO `plot` (`id`, `hostservice_id`, `name`, `unit`) VALUES (?, ?, ?, ?)',
-                           (None, host_service_id, name, uom))
-        except:
-            connection.rollback()
-            raise
-        else:
-            connection.commit()
-        finally:
-            cursor.close()
+        cursor.execute('INSERT INTO `plot` (`id`, `hostservice_id`, `name`, `unit`) VALUES (?, ?, ?, ?)',
+                       (None, host_service_id, name, uom))
         return self.fetch_plot(connection, host_service_id, name, uom)
 
     def fetch_datapoint_tables(self, connection):
@@ -250,32 +219,23 @@ class MySQLAPI(object):
         return res
 
     def create_datapoint_table(self, connection, tablename, retention_period):
-        cursor = connection.cursor(oursql.DictCursor)
         now = time()
         next = now + retention_period
-        try:
-            cursor.execute(
-                '''CREATE TABLE `%s` (
-                    `plot_id` int(11) NOT NULL,
-                    `timestamp` int(11) NOT NULL,
-                    `min` decimal(20,5) NOT NULL,
-                    `max` decimal(20,5) NOT NULL,
-                    `avg` decimal(20,5) NOT NULL,
-                    `count` int(11) NOT NULL,
-                    PRIMARY KEY (`plot_id`, `timestamp`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=latin1
-                PARTITION BY RANGE(timestamp) (
-                    PARTITION `%i` VALUES LESS THAN (%i) ENGINE = InnoDB,
-                    PARTITION `%i` VALUES LESS THAN (%i) ENGINE = InnoDB
-                )''' % (tablename, now, now, next, next))
-        except:
-            connection.rollback()
-            raise
-        else:
-            connection.commit()
-        finally:
-            cursor.close()
-        return True
+        cursor = connection.cursor(oursql.DictCursor)
+        cursor.execute(
+            '''CREATE TABLE `%s` (
+                `plot_id` int(11) NOT NULL,
+                `timestamp` int(11) NOT NULL,
+                `min` decimal(20,5) NOT NULL,
+                `max` decimal(20,5) NOT NULL,
+                `avg` decimal(20,5) NOT NULL,
+                `count` int(11) NOT NULL,
+                PRIMARY KEY (`plot_id`, `timestamp`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+            PARTITION BY RANGE(timestamp) (
+                PARTITION `%i` VALUES LESS THAN (%i) ENGINE = InnoDB,
+                PARTITION `%i` VALUES LESS THAN (%i) ENGINE = InnoDB
+            )''' % (tablename, now, now, next, next))
 
     @synchronized(partition_lock)
     @synchronized(datapoint_lock)
@@ -298,8 +258,8 @@ class MySQLAPI(object):
                 raise
             else:
                 connection.commit()
-            finally:
                 self._datapoint_cache.clear_interval(interval)
+            finally:
                 cursor.close()
 
     @synchronized(datapoint_lock)
@@ -326,30 +286,12 @@ class MySQLAPI(object):
 
     def add_partition(self, connection, tablename, values_less_than):
         cursor = connection.cursor(oursql.DictCursor)
-        try:
-            cursor.execute('ALTER TABLE `%s` ADD PARTITION (PARTITION `%s` VALUES LESS THAN (%i))' %
-                           (tablename, values_less_than, values_less_than))
-        except:
-            connection.rollback()
-            raise
-        else:
-            connection.commit()
-        finally:
-            cursor.close()
-        return True
+        cursor.execute('ALTER TABLE `%s` ADD PARTITION (PARTITION `%s` VALUES LESS THAN (%i))' %
+                       (tablename, values_less_than, values_less_than))
 
     def drop_partition(self, connection, tablename, partitionname):
         cursor = connection.cursor(oursql.DictCursor)
-        try:
-            cursor.execute('ALTER TABLE `%s` DROP PARTITION `%s`' % (tablename, partitionname))
-        except:
-            connection.rollback()
-            raise
-        else:
-            connection.commit()
-        finally:
-            cursor.close()
-        return True
+        cursor.execute('ALTER TABLE `%s` DROP PARTITION `%s`' % (tablename, partitionname))
 
     def close(self):
         self._scheduler.stop()

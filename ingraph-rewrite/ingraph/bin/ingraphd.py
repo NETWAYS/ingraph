@@ -42,6 +42,7 @@ from ingraph.scheduler import synchronized
 
 log = logging.getLogger(__name__)
 perfdata_lock = Lock()
+MAX_THREADS=2
 
 
 class IngraphDaemon(UnixDaemon):
@@ -56,6 +57,7 @@ class IngraphDaemon(UnixDaemon):
         self.connection = None
         self._dismissed = Event()
         self._remaining_perfdata = None
+        self._process_performancedata_threadpool = []
         super(IngraphDaemon, self).__init__(**kwargs)
 
     def before_daemonize(self):
@@ -127,13 +129,9 @@ class IngraphDaemon(UnixDaemon):
             #    os.remove(file)
 
     def run(self):
-        #self._process_performancedata_thread = Thread(target=self._process_performancedata, name=__name__)
-        #self._process_performancedata_thread.setDaemon(True)
-        #self._process_performancedata_thread.start()
-        self._pool = []
-        for i in xrange(1, 11):
-            t = Thread(target=self._process_performancedata, name=i)
-            self._pool.append(t)
+        for i in xrange(0, MAX_THREADS):
+            t = Thread(target=self._process_performancedata, name="Process performance data %d" % (i + 1))
+            self._process_performancedata_threadpool.append(t)
             t.setDaemon(True)
             t.start()
         try:
@@ -146,8 +144,7 @@ class IngraphDaemon(UnixDaemon):
     def cleanup(self):
         self._dismissed.set()
         log.info("Waiting for daemon to complete processing open performance data files..")
-        #self._process_performancedata_thread.join()
-        for t in self._pool:
+        for t in self._process_performancedata_threadpool:
             t.join()
         self.connection.close()
 

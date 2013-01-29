@@ -42,7 +42,7 @@ from ingraph.scheduler import synchronized
 
 log = logging.getLogger(__name__)
 perfdata_lock = Lock()
-MAX_THREADS=2
+MAX_THREADS = 4
 
 
 class IngraphDaemon(UnixDaemon):
@@ -119,10 +119,10 @@ class IngraphDaemon(UnixDaemon):
                     log.error("%s %s:%i" % (e, input.filename(), input.filelineno()))
                     continue
                 host_service_record = self.connection.fetch_host_service(observation['host'], observation['service'])
-                for plot, values in perfdata.iteritems():
-                    value, uom, min, max = values
-                    plot_record = self.connection.fetch_plot(host_service_record['id'], plot, uom)
-                    self.connection.insert_datapoint(plot_record['id'], observation['timestamp'], value)
+                for plot, performance_data in perfdata.iteritems():
+                    plot_record = self.connection.fetch_plot(host_service_record['id'], plot, performance_data.pop('uom'))
+                    self.connection.insert_datapoint(plot_record['id'], observation['timestamp'], performance_data.pop('value'))
+                    self.connection.insert_performance_data(plot_record['id'], observation['timestamp'], **performance_data)
             #if self._perfdata_mode == 'BACKUP':
             #    shutil.move(file, '%s.bak' % file)
             #elif self._perfdata_mode == 'REMOVE':

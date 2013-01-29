@@ -80,5 +80,8 @@ class Database(object):
     def insert_datapoint(self, plot_id, timestamp, value):
         return self.dbapi.insert_datapoint(self.dbapi.connect(), plot_id, timestamp, value)
 
+    def insert_performance_data(self, plot_id, timestamp, **kwargs):
+        return self.dbapi.insert_performance_data(self.dbapi.connect(), plot_id, timestamp, **kwargs)
+
     def __getattr__(self, key):
         return getattr(self.dbapi, key)

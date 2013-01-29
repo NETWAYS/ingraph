@@ -41,6 +41,8 @@ class PerfdataParser(object):
 
     match_quantitative_value = re.compile('(?P<value>[+-]?[0-9e,.]+)\s*(?P<uom>.*?)').match
 
+    match_range = re.compile('(?P<inside>@(?=[^:]+:))?(?P<start>[^:]+(?=:))?:?(?P<end>[^:]+)?').match
+
     binary_suffix = {
         'B': 1,
         'KB': 1 << 10,
@@ -104,8 +106,17 @@ class PerfdataParser(object):
             uom = 'raw'
         return value, uom, base
 
+    def _parse_threshold(self, value_string):
+        match = self.__class__.match_range(value_string)
+        if not match or match.group('start') and not match.group('end'):
+            raise InvalidPerfdata("Invalid performance data: warn or crit (%s) are not in the range format. "
+                                  "Please refer to http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT "
+                                  "for more information." % value_string)
+        # TODO(el): *:5 vs 5
+        return match.group('start'), match.group('end'), 'inside' if match.group('inside') else 'outside'
+
     def parse(self, perfdata_line):
-        # TODO(el): check_multi, plugin output, warn, crit
+        # TODO(el): check_multi, plugin output
         """
         (^|\s|\()(?P<data>-?\d[\d\.\,]*)(\)|\s|$)
         (^|\s|\()(?P<data>-?\d[\d\.\,]*)\s+(?P<uom>[a-zA-Z]+)\b
@@ -140,22 +151,50 @@ class PerfdataParser(object):
             values = format.split(';')
             try:
                 value, uom, base = self._parse_quantitative_value(values[0])
+                value *= base
             except AttributeError:
                 raise InvalidPerfdata("Invalid performance data: Measurement `%s` does not contain a value." % values[0])
             try:
-                min = values[3] * base
+                warn_lower, warn_upper, warn_type = self._parse_threshold(values[1])
+                if warn_lower:
+                    warn_lower *= base
+                if warn_upper:
+                    warn_upper *= base
             except IndexError:
-                if uom == 'percent':
-                    min = 0
-                else:
-                    min = None
+                warn_lower, warn_upper, warn_type = None, None, None
             try:
-                max = values[4] * base
+                crit_lower, crit_upper, crit_type = self._parse_threshold(values[2])
+                if crit_lower:
+                    crit_lower *= base
+                if crit_upper:
+                    crit_upper *= base
+            except IndexError:
+                crit_lower, crit_upper, crit_type = None, None, None
+            try:
+                min_ = values[3] * base
             except IndexError:
                 if uom == 'percent':
-                    max = 100
+                    min_ = 0
                 else:
-                    max = None
-            perfdata[label] = (value * base, uom, min, max)
+                    min_ = None
+            try:
+                max_ = values[4] * base
+            except IndexError:
+                if uom == 'percent':
+                    max_ = 100
+                else:
+                    max_ = None
+            perfdata[label] = {
+                'value': value,
+                'uom': uom,
+                'lower_limit': min_,
+                'upper_limit': max_,
+                'warn_lower': warn_lower,
+                'warn_upper': warn_upper,
+                'warn_type': warn_type,
+                'crit_lower': crit_lower,
+                'crit_upper': crit_upper,
+                'crit_type': crit_type
+            }
         perfdata_no_cruft.pop('perfdata')
         return perfdata_no_cruft, perfdata

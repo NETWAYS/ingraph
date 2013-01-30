@@ -20,12 +20,13 @@ import oursql
 import sys
 import logging
 from time import time
-from threading import Lock, RLock, Event
+from threading import Lock, RLock
 from decimal import Decimal
 
 from sqlalchemy import pool
 
 from ingraph.scheduler import Scheduler, synchronized, RotationJob, RecurringJob
+from ingraph.cache import Node, UniqueSortedRingBuffer
 
 __all__ = ['MySQLAPI']
 
@@ -87,24 +88,20 @@ class DatapointCache(dict):
         dict.__getitem__(self, interval).clear()
 
 
-class PerformanceData(object):
+class PerformanceData(Node):
 
     __slots__ = ('timestamp', 'lower_limit', 'upper_limit', 'warn_lower', 'warn_upper', 'warn_type',
-                 'crit_lower', 'crit_upper', 'crit_type', 'dirty')
+                 'crit_lower', 'crit_upper', 'crit_type', 'phantom')
 
     def __init__(self, **kwargs):
         for slot in self.__class__.__slots__:
             object.__setattr__(self, slot, None)
         self.update(**kwargs)
-        object.__setattr__(self, 'dirty', False)
+        self.phantom = True
 
     def __setattr__(self, name, value):
-        # TODO(el): How to process older/newer timestamps
-        old_value = getattr(self, name, None)
-        if name == 'timestamp':
-            object.__setattr__(self, name, value)
-        elif value and  value != old_value:
-            object.__setattr__(self, 'dirty', value)
+        if value != '':
+            # Prevent that empty strings overwrite None/NULL values which would cause invalid decimal value exception
             object.__setattr__(self, name, value)
 
     def update(self, **kwargs):
@@ -112,31 +109,60 @@ class PerformanceData(object):
         for k, v in values.iteritems():
             setattr(self, k, v)
 
+    def __eq__(self, other):
+        if not isinstance(other, PerformanceData):
+            return False
+        return all(getattr(self, slot) == getattr(other, slot) for slot in self.__class__.__slots__ if slot != 'phantom' and slot != 'timestamp')
+
+    def __repr__(self):
+        if not self:
+            return '%s()' % self.__class__.__name__
+        return '%s(%r)' % (self.__class__.__name__, dict((slot, getattr(self, slot)) for slot in self.__class__.__slots__))
+
 
 class PerformanceDataCache(dict):
 
     def __init__(self, dbapi):
         self.dbapi = dbapi
+        self.__pending = []
+        self.__abandon = []
 
     def __getitem__(self, key):
+        plot_id, timestamp = key
         try:
-            item = dict.__getitem__(self, key)
+            plot_cache = dict.__getitem__(self, plot_id)
         except KeyError:
-            performance_data = self.dbapi.fetch_performance_data(self.dbapi.connect(), key)
-            if performance_data:
-                item = PerformanceData(**performance_data)
-            else:
-                item = PerformanceData()
-            self[key] = item
-        return item
+            plot_cache = self[plot_id] = UniqueSortedRingBuffer()
+            performance_data_rows = self.dbapi.fetch_performance_data(self.dbapi.connect(), plot_id)
+            for performance_data_row in performance_data_rows:
+                performance_data = PerformanceData(**performance_data_row)
+                performance_data.phantom = False
+                plot_cache[performance_data_row['timestamp']] = performance_data
+        plot_cache[timestamp] = PerformanceData(timestamp=timestamp)
+        return plot_cache[timestamp]
 
     def generate_parambatch(self):
-        for plot_id, performance_data in self.iteritems():
-            if not performance_data.dirty:
+        for plot_id, plot_cache in self.iteritems():
+            if len(plot_cache) < 2:
                 continue
-            yield (plot_id, performance_data.timestamp, performance_data.lower_limit, performance_data.upper_limit,
-                   performance_data.warn_lower, performance_data.warn_upper, performance_data.warn_type,
-                   performance_data.crit_lower, performance_data.crit_upper, performance_data.crit_type)
+            for i, performance_data in enumerate(plot_cache):
+                if (i == 0 and performance_data.phantom) or\
+                   ((isinstance(performance_data.prev, PerformanceData) and performance_data.prev != performance_data) or
+                    (isinstance(performance_data.next, PerformanceData) and performance_data.next != performance_data)):
+                    self.__pending.append((plot_id, performance_data.key))
+                    yield (plot_id, performance_data.timestamp, performance_data.lower_limit, performance_data.upper_limit,
+                           performance_data.warn_lower, performance_data.warn_upper, performance_data.warn_type,
+                           performance_data.crit_lower, performance_data.crit_upper, performance_data.crit_type)
+                else:
+                    self.__abandon.append((plot_id, performance_data.key))
+
+    def commit(self):
+        for plot_id, key in self.__pending:
+            dict.__getitem__(self, plot_id)[key].phantom = False
+        del self.__pending[:]
+        for plot_id, key in self.__abandon:
+            del dict.__getitem__(self, plot_id)[key]
+        del self.__abandon[:]
 
 
 class MySQLAPI(object):
@@ -304,13 +330,6 @@ class MySQLAPI(object):
             datapoint = self._datapoint_cache[aggregate['interval'], plot_id, timestamp - timestamp % aggregate['interval']]
             datapoint.update(value)
 
-    """
-    ON DUPLICATE KEY UPDATE
-                    avg = (avg + VALUES(avg)) / 2,
-                    count = count + VALUES(count),
-                    min = IF(min < VALUES(min), min, VALUES(min)),
-                    max = IF(max > VALUES(max), max, VALUES(max))
-                    """
     @synchronized(partition_lock)
     @synchronized(datapoint_lock)
     def _insert_datapoints(self):
@@ -320,7 +339,12 @@ class MySQLAPI(object):
             try:
                 cursor.executemany(
                     '''INSERT INTO `datapoint_%d` (`plot_id`, `timestamp`, `avg`, `min`, `max`, `count`)
-                    VALUES (?, ?, ?, ?, ?, ?)''' % interval,
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE
+                    avg = (avg + VALUES(avg)) / 2,
+                    count = count + VALUES(count),
+                    min = IF(min < VALUES(min), min, VALUES(min)),
+                    max = IF(max > VALUES(max), max, VALUES(max))''' % interval,
                     self._datapoint_cache.generate_parambatch(interval))
             except:
                 connection.rollback()
@@ -334,24 +358,22 @@ class MySQLAPI(object):
     @synchronized(performance_data_lock)
     def fetch_performance_data(self, connection, plot_id):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('SELECT * FROM  `performance_data` WHERE `plot_id` = ? ORDER BY `timestamp` DESC LIMIT 1',
+        cursor.execute('SELECT * FROM  `performance_data` WHERE `plot_id` = ?',
                        (plot_id,))
-        return cursor.fetchone()
+        return cursor.fetchall()
 
     @synchronized(performance_data_lock)
     def insert_performance_data(self, connection, plot_id, timestamp, **kwargs):
-        kwargs['timestamp'] = timestamp
-        performance_data = self._performance_data_cache[plot_id]
+        performance_data = self._performance_data_cache[(plot_id, timestamp)]
         performance_data.update(**kwargs)
 
-    @synchronized(partition_lock)
     @synchronized(performance_data_lock)
     def _insert_performance_data(self):
         connection = self.connect()
         cursor = connection.cursor(oursql.DictCursor)
         try:
             cursor.executemany(
-                '''INSERT IGNORE INTO `performance_data` (
+                '''INSERT INTO `performance_data` (
                 `plot_id`, `timestamp`, `lower_limit`, `upper_limit`,
                 `warn_lower`, `warn_upper`, `warn_type`, `crit_lower`, `crit_upper`, `crit_type`)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
@@ -361,6 +383,7 @@ class MySQLAPI(object):
             raise
         else:
             connection.commit()
+            self._performance_data_cache.commit()
         finally:
             cursor.close()
 

@@ -20,19 +20,15 @@
 import logging
 import sys
 import os.path
-import fileinput
 from optparse import OptionParser, OptionGroup
 from glob import iglob
-from time import time
 from threading import Thread, Event
 from tempfile import NamedTemporaryFile
 import errno
 import shutil
 from threading import Lock
-from Queue import Queue
 
 import ingraph
-
 from ingraph.daemon import UnixDaemon, add_optparse_daemon_options
 from ingraph.config import file_config
 from ingraph.db import connect
@@ -42,7 +38,7 @@ from ingraph.scheduler import synchronized
 
 log = logging.getLogger(__name__)
 perfdata_lock = Lock()
-MAX_THREADS = 4
+MAX_THREADS = 1
 
 
 class IngraphDaemon(UnixDaemon):
@@ -110,23 +106,26 @@ class IngraphDaemon(UnixDaemon):
     def _process_performancedata(self):
         parser = PerfdataParser()
         while not self._dismissed.isSet():
-            file = self._consume_perfdata_file()
-            log.debug("Parsing performance data file %s.." % file)
-            for line in open(file):
+            filename = self._consume_perfdata_file()
+            log.debug("Parsing performance data file %s.." % filename)
+            f = open(filename)
+            for lineno, line in enumerate(f):
                 try:
                     observation, perfdata = parser.parse(line)
                 except InvalidPerfdata, e:
-                    log.error("%s %s:%i" % (e, input.filename(), input.filelineno()))
+                    log.error("%s %s:%i" % (e, filename, lineno))
                     continue
                 host_service_record = self.connection.fetch_host_service(observation['host'], observation['service'])
                 for plot, performance_data in perfdata.iteritems():
                     plot_record = self.connection.fetch_plot(host_service_record['id'], plot, performance_data.pop('uom'))
                     self.connection.insert_datapoint(plot_record['id'], observation['timestamp'], performance_data.pop('value'))
                     self.connection.insert_performance_data(plot_record['id'], observation['timestamp'], **performance_data)
-            #if self._perfdata_mode == 'BACKUP':
-            #    shutil.move(file, '%s.bak' % file)
-            #elif self._perfdata_mode == 'REMOVE':
-            #    os.remove(file)
+                    #self.connection.insert_state(plot_record['id'], observation['timestamp'], observation['state'].lower())
+            f.close()
+            if self._perfdata_mode == 'BACKUP':
+                shutil.move(filename, '%s.bak' % filename)
+            elif self._perfdata_mode == 'REMOVE':
+                os.remove(filename)
 
     def run(self):
         for i in xrange(0, MAX_THREADS):
@@ -150,14 +149,14 @@ class IngraphDaemon(UnixDaemon):
 
 
 def add_optparse_ingraph_options(parser):
-    PERFDATA_MODES = ('BACKUP', 'REMOVE')
+    PERFDATA_MODES = ('BACKUP', 'REMOVE', 'LEAVEMEBE')
     ingraph_group = OptionGroup(parser, "inGraph",
                                 "These are the options to specify the inGraph daemon:")
     ingraph_group.add_option('-P', '--perfdata-dir', dest='perfdata_dir', default='/var/lib/icinga/perfdata', metavar='DIR',
                              help="Set the performance data directory DIR. [default: %default]")
     ingraph_group.add_option('-e', '--pattern', dest='perfdata_pattern', default='*-perfdata.*[0-9]', metavar='PATTERN',
                              help="Find all performance data files matching the shell pattern PATTERN. [default: %default]")
-    ingraph_group.add_option('-m', '--mode', dest='perfdata_mode', default='BACKUP', choices=PERFDATA_MODES,
+    ingraph_group.add_option('-m', '--mode', dest='perfdata_mode', default='LEAVEMEBE', choices=PERFDATA_MODES,
                              help="perfdata files post processing, one of: %s [default: %%default]" % ', '.join(PERFDATA_MODES))
     parser.add_option_group(ingraph_group)
 

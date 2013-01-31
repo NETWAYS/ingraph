@@ -38,7 +38,7 @@ from ingraph.scheduler import synchronized
 
 log = logging.getLogger(__name__)
 perfdata_lock = Lock()
-MAX_THREADS = 1
+MAX_THREADS = 4
 
 
 class IngraphDaemon(UnixDaemon):

@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import re
-
 from ingraph.db.mysql import MySQLAPI
 from ingraph.cache import memoize
 
@@ -24,10 +22,10 @@ __all__ = ['connect']
 
 
 def connect(dsn):
-    return Database(dsn)
+    return IngraphDatabase(dsn)
 
 
-class Database(object):
+class IngraphDatabase(object):
 
     _dialects = {
         'mysql': MySQLAPI
@@ -49,39 +47,50 @@ class Database(object):
 
     @memoize
     def fetch_host(self, name):
-        res = self.dbapi.fetch_host(self.dbapi.connect(), name)
-        if not res:
-            res = self.dbapi.insert_host(self.dbapi.connect(), name)
-        return res
+        rs = self.dbapi.fetch_host(self.dbapi.connect(), name)
+        if not rs:
+            rs = self.dbapi.insert_host(self.dbapi.connect(), name)
+        return rs
 
     @memoize
     def fetch_service(self, name):
-        res = self.dbapi.fetch_service(self.dbapi.connect(), name)
-        if not res:
-            res = self.dbapi.insert_service(self.dbapi.connect(), name)
-        return res
+        rs = self.dbapi.fetch_service(self.dbapi.connect(), name)
+        if not rs:
+            rs = self.dbapi.insert_service(self.dbapi.connect(), name)
+        return rs
 
     @memoize
     def fetch_host_service(self, host_name, service_name):
         host = self.fetch_host(host_name)
         service = self.fetch_service(service_name)
-        res = self.dbapi.fetch_host_service(self.dbapi.connect(), host['id'], service['id'])
-        if not res:
-            res = self.dbapi.insert_host_service(self.dbapi.connect(), host['id'], service['id'])
-        return res
+        rs = self.dbapi.fetch_host_service(self.dbapi.connect(), host['id'], service['id'])
+        if not rs:
+            rs = self.dbapi.insert_host_service(self.dbapi.connect(), host['id'], service['id'])
+        return rs
 
     @memoize
     def fetch_plot(self, host_service_id, name, uom):
-        res = self.dbapi.fetch_plot(self.dbapi.connect(), host_service_id, name, uom)
-        if not res:
-            res = self.dbapi.insert_plot(self.dbapi.connect(), host_service_id, name, uom)
-        return res
+        rs = self.dbapi.fetch_plot(self.dbapi.connect(), host_service_id, name, uom)
+        if not rs:
+            rs = self.dbapi.insert_plot(self.dbapi.connect(), host_service_id, name, uom)
+        return rs
 
     def insert_datapoint(self, plot_id, timestamp, value):
         return self.dbapi.insert_datapoint(self.dbapi.connect(), plot_id, timestamp, value)
 
     def insert_performance_data(self, plot_id, timestamp, **kwargs):
         return self.dbapi.insert_performance_data(self.dbapi.connect(), plot_id, timestamp, **kwargs)
+
+    def fetch_hosts(self, host_pattern=None, limit=None, offset=None):
+        return self.dbapi.fetch_hosts(self.dbapi.connect(), host_pattern, limit, offset)
+
+    def fetch_services(self, host_pattern=None, service_pattern=None, limit=None, offset=None):
+        return self.dbapi.fetch_services(self.dbapi.connect(), host_pattern, service_pattern, limit, offset)
+
+    def fetch_plots(self, host_pattern=None, service_pattern=None, parent_service_pattern=None, plot_pattern=None,
+                    limit=None, offset=None):
+        return self.dbapi.fetch_plots(self.dbapi.connect(), host_pattern, service_pattern, parent_service_pattern,
+                                      plot_pattern, limit, offset)
 
     def __getattr__(self, key):
         return getattr(self.dbapi, key)

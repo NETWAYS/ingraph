@@ -146,9 +146,10 @@ class PerformanceDataCache(dict):
             if len(plot_cache) < 2:
                 continue
             for i, performance_data in enumerate(plot_cache):
-                if (i == 0 and performance_data.phantom) or\
-                   ((isinstance(performance_data.prev, PerformanceData) and performance_data.prev != performance_data) or
-                    (isinstance(performance_data.next, PerformanceData) and performance_data.next != performance_data)):
+                if (i == 0 and performance_data.phantom) or ((isinstance(performance_data.prev, PerformanceData) and
+                                                              performance_data.prev != performance_data) or
+                                                             (isinstance(performance_data.next, PerformanceData) and
+                                                              performance_data.next != performance_data)):
                     self.__pending.append((plot_id, performance_data.key))
                     yield (plot_id, performance_data.timestamp, performance_data.lower_limit, performance_data.upper_limit,
                            performance_data.warn_lower, performance_data.warn_upper, performance_data.warn_type,
@@ -195,7 +196,7 @@ class MySQLAPI(object):
         log.debug("Checking database schema..")
         connection = self.connect()
         present = int(time())
-        existing_datapoint_tables = self.fetch_datapoint_tables(connection)
+        existing_datapoint_tables = [table for table in self.fetch_datapoint_tables(connection)]
         configured_datapoint_tables = []
         for aggregate in aggregates:
             datapoint_table = 'datapoint_%i' % aggregate['interval']
@@ -226,9 +227,9 @@ class MySQLAPI(object):
         self.add_partition(connection, tablename, next_values_less_than)
 
     def _schedule_rotation(self, connection, tablename):
-        partitions = self.fetch_partitions(connection, tablename)
-        present, ahead = (int(float(partitions[0]['partition_name'].encode('ascii', 'ignore'))),
-                          int(float(partitions[1]['partition_name'].encode('ascii', 'ignore'))))
+        partitions = [partition for partition in self.fetch_partitions(connection, tablename)]
+        present, ahead = (int(float(partitions[0].encode('ascii', 'ignore'))),
+                          int(float(partitions[1].encode('ascii', 'ignore'))))
         retention_period = ahead - present
         log.debug("%s: Detected retention period %d.." % (tablename, retention_period))
         now = int(time())
@@ -294,12 +295,10 @@ class MySQLAPI(object):
         return self.fetch_plot(connection, host_service_id, name, uom)
 
     def fetch_datapoint_tables(self, connection):
-        cursor = connection.cursor(oursql.DictCursor)
+        cursor = connection.cursor()
         cursor.execute('SHOW TABLES LIKE "datapoint_%"', plain_query=True)
-        res = []
-        for table in cursor:
-            res.extend(table.values())
-        return res
+        for row in cursor:
+            yield row[0]
 
     def create_datapoint_table(self, connection, interval, present, ahead):
         cursor = connection.cursor(oursql.DictCursor)
@@ -360,7 +359,7 @@ class MySQLAPI(object):
         cursor = connection.cursor(oursql.DictCursor)
         cursor.execute('SELECT * FROM  `performance_data` WHERE `plot_id` = ?',
                        (plot_id,))
-        return cursor.fetchall()
+        return cursor
 
     @synchronized(performance_data_lock)
     def insert_performance_data(self, connection, plot_id, timestamp, **kwargs):
@@ -373,7 +372,7 @@ class MySQLAPI(object):
         cursor = connection.cursor(oursql.DictCursor)
         try:
             cursor.executemany(
-                '''INSERT INTO `performance_data` (
+                '''INSERT IGNORE INTO `performance_data` (
                 `plot_id`, `timestamp`, `lower_limit`, `upper_limit`,
                 `warn_lower`, `warn_upper`, `warn_type`, `crit_lower`, `crit_upper`, `crit_type`)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
@@ -388,11 +387,13 @@ class MySQLAPI(object):
             cursor.close()
 
     def fetch_partitions(self, connection, tablename):
-        cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('''SELECT DISTINCT `partition_name` FROM `information_schema`.`partitions`
+        cursor = connection.cursor()
+        cursor.execute('''SELECT DISTINCT `partition_name`
+                       FROM `information_schema`.`partitions`
                        WHERE `table_schema` = ? AND `table_name` = ?''',
                        (self.oursql_kwargs['db'], tablename))
-        return cursor.fetchall()
+        for row in cursor:
+            yield row[0]
 
     def add_partition(self, connection, tablename, values_less_than):
         cursor = connection.cursor(oursql.DictCursor)
@@ -402,6 +403,126 @@ class MySQLAPI(object):
     def drop_partition(self, connection, tablename, partitionname):
         cursor = connection.cursor(oursql.DictCursor)
         cursor.execute('ALTER TABLE `%s` DROP PARTITION `%s`' % (tablename, partitionname))
+
+    def fetch_hosts(self, connection, host_pattern=None, limit=None, offset=None):
+        condition = []
+        params = []
+        if host_pattern:
+            condition.append('`name` LIKE ?')
+            params.append(host_pattern)
+        query = 'SELECT `name` AS `host_name`FROM `host`'
+        countQuery = 'SELECT COUNT(`id`) FROM `host`'
+        try:
+            where = condition.pop()
+        except IndexError:
+            # No condition
+            pass
+        else:
+            query += ' WHERE %s' % where
+            countQuery += ' WHERE %s' % where
+        if limit:
+            query += ' LIMIT %d' % limit
+        if offset:
+            query += ' OFFSET %d' % offset
+        cursor = connection.cursor(oursql.DictCursor)
+        cursor.execute(query, params)
+        countCursor = connection.cursor()
+        countCursor.execute(countQuery, params)
+        return cursor, countCursor.fetchone()[0]
+
+    def fetch_services(self, connection, host_pattern=None, service_pattern=None, limit=None, offset=None):
+        condition = []
+        params = []
+        if host_pattern:
+            condition.append('`h`.`name` LIKE ?')
+            params.append(host_pattern)
+        if service_pattern:
+            condition.append('`s`.`name` LIKE ?')
+            params.append(service_pattern)
+        query = '''SELECT `s`.`name` AS `service_name`, `ps`.`name` AS `parent_service_name`
+                   FROM `hostservice` `hs`
+                   INNER JOIN `host` `h` ON `hs`.`host_id` = `h`.`id`
+                   INNER JOIN `service` `s` ON `hs`.`service_id` = `s`.`id`
+                   LEFT JOIN `hostservice` `phs` ON `hs`.`parent_hostservice_id` = `phs`.`id`
+                   LEFT JOIN `service` `ps` ON `phs`.`service_id` = `ps`.`id`'''
+        countQuery = '''SELECT COUNT(`hs`.`id`)
+                   FROM `hostservice` `hs`
+                   INNER JOIN `host` `h` ON `hs`.`host_id` = `h`.`id`
+                   INNER JOIN `service` `s` ON `hs`.`service_id` = `s`.`id`
+                   LEFT JOIN `hostservice` `phs` ON `hs`.`parent_hostservice_id` = `phs`.`id`
+                   LEFT JOIN `service` `ps` ON `phs`.`service_id` = `ps`.`id`'''
+        try:
+            where = condition.pop()
+        except IndexError:
+            # No condition
+            pass
+        else:
+            query += ' WHERE %s' % where
+            countQuery += ' WHERE %s' % where
+            for and_ in condition:
+                query += ' AND %s' % and_
+                countQuery += ' AND %s' % and_
+        if limit:
+            query += ' LIMIT %d' % limit
+        if offset:
+            query += ' OFFSET %d' % offset
+        cursor = connection.cursor(oursql.DictCursor)
+        cursor.execute(query, params)
+        countCursor = connection.cursor()
+        countCursor.execute(countQuery, params)
+        return cursor, countCursor.fetchone()[0]
+
+    def fetch_plots(self, connection, host_pattern=None, service_pattern=None, parent_service_pattern=None, plot_pattern=None,
+                    limit=None, offset=None):
+        condition = []
+        params = []
+        if host_pattern:
+            condition.append('`h`.`name` LIKE ?')
+            params.append(host_pattern)
+        if service_pattern:
+            condition.append('`s`.`name` LIKE ?')
+            params.append(service_pattern)
+        if parent_service_pattern:
+            condition.append('`ps`.`name` LIKE ?')
+            params.append(parent_service_pattern)
+        if plot_pattern:
+            condition.append('`p`.`name` LIKE ?')
+            params.append(plot_pattern)
+        query = '''SELECT `p`.`name` AS `plot_name`, `h`.`name` AS `host_name`, `s`.`name` AS `service_name`,
+                          `ps`.`name` AS `parent_service_name`
+                   FROM `plot` `p`
+                   INNER JOIN `hostservice` `hs` ON `p`.`hostservice_id` = `hs`.`id`
+                   INNER JOIN `host` `h` ON `hs`.`host_id` = `h`.`id`
+                   INNER JOIN `service` `s` ON `hs`.`service_id` = `s`.`id`
+                   LEFT JOIN `hostservice` `phs` ON `hs`.`parent_hostservice_id` = `phs`.`id`
+                   LEFT JOIN `service` `ps` ON `phs`.`service_id` = `ps`.`id`'''
+        countQuery = '''SELECT COUNT(`p`.`id`)
+                   FROM `plot` `p`
+                   INNER JOIN `hostservice` `hs` ON `p`.`hostservice_id` = `hs`.`id`
+                   INNER JOIN `host` `h` ON `hs`.`host_id` = `h`.`id`
+                   INNER JOIN `service` `s` ON `hs`.`service_id` = `s`.`id`
+                   LEFT JOIN `hostservice` `phs` ON `hs`.`parent_hostservice_id` = `phs`.`id`
+                   LEFT JOIN `service` `ps` ON `phs`.`service_id` = `ps`.`id`'''
+        try:
+            where = condition.pop()
+        except IndexError:
+            # No condition
+            pass
+        else:
+            query += ' WHERE %s' % where
+            countQuery += ' WHERE %s' % where
+            for and_ in condition:
+                query += ' AND %s' % and_
+                countQuery += ' AND %s' % and_
+        if limit:
+            query += ' LIMIT %d' % limit
+        if offset:
+            query += ' OFFSET %d' % offset
+        cursor = connection.cursor(oursql.DictCursor)
+        cursor.execute(query, params)
+        countCursor = connection.cursor()
+        countCursor.execute(countQuery, params)
+        return cursor, countCursor.fetchone()[0]
 
     def close(self):
         self._scheduler.stop()

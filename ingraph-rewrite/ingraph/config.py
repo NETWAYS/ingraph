@@ -17,7 +17,6 @@
 
 import logging
 import os.path
-import sys
 
 log = logging.getLogger(__name__)
 

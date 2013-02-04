@@ -143,7 +143,8 @@ class PerformanceDataCache(dict):
         for plot_id, plot_cache in self.iteritems():
             for i, performance_data in enumerate(plot_cache):
                 if performance_data.phantom:
-                    if (performance_data.next != performance_data or
+                    if (performance_data.next != performance_data
+                        and performance_data.prev != performance_data or
                         not isinstance(performance_data.next, PerformanceData) and i == 0):
                         self.__pending.append((plot_id, performance_data.key))
                         yield (plot_id, performance_data.timestamp, performance_data.lower_limit, performance_data.upper_limit,
@@ -175,7 +176,7 @@ class MySQLAPI(object):
         if passwd:
             oursql_kwargs['passwd'] = passwd
         self.oursql_kwargs = oursql_kwargs
-        pool.manage(oursql)
+        pool.manage(oursql, max_overflow=10, pool_size=5)
         self._scheduler = Scheduler()
         self._start_of_available_data = None
         self._aggregates = None
@@ -356,18 +357,19 @@ class MySQLAPI(object):
                     VALUES (?, ?, ?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE
                     avg = (avg + VALUES(avg)) / 2,
-                    count = count + VALUES(count),
+                    count = VALUES(count),
                     min = IF(min < VALUES(min), min, VALUES(min)),
                     max = IF(max > VALUES(max), max, VALUES(max))''' % interval,
                     self._datapoint_cache.generate_parambatch(interval))
+            except oursql.CollatedWarningsError as warnings:
+                log.warn(warnings)
             except:
                 connection.rollback()
                 raise
-            else:
-                connection.commit()
-                self._datapoint_cache.clear_interval(interval)
             finally:
                 cursor.close()
+        connection.commit()
+        self._datapoint_cache.clear_interval(interval)
 
 
     def get_performance_data(self, connection, plot_id):
@@ -392,14 +394,16 @@ class MySQLAPI(object):
                 `warn_lower`, `warn_upper`, `warn_type`, `crit_lower`, `crit_upper`, `crit_type`)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                 self._performance_data_cache.generate_parambatch())
+        except oursql.CollatedWarningsError as warnings:
+            log.warn(warnings)
         except:
             connection.rollback()
             raise
-        else:
-            connection.commit()
-            self._performance_data_cache.commit()
         finally:
             cursor.close()
+        connection.commit()
+        self._performance_data_cache.commit()
+
 
     def fetch_partitions(self, connection, tablename):
         cursor = connection.cursor()
@@ -533,7 +537,6 @@ class MySQLAPI(object):
             query += ' LIMIT %d' % limit
         if offset:
             query += ' OFFSET %d' % offset
-        print query
         cursor = connection.cursor(oursql.DictCursor)
         cursor.execute(query, params)
         countCursor = connection.cursor()
@@ -553,7 +556,7 @@ class MySQLAPI(object):
         else:
             left = right
         i -= proposed_interval - left <= right - proposed_interval
-        return intervals[i]
+        return intervals[max(i, 0)]
 
     def align_interval(self, start=None, end=None, interval=None):
         if interval:
@@ -575,8 +578,8 @@ class MySQLAPI(object):
     def fetch_datapoints(self, connection, plot_ids, start, end, interval, null_tolerance=0):
         cursor = connection.cursor(oursql.DictCursor)
         cursor.execute('''SELECT * FROM `datapoint_%d`
-                          WHERE `timestamp` BETWEEN ? AND ? AND `plot_id` IN (?)
-                          ORDER BY `timestamp` ASC''' % interval, (start, end, ','.join(map(repr, plot_ids))))
+                          WHERE `timestamp` BETWEEN ? AND ? AND `plot_id` IN (%s)
+                          ORDER BY `timestamp` ASC''' % (interval, ','.join(map(str, plot_ids))), (start, end))
         return cursor
 
     def fetch_performance_data(self, connection, plot_ids, start, end):

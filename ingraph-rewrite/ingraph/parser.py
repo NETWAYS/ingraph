@@ -72,9 +72,7 @@ class PerfdataParser(object):
         'us': 10 ** (-6)
     }
 
-    def _parse_quantitative_value(self, value_string):
-        match = self.__class__.match_quantitative_value(value_string)
-        value = match.group('value')
+    def _parse_decimal(self, value):
         last_comma = value.rfind(',')
         comma_count = value.count(',')
         last_period = value.rfind('.')
@@ -89,6 +87,10 @@ class PerfdataParser(object):
             # Values like 1,0; 1,000.0; 1.0
             # Note that values like 1,0 are treated comma-less whereas 1.0 is treated with comma
             value = Decimal(value.replace(',', ''))
+        return value
+
+    def _parse_quantitative_value(self, value_string):
+        match = self.__class__.match_quantitative_value(value_string)
         sfx = match.group('uom').upper()
         if sfx == '%':
             base = 1
@@ -108,7 +110,7 @@ class PerfdataParser(object):
         else:
             base = 1
             uom = 'raw'
-        return value, uom, base
+        return match.group('value'), uom, base
 
     def _parse_threshold(self, value_string):
         match = self.__class__.match_range(value_string)
@@ -150,42 +152,48 @@ class PerfdataParser(object):
             perfdata_no_cruft['service'] = ''
         perfdata = []
         for child_service, plot_label, format in self.find_perfdata(perfdata_no_cruft['perfdata']):
+            # Trainling unfilled semicolons can be dropped
+            values = re.sub(r';+$', '', format).split(';')
             # value[UOM];[warn];[crit];[min];[max]
             # where min and max are set automatically if missing to 0 and 100 respectively if UOM is `%`
-            values = format.split(';')
             try:
                 value, uom, base = self._parse_quantitative_value(values[0])
+                value = self._parse_decimal(value)
                 value *= base
             except AttributeError:
                 raise InvalidPerfdata("Invalid performance data: Measurement `%s` does not contain a value." % values[0])
             try:
                 warn_lower, warn_upper, warn_type = self._parse_threshold(values[1])
                 if warn_lower:
+                    warn_lower = self._parse_decimal(warn_lower)
                     warn_lower *= base
                 if warn_upper:
+                    warn_upper = self._parse_decimal(warn_upper)
                     warn_upper *= base
             except IndexError:
                 warn_lower, warn_upper, warn_type = None, None, None
             try:
                 crit_lower, crit_upper, crit_type = self._parse_threshold(values[2])
                 if crit_lower:
+                    crit_lower = self._parse_decimal(crit_lower)
                     crit_lower *= base
                 if crit_upper:
+                    crit_upper = self._parse_decimal(crit_upper)
                     crit_upper *= base
             except IndexError:
                 crit_lower, crit_upper, crit_type = None, None, None
             try:
-                min_ = values[3] * base
+                min_ = self._parse_decimal(values[3]) * base
             except IndexError:
                 if uom == 'percent':
-                    min_ = 0
+                    min_ = Decimal(0)
                 else:
                     min_ = None
             try:
-                max_ = values[4] * base
+                max_ = self._parse_decimal(values[4]) * base
             except IndexError:
                 if uom == 'percent':
-                    max_ = 100
+                    max_ = Decimal(100)
                 else:
                     max_ = None
             perfdata.append({

@@ -70,12 +70,11 @@ class IngraphAPI(object):
                     'types': {},
                     'host': spec['host'],
                     'service': spec['service'],
-                    'parent_service': None,
+                    'parent_service': spec['parent_service'],
                     'plot': plot['name'],
-                    'label': plot['name'],
                     'unit': plot['unit'],
-                    'min_timestamp': start,
-                    'max_timestamp': end,
+                    'start_timestamp': start,
+                    'end_timestamp': end,
                     'granularity': interval
                 }
             if spec['type'] not in fetch_plot['types']:
@@ -99,9 +98,19 @@ class IngraphAPI(object):
         for _, fetch_plot in fetch_plots.iteritems():
             for type_, data in fetch_plot['types'].iteritems():
                 chart = fetch_plot.copy()
+                label = '%s - %s' % (plot['name'], type_)
+                plot_id = spec['host']
+                if spec['parent_service']:
+                    label = '%s - %s' % (spec['parent_service'], label)
+                    plot_id = '%s - %s' % (plot_id, spec['parent_service'])
+                if spec['service']:
+                    plot_id = '%s - %s' % (plot_id, spec['service'])
+                plot_id = '%s - %s - %s' % (plot_id, fetch_plot['plot'], type_)
                 chart.pop('types')
                 chart['type'] = type_
                 chart['data'] = data
+                chart['label'] = label
+                chart['plot_id'] = plot_id
                 charts.append(chart)
         return {
             'comments': [],

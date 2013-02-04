@@ -115,16 +115,23 @@ class IngraphDaemon(UnixDaemon):
     @synchronized(perfdata_lock)
     def _consume_perfdata_file(self):
         if not self._remaining_perfdata:
-            files = iglob(self._perfdata_pathname)
+            from time import sleep
+            sleep(10)
             # TODO(el): Synchronize with active threads
+            files = iglob(self._perfdata_pathname)
             self._remaining_perfdata = sorted(files, key=lambda file: os.path.getmtime(file))
-        perfdata_to_process = self._remaining_perfdata.pop()
+        try:
+            perfdata_to_process = self._remaining_perfdata.pop()
+        except IndexError:
+            return None
         return perfdata_to_process
 
     def _process_performancedata(self):
         parser = PerfdataParser()
         while not self._dismissed.isSet():
             filename = self._consume_perfdata_file()
+            if not filename:
+                continue
             log.debug("Parsing performance data file %s.." % filename)
             f = open(filename)
             for lineno, line in enumerate(f):
@@ -196,7 +203,7 @@ def add_optparse_ingraph_options(parser):
                              help="Set the performance data directory DIR. [default: %default]")
     ingraph_group.add_option('-e', '--pattern', dest='perfdata_pattern', default='*-perfdata.*[0-9]', metavar='PATTERN',
                              help="Find all performance data files matching the shell pattern PATTERN. [default: %default]")
-    ingraph_group.add_option('-m', '--mode', dest='perfdata_mode', default='LEAVEMEBE', choices=PERFDATA_MODES,
+    ingraph_group.add_option('-m', '--mode', dest='perfdata_mode', default='BACKUP', choices=PERFDATA_MODES,
                              help="perfdata files post processing, one of: %s [default: %%default]" % ', '.join(PERFDATA_MODES))
     parser.add_option_group(ingraph_group)
 

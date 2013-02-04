@@ -20,21 +20,38 @@ import collections
 import bisect
 import weakref
 
-__all__ = ['memoize', 'Node', 'UniqueSortedRingBuffer']
+from threading import RLock
+
+from ingraph.scheduler import synchronized
+
+__all__ = ['get_cache', 'memoize', 'Node', 'UniqueSortedRingBuffer']
+
+cache_lock = RLock()
+_caches = {}
+
+
+@synchronized(cache_lock)
+def get_cache(name):
+    try:
+        cache = _caches[name]
+    except KeyError:
+        cache = _caches[name] = {}
+    return cache
 
 
 def memoize(f=None, cache={}):
     """Memoization decorator for both instance methods and functions."""
     if f is None:
         return functools.partial(memoize, cache=cache)
+    @synchronized(cache_lock)
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         key = (f, tuple(args), frozenset(kwargs.items()))
         try:
-            res = cache[key]
+            rs = cache[key]
         except KeyError:
-            res = cache[key] = f(*args, **kwargs)
-        return res
+            rs = cache[key] = f(*args, **kwargs)
+        return rs
     return wrapper
 
 

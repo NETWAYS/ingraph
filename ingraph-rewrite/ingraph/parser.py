@@ -17,6 +17,8 @@
 
 import re
 
+from decimal import Decimal
+
 __all__ = ['PerfdataParser', 'InvalidPerfdata']
 
 
@@ -39,7 +41,7 @@ class PerfdataParser(object):
         'HOSTCHECKCOMMAND': lambda v: ('check_command', v.split('!', 1)[0])
     }
 
-    find_perfdata = re.compile('([^= ][^=]*)=([^ ]+)').findall
+    find_perfdata = re.compile('(?:([^: ]+::[^:]+)::)?([^= ]+)=([^ ]+)').findall
 
     match_quantitative_value = re.compile('(?P<value>[+-]?[0-9e,.]+)\s*(?P<uom>.*?)').match
 
@@ -79,14 +81,14 @@ class PerfdataParser(object):
         period_count = value.count('.')
         if period_count > 1 and not comma_count or comma_count > 1 and not period_count:
             # Values like 1,000,000; 1.000.000
-            value = float(value.replace(',', '').replace('.', ''))
+            value = Decimal(value.replace(',', '').replace('.', ''))
         elif last_comma > last_period:
             # Values like 1,0; 1.000,0
-            value = float(value.replace('.', '').replace(',', '.'))
+            value = Decimal(value.replace('.', '').replace(',', '.'))
         else:
             # Values like 1,0; 1,000.0; 1.0
             # Note that values like 1,0 are treated comma-less whereas 1.0 is treated with comma
-            value = float(value.replace(',', ''))
+            value = Decimal(value.replace(',', ''))
         sfx = match.group('uom').upper()
         if sfx == '%':
             base = 1
@@ -118,7 +120,7 @@ class PerfdataParser(object):
         return match.group('start'), match.group('end'), 'inside' if match.group('inside') else 'outside'
 
     def parse(self, perfdata_line):
-        # TODO(el): check_multi, plugin output
+        # TODO(el): Parse plugin output, save check_command, save state
         """
         (^|\s|\()(?P<data>-?\d[\d\.\,]*)(\)|\s|$)
         (^|\s|\()(?P<data>-?\d[\d\.\,]*)\s+(?P<uom>[a-zA-Z]+)\b
@@ -146,8 +148,8 @@ class PerfdataParser(object):
             raise InvalidPerfdata("Invalid performance data: Line is missing `host`, `state`, or `perfdata`.")
         if 'service' not in perfdata_no_cruft:
             perfdata_no_cruft['service'] = ''
-        perfdata = {}
-        for label, format in self.find_perfdata(perfdata_no_cruft['perfdata']):
+        perfdata = []
+        for child_service, plot_label, format in self.find_perfdata(perfdata_no_cruft['perfdata']):
             # value[UOM];[warn];[crit];[min];[max]
             # where min and max are set automatically if missing to 0 and 100 respectively if UOM is `%`
             values = format.split(';')
@@ -186,7 +188,9 @@ class PerfdataParser(object):
                     max_ = 100
                 else:
                     max_ = None
-            perfdata[label] = {
+            perfdata.append({
+                'label': plot_label,
+                'child_service': child_service,
                 'value': value,
                 'uom': uom,
                 'lower_limit': min_,
@@ -197,6 +201,6 @@ class PerfdataParser(object):
                 'crit_lower': crit_lower,
                 'crit_upper': crit_upper,
                 'crit_type': crit_type
-            }
+            })
         perfdata_no_cruft.pop('perfdata')
         return perfdata_no_cruft, perfdata

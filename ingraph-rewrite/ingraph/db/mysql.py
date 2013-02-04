@@ -19,9 +19,11 @@ from __future__ import division
 import oursql
 import sys
 import logging
+import bisect
 from time import time
-from threading import Lock, RLock
-from decimal import Decimal
+from threading import Lock
+from operator import itemgetter
+from collections import deque
 
 from sqlalchemy import pool
 
@@ -33,7 +35,7 @@ __all__ = ['MySQLAPI']
 log = logging.getLogger(__name__)
 partition_lock = Lock()
 datapoint_lock = Lock()
-performance_data_lock = RLock()
+performance_data_lock = Lock()
 
 
 class Datapoint(object):
@@ -47,7 +49,6 @@ class Datapoint(object):
         self.count = count
 
     def update(self, value):
-        value = Decimal(repr(value))
         self.avg = (self.avg + value) / 2
         self.min = value if self.min == None else min(self.min, value)
         self.max = value if self.max == None else max(self.max, value)
@@ -70,7 +71,7 @@ class DatapointCache(dict):
         try:
             item = plot_cache[timestamp]
         except KeyError:
-            datapoint = self.dbapi.fetch_datapoint(self.dbapi.connect(), interval, plot_id, timestamp)
+            datapoint = self.dbapi.get_datapoint(self.dbapi.connect(), interval, plot_id, timestamp)
             if datapoint:
                 item = Datapoint(**datapoint)
             else:
@@ -99,11 +100,6 @@ class PerformanceData(Node):
         self.update(**kwargs)
         self.phantom = True
 
-    def __setattr__(self, name, value):
-        if value != '':
-            # Prevent that empty strings overwrite None/NULL values which would cause invalid decimal value exception
-            object.__setattr__(self, name, value)
-
     def update(self, **kwargs):
         values = dict((k, v) for (k, v) in kwargs.iteritems() if k in self.__class__.__slots__)
         for k, v in values.iteritems():
@@ -117,7 +113,8 @@ class PerformanceData(Node):
     def __repr__(self):
         if not self:
             return '%s()' % self.__class__.__name__
-        return '%s(%r)' % (self.__class__.__name__, dict((slot, getattr(self, slot)) for slot in self.__class__.__slots__))
+        return '%s(%r)' % (self.__class__.__name__,
+                           dict((slot, getattr(self, slot)) for slot in self.__class__.__slots__))
 
 
 class PerformanceDataCache(dict):
@@ -133,7 +130,7 @@ class PerformanceDataCache(dict):
             plot_cache = dict.__getitem__(self, plot_id)
         except KeyError:
             plot_cache = self[plot_id] = UniqueSortedRingBuffer()
-            performance_data_rows = self.dbapi.fetch_performance_data(self.dbapi.connect(), plot_id)
+            performance_data_rows = self.dbapi.get_performance_data(self.dbapi.connect(), plot_id)
             for performance_data_row in performance_data_rows:
                 performance_data = PerformanceData(**performance_data_row)
                 performance_data.phantom = False
@@ -142,20 +139,18 @@ class PerformanceDataCache(dict):
         return plot_cache[timestamp]
 
     def generate_parambatch(self):
+        # TODO(el): Fix duplicate key errors
         for plot_id, plot_cache in self.iteritems():
-            if len(plot_cache) < 2:
-                continue
             for i, performance_data in enumerate(plot_cache):
-                if (i == 0 and performance_data.phantom) or ((isinstance(performance_data.prev, PerformanceData) and
-                                                              performance_data.prev != performance_data) or
-                                                             (isinstance(performance_data.next, PerformanceData) and
-                                                              performance_data.next != performance_data)):
-                    self.__pending.append((plot_id, performance_data.key))
-                    yield (plot_id, performance_data.timestamp, performance_data.lower_limit, performance_data.upper_limit,
-                           performance_data.warn_lower, performance_data.warn_upper, performance_data.warn_type,
-                           performance_data.crit_lower, performance_data.crit_upper, performance_data.crit_type)
-                else:
-                    self.__abandon.append((plot_id, performance_data.key))
+                if performance_data.phantom:
+                    if (performance_data.next != performance_data or
+                        not isinstance(performance_data.next, PerformanceData) and i == 0):
+                        self.__pending.append((plot_id, performance_data.key))
+                        yield (plot_id, performance_data.timestamp, performance_data.lower_limit, performance_data.upper_limit,
+                               performance_data.warn_lower, performance_data.warn_upper, performance_data.warn_type,
+                               performance_data.crit_lower, performance_data.crit_upper, performance_data.crit_type)
+                    else:
+                        self.__abandon.append((plot_id, performance_data.key))
 
     def commit(self):
         for plot_id, key in self.__pending:
@@ -182,6 +177,10 @@ class MySQLAPI(object):
         self.oursql_kwargs = oursql_kwargs
         pool.manage(oursql)
         self._scheduler = Scheduler()
+        self._start_of_available_data = None
+        self._aggregates = None
+        self._datapoint_cache = None
+        self._performance_data_cache = None
 
     def connect(self):
         try:
@@ -194,7 +193,9 @@ class MySQLAPI(object):
     def setup_database_schema(self, aggregates):
         # TODO(el): Track aggregates for changes
         log.debug("Checking database schema..")
+        aggregates.sort(key=itemgetter('interval'))
         connection = self.connect()
+        cursor = connection.cursor()
         present = int(time())
         existing_datapoint_tables = [table for table in self.fetch_datapoint_tables(connection)]
         configured_datapoint_tables = []
@@ -206,6 +207,16 @@ class MySQLAPI(object):
                 ahead = present + aggregate['retention-period']
                 self.create_datapoint_table(connection, aggregate['interval'], present, ahead)
             self._schedule_rotation(connection, datapoint_table)
+            cursor.execute('SELECT MIN(`timestamp`) FROM datapoint_%d' % aggregate['interval'])
+        start = cursor.fetchone()[0]
+        if start:
+            self._start_of_available_data = start
+        else:
+            self._start_of_available_data = time()
+        while cursor.nextset():
+            start = cursor.fetchone()[0]
+            if start:
+                self._start_of_available_data = min(self._start_of_available_data, start)
         for tablename in [tablename for tablename in
                           existing_datapoint_tables if tablename not in
                           configured_datapoint_tables]:
@@ -215,7 +226,7 @@ class MySQLAPI(object):
         self._scheduler.add(RecurringJob("Inserting performance data", 0, 10, self._insert_performance_data))
         self._scheduler.start()
         self._aggregates = aggregates
-        self._datapoint_cache = DatapointCache(self, dict.fromkeys((aggregate['interval'] for aggregate in aggregates), {}))
+        self._datapoint_cache = DatapointCache(self, dict((aggregate['interval'], {}) for aggregate in aggregates))
         self._performance_data_cache = PerformanceDataCache(self)
 
     @synchronized(partition_lock)
@@ -250,49 +261,53 @@ class MySQLAPI(object):
     def drop_table(self, connection, tablename):
         connection.cursor().execute('DROP TABLE %s' % tablename, plain_query=True)
 
-    def fetch_host(self, connection, name):
+    def get_host(self, connection, host_name):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('SELECT * FROM `host` WHERE `name` = ?', (name,))
+        cursor.execute('SELECT * FROM `host` WHERE `name` = ?', (host_name,))
         return cursor.fetchone()
 
-    def insert_host(self, connection, name):
+    def insert_host(self, connection, host_name):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('INSERT INTO `host` (`id`, `name`) VALUES (?, ?)', (None, name))
-        return self.fetch_host(connection, name)
+        cursor.execute('INSERT INTO `host` (`name`) VALUES (?)', (host_name,))
+        return self.get_host(connection, host_name)
 
-    def fetch_service(self, connection, name):
+    def get_service(self, connection, service_name):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('SELECT * FROM `service` WHERE `name` = ?', (name,))
+        cursor.execute('SELECT * FROM `service` WHERE `name` = ?', (service_name,))
         return cursor.fetchone()
 
-    def insert_service(self, connection, name):
+    def insert_service(self, connection, service_name):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('INSERT INTO `service` (`id`, `name`) VALUES (?, ?)', (None, name))
-        return self.fetch_service(connection, name)
+        cursor.execute('INSERT INTO `service` (`name`) VALUES (?)', (service_name,))
+        return self.get_service(connection, service_name)
 
-    def fetch_host_service(self, connection, host_id, service_id):
+    def get_host_service(self, connection, host_id, service_id, parent_hostservice_id=None):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('SELECT * FROM `hostservice` WHERE `host_id` = ? AND `service_id` = ?',
-                       (host_id, service_id))
+        query = 'SELECT * FROM `hostservice` WHERE `host_id` = ? AND `service_id` = ?'
+        params = [host_id, service_id]
+        if parent_hostservice_id:
+            query += ' AND `parent_hostservice_id` = ?'
+            params.append(parent_hostservice_id)
+        cursor.execute(query, params)
         return cursor.fetchone()
 
-    def insert_host_service(self, connection, host_id, service_id):
+    def insert_host_service(self, connection, host_id, service_id, parent_hostservice_id=None):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('INSERT INTO `hostservice` (`id`, `host_id`, `service_id`) VALUES (?, ?, ?)',
-                       (None, host_id, service_id))
-        return self.fetch_host_service(connection, host_id, service_id)
+        cursor.execute('INSERT INTO `hostservice` (`host_id`, `service_id`, `parent_hostservice_id`) VALUES (?, ?, ?)',
+                       (host_id, service_id, parent_hostservice_id))
+        return self.get_host_service(connection, host_id, service_id, parent_hostservice_id)
 
-    def fetch_plot(self, connection, host_service_id, name, uom):
+    def get_plot(self, connection, host_service_id, plot_name):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('SELECT * FROM `plot` WHERE `hostservice_id` = ? AND `name` = ? AND `unit` = ?',
-                       (host_service_id, name, uom))
+        cursor.execute('SELECT * FROM `plot` WHERE `hostservice_id` = ? AND `name` = ?',
+                       (host_service_id, plot_name))
         return cursor.fetchone()
 
-    def insert_plot(self, connection, host_service_id, name, uom):
+    def insert_plot(self, connection, host_service_id, plot_name, plot_uom):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('INSERT INTO `plot` (`id`, `hostservice_id`, `name`, `unit`) VALUES (?, ?, ?, ?)',
-                       (None, host_service_id, name, uom))
-        return self.fetch_plot(connection, host_service_id, name, uom)
+        cursor.execute('INSERT INTO `plot` (`hostservice_id`, `name`, `unit`) VALUES (?, ?, ?)',
+                       (host_service_id, plot_name, plot_uom))
+        return self.get_plot(connection, host_service_id, plot_name)
 
     def fetch_datapoint_tables(self, connection):
         cursor = connection.cursor()
@@ -317,14 +332,14 @@ class MySQLAPI(object):
                 PARTITION `%d` VALUES LESS THAN (%d) ENGINE = InnoDB
             )''' % (interval, present, present, ahead, ahead))
 
-    def fetch_datapoint(self, connection, interval, plot_id, timestamp):
+    def get_datapoint(self, connection, interval, plot_id, timestamp):
         cursor = connection.cursor(oursql.DictCursor)
         cursor.execute('SELECT * FROM  `datapoint_%d` WHERE `plot_id` = ? AND `timestamp` = ?' % interval,
-            (plot_id, timestamp))
+                       (plot_id, timestamp))
         return cursor.fetchone()
 
     @synchronized(datapoint_lock)
-    def insert_datapoint(self, connection, plot_id, timestamp, value):
+    def insert_datapoint(self, plot_id, timestamp, value):
         for aggregate in self._aggregates:
             datapoint = self._datapoint_cache[aggregate['interval'], plot_id, timestamp - timestamp % aggregate['interval']]
             datapoint.update(value)
@@ -354,15 +369,15 @@ class MySQLAPI(object):
             finally:
                 cursor.close()
 
-    @synchronized(performance_data_lock)
-    def fetch_performance_data(self, connection, plot_id):
+
+    def get_performance_data(self, connection, plot_id):
         cursor = connection.cursor(oursql.DictCursor)
         cursor.execute('SELECT * FROM  `performance_data` WHERE `plot_id` = ?',
                        (plot_id,))
         return cursor
 
     @synchronized(performance_data_lock)
-    def insert_performance_data(self, connection, plot_id, timestamp, **kwargs):
+    def insert_performance_data(self, plot_id, timestamp, **kwargs):
         performance_data = self._performance_data_cache[(plot_id, timestamp)]
         performance_data.update(**kwargs)
 
@@ -372,7 +387,7 @@ class MySQLAPI(object):
         cursor = connection.cursor(oursql.DictCursor)
         try:
             cursor.executemany(
-                '''INSERT IGNORE INTO `performance_data` (
+                '''INSERT INTO `performance_data` (
                 `plot_id`, `timestamp`, `lower_limit`, `upper_limit`,
                 `warn_lower`, `warn_upper`, `warn_type`, `crit_lower`, `crit_upper`, `crit_type`)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
@@ -405,7 +420,7 @@ class MySQLAPI(object):
         cursor.execute('ALTER TABLE `%s` DROP PARTITION `%s`' % (tablename, partitionname))
 
     def fetch_hosts(self, connection, host_pattern=None, limit=None, offset=None):
-        condition = []
+        condition = deque()
         params = []
         if host_pattern:
             condition.append('`name` LIKE ?')
@@ -413,7 +428,7 @@ class MySQLAPI(object):
         query = 'SELECT `name` AS `host_name`FROM `host`'
         countQuery = 'SELECT COUNT(`id`) FROM `host`'
         try:
-            where = condition.pop()
+            where = condition.popleft()
         except IndexError:
             # No condition
             pass
@@ -431,7 +446,7 @@ class MySQLAPI(object):
         return cursor, countCursor.fetchone()[0]
 
     def fetch_services(self, connection, host_pattern=None, service_pattern=None, limit=None, offset=None):
-        condition = []
+        condition = deque()
         params = []
         if host_pattern:
             condition.append('`h`.`name` LIKE ?')
@@ -452,7 +467,7 @@ class MySQLAPI(object):
                    LEFT JOIN `hostservice` `phs` ON `hs`.`parent_hostservice_id` = `phs`.`id`
                    LEFT JOIN `service` `ps` ON `phs`.`service_id` = `ps`.`id`'''
         try:
-            where = condition.pop()
+            where = condition.popleft()
         except IndexError:
             # No condition
             pass
@@ -474,7 +489,7 @@ class MySQLAPI(object):
 
     def fetch_plots(self, connection, host_pattern=None, service_pattern=None, parent_service_pattern=None, plot_pattern=None,
                     limit=None, offset=None):
-        condition = []
+        condition = deque()
         params = []
         if host_pattern:
             condition.append('`h`.`name` LIKE ?')
@@ -504,7 +519,7 @@ class MySQLAPI(object):
                    LEFT JOIN `hostservice` `phs` ON `hs`.`parent_hostservice_id` = `phs`.`id`
                    LEFT JOIN `service` `ps` ON `phs`.`service_id` = `ps`.`id`'''
         try:
-            where = condition.pop()
+            where = condition.popleft()
         except IndexError:
             # No condition
             pass
@@ -518,11 +533,58 @@ class MySQLAPI(object):
             query += ' LIMIT %d' % limit
         if offset:
             query += ' OFFSET %d' % offset
+        print query
         cursor = connection.cursor(oursql.DictCursor)
         cursor.execute(query, params)
         countCursor = connection.cursor()
         countCursor.execute(countQuery, params)
         return cursor, countCursor.fetchone()[0]
+
+    def _find_best_interval(self, proposed_interval):
+        intervals = [aggregate['interval'] for aggregate in self._aggregates]
+        i = bisect.bisect_left(intervals, proposed_interval)
+        try:
+            right = intervals[i]
+        except IndexError:
+            i -= 1
+            right = intervals[i]
+        if i:
+            left = intervals[i - 1]
+        else:
+            left = right
+        i -= proposed_interval - left <= right - proposed_interval
+        return intervals[i]
+
+    def align_interval(self, start=None, end=None, interval=None):
+        if interval:
+            interval = self._find_best_interval(interval)
+        if not end:
+            end = time()
+        if not start:
+            start = self._start_of_available_data
+        if start > end:
+            raise Exception
+        if not interval:
+            interval = self._find_best_interval((end - start) / 300) # Target resoultion 300
+        # Properly align start with the interval
+        start -= start % interval
+        start -= 1.5 * interval
+        end += 1.5 * interval
+        return start, end, interval
+
+    def fetch_datapoints(self, connection, plot_ids, start, end, interval, null_tolerance=0):
+        cursor = connection.cursor(oursql.DictCursor)
+        cursor.execute('''SELECT * FROM `datapoint_%d`
+                          WHERE `timestamp` BETWEEN ? AND ? AND `plot_id` IN (?)
+                          ORDER BY `timestamp` ASC''' % interval, (start, end, ','.join(map(repr, plot_ids))))
+        return cursor
+
+    def fetch_performance_data(self, connection, plot_ids, start, end):
+        cursor = connection.cursor(oursql.DictCursor)
+        cursor.execute('''SELECT * FROM `performance_data`
+                          WHERE `timestamp` BETWEEN ? AND ? AND `plot_id` IN (?)
+                          ORDER BY `timestamp` ASC''', (start, end, ','.join(map(repr, plot_ids))))
+        return cursor
 
     def close(self):
         self._scheduler.stop()

@@ -35,6 +35,8 @@ from ingraph.db import connect
 from ingraph.parser import PerfdataParser, InvalidPerfdata
 from ingraph.log import add_optparse_logging_options
 from ingraph.scheduler import synchronized
+from ingraph.xmlrpc import AuthenticatedXMLRPCServer
+from ingraph.api import  IngraphAPI
 
 log = logging.getLogger(__name__)
 perfdata_lock = Lock()
@@ -54,6 +56,8 @@ class IngraphDaemon(UnixDaemon):
         self._dismissed = Event()
         self._remaining_perfdata = None
         self._process_performancedata_threadpool = []
+        self._server = None
+        self._server_thread = None
         super(IngraphDaemon, self).__init__(**kwargs)
 
     def before_daemonize(self):
@@ -93,6 +97,20 @@ class IngraphDaemon(UnixDaemon):
             # Not a permission error
             raise
         self.connection.setup_database_schema(self._aggregates)
+        try:
+            xmlrpc_config = file_config('/share/netways.ingraph/ingraph-rewrite/examples/config/ingraph-xmlrpc.conf')
+        except IOError as e:
+            log.critical(e)
+            sys.exit(1)
+        if 'xmlrpc_address' not in xmlrpc_config or 'xmlrpc_port' not in xmlrpc_config:
+            log.critical("You need to set a bind address/port for the XML-RPC interface "
+                         "'xmlrpc_address' and 'xmlrpc_port' settings).")
+            sys.exit(1)
+        if 'xmlrpc_username' not in xmlrpc_config or 'xmlrpc_password' not in xmlrpc_config:
+            self.logger.error("You need to set an XML-RPC username and password "
+                              "'xmlrpc_username' and 'xmlrpc_password' settings).")
+            sys.exit(1)
+        self._xmlrpc_config = xmlrpc_config
 
     @synchronized(perfdata_lock)
     def _consume_perfdata_file(self):
@@ -115,12 +133,17 @@ class IngraphDaemon(UnixDaemon):
                 except InvalidPerfdata, e:
                     log.error("%s %s:%i" % (e, filename, lineno))
                     continue
-                host_service_record = self.connection.fetch_host_service(observation['host'], observation['service'])
-                for plot, performance_data in perfdata.iteritems():
-                    plot_record = self.connection.fetch_plot(host_service_record['id'], plot, performance_data.pop('uom'))
+                host_service_record = self.connection.get_host_service_guaranteed(observation['host'], observation['service'])
+                for performance_data in perfdata:
+                    if performance_data['child_service']:
+                        parent_host_service_record = self.connection.get_host_service_guaranteed(
+                            observation['host'], performance_data.pop('child_service'), observation['service'])
+                        hostservice_id = parent_host_service_record['id']
+                    else:
+                        hostservice_id = host_service_record['id']
+                    plot_record = self.connection.get_plot_guaranteed(hostservice_id, performance_data.pop('label'), performance_data.pop('uom'))
                     self.connection.insert_datapoint(plot_record['id'], observation['timestamp'], performance_data.pop('value'))
                     self.connection.insert_performance_data(plot_record['id'], observation['timestamp'], **performance_data)
-                    #self.connection.insert_state(plot_record['id'], observation['timestamp'], observation['state'].lower())
             f.close()
             if self._perfdata_mode == 'BACKUP':
                 shutil.move(filename, '%s.bak' % filename)
@@ -128,6 +151,21 @@ class IngraphDaemon(UnixDaemon):
                 os.remove(filename)
 
     def run(self):
+        log.info("Starting XML-RPC interface on %s:%d..." %
+                 (self._xmlrpc_config['xmlrpc_address'], self._xmlrpc_config['xmlrpc_port']))
+        self._server = AuthenticatedXMLRPCServer(
+            (self._xmlrpc_config['xmlrpc_address'], self._xmlrpc_config['xmlrpc_port']), allow_none=True)
+        self._server.timeout = 5
+        if sys.version_info[:2] < (2,6):
+            self._server.socket.settimeout(self._server.timeout)
+        self._server.required_username = self._xmlrpc_config['xmlrpc_username']
+        self._server.required_password = self._xmlrpc_config['xmlrpc_password']
+        self._server.register_introspection_functions()
+        self._server.register_multicall_functions()
+        self._server.register_instance(IngraphAPI(self.connection))
+        self._server_thread = Thread(target=self._server.serve_forever)
+        self._server_thread.setDaemon(True)
+        self._server_thread.start()
         for i in xrange(0, MAX_THREADS):
             t = Thread(target=self._process_performancedata, name="Process performance data %d" % (i + 1))
             self._process_performancedata_threadpool.append(t)
@@ -135,13 +173,15 @@ class IngraphDaemon(UnixDaemon):
             t.start()
         try:
             while not self._dismissed.isSet():
-                # TODO(el): Serve requests
                 self._dismissed.wait(sys.maxint) # A call to wait() without a timeout never raises KeyboardInterrupt
         except KeyboardInterrupt:
             sys.exit(0)
 
     def cleanup(self):
         self._dismissed.set()
+        if self._server:
+            self._server.shutdown()
+            self._server_thread.join()
         log.info("Waiting for daemon to complete processing open performance data files..")
         for t in self._process_performancedata_threadpool:
             t.join()

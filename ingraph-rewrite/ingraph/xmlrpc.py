@@ -1,5 +1,6 @@
-# inGraph (https://www.netways.org/projects/ingraph)
-# Copyright (C) 2011-2012 NETWAYS GmbH
+# Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+#
+# This file is part of inGraph (https://www.netways.org/projects/ingraph).
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,12 +18,15 @@
 import xmlrpclib
 import base64
 import sys
+import logging
 
 from SocketServer import ThreadingTCPServer
 from SimpleXMLRPCServer import SimpleXMLRPCDispatcher, SimpleXMLRPCRequestHandler
-
+from decimal import Decimal
 
 __all__ = ['AuthenticatedXMLRPCServer']
+
+log = logging.getLogger(__name__)
 
 
 class _xmldumps(object):
@@ -33,15 +37,21 @@ class _xmldumps(object):
         kwargs.setdefault('allow_none', 1)
         return self.__dumps[0](*args, **kwargs)
 
-
 xmlrpclib.dumps = _xmldumps(xmlrpclib.dumps)
+
+def dump_decimal(self, value, write):
+    write("<value><double>")
+    write(repr(float(value)))
+    write("</double></value>\n")
+
+xmlrpclib.Marshaller.dispatch[Decimal] = dump_decimal
 
 
 # http://www.acooke.org/cute/BasicHTTPA0.html
 class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
     allow_reuse_address = 1
 
-    def __init__(self, addr, logger, allow_none=False, logRequests=1, encoding='iso-8859-1'):
+    def __init__(self, addr, allow_none=False, logRequests=1, encoding='iso-8859-1'):
         class AuthenticatedRequestHandler(SimpleXMLRPCRequestHandler):
             def parse_request(myself):
                 if SimpleXMLRPCRequestHandler.parse_request(myself):
@@ -50,8 +60,7 @@ class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
                         username = None
                         password = None
                     else:
-                        (basic, encoded) = \
-                            header.split(' ', 2)
+                        (basic, encoded) = header.split(' ', 2)
                         assert basic == 'Basic', 'Only basic authentication supported'
                         (username, password) = base64.b64decode(encoded).split(':', 2)
                     if self.authenticate(username, password):
@@ -70,7 +79,6 @@ class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
         ThreadingTCPServer.__init__(self, addr, AuthenticatedRequestHandler)
         self.required_username = None
         self.required_password = None
-        self.logger = logger
 
     def authenticate(self, username, password):
         if self.required_username == None and self.required_password == None:
@@ -84,5 +92,5 @@ class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
             message  = "XML-RPC request caused exception:\n"
             message += "Method: %s\n" % (method)
             message += "Parameters: %s" % (str(params))
-            self.logger.exception(message)
+            log.exception(message)
             raise

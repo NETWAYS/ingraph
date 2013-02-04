@@ -185,7 +185,7 @@ class Collectord(daemon.UnixDaemon):
                 check_command = logdata['check_command']
             except KeyError:
                 check_command = None
-            
+
             update = (logdata['host'], upd_parentservice, upd_service,
                       upd_plotname, logdata['timestamp'], uom, raw_value,
                       raw_value, raw_value, min_value, max_value, warn_lower,
@@ -329,7 +329,7 @@ def main():
                             pidfile=options.pidfile,
                             format=options.format,
                             log=options.logfile)
-    
+
     if options.logfile and options.logfile != '-':
         collectord.stdout_logger = ingraph.log.FileLikeLogger(collectord.logger,
                                                               logging.INFO)

@@ -12,10 +12,10 @@ class inGraph_Provider_TemplateAction extends inGraphBaseAction
         } catch (inGraph_XmlRpc_Exception $e) {
             return $this->setError($e->getMessage());
         }
-        
+
         // TODO(el): Throw exception in case we did not find any plots?
         // if (!$plots['total']) { ... }
-        $manager = new inGraph_Template_Manager(
+        $manager = new inGraph_Templates_Manager(
             AgaviConfig::get('modules.ingraph.templates'));
 
         $template = $manager->fetchTemplate($service);

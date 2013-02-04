@@ -40,19 +40,21 @@ performance_data_lock = Lock()
 
 class Datapoint(object):
 
-    __slots__ = ('min', 'max', 'avg', 'count')
+    __slots__ = ('min', 'max', 'avg', 'count', 'dirty')
 
     def __init__(self, avg=0, min=None, max=None, count=0, **kwargs):
         self.avg = avg
         self.min = min
         self.max = max
         self.count = count
+        self.dirty = False
 
     def update(self, value):
         self.avg = (self.avg + value) / 2
         self.min = value if self.min == None else min(self.min, value)
         self.max = value if self.max == None else max(self.max, value)
         self.count += 1
+        self.dirty = True
 
 
 class DatapointCache(dict):
@@ -83,7 +85,8 @@ class DatapointCache(dict):
         interval_cache = dict.__getitem__(self, interval)
         for plot_id, plot_cache in interval_cache.iteritems():
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
-                yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max, datapoint.count
+                if datapoint.dirty:
+                    yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max, datapoint.count
 
     def clear_interval(self, interval):
         dict.__getitem__(self, interval).clear()
@@ -369,7 +372,7 @@ class MySQLAPI(object):
             finally:
                 cursor.close()
         connection.commit()
-        self._datapoint_cache.clear_interval(interval)
+        #self._datapoint_cache.clear_interval(interval)
 
 
     def get_performance_data(self, connection, plot_id):

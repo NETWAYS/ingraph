@@ -160,8 +160,12 @@ class IngraphDaemon(UnixDaemon):
     def run(self):
         log.info("Starting XML-RPC interface on %s:%d..." %
                  (self._xmlrpc_config['xmlrpc_address'], self._xmlrpc_config['xmlrpc_port']))
-        self._server = AuthenticatedXMLRPCServer(
-            (self._xmlrpc_config['xmlrpc_address'], self._xmlrpc_config['xmlrpc_port']), allow_none=True)
+        try:
+            self._server = AuthenticatedXMLRPCServer(
+                (self._xmlrpc_config['xmlrpc_address'], self._xmlrpc_config['xmlrpc_port']), allow_none=True)
+        except Exception as e:
+            log.critical(e)
+            sys.exit(1)
         self._server.timeout = 5
         if sys.version_info[:2] < (2,6):
             self._server.socket.settimeout(self._server.timeout)

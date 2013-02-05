@@ -51,7 +51,7 @@ xmlrpclib.Marshaller.dispatch[Decimal] = dump_decimal
 class AuthenticatedXMLRPCServer(ThreadingTCPServer, SimpleXMLRPCDispatcher):
     allow_reuse_address = 1
 
-    def __init__(self, addr, allow_none=False, logRequests=1, encoding='iso-8859-1'):
+    def __init__(self, addr, allow_none=False, logRequests=0, encoding='iso-8859-1'):
         class AuthenticatedRequestHandler(SimpleXMLRPCRequestHandler):
             def parse_request(myself):
                 if SimpleXMLRPCRequestHandler.parse_request(myself):

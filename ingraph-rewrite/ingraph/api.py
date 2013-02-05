@@ -31,7 +31,6 @@ class IngraphAPI(object):
         }
 
     def getServices(self, host_pattern=None, service_pattern=None, limit=None, offset=None):
-        print host_pattern, service_pattern, limit, offset
         rs, total = self.connection.fetch_services(host_pattern, service_pattern, limit, offset)
         return {
             'total': total,

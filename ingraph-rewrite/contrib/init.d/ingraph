@@ -19,10 +19,12 @@
 INGRAPH_CHDIR=/etc/ingraph
 INGRAPH_PIDFILE=/var/run/ingraph/ingraphd.pid
 INGRAPH_USER=ingraph
+INGRAPH_GROUP=icinga
 INGRAPH_PERFDATA_DIR="/usr/local/icinga/var/perfdata"
 INGRAPH_PERFDATA_PATTERN="*-perfdata.*[0-9]"
 INGRAPH_FILE_MODE="REMOVE"
 INGRAPH_LOGFILE="-"
+INGRAPH_LOGLEVEL="INFO"
 
 [ -r /etc/default/ingraph ] && . /etc/default/ingraph
 [ -r /etc/sysconfig/ingraph ] && . /etc/sysconfig/ingraph
@@ -34,10 +36,13 @@ do_action() {
     -d "$INGRAPH_CHDIR" \
     -p "$INGRAPH_PIDFILE" \
     -u "$INGRAPH_USER" \
+    -g "$INGRAPH_GROUP" \
     -o "$INGRAPH_LOGFILE" \
     -P "$INGRAPH_PERFDATA_DIR" \
     -e "$INGRAPH_PERFDATA_PATTERN" \
     -m "$INGRAPH_FILE_MODE" \
+    -v "$INGRAPH_LOGLEVEL" \
+    -b \
     "$1"
     RETVAL="$?"
 }

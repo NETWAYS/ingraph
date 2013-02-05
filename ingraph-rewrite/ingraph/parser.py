@@ -161,7 +161,7 @@ class PerfdataParser(object):
                 value = self._parse_decimal(value)
                 value *= base
             except AttributeError:
-                raise InvalidPerfdata("Invalid performance data: Measurement `%s` does not contain a value." % values[0])
+                raise InvalidPerfdata("Invalid performance data: Measurement `%s=%s` does not contain a valid value." % (plot_label, ' '.join(values)))
             try:
                 warn_lower, warn_upper, warn_type = self._parse_threshold(values[1])
                 if warn_lower:

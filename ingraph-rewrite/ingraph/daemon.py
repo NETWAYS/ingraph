@@ -89,12 +89,12 @@ class UnixDaemon(object):
         except OSError, e:
             raise Exception("fork #2 failed: %d (%s)" % (e.errno, e.strerror))
 
-    def _sigterm_handler(self):
+    def _sigterm_handler(self, signum, frame):
         sys.exit(0)
 
     def _atexit(self):
-        self._delpid()
         self.cleanup()
+        self._delpid()
 
     def cleanup(self):
         pass

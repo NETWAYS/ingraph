@@ -63,7 +63,7 @@ class IngraphDaemon(UnixDaemon):
     def before_daemonize(self):
         log.info("Starting inGraph daemon..")
         try:
-            databse_config = file_config('/share/netways.ingraph/ingraph-rewrite/examples/config/ingraph-database.conf')
+            databse_config = file_config('ingraph-database.conf')
         except IOError as e:
             log.critical(e)
             sys.exit(1)
@@ -75,7 +75,7 @@ class IngraphDaemon(UnixDaemon):
             log.critical("You need to set a database connection string (`dsn` setting) in your database configuration file.")
             sys.exit(1)
         try:
-            aggregates_config = file_config('/share/netways.ingraph/ingraph-rewrite/examples/config/ingraph-aggregates.conf')
+            aggregates_config = file_config('ingraph-aggregates.conf')
         except IOError as e:
             log.critical(e)
             sys.exit(1)
@@ -96,9 +96,8 @@ class IngraphDaemon(UnixDaemon):
                 sys.exit(1)
             # Not a permission error
             raise
-        self.connection.setup_database_schema(self._aggregates)
         try:
-            xmlrpc_config = file_config('/share/netways.ingraph/ingraph-rewrite/examples/config/ingraph-xmlrpc.conf')
+            xmlrpc_config = file_config('ingraph-xmlrpc.conf')
         except IOError as e:
             log.critical(e)
             sys.exit(1)
@@ -114,6 +113,8 @@ class IngraphDaemon(UnixDaemon):
 
     @synchronized(perfdata_lock)
     def _consume_perfdata_file(self):
+        if self._dismissed.isSet():
+            return None
         if not self._remaining_perfdata:
             from time import sleep
             sleep(10)
@@ -138,7 +139,7 @@ class IngraphDaemon(UnixDaemon):
                 try:
                     observation, perfdata = parser.parse(line)
                 except InvalidPerfdata, e:
-                    log.error("%s %s:%i" % (e, filename, lineno))
+                    log.warn("%s %s:%i" % (e, filename, lineno + 1))
                     continue
                 host_service_record = self.connection.get_host_service_guaranteed(observation['host'], observation['service'])
                 for performance_data in perfdata:
@@ -158,6 +159,7 @@ class IngraphDaemon(UnixDaemon):
                 os.remove(filename)
 
     def run(self):
+        self.connection.setup_database_schema(self._aggregates)
         log.info("Starting XML-RPC interface on %s:%d..." %
                  (self._xmlrpc_config['xmlrpc_address'], self._xmlrpc_config['xmlrpc_port']))
         try:
@@ -195,7 +197,7 @@ class IngraphDaemon(UnixDaemon):
             self._server_thread.join()
         log.info("Waiting for daemon to complete processing open performance data files..")
         for t in self._process_performancedata_threadpool:
-            t.join()
+            t.join(2)
         self.connection.close()
 
 
@@ -215,7 +217,7 @@ def add_optparse_ingraph_options(parser):
 class UnsupportedDaemonFunction(Exception): pass
 
 
-if __name__ == '__main__':
+def main():
     daemon_functions = ('start', 'stop', 'restart', 'status')
     usage = "Usage: %%prog [options] {%s}" % '|'.join(daemon_functions)
     parser = OptionParser(usage=usage,
@@ -236,3 +238,7 @@ if __name__ == '__main__':
     ingraphd = IngraphDaemon(**daemon_kwargs)
     # Exec daemon function
     getattr(ingraphd, args[0])()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -97,14 +97,14 @@ class IngraphAPI(object):
         for _, fetch_plot in fetch_plots.iteritems():
             for type_, data in fetch_plot['types'].iteritems():
                 chart = fetch_plot.copy()
-                label = '%s - %s' % (plot['name'], type_)
-                plot_id = spec['host']
-                if spec['parent_service']:
-                    label = '%s - %s' % (spec['parent_service'], label)
-                    plot_id = '%s - %s' % (plot_id, spec['parent_service'])
-                if spec['service']:
-                    plot_id = '%s - %s' % (plot_id, spec['service'])
-                plot_id = '%s - %s - %s' % (plot_id, fetch_plot['plot'], type_)
+                label = '%s - %s' % (chart['plot'], type_)
+                plot_id = chart['host']
+                if chart['parent_service']:
+                    label = '%s - %s' % (chart['parent_service'], label)
+                    plot_id = '%s - %s' % (plot_id, chart['parent_service'])
+                if chart['service']:
+                    plot_id = '%s - %s' % (plot_id, chart['service'])
+                plot_id = '%s - %s - %s' % (plot_id, chart['plot'], type_)
                 chart.pop('types')
                 chart['type'] = type_
                 chart['data'] = data

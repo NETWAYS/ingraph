@@ -34,7 +34,7 @@ setup(
     author_email = ingraph.__contact__,
     url = ingraph.__url__,
     requires = ['sqlalchemy (>=0.6.3)'],
-    packages = ['ingraph.bin', 'ingraph'],
+    packages = ['ingraph.bin', 'ingraph.db', 'ingraph'],
     zip_safe = False,
     entry_points = {
         'console_scripts': ['ingraphd = ingraph.bin.ingraphd:main']

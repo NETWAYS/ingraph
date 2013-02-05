@@ -40,20 +40,19 @@ performance_data_lock = Lock()
 
 class Datapoint(object):
 
-    __slots__ = ('min', 'max', 'avg', 'count', 'dirty')
+    __slots__ = ('min', 'max', 'avg', 'dirty')
 
-    def __init__(self, avg=0, min=None, max=None, count=0, **kwargs):
+    def __init__(self, avg=0, min=None, max=None, **kwargs):
         self.avg = avg
         self.min = min
         self.max = max
-        self.count = count
         self.dirty = False
 
     def update(self, value):
+        # TODO(el): Counter values
         self.avg = (self.avg + value) / 2
         self.min = value if self.min == None else min(self.min, value)
         self.max = value if self.max == None else max(self.max, value)
-        self.count += 1
         self.dirty = True
 
 
@@ -86,7 +85,7 @@ class DatapointCache(dict):
         for plot_id, plot_cache in interval_cache.iteritems():
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
                 if datapoint.dirty:
-                    yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max, datapoint.count
+                    yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max
 
     def clear_interval(self, interval):
         dict.__getitem__(self, interval).clear()
@@ -211,6 +210,9 @@ class MySQLAPI(object):
                 ahead = present + aggregate['retention-period']
                 self.create_datapoint_table(connection, aggregate['interval'], present, ahead)
             self._schedule_rotation(connection, datapoint_table)
+            self._scheduler.add(
+                RecurringJob("Inserting datapoints for interval %d" % aggregate['interval'],
+                             0, aggregate['interval'] * 1.1, self._insert_datapoints, aggregate['interval']))
             cursor.execute('SELECT MIN(`timestamp`) FROM datapoint_%d' % aggregate['interval'])
         start = cursor.fetchone()[0]
         if start:
@@ -226,7 +228,6 @@ class MySQLAPI(object):
                           configured_datapoint_tables]:
             log.info("Dropping table %s.." % tablename)
             self.drop_table(connection, tablename)
-        self._scheduler.add(RecurringJob("Inserting datapoints", 0, 5 * 60, self._insert_datapoints))
         self._scheduler.add(RecurringJob("Inserting performance data", 0, 5 * 60, self._insert_performance_data))
         self._scheduler.start()
         self._aggregates = aggregates
@@ -328,7 +329,6 @@ class MySQLAPI(object):
                 `min` decimal(20,5) NOT NULL,
                 `max` decimal(20,5) NOT NULL,
                 `avg` decimal(20,5) NOT NULL,
-                `count` int(11) NOT NULL,
                 PRIMARY KEY (`plot_id`, `timestamp`)
             ) ENGINE=InnoDB DEFAULT CHARSET=latin1
             PARTITION BY RANGE(timestamp) (
@@ -350,26 +350,25 @@ class MySQLAPI(object):
 
     @synchronized(partition_lock)
     @synchronized(datapoint_lock)
-    def _insert_datapoints(self):
+    def _insert_datapoints(self, interval):
         connection = self.connect()
-        for interval in self._datapoint_cache.iterkeys():
-            start = time()
-            cursor = connection.cursor(oursql.DictCursor)
-            try:
-                cursor.executemany(
-                    '''REPLACE INTO `datapoint_%d` (`plot_id`, `timestamp`, `avg`, `min`, `max`, `count`)
-                    VALUES (?, ?, ?, ?, ?, ?)''' % interval,
-                    self._datapoint_cache.generate_parambatch(interval))
-            except oursql.CollatedWarningsError as warnings:
-                log.warn(warnings)
-            except:
-                connection.rollback()
-                raise
-            finally:
-                cursor.close()
-            log.debug("Insert finished for interval %d in %3fs" % (interval, time() - start))
+        start = time()
+        cursor = connection.cursor(oursql.DictCursor)
+        try:
+            cursor.executemany(
+                '''REPLACE INTO `datapoint_%d` (`plot_id`, `timestamp`, `avg`, `min`, `max`)
+                VALUES (?, ?, ?, ?, ?)''' % interval,
+                self._datapoint_cache.generate_parambatch(interval))
+        except oursql.CollatedWarningsError as warnings:
+            log.warn(warnings)
+        except:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
+        log.debug("Inserted %d datapoints for interval %d in %3fs" % (cursor.rowcount, interval, time() - start))
         connection.commit()
-        #self._datapoint_cache.clear_interval(interval)
+        self._datapoint_cache.clear_interval(interval)
 
 
     def get_performance_data(self, connection, plot_id):
@@ -596,6 +595,7 @@ class MySQLAPI(object):
     def close(self):
         self._scheduler.stop()
         log.info("Inserting datapoints currently hold in memory..")
-        self._insert_datapoints()
+        for interval in self._datapoint_cache.iterkeys():
+            self._insert_datapoints(interval)
         log.info("Inserting performance data currently hold in memory..")
         self._insert_performance_data()

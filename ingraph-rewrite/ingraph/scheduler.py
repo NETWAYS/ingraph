@@ -91,6 +91,7 @@ class RecurringJob(object):
                 self._delay = 0
             else:
                 # TODO(el): !
+                log.debug("%s execution scheduled in %ds.." % (self.jobname, self._interval))
                 self._timer = Timer(self._interval, self.run)
             self._timer.start()
 

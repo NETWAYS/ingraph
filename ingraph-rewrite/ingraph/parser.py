@@ -41,11 +41,11 @@ class PerfdataParser(object):
         'HOSTCHECKCOMMAND': lambda v: ('check_command', v.split('!', 1)[0])
     }
 
-    find_perfdata = re.compile('(?:([^: ]+::[^:]+)::)?([^= ]+)=([^ ]+)').findall
+    find_perfdata = re.compile('(?:([^: ]+::[^:]+)::)?([^= ]+)=\s*([+-]?[0-9e,.]+)').findall
 
     match_quantitative_value = re.compile('(?P<value>[+-]?[0-9e,.]+)\s*(?P<uom>.*?)').match
 
-    match_range = re.compile('(?P<inside>@(?=[^:]+:))?(?P<start>[^:]+(?=:))?:?(?P<end>[^:]+)?').match
+    match_range = re.compile('(?P<inside>@(?=[^:]+:))?(?P<start>[^:]+(?=:))?:?(?P<end>(?(start)[^:]+|(?<!:)[^:]+))?').match
 
     binary_suffix = {
         'B': 1,
@@ -114,11 +114,10 @@ class PerfdataParser(object):
 
     def _parse_threshold(self, value_string):
         match = self.__class__.match_range(value_string)
-        if not match or match.group('start') and not match.group('end'):
+        if not match or not match.group('start') and not match.group('end'):
             raise InvalidPerfdata("Invalid performance data: warn or crit (%s) are not in the range format. "
                                   "Please refer to http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT "
                                   "for more information." % value_string)
-        # TODO(el): *:5 vs 5
         return match.group('start'), match.group('end'), 'inside' if match.group('inside') else 'outside'
 
     def parse(self, perfdata_line):

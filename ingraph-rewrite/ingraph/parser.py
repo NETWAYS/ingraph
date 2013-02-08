@@ -17,8 +17,6 @@
 
 import re
 
-from decimal import Decimal
-
 __all__ = ['PerfdataParser', 'InvalidPerfdata']
 
 
@@ -79,14 +77,14 @@ class PerfdataParser(object):
         period_count = value.count('.')
         if period_count > 1 and not comma_count or comma_count > 1 and not period_count:
             # Values like 1,000,000; 1.000.000
-            value = Decimal(value.replace(',', '').replace('.', ''))
+            value = float(value.replace(',', '').replace('.', ''))
         elif last_comma > last_period:
             # Values like 1,0; 1.000,0
-            value = Decimal(value.replace('.', '').replace(',', '.'))
+            value = float(value.replace('.', '').replace(',', '.'))
         else:
             # Values like 1,0; 1,000.0; 1.0
             # Note that values like 1,0 are treated comma-less whereas 1.0 is treated with comma
-            value = Decimal(value.replace(',', ''))
+            value = float(value.replace(',', ''))
         return value
 
     def _parse_quantitative_value(self, value_string):
@@ -185,14 +183,14 @@ class PerfdataParser(object):
                 min_ = self._parse_decimal(values[3]) * base
             except IndexError:
                 if uom == 'percent':
-                    min_ = Decimal(0)
+                    min_ = float(0)
                 else:
                     min_ = None
             try:
                 max_ = self._parse_decimal(values[4]) * base
             except IndexError:
                 if uom == 'percent':
-                    max_ = Decimal(100)
+                    max_ = float(100)
                 else:
                     max_ = None
             perfdata.append({

@@ -43,6 +43,12 @@ class Datapoint(object):
     __slots__ = ('min', 'max', 'avg', 'dirty')
 
     def __init__(self, avg=0, min=None, max=None, **kwargs):
+        if avg != None:
+            avg = float(avg)
+        if min != None:
+            min = float(min)
+        if max != None:
+            max = float(max)
         self.avg = avg
         self.min = min
         self.max = max
@@ -58,9 +64,16 @@ class Datapoint(object):
 
 class DatapointCache(dict):
 
-    def __init__(self, dbapi, mapping):
+    class PlotCache(dict):
+
+        def __init__(self, start=None, end=None):
+            self.start = start
+            self.end = end
+            dict.__init__(self)
+
+    def __init__(self, dbapi):
         self.dbapi = dbapi
-        dict.__init__(self, mapping)
+        dict.__init__(self)
 
     def __getitem__(self, key):
         interval, plot_id, timestamp = key
@@ -68,15 +81,18 @@ class DatapointCache(dict):
         try:
             plot_cache = interval_cache[plot_id]
         except KeyError:
-            plot_cache = interval_cache[plot_id] = {}
+            plot_cache = interval_cache[plot_id] = DatapointCache.PlotCache()
         try:
             item = plot_cache[timestamp]
         except KeyError:
-            datapoint = self.dbapi.get_datapoint(self.dbapi.connect(), interval, plot_id, timestamp)
-            if datapoint:
-                item = Datapoint(**datapoint)
-            else:
+            if not plot_cache.start or timestamp < plot_cache.start or timestamp > plot_cache.end:
                 item = Datapoint()
+            else:
+                datapoint = self.dbapi.get_datapoint(self.dbapi.connect(), interval, plot_id, timestamp)
+                if datapoint:
+                    item = Datapoint(**datapoint)
+                else:
+                    item = Datapoint()
             plot_cache[timestamp] = item
         return item
 
@@ -88,7 +104,12 @@ class DatapointCache(dict):
                     yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max
 
     def clear_interval(self, interval):
-        dict.__getitem__(self, interval).clear()
+        interval_cache = dict.__getitem__(self, interval)
+        for plot_cache in interval_cache.itervalues():
+            # TODO(el): Performance vs min/max in __getitem__
+            if plot_cache:
+                plot_cache.start = min(plot_cache.start, min(plot_cache.iterkeys()))
+                plot_cache.end = max(plot_cache.end, max(plot_cache.iterkeys()))
 
 
 class PerformanceData(Node):
@@ -141,7 +162,6 @@ class PerformanceDataCache(dict):
         return plot_cache[timestamp]
 
     def generate_parambatch(self):
-        # TODO(el): Fix duplicate key errors
         for plot_id, plot_cache in self.iteritems():
             for i, performance_data in enumerate(plot_cache):
                 if performance_data.phantom:
@@ -180,10 +200,10 @@ class MySQLAPI(object):
         self.oursql_kwargs = oursql_kwargs
         pool.manage(oursql, max_overflow=10, pool_size=5)
         self._scheduler = Scheduler()
-        self._start_of_available_data = None
+        self._start_of_available_data = time()
         self._aggregates = None
-        self._datapoint_cache = None
-        self._performance_data_cache = None
+        self._datapoint_cache = DatapointCache(self)
+        self._performance_data_cache = PerformanceDataCache(self)
 
     def connect(self):
         try:
@@ -198,7 +218,7 @@ class MySQLAPI(object):
         log.debug("Checking database schema..")
         aggregates.sort(key=itemgetter('interval'))
         connection = self.connect()
-        cursor = connection.cursor()
+        cursor = connection.cursor(oursql.DictCursor)
         present = int(time())
         existing_datapoint_tables = [table for table in self.fetch_datapoint_tables(connection)]
         configured_datapoint_tables = []
@@ -213,16 +233,12 @@ class MySQLAPI(object):
             self._scheduler.add(
                 RecurringJob("Inserting datapoints for interval %d" % aggregate['interval'],
                              0, aggregate['interval'] * 1.1, self._insert_datapoints, aggregate['interval']))
-            cursor.execute('SELECT MIN(`timestamp`) FROM datapoint_%d' % aggregate['interval'])
-        start = cursor.fetchone()[0]
-        if start:
-            self._start_of_available_data = start
-        else:
-            self._start_of_available_data = time()
-        while cursor.nextset():
-            start = cursor.fetchone()[0]
-            if start:
-                self._start_of_available_data = min(self._start_of_available_data, start)
+            cursor.execute('SELECT MIN(`timestamp`) AS `start`, MAX(`timestamp`) AS `end`, `plot_id` FROM `datapoint_%d` GROUP BY `plot_id`' % aggregate['interval'])
+            interval_cache = self._datapoint_cache[aggregate['interval']] = {}
+            for row in cursor:
+                self._start_of_available_data = min(self._start_of_available_data, row['start'])
+                interval_cache[row['plot_id']] = DatapointCache.PlotCache(row['start'], row['end'])
+
         for tablename in [tablename for tablename in
                           existing_datapoint_tables if tablename not in
                           configured_datapoint_tables]:
@@ -231,8 +247,6 @@ class MySQLAPI(object):
         self._scheduler.add(RecurringJob("Inserting performance data", 0, 5 * 60, self._insert_performance_data))
         self._scheduler.start()
         self._aggregates = aggregates
-        self._datapoint_cache = DatapointCache(self, dict((aggregate['interval'], {}) for aggregate in aggregates))
-        self._performance_data_cache = PerformanceDataCache(self)
 
     @synchronized(partition_lock)
     def _rotate_partition(self, tablename, partitionname, next_values_less_than):
@@ -369,7 +383,6 @@ class MySQLAPI(object):
         log.debug("Inserted %d datapoints for interval %d in %3fs" % (cursor.rowcount, interval, time() - start))
         connection.commit()
         self._datapoint_cache.clear_interval(interval)
-
 
     def get_performance_data(self, connection, plot_id):
         cursor = connection.cursor(oursql.DictCursor)

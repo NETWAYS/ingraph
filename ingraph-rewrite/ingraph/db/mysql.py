@@ -85,6 +85,11 @@ class DatapointCache(dict):
         try:
             item = plot_cache[timestamp]
         except KeyError:
+            cursor = self.dbapi.connect().cursor(oursql.DictCursor)
+            cursor.execute('SELECT MIN(`timestamp`) AS start, MAX(`timestamp`) AS end FROM `datapoint_%d` WHERE `plot_id` = ?' % interval, (plot_id,))
+            for row in cursor:
+                plot_cache.start = row['start']
+                plot_cache.end = row['end']
             if not plot_cache.start or timestamp < plot_cache.start or timestamp > plot_cache.end:
                 item = Datapoint()
             else:
@@ -233,11 +238,10 @@ class MySQLAPI(object):
             self._scheduler.add(
                 RecurringJob("Inserting datapoints for interval %d" % aggregate['interval'],
                              0, aggregate['interval'] * 1.1, self._insert_datapoints, aggregate['interval']))
-            cursor.execute('SELECT MIN(`timestamp`) AS `start`, MAX(`timestamp`) AS `end`, `plot_id` FROM `datapoint_%d` GROUP BY `plot_id`' % aggregate['interval'])
-            interval_cache = self._datapoint_cache[aggregate['interval']] = {}
+            cursor.execute('SELECT MIN(`timestamp`) AS `start` FROM `datapoint_%d`' % aggregate['interval'])
+            self._datapoint_cache[aggregate['interval']] = {}
             for row in cursor:
                 self._start_of_available_data = min(self._start_of_available_data, row['start'])
-                interval_cache[row['plot_id']] = DatapointCache.PlotCache(row['start'], row['end'])
 
         for tablename in [tablename for tablename in
                           existing_datapoint_tables if tablename not in

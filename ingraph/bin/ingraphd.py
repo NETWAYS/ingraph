@@ -64,18 +64,6 @@ def cleanup(engine):
         time.sleep(60)
         ingraph.model.cleanup(engine)
         
-
-def vacuum(engine):
-    while True:
-        time.sleep(7*24*60*60)
-        ingraph.model.exec_vacuum(engine)
-        
-
-def pragma(engine, pragma):
-    while True:
-        time.sleep(5*60)
-        ingraph.model.exec_pragma(engine, pragma)
-        
         
 def daemonized_thread(target, args):
     t = threading.Thread(target=target, args=args)
@@ -153,8 +141,6 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         
         daemonized_thread(flush, (self.engine, queryqueue))
         daemonized_thread(cleanup, (self.engine,))
-        daemonized_thread(vacuum, (self.engine,))
-        daemonized_thread(pragma, (self.engine, 'wal_checkpoint'))
 
         while not rpcmethods.shutdown_server:
             self.server.handle_request()

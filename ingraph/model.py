@@ -1332,10 +1332,6 @@ class PluginStatus(ModelBase):
             if tf.retention_period == None:
                 continue
 
-            if retention_period == None or tf.retention_period > retention_period:
-                retention_period = tf.retention_period
-
-        if retention_period != None:
             delsql = pluginstatus.delete(pluginstatus.c.timestamp < time() - retention_period)
             
             conn.execute(delsql)
@@ -1367,15 +1363,6 @@ def createModelEngine(dsn):
 
     conn = engine.connect()
 
-    # sqlite3-specific optimization
-    try:
-        conn.execute('PRAGMA locking_mode=exclusive')
-        conn.execute('PRAGMA journal_mode=WAL')
-        conn.execute('PRAGMA wal_autocheckpoint=0')
-        conn.execute('PRAGMA cache_size=1000000')
-    except:
-        pass
-
     metadata.create_all(engine)
 
     sel = select([func.min(datapoint.c.timestamp, type_=Integer).label('mintimestamp')])
@@ -1395,20 +1382,9 @@ def createModelEngine(dsn):
     return engine
 
 
-def exec_vacuum(conn):
-    try:
-        conn.execute('VAUUM')
-    except:
-        pass
-    
-
-def exec_pragma(conn, pragma):
-    try:
-        conn.execute('PRAGMA %s' % pragma)
-    except:
-        pass
-    
-
 def cleanup(conn):
-    DataPoint.cleanupOldData(conn)
-    PluginStatus.cleanupOldData(conn)
+    try:
+        DataPoint.cleanupOldData(conn)
+        PluginStatus.cleanupOldData(conn)
+    except Exception as e:
+        print e

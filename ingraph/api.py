@@ -406,7 +406,7 @@ class BackendRPCMethods(object):
             limit, offset)
         for plot in res.get('plots'):
             if plot.hostservice.parent_hostservice:
-                parent_service_name = plot.hostservice.parent_hostservice.service_name
+                parent_service_name = plot.hostservice.parent_hostservice.service.name
             else:
                 parent_service_name = None
             plots.append({

@@ -115,6 +115,7 @@ class DatapointCache(dict):
             if plot_cache:
                 plot_cache.start = min(plot_cache.start, min(plot_cache.iterkeys()))
                 plot_cache.end = max(plot_cache.end, max(plot_cache.iterkeys()))
+        interval_cache.clear()
 
 
 class PerformanceData(Node):

@@ -95,8 +95,8 @@ class BackendRPCMethods(object):
 
         return obj
 
-    def _createHostService(self, conn, host, service, parent_hostservice,
-                           check_command):
+    def _createHostService(self, conn, host, service, parent_hostservice=None,
+                           check_command=None):
         hostservice_key = (host, service)
 
         if hostservice_key in self.hostservices:
@@ -148,7 +148,7 @@ class BackendRPCMethods(object):
             if parent_service != None:
                 parent_service_obj = self._createService(conn, parent_service)
                 parent_hostservice_obj = self._createHostService(
-                    conn, host_obj, parent_service_obj, None)
+                    conn, host_obj, parent_service_obj)
             else:
                 parent_hostservice_obj = None
             service_obj = self._createService(conn, service)

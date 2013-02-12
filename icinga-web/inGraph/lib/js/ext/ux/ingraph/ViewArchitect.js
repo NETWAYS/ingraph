@@ -769,7 +769,7 @@
                                                             'plot'],
                                                     forceSelection: true,
                                                     allowBlank: false,
-                                                    value: ''
+                                                    value: 'service'
                                                 }
                                             ]
                                         },
@@ -788,7 +788,7 @@
                                                             'Bar Area Chart'],
                                                     forceSelection: true,
                                                     allowBlank: false,
-                                                    value: ''
+                                                    value: 'Line Chart'
                                                 }
                                             ]
                                         }
@@ -813,7 +813,7 @@
                                                     store: ['avg', 'min', 'max'],
                                                     forceSelection: true,
                                                     allowBlank: false,
-                                                    value: ''
+                                                    value: 'avg'
                                                 }
                                             ]
                                         },

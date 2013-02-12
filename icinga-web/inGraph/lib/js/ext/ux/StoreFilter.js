@@ -28,20 +28,19 @@
         // private override
         init: function (combo) {
             Ext.each(this.storesToFilter, function (cfg) {
+                combo.on('select', function (combo, record) {
+                    cfg.store.baseParams[cfg.param] = record.get(combo.valueField);
+                    cfg.store.load();
+                });
                 combo.on('change', function (field, newValue, oldValue) {
-                    if (newValue !== oldValue && combo.lastQuery) {
-                        delete combo.lastQuery;
-                    }
                     if (newValue === oldValue) {
                         return;
                     }
                     var selectedRecord = combo.getSelectedRecord();
-                    if (selectedRecord) {
-                        newValue = selectedRecord.get(combo.valueField);
-                    } else {
-                        newValue = '%' + newValue + '%';
+                    if (selectedRecord && selectedRecord.get(combo.valueField) === newValue) {
+                        return;
                     }
-                    cfg.store.baseParams[cfg.param] = newValue;
+                    cfg.store.baseParams[cfg.param] = '%' + newValue + '%';
                     cfg.store.load();
                 });
             });

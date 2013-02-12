@@ -601,7 +601,8 @@
                                                     fieldLabel: _('Title'),
                                                     emptyText: _('Title'),
                                                     anchor: '95%',
-                                                    allowBlank: false
+                                                    allowBlank: false,
+                                                    value: ''
                                                 }
                                             ]
                                         },
@@ -652,7 +653,8 @@
                                                         var date = new Date();
                                                         date.setDate(date.getDate() + 1);
                                                         return date;
-                                                    }())
+                                                    }()),
+                                                    value: ''
                                                 }
                                             ]
                                         },
@@ -673,7 +675,8 @@
                                                         var date = new Date();
                                                         date.setDate(date.getDate() + 1);
                                                         return date;
-                                                    }())
+                                                    }()),
+                                                    value: ''
                                                 }
                                             ]
                                         }
@@ -708,7 +711,8 @@
                                                     displayField: 'interval',
                                                     valueField: 'interval',
                                                     forceSelection: true,
-                                                    allowBlank: false
+                                                    allowBlank: false,
+                                                    value: ''
                                                 }
                                             ]
                                         },
@@ -764,7 +768,8 @@
                                                             'parentService',
                                                             'plot'],
                                                     forceSelection: true,
-                                                    allowBlank: false
+                                                    allowBlank: false,
+                                                    value: ''
                                                 }
                                             ]
                                         },
@@ -782,7 +787,8 @@
                                                             'Area Chart',
                                                             'Bar Area Chart'],
                                                     forceSelection: true,
-                                                    allowBlank: false
+                                                    allowBlank: false,
+                                                    value: ''
                                                 }
                                             ]
                                         }
@@ -806,7 +812,8 @@
                                                     mode: 'local',
                                                     store: ['avg', 'min', 'max'],
                                                     forceSelection: true,
-                                                    allowBlank: false
+                                                    allowBlank: false,
+                                                    value: ''
                                                 }
                                             ]
                                         },

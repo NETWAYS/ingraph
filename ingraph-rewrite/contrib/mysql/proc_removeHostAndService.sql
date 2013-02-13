@@ -8,17 +8,50 @@ CREATE PROCEDURE `proc_removeHostAndService`(
 BEGIN
 
 DECLARE output TEXT DEFAULT '';
-DECLARE affectedRows SMALLINT UNSIGNED DEFAULT 0;
 DECLARE affectedRowsTotal BIGINT UNSIGNED DEFAULT 0;
-DECLARE foundRows INT UNSIGNED DEFAULT 0;
-DECLARE datapointTables CURSOR for
-SELECT
-    table_name
-FROM
-    INFORMATION_SCHEMA.TABLES
-WHERE
-    table_schema = DATABASE()
-    AND table_name LIKE 'datapoint_%';
+DECLARE tablename VARCHAR(64);
+DECLARE plotId INT;
+DECLARE END_LOOP TINYINT DEFAULT 0;
+DECLARE datapointTables CURSOR FOR
+    SELECT
+        table_name
+    FROM
+        INFORMATION_SCHEMA.TABLES
+    WHERE
+        table_schema = DATABASE()
+        AND table_name LIKE 'datapoint_%';
+DECLARE plotIds CURSOR FOR
+    SELECT
+        p.id AS id
+    FROM
+        plot p
+    INNER JOIN
+        hostservice hs ON p.hostservice_id = hs.id
+    INNER JOIN
+        hostservice parent ON parent.id = hs.parent_hostservice_id
+    INNER JOIN
+        host h on parent.host_id = h.id
+    INNER JOIN
+        service s on parent.service_id = s.id
+    WHERE
+        h.name LIKE hostname
+        AND s.name LIKE servicename
+    UNION SELECT
+        p.id AS id
+    FROM
+        plot p
+    INNER JOIN
+        hostservice hs ON p.hostservice_id = hs.id
+    INNER JOIN
+        host h on hs.host_id = h.id
+    INNER JOIN
+        service s on hs.service_id = s.id
+    WHERE
+        h.name LIKE hostname
+        AND s.name LIKE servicename
+    ORDER BY
+        id;
+DECLARE CONTINUE HANDLER FOR 1329 set END_LOOP = 1;
 
 -- Uncomment following tow lines to rollback on any error
 #DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
@@ -27,78 +60,32 @@ WHERE
 START TRANSACTION;
 
 -- Delete from datapoints
-SET @hostname = hostname;
-SET @servicename = servicename;
 OPEN datapointTables;
-SET foundRows = FOUND_ROWS();
 datapointLoop: LOOP
-    IF foundRows > 0 THEN BEGIN
-        DECLARE tablename VARCHAR(64);
-        FETCH datapointTables INTO tablename;
-        SET foundRows = foundRows - 1;
-        SET @del1 = CONCAT(
-            'DELETE FROM ',
-                tablename,
-            ' WHERE '
-                'plot_id IN ('
-                    'SELECT '
-                        'p.id '
-                    'FROM '
-                        'plot p '
-                    'INNER JOIN '
-                        'hostservice hs ON p.hostservice_id = hs.id '
-                    'INNER JOIN '
-                        'hostservice parent ON parent.id = hs.parent_hostservice_id '
-                    'INNER JOIN '
-                        'host h on parent.host_id = h.id '
-                    'INNER JOIN '
-                        'service s on parent.service_id = s.id '
-                    'WHERE '
-                        'h.name LIKE ? ',
-                        'AND s.name LIKE ? ',
-                    'ORDER BY '
-                        'p.id'
-                ') '
-            'LIMIT 1000');
-        PREPARE del1Stmt FROM @del1;
-        SET @del2 = CONCAT(
-            'DELETE FROM ',
-                tablename,
-            ' WHERE '
-                'plot_id IN ('
-                    'SELECT '
-                        'p.id '
-                    'FROM '
-                        'plot p '
-                    'INNER JOIN '
-                        'hostservice hs ON p.hostservice_id = hs.id '
-                    'INNER JOIN '
-                        'host h on hs.host_id = h.id '
-                    'INNER JOIN '
-                        'service s on hs.service_id = s.id '
-                    'WHERE '
-                        'h.name LIKE ? ',
-                        'AND s.name LIKE ? ',
-                    'ORDER BY '
-                        'p.id'
-                ') '
-            'LIMIT 1000');
-        PREPARE del2Stmt FROM @del2;
-        REPEAT
-            EXECUTE del1Stmt USING @hostname, @servicename;
-            SET affectedRows = ROW_COUNT();
-            SET affectedRowsTotal = affectedRowsTotal + affectedRows;
-        UNTIL affectedRows = 0 END REPEAT;
-        REPEAT
-            EXECUTE del2Stmt USING @hostname, @servicename;
-            SET affectedRows = ROW_COUNT();
-            SET affectedRowsTotal = affectedRowsTotal + affectedRows;
-        UNTIL affectedRows = 0 END REPEAT;
-    END; ELSE
+    FETCH datapointTables INTO tablename;
+    IF END_LOOP THEN
+        CLOSE datapointTables;
         LEAVE datapointLoop;
     END IF;
+    SET @del = CONCAT(
+        'DELETE FROM ',
+            tablename,
+        ' WHERE '
+            'plot_id = ?');
+    PREPARE del FROM @del;
+    OPEN plotIds;
+    plotLoop: LOOP
+        FETCH plotIds INTO plotId;
+        IF END_LOOP THEN
+            SET END_LOOP = 0;
+            CLOSE plotIds;
+            LEAVE plotLoop;x
+        END IF;
+        SET @plotId = plotId;
+        EXECUTE del USING @plotId;
+        SET affectedRowsTotal = affectedRowsTotal + ROW_COUNT();
+    END LOOP plotLoop;
 END LOOP datapointLoop;
-CLOSE datapointTables;
 SET output = CONCAT("Removed ", affectedRowsTotal, " datapoints");
 
 -- Delete from performance data

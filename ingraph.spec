@@ -179,8 +179,9 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %doc AUTHORS LICENSE README TODO README.RHEL
 %endif
 %attr(755,root,root) %{_defaultdocdir}/%{name}/examples/
-%attr(0755,%{apacheuser},%{apachegroup}) %{_datadir}/icinga-web/app/modules/inGraph/config/views/
-%attr(0755,%{apacheuser},%{apachegroup}) %{_datadir}/icinga-web/app/modules/inGraph/config/templates/
+%config(noreplace) %attr(0755,%{apacheuser},%{apachegroup}) %{_datadir}/icinga-web/app/modules/inGraph/config/views/
+%config(noreplace) %attr(0755,%{apacheuser},%{apachegroup}) %{_datadir}/icinga-web/app/modules/inGraph/config/templates/
+%config(noreplace) %{_datadir}/icinga-web/app/modules/inGraph/config/*.xml
 %{_datadir}/icinga-web/
 %if "%{_vendor}" == "suse"
 %{_localstatedir}/adm/fillup-templates/sysconfig.ingraph*
@@ -212,6 +213,10 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %endif
 
 %changelog
+* Wed Feb 13 2013 michael.friedrich@netways.de
+- templates and views are config noreplace
+- icinga web config must not be overwritten
+
 * Fri Dec 21 2012 michael.friedrich@netways.de
 - add support for rhel, while keeping suse support
 

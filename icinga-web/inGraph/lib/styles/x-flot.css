@@ -16,6 +16,10 @@
     visibility: hidden;
 }
 
+.legendLabel {
+    font-size: 6pt !important;
+}
+
 @media print {
     body {
         overflow: visible !important;

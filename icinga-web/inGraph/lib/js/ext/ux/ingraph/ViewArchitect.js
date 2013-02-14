@@ -126,8 +126,7 @@
                     series: [],
                     start: values.start,
                     end: values.end,
-                    interval: values.interval,
-                    title: group
+                    interval: values.interval
                 };
                 this.store.query(values.groupby, group).each(function (series) {
                     panel.series.push({
@@ -150,6 +149,7 @@
                               '')) + series.data.plot + ' - ' + values.type
                     });
                 });
+                panel.title = panel.series[0].host + (panel.series[0].service ? (' - ' + panel.series[0].service) : '') + ' - ' + panel.series[0].plot
                 panels.push(panel);
             }, this);
             var view = new Ext.ux.ingraph.View({
@@ -602,7 +602,7 @@
                                                     emptyText: _('Title'),
                                                     anchor: '95%',
                                                     allowBlank: false,
-                                                    value: ''
+                                                    value: 'Generic View'
                                                 }
                                             ]
                                         },
@@ -654,7 +654,7 @@
                                                         date.setDate(date.getDate() + 1);
                                                         return date;
                                                     }()),
-                                                    value: ''
+                                                    value: new Date(strtotime('-1 week') * 1000)
                                                 }
                                             ]
                                         },
@@ -676,7 +676,7 @@
                                                         date.setDate(date.getDate() + 1);
                                                         return date;
                                                     }()),
-                                                    value: ''
+                                                    value: new Date(strtotime('now') * 1000)
                                                 }
                                             ]
                                         }
@@ -712,7 +712,7 @@
                                                     valueField: 'interval',
                                                     forceSelection: true,
                                                     allowBlank: false,
-                                                    value: ''
+                                                    value: 300
                                                 }
                                             ]
                                         },

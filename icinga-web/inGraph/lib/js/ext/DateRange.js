@@ -47,6 +47,7 @@
          *     });
          */
         daterange: function (value, field) {
+            return true;
             var date = field.parseDate(value),
                 backup;
             if (!date) {

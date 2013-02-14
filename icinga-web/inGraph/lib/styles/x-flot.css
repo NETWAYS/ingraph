@@ -17,8 +17,13 @@
 }
 
 .legendLabel {
-    font-size: 6pt !important;
+    font-size: 7pt !important;
 }
+
+.xflot {
+    font-size: 8pt !important;
+}
+
 
 @media print {
     body {

@@ -168,6 +168,7 @@
                     stateuid: stateuid
                 },
                 tabPanel = Ext.getCmp('cronk-tabs');
+            cronk = Ext.ux.ingraph.icingaweb.Cronk.local(cronk);
             view.setTitle(values.title);
             view.view = {
                 name: values.title
@@ -195,9 +196,11 @@
                 items.push(cfg);
             }, view); // Eof each panel
             view.addViewTbarItems();
+            cronk.add(view);
+            cronk.doLayout();
+            view.setSize(cronk.getSize());
             view.add(items);
-            cronk.items = view;
-            cronk = Ext.ux.ingraph.icingaweb.Cronk.local(cronk);
+            view.doLayout();
             // Manual handling of ext state
             Ext.state.Manager.getProvider().set(view.stateId, view.getState());
             cronk.on('removed', function () {

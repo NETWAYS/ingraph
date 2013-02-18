@@ -17,6 +17,7 @@
 
 import logging
 import os.path
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -29,3 +30,14 @@ def file_config(filename):
     execfile(filename, config)
     config_no_cruft = dict((k, v) for k, v in config.iteritems() if k not in globals())
     return config_no_cruft
+
+
+def validate_xmlrpc_config(xmlrpc_config):
+    if 'xmlrpc_address' not in xmlrpc_config or 'xmlrpc_port' not in xmlrpc_config:
+        log.critical("You need to set a bind address/port for the XML-RPC interface "
+                     "'xmlrpc_address' and 'xmlrpc_port' settings).")
+        sys.exit(1)
+    if 'xmlrpc_username' not in xmlrpc_config or 'xmlrpc_password' not in xmlrpc_config:
+        log.critical("You need to set an XML-RPC username and password "
+                     "'xmlrpc_username' and 'xmlrpc_password' settings).")
+        sys.exit(1)

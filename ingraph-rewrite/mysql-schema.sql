@@ -45,7 +45,7 @@ CREATE TABLE `host` (
   `name` varchar(128) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=517 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -67,7 +67,7 @@ CREATE TABLE `hostservice` (
   CONSTRAINT `hostservice_ibfk_1` FOREIGN KEY (`host_id`) REFERENCES `host` (`id`),
   CONSTRAINT `hostservice_ibfk_2` FOREIGN KEY (`parent_hostservice_id`) REFERENCES `hostservice` (`id`),
   CONSTRAINT `hostservice_ibfk_3` FOREIGN KEY (`service_id`) REFERENCES `service` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12422 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -84,7 +84,7 @@ CREATE TABLE `plot` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uc_plot_1` (`hostservice_id`,`name`),
   CONSTRAINT `plot_ibfk_1` FOREIGN KEY (`hostservice_id`) REFERENCES `hostservice` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12369 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -125,7 +125,7 @@ CREATE TABLE `service` (
   `name` varchar(128) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=190 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

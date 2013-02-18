@@ -23,12 +23,11 @@ import errno
 import fcntl
 import resource
 import logging
-
+import optparse
 from pwd import getpwnam
 from grp import getgrnam
-from optparse import OptionGroup
 
-__all__ = ['UnixDaemon', 'add_optparse_daemon_options']
+__all__ = ['UnixDaemon', 'get_option_parser']
 
 try:
     os.SEEK_SET
@@ -39,6 +38,7 @@ try:
     MAXFD = os.sysconf('SC_OPEN_MAX')
 except:
     MAXFD = 1024
+DAEMON_FUNCTIONS = ('start', 'stop', 'status', 'restart')
 log = logging.getLogger(__name__)
 
 
@@ -194,7 +194,10 @@ class UnixDaemon(object):
                 fp = open(self._logfile, 'a')
             except IOError as e:
                 if e.errno == errno.EACCES:
-                    log.critical("Permission denied to write to logfile %s.." % self._logfile)
+                    log.critical("Permission denied to write to logfile '%s'" % self._logfile)
+                    sys.exit(1)
+                if e.errno == errno.ENOENT:
+                    log.critical("No such directory: '%s'" % os.path.dirname(self._logfile))
                     sys.exit(1)
                 # Not a permission error
                 raise
@@ -219,6 +222,7 @@ class UnixDaemon(object):
                 # Remove all already attached handlers
                 del logging.getLogger().handlers[:]
                 channel = logging.FileHandler(filename=self._logfile)
+                channel.setFormatter(logging.Formatter(fmt='%(asctime)-15s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
                 logging.getLogger().addHandler(channel)
                 redirect_to = channel.stream
             else:
@@ -236,7 +240,7 @@ class UnixDaemon(object):
         if not pid and not ignore_error:
             log.error("%s is NOT running" % self.name)
             sys.exit(1)
-        log.info("Waiting for %s to die.." % self.name)
+        log.info("Waiting for %s to stop.." % self.name)
         try:
             if pid and pid != True:
                 os.kill(pid, signal.SIGTERM)
@@ -264,20 +268,38 @@ class UnixDaemon(object):
         pass
 
 
-def add_optparse_daemon_options(parser):
-    start_stop_group = OptionGroup(parser, "Start and stop",
+class UnsupportedDaemonFunction(Exception): pass
+
+
+class DaemonOptionParser(optparse.OptionParser):
+
+    def parse_args(self, a=None, v=None):
+        options, args = optparse.OptionParser.parse_args(self, a, v)
+        try:
+            if args[0] not in DAEMON_FUNCTIONS:
+                raise UnsupportedDaemonFunction()
+        except (IndexError, UnsupportedDaemonFunction):
+            self.print_usage()
+            sys.exit(1)
+        return options, args
+
+
+def get_option_parser(usage="Usage: %%prog [options]", version=None, chdir='/etc/ingraph', pidfile='/var/run/ingraph/ingraph.pid'):
+    usage += " {%s}" % '|'.join(DAEMON_FUNCTIONS)
+    parser = DaemonOptionParser(usage=usage, version=version)
+    start_stop_group = optparse.OptionGroup(parser, "Start and stop",
         "Here are the options to specify the daemon and how it should start or stop:")
-    start_stop_group.add_option('-p', '--pidfile', dest='pidfile', metavar='FILE', default='/var/run/ingraph/ingraph.pid',
+    start_stop_group.add_option('-p', '--pidfile', dest='pidfile', metavar='FILE', default=pidfile,
         help="pidfile FILE [default: %default]")
     start_stop_group.add_option('-u', '--user', dest='user', default=None,
         help="Start/stop the daemon as the user.")
     start_stop_group.add_option('-g', '--group', dest='group', default=None,
         help="Start/stop the daemon as in the group.")
-    start_group = OptionGroup(parser, "Start",
+    start_group = optparse.OptionGroup(parser, "Start",
         "These options are only used for starting daemons:")
     start_group.add_option('-b', '--background', dest='detach', default=False, action='store_true',
         help="Force the daemon into the background.")
-    start_group.add_option('-d', '--chdir', dest='chdir', metavar='DIR', default='/etc/ingraph',
+    start_group.add_option('-d', '--chdir', dest='chdir', metavar='DIR', default=chdir,
         help="chdir to directory DIR before starting the daemon. [default: %default]")
     start_group.add_option('-k', '--umask', dest='umask', default=None,
         help="Set the umask of the daemon.")
@@ -286,3 +308,4 @@ def add_optparse_daemon_options(parser):
              "Must be an absolute pathname. [default: %default]")
     parser.add_option_group(start_stop_group)
     parser.add_option_group(start_group)
+    return parser

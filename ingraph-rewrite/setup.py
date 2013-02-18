@@ -26,6 +26,7 @@ for config_file in ('ingraph-aggregates.conf', 'ingraph-database.conf',
     if not isfile('/etc/ingraph/%s' % config_file):
         config_files.append('examples/config/%s' % config_file)
 
+
 setup(
     name = ingraph.__name__,
     version = ingraph.__version__,
@@ -33,11 +34,12 @@ setup(
     author = ingraph.__author__,
     author_email = ingraph.__contact__,
     url = ingraph.__url__,
-    requires = ['sqlalchemy (>=0.6.3)'],
-    packages = ['ingraph.bin', 'ingraph.db', 'ingraph'],
+    requires = ['oursql (>=0.9.3)'],
+    packages = ['ingraph.bin.cmd', 'ingraph.bin', 'ingraph.db', 'ingraph'],
     zip_safe = False,
     entry_points = {
-        'console_scripts': ['ingraphd = ingraph.bin.ingraphd:main']
+        'console_scripts': ['ingraphd = ingraph.bin.ingraphd:main',
+                            'ingraph = ingraph.bin.cli:main']
     },
     data_files = [
         ('/etc/init.d', ['contrib/init.d/ingraph']),

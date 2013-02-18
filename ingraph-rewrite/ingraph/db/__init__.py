@@ -133,5 +133,23 @@ class IngraphDatabase(object):
     def fetch_performance_data(self, plot_ids, start=None, end=None):
         return self.dbapi.fetch_performance_data(self.dbapi.connect(), plot_ids, start, end)
 
+    def delete_datapoints(self, parambatch):
+        return self.dbapi.delete_datapoints(self.dbapi.connect(), parambatch)
+
+    def delete_plots(self, parambatch):
+        return self.dbapi.delete_plots(self.dbapi.connect(), parambatch)
+
+    def delete_performance_data(self, parambatch):
+        return self.dbapi.delete_performance_data(self.dbapi.connect(), parambatch)
+
+    def delete_host_services_unconstrained(self):
+        return self.dbapi.delete_host_services_unconstrained(self.dbapi.connect())
+
+    def delete_services_unconstrained(self):
+        return self.dbapi.delete_services_unconstrained(self.dbapi.connect())
+
+    def delete_hosts_unconstrained(self):
+        return self.dbapi.delete_hosts_unconstrained(self.dbapi.connect())
+
     def __getattr__(self, key):
         return getattr(self.dbapi, key)

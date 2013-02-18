@@ -20,7 +20,7 @@
 import logging
 import sys
 import os.path
-from optparse import OptionParser, OptionGroup
+from optparse import OptionGroup
 from glob import iglob
 from threading import Thread, Event
 from tempfile import NamedTemporaryFile
@@ -29,8 +29,8 @@ import shutil
 from threading import Lock
 
 import ingraph
-from ingraph.daemon import UnixDaemon, add_optparse_daemon_options
-from ingraph.config import file_config
+from ingraph.daemon import UnixDaemon, get_option_parser
+from ingraph.config import file_config, validate_xmlrpc_config
 from ingraph.db import connect
 from ingraph.parser import PerfdataParser, InvalidPerfdata
 from ingraph.log import add_optparse_logging_options
@@ -101,14 +101,7 @@ class IngraphDaemon(UnixDaemon):
         except IOError as e:
             log.critical(e)
             sys.exit(1)
-        if 'xmlrpc_address' not in xmlrpc_config or 'xmlrpc_port' not in xmlrpc_config:
-            log.critical("You need to set a bind address/port for the XML-RPC interface "
-                         "'xmlrpc_address' and 'xmlrpc_port' settings).")
-            sys.exit(1)
-        if 'xmlrpc_username' not in xmlrpc_config or 'xmlrpc_password' not in xmlrpc_config:
-            self.logger.error("You need to set an XML-RPC username and password "
-                              "'xmlrpc_username' and 'xmlrpc_password' settings).")
-            sys.exit(1)
+        validate_xmlrpc_config(xmlrpc_config)
         self._xmlrpc_config = xmlrpc_config
 
     @synchronized(perfdata_lock)
@@ -214,28 +207,14 @@ def add_optparse_ingraph_options(parser):
     parser.add_option_group(ingraph_group)
 
 
-class UnsupportedDaemonFunction(Exception): pass
-
-
 def main():
-    daemon_functions = ('start', 'stop', 'restart', 'status')
-    usage = "Usage: %%prog [options] {%s}" % '|'.join(daemon_functions)
-    parser = OptionParser(usage=usage,
-                          version="%%prog %s" % ingraph.__version__)
+    parser = get_option_parser(version="%%prog %s" % ingraph.__version__)
     add_optparse_logging_options(parser)
-    add_optparse_daemon_options(parser)
     add_optparse_ingraph_options(parser)
-    (options, args) = parser.parse_args()
-    try:
-        if args[0] not in daemon_functions:
-            raise UnsupportedDaemonFunction()
-    except (IndexError, UnsupportedDaemonFunction):
-        parser.print_usage()
-        sys.exit(1)
+    options, args = parser.parse_args()
     logging.getLogger().setLevel(getattr(logging, options.logging_level))
     # Remove all None-values from options
-    daemon_kwargs = dict((k, v) for k, v in options.__dict__.iteritems() if v is not None)
-    ingraphd = IngraphDaemon(**daemon_kwargs)
+    ingraphd = IngraphDaemon(**dict((k, v) for k, v in options.__dict__.iteritems() if v is not None))
     # Exec daemon function
     getattr(ingraphd, args[0])()
 

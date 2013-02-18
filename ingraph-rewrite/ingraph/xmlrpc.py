@@ -19,7 +19,6 @@ import xmlrpclib
 import base64
 import sys
 import logging
-
 from SocketServer import ThreadingTCPServer
 from SimpleXMLRPCServer import SimpleXMLRPCDispatcher, SimpleXMLRPCRequestHandler
 from decimal import Decimal

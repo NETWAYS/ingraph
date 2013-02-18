@@ -19,7 +19,6 @@ import functools
 import collections
 import bisect
 import weakref
-
 from threading import RLock
 
 from ingraph.scheduler import synchronized

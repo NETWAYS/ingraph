@@ -17,7 +17,6 @@
 
 import logging
 import sys
-
 from random import randint
 from threading import Event, Lock, Thread, Timer
 from functools import wraps

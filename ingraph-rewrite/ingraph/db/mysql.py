@@ -16,7 +16,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division
-import oursql
 import sys
 import logging
 import bisect
@@ -25,6 +24,7 @@ from threading import Lock
 from operator import itemgetter
 from collections import deque
 
+import oursql
 from sqlalchemy import pool
 
 from ingraph.scheduler import Scheduler, synchronized, RotationJob, RecurringJob
@@ -350,7 +350,8 @@ class MySQLAPI(object):
                 `avg` decimal(20,5) NOT NULL,
                 PRIMARY KEY (`plot_id`, `timestamp`)
             ) ENGINE=InnoDB DEFAULT CHARSET=latin1
-            PARTITION BY RANGE(timestamp) (
+            PARTITION BY RANGE(`timestamp`)
+            (
                 PARTITION `%d` VALUES LESS THAN (%d) ENGINE = InnoDB,
                 PARTITION `%d` VALUES LESS THAN (%d) ENGINE = InnoDB
             )''' % (interval, present, present, ahead, ahead))
@@ -524,7 +525,7 @@ class MySQLAPI(object):
         if plot_pattern:
             condition.append('`p`.`name` LIKE ?')
             params.append(plot_pattern)
-        query = '''SELECT `p`.`name` AS `plot_name`, `h`.`name` AS `host_name`, `s`.`name` AS `service_name`,
+        query = '''SELECT `p`.`id`, `p`.`name` AS `plot_name`, `h`.`name` AS `host_name`, `s`.`name` AS `service_name`,
                           `ps`.`name` AS `parent_service_name`
                    FROM `plot` `p`
                    INNER JOIN `hostservice` `hs` ON `p`.`hostservice_id` = `hs`.`id`
@@ -609,6 +610,108 @@ class MySQLAPI(object):
                           WHERE `timestamp` BETWEEN ? AND ? AND `plot_id` IN (?)
                           ORDER BY `timestamp` ASC''', (start, end, ','.join(map(repr, plot_ids))))
         return cursor
+
+    def delete_datapoints(self, connection, parambatch):
+        start = time()
+        rows_affected = 0
+        for interval in self._datapoint_cache.iterkeys():
+            cursor = connection.cursor()
+            try:
+                cursor.executemany(
+                    'DELETE FROM `datapoint_%d` WHERE `plot_id` = ?' % interval,
+                    parambatch)
+            except oursql.CollatedWarningsError as warnings:
+                log.warn(warnings)
+            except:
+                connection.rollback()
+                raise
+            finally:
+                cursor.close()
+            rows_affected += cursor.rowcount
+        return rows_affected, time() - start
+
+    def delete_plots(self, connection, parambatch):
+        start = time()
+        cursor = connection.cursor()
+        try:
+            cursor.executemany(
+                'DELETE FROM `plot` WHERE `id` = ?',
+                parambatch)
+        except oursql.CollatedWarningsError as warnings:
+            log.warn(warnings)
+        except:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
+        return cursor.rowcount, time() - start
+
+    def delete_performance_data(self, connection, parambatch):
+        start = time()
+        cursor = connection.cursor()
+        try:
+            cursor.executemany(
+                'DELETE FROM `performance_data` WHERE `plot_id` = ?',
+                parambatch)
+        except oursql.CollatedWarningsError as warnings:
+            log.warn(warnings)
+        except:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
+        return cursor.rowcount, time() - start
+
+    def delete_host_services_unconstrained(self, connection):
+        start = time()
+        cursor = connection.cursor()
+        cursor.execute(
+            '''DELETE
+                hs
+            FROM
+                hostservice hs
+            WHERE
+               hs.id NOT IN (
+                    SELECT
+                         hostservice_id
+                    FROM
+                         plot
+                )''')
+        return cursor.rowcount, time() - start
+
+    def delete_services_unconstrained(self, connection):
+        start = time()
+        cursor = connection.cursor()
+        cursor.execute(
+            '''DELETE
+                s
+            FROM
+                service s
+            WHERE
+               s.id NOT IN (
+                    SELECT
+                         service_id
+                    FROM
+                         hostservice
+                )''')
+        return cursor.rowcount, time() - start
+
+    def delete_hosts_unconstrained(self, connection):
+        start = time()
+        cursor = connection.cursor()
+        cursor.execute(
+            '''DELETE
+                h
+            FROM
+                host h
+            WHERE
+               h.id NOT IN (
+                    SELECT
+                         host_id
+                    FROM
+                         hostservice
+                )''')
+        return cursor.rowcount, time() - start
 
     def close(self):
         self._scheduler.stop()

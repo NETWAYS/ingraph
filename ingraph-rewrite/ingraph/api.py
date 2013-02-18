@@ -15,7 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+from itertools import chain
+
 __all__ = ['IngraphAPI']
+
+log = logging.getLogger(__name__)
 
 
 class IngraphAPI(object):
@@ -127,3 +132,24 @@ class IngraphAPI(object):
 
     def deleteComment(self):
         pass
+
+    def deleteHostService(self, host_pattern, service_pattern):
+        def generate_plots():
+            rs1, _ = self.connection.fetch_plots(host_pattern, service_pattern)
+            rs2, _ = self.connection.fetch_plots(host_pattern, None, service_pattern)
+            for plot in chain(rs1, rs2):
+                yield (plot['id'],)
+        # We would consume all items of the generator multiple times, so it's better to cache the list
+        plots = list(generate_plots())
+        rows_affected, time_ = self.connection.delete_datapoints(plots)
+        log.info("Deleted %d datapoints in %3fs" % (rows_affected, time_))
+        rows_affected, time_ = self.connection.delete_plots(plots)
+        log.info("Deleted %d plots in %3fs" % (rows_affected, time_))
+        rows_affected, time_ = self.connection.delete_performance_data(plots)
+        log.info("Deleted %d rows from performance data in %3fs" % (rows_affected, time_))
+        rows_affected, time_ = self.connection.delete_host_services_unconstrained()
+        log.info("Deleted %d host service combinations in %3fs" % (rows_affected, time_))
+        rows_affected, time_ = self.connection.delete_services_unconstrained()
+        log.info("Deleted %d services in %3fs" % (rows_affected, time_))
+        rows_affected, time_ = self.connection.delete_hosts_unconstrained()
+        log.info("Deleted %d hosts in %3fs" % (rows_affected, time_))

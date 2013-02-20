@@ -26,7 +26,7 @@ from threading import Thread, Event
 from tempfile import NamedTemporaryFile
 import errno
 import shutil
-from threading import Lock
+from time import time
 
 import ingraph
 from ingraph.daemon import UnixDaemon, get_option_parser
@@ -39,9 +39,7 @@ from ingraph.xmlrpc import AuthenticatedXMLRPCServer
 from ingraph.api import  IngraphAPI
 
 log = logging.getLogger(__name__)
-perfdata_lock = Lock()
 MAX_THREADS = 4
-
 
 class IngraphDaemon(UnixDaemon):
 
@@ -53,15 +51,12 @@ class IngraphDaemon(UnixDaemon):
         self._perfdata_pattern = kwargs.pop('perfdata_pattern')
         self._perfdata_pathname = os.path.join(self._perfdata_dir, self._perfdata_pattern)
         self.connection = None
-        self._dismissed = Event()
-        self._remaining_perfdata = None
-        self._process_performancedata_threadpool = []
         self._server = None
         self._server_thread = None
-        super(IngraphDaemon, self).__init__(**kwargs)
+        self._dismissed = Event()
+        UnixDaemon.__init__(self, **kwargs)
 
     def before_daemonize(self):
-        log.info("Starting inGraph daemon..")
         try:
             databse_config = file_config('ingraph-database.conf')
         except IOError as e:
@@ -104,52 +99,33 @@ class IngraphDaemon(UnixDaemon):
         validate_xmlrpc_config(xmlrpc_config)
         self._xmlrpc_config = xmlrpc_config
 
-    @synchronized(perfdata_lock)
-    def _consume_perfdata_file(self):
-        if self._dismissed.isSet():
-            return None
-        if not self._remaining_perfdata:
-            from time import sleep
-            sleep(10)
-            # TODO(el): Synchronize with active threads
-            files = iglob(self._perfdata_pathname)
-            self._remaining_perfdata = sorted(files, key=lambda file: os.path.getmtime(file))
-        try:
-            perfdata_to_process = self._remaining_perfdata.pop()
-        except IndexError:
-            return None
-        return perfdata_to_process
-
-    def _process_performancedata(self):
-        parser = PerfdataParser()
-        while not self._dismissed.isSet():
-            filename = self._consume_perfdata_file()
-            if not filename:
+    def _process_perfdata(self, filename, parser=PerfdataParser()):
+        start = time()
+        log.info("Parsing performance data file %s.." % filename)
+        f = open(filename)
+        for lineno, line in enumerate(f):
+            try:
+                observation, perfdata = parser.parse(line)
+            except InvalidPerfdata, e:
+                log.warn("%s %s:%i" % (e, filename, lineno + 1))
                 continue
-            log.debug("Parsing performance data file %s.." % filename)
-            f = open(filename)
-            for lineno, line in enumerate(f):
-                try:
-                    observation, perfdata = parser.parse(line)
-                except InvalidPerfdata, e:
-                    log.warn("%s %s:%i" % (e, filename, lineno + 1))
-                    continue
-                host_service_record = self.connection.get_host_service_guaranteed(observation['host'], observation['service'])
-                for performance_data in perfdata:
-                    if performance_data['child_service']:
-                        parent_host_service_record = self.connection.get_host_service_guaranteed(
-                            observation['host'], performance_data.pop('child_service'), observation['service'])
-                        hostservice_id = parent_host_service_record['id']
-                    else:
-                        hostservice_id = host_service_record['id']
-                    plot_record = self.connection.get_plot_guaranteed(hostservice_id, performance_data.pop('label'), performance_data.pop('uom'))
-                    self.connection.insert_datapoint(plot_record['id'], observation['timestamp'], performance_data.pop('value'))
-                    self.connection.insert_performance_data(plot_record['id'], observation['timestamp'], **performance_data)
-            f.close()
-            if self._perfdata_mode == 'BACKUP':
-                shutil.move(filename, '%s.bak' % filename)
-            elif self._perfdata_mode == 'REMOVE':
-                os.remove(filename)
+            host_service_record = self.connection.get_host_service_guaranteed(observation['host'], observation['service'])
+            for performance_data in perfdata:
+                if performance_data['child_service']:
+                    parent_host_service_record = self.connection.get_host_service_guaranteed(
+                        observation['host'], performance_data.pop('child_service'), observation['service'])
+                    hostservice_id = parent_host_service_record['id']
+                else:
+                    hostservice_id = host_service_record['id']
+                plot_record = self.connection.get_plot_guaranteed(hostservice_id, performance_data.pop('label'), performance_data.pop('uom'))
+                self.connection.insert_datapoint(plot_record['id'], observation['timestamp'], performance_data.pop('value'))
+                self.connection.insert_performance_data(plot_record['id'], observation['timestamp'], **performance_data)
+        f.close()
+        if self._perfdata_mode == 'BACKUP':
+            shutil.move(filename, '%s.bak' % filename)
+        elif self._perfdata_mode == 'REMOVE':
+            os.remove(filename)
+        log.debug("Processed %s in %3fs" % (filename, time() - start))
 
     def run(self):
         self.connection.setup_database_schema(self._aggregates)
@@ -170,27 +146,22 @@ class IngraphDaemon(UnixDaemon):
         self._server.register_multicall_functions()
         self._server.register_instance(IngraphAPI(self.connection))
         self._server_thread = Thread(target=self._server.serve_forever)
-        self._server_thread.setDaemon(True)
+        self._server_thread.daemon = True
         self._server_thread.start()
-        for i in xrange(0, MAX_THREADS):
-            t = Thread(target=self._process_performancedata, name="Process performance data %d" % (i + 1))
-            self._process_performancedata_threadpool.append(t)
-            t.setDaemon(True)
-            t.start()
         try:
-            while not self._dismissed.isSet():
-                self._dismissed.wait(sys.maxint) # A call to wait() without a timeout never raises KeyboardInterrupt
+            while not self._dismissed.is_set():
+                for filename in sorted(iglob(self._perfdata_pathname), key=lambda file: os.path.getmtime(file), reverse=True)[:10]:
+                    self._process_perfdata(filename)
         except KeyboardInterrupt:
             sys.exit(0)
 
     def cleanup(self):
+        log.info("Waiting for daemon to complete processing open performance data files..")
         self._dismissed.set()
         if self._server:
+            log.info("Stopping XML-RPC interface..")
             self._server.shutdown()
             self._server_thread.join()
-        log.info("Waiting for daemon to complete processing open performance data files..")
-        for t in self._process_performancedata_threadpool:
-            t.join(2)
         self.connection.close()
 
 

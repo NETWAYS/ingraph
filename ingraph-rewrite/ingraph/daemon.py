@@ -111,7 +111,7 @@ class UnixDaemon(object):
         try:
             self._pidfp = open(self._pidfle, 'r+')
         except IOError:
-            pidpath = os.path.split(self._pidfle)[0]
+            pidpath = os.path.dirname(self._pidfle)
             try:
                 os.mkdir(pidpath)
                 os.chown(pidpath, self.uid, -1)
@@ -189,7 +189,6 @@ class UnixDaemon(object):
 
     def _check_logfile_permissions(self):
         if self._logfile:
-            self._logfile = os.path.abspath(self._logfile)
             try:
                 fp = open(self._logfile, 'a')
             except IOError as e:
@@ -209,6 +208,7 @@ class UnixDaemon(object):
         if pid:
             log.error("%s already running with pid %i" % (self.name, pid))
             sys.exit(1)
+        log.info("Starting %s." % self.name)
         os.umask(self._umask)
         os.chdir(self._chdir)
         os.setgid(self.gid)

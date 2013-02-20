@@ -66,14 +66,15 @@ class DatapointCache(dict):
 
     class PlotCache(dict):
 
+        __slots__ = ('start', 'end')
+
         def __init__(self, start=None, end=None):
             self.start = start
             self.end = end
-            dict.__init__(self)
 
     def __init__(self, dbapi):
         self.dbapi = dbapi
-        dict.__init__(self)
+        self.cursor = dbapi.connect().cursor(oursql.DictCursor)
 
     def __getitem__(self, key):
         interval, plot_id, timestamp = key
@@ -82,18 +83,18 @@ class DatapointCache(dict):
             plot_cache = interval_cache[plot_id]
         except KeyError:
             plot_cache = interval_cache[plot_id] = DatapointCache.PlotCache()
+            self.cursor.execute('SELECT MIN(`timestamp`) AS start, MAX(`timestamp`) AS end FROM `datapoint_%d` WHERE `plot_id` = ?' % interval, (plot_id,))
+            row = self.cursor.fetchall()[0]
+            if row:
+                plot_cache.start = row['start']
+                plot_cache.end = row['end']
         try:
             item = plot_cache[timestamp]
         except KeyError:
-            cursor = self.dbapi.connect().cursor(oursql.DictCursor)
-            cursor.execute('SELECT MIN(`timestamp`) AS start, MAX(`timestamp`) AS end FROM `datapoint_%d` WHERE `plot_id` = ?' % interval, (plot_id,))
-            for row in cursor:
-                plot_cache.start = row['start']
-                plot_cache.end = row['end']
             if not plot_cache.start or timestamp < plot_cache.start or timestamp > plot_cache.end:
                 item = Datapoint()
             else:
-                datapoint = self.dbapi.get_datapoint(self.dbapi.connect(), interval, plot_id, timestamp)
+                datapoint = self.dbapi.get_datapoint(self.cursor, interval, plot_id, timestamp)
                 if datapoint:
                     item = Datapoint(**datapoint)
                 else:
@@ -111,11 +112,11 @@ class DatapointCache(dict):
     def clear_interval(self, interval):
         interval_cache = dict.__getitem__(self, interval)
         for plot_cache in interval_cache.itervalues():
-            # TODO(el): Performance vs min/max in __getitem__
             if plot_cache:
                 plot_cache.start = min(plot_cache.start, min(plot_cache.iterkeys()))
                 plot_cache.end = max(plot_cache.end, max(plot_cache.iterkeys()))
-        interval_cache.clear()
+            for k in sorted(plot_cache.keys())[2:-2]:
+                del plot_cache[k]
 
 
 class PerformanceData(Node):
@@ -238,18 +239,19 @@ class MySQLAPI(object):
             self._schedule_rotation(connection, datapoint_table)
             self._scheduler.add(
                 RecurringJob("Inserting datapoints for interval %d" % aggregate['interval'],
-                             0, aggregate['interval'] * 1.1, self._insert_datapoints, aggregate['interval']))
-            cursor.execute('SELECT MIN(`timestamp`) AS `start` FROM `datapoint_%d`' % aggregate['interval'])
+                             0, min(aggregate['interval'] * 1.1, min(aggregate['interval'] * 1.1, 60 * 60 * 1.1)), self._insert_datapoints, aggregate['interval']))
             self._datapoint_cache[aggregate['interval']] = {}
-            for row in cursor:
-                self._start_of_available_data = min(self._start_of_available_data, row['start'])
+        cursor.execute('SELECT MIN(`timestamp`) AS `start` FROM `datapoint_%d`' % aggregates[-1]['interval'])
+        row = cursor.fetchall()[0]
+        if row:
+            self._start_of_available_data = min(self._start_of_available_data, row['start'])
 
         for tablename in [tablename for tablename in
                           existing_datapoint_tables if tablename not in
                           configured_datapoint_tables]:
             log.info("Dropping table %s.." % tablename)
             self.drop_table(connection, tablename)
-        self._scheduler.add(RecurringJob("Inserting performance data", 0, 5 * 60, self._insert_performance_data))
+        self._scheduler.add(RecurringJob("Inserting performance data", 10 * 60, 60 * 60, self._insert_performance_data))
         self._scheduler.start()
         self._aggregates = aggregates
 
@@ -356,11 +358,13 @@ class MySQLAPI(object):
                 PARTITION `%d` VALUES LESS THAN (%d) ENGINE = InnoDB
             )''' % (interval, present, present, ahead, ahead))
 
-    def get_datapoint(self, connection, interval, plot_id, timestamp):
-        cursor = connection.cursor(oursql.DictCursor)
+    def get_datapoint(self, cursor, interval, plot_id, timestamp):
         cursor.execute('SELECT * FROM  `datapoint_%d` WHERE `plot_id` = ? AND `timestamp` = ?' % interval,
                        (plot_id, timestamp))
-        return cursor.fetchone()
+        try:
+            return cursor.fetchall()[0]
+        except IndexError:
+            return None
 
     @synchronized(datapoint_lock)
     def insert_datapoint(self, plot_id, timestamp, value):

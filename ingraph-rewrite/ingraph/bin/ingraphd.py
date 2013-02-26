@@ -150,7 +150,7 @@ class IngraphDaemon(UnixDaemon):
         self._server_thread.start()
         try:
             while not self._dismissed.is_set():
-                for filename in sorted(iglob(self._perfdata_pathname), key=lambda file: os.path.getmtime(file), reverse=True)[:10]:
+                for filename in sorted(iglob(self._perfdata_pathname), key=lambda file: os.path.getmtime(file), reverse=True)[:50]:
                     self._process_perfdata(filename)
         except KeyboardInterrupt:
             sys.exit(0)

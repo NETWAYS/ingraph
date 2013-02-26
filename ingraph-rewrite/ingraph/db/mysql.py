@@ -117,7 +117,7 @@ class DatapointCache(dict):
             if plot_cache:
                 plot_cache.start = min(plot_cache.start, min(plot_cache.iterkeys()))
                 plot_cache.end = max(plot_cache.end, max(plot_cache.iterkeys()))
-            for k in sorted(plot_cache.keys())[2:-2]:
+            for k in sorted(plot_cache.keys())[6:-6]:
                 del plot_cache[k]
 
 

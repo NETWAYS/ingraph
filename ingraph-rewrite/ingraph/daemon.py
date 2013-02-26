@@ -217,7 +217,7 @@ class UnixDaemon(object):
         if self._detach:
             self._check_logfile_permissions()
             self._daemonize()
-            self._close_fds(self._pidfp.fileno())
+            #self._close_fds(self._pidfp.fileno())
             if self._logfile and self._logfile != '-':
                 # Remove all already attached handlers
                 del logging.getLogger().handlers[:]

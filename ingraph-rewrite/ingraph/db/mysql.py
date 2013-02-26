@@ -40,9 +40,9 @@ performance_data_lock = Lock()
 
 class Datapoint(object):
 
-    __slots__ = ('min', 'max', 'avg', 'dirty')
+    __slots__ = ('min', 'max', 'avg', 'count', 'dirty')
 
-    def __init__(self, avg=0, min=None, max=None, **kwargs):
+    def __init__(self, avg=0, min=None, max=None, count=0, **kwargs):
         if avg != None:
             avg = float(avg)
         if min != None:
@@ -52,11 +52,13 @@ class Datapoint(object):
         self.avg = avg
         self.min = min
         self.max = max
+        self.count = count
         self.dirty = False
 
     def update(self, value):
         # TODO(el): Counter values
-        self.avg = (self.avg + value) / 2
+        self.count += 1
+        self.avg = (self.avg + value) / self.count
         self.min = value if self.min == None else min(self.min, value)
         self.max = value if self.max == None else max(self.max, value)
         self.dirty = True
@@ -107,7 +109,7 @@ class DatapointCache(dict):
         for plot_id, plot_cache in interval_cache.iteritems():
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
                 if datapoint.dirty:
-                    yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max
+                    yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max, datapoint.count
 
     def clear_interval(self, interval):
         interval_cache = dict.__getitem__(self, interval)
@@ -350,6 +352,7 @@ class MySQLAPI(object):
                 `min` decimal(20,5) NOT NULL,
                 `max` decimal(20,5) NOT NULL,
                 `avg` decimal(20,5) NOT NULL,
+                `count` int(11) NOT NULL,
                 PRIMARY KEY (`plot_id`, `timestamp`)
             ) ENGINE=InnoDB DEFAULT CHARSET=latin1
             PARTITION BY RANGE(`timestamp`)
@@ -380,8 +383,8 @@ class MySQLAPI(object):
         cursor = connection.cursor(oursql.DictCursor)
         try:
             cursor.executemany(
-                '''REPLACE INTO `datapoint_%d` (`plot_id`, `timestamp`, `avg`, `min`, `max`)
-                VALUES (?, ?, ?, ?, ?)''' % interval,
+                '''REPLACE INTO `datapoint_%d` (`plot_id`, `timestamp`, `avg`, `min`, `max`, `count`)
+                VALUES (?, ?, ?, ?, ?, ?)''' % interval,
                 self._datapoint_cache.generate_parambatch(interval))
         except oursql.CollatedWarningsError as warnings:
             log.warn(warnings)
@@ -443,7 +446,7 @@ class MySQLAPI(object):
 
     def drop_partition(self, connection, tablename, partitionname):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('ALTER TABLE `%s` DROP PARTITION `%s`' % (tablename, partitionname))
+        cursor.execute('ALTER TABLE `%s` DROP PARTITION g`%s`' % (tablename, partitionname))
 
     def fetch_hosts(self, connection, host_pattern=None, limit=None, offset=None):
         condition = deque()

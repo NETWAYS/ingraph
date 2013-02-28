@@ -433,11 +433,11 @@ class HostService(ModelBase):
             countQuery = select(
                 [func.count()],
                 from_obj=[hostservice]).where(
-                    hostervice.c.id.in_(parent_hostservice_ids))
+                    hostservice.c.id.in_(parent_hostservice_ids))
             selectQuery = hostservice.select(
                 from_obj=[hostservice],
                 limit=limit, offset=offset).where(
-                    hostervice.c.id.in_(parent_hostservice_ids))
+                    hostservice.c.id.in_(parent_hostservice_ids))
         return {
                 'services': [HostService.getByID(conn,
                                                  row[hostservice.c.id], row) for

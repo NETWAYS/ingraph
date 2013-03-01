@@ -14,7 +14,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     {
         $hosts = $this->backend->fetchHosts($hostPattern, $limit, $offset);
         return array(
-            'results' => $hosts['hosts'],
+            'hosts' => $hosts['hosts'],
             'total' => $hosts['total']
         );
     }

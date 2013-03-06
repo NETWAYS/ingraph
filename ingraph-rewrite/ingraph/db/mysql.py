@@ -107,6 +107,7 @@ class DatapointCache(dict):
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
                 if datapoint.dirty and not datapoint.phantom:
                     yield datapoint.avg, datapoint.min, datapoint.max, datapoint.count, plot_id, timestamp
+                    datapoint.dirty = False
 
     def generate_insert_parambatch(self, interval):
         interval_cache = dict.__getitem__(self, interval)
@@ -115,6 +116,7 @@ class DatapointCache(dict):
                 if datapoint.dirty and datapoint.phantom:
                     yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max, datapoint.count
                     datapoint.phantom = False
+                    datapoint.dirty = False
 
     def clear_interval(self, interval):
         interval_cache = dict.__getitem__(self, interval)

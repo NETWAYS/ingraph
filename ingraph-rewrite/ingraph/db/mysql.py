@@ -23,6 +23,7 @@ from time import time
 from threading import Lock
 from operator import itemgetter
 from collections import deque
+from decimal import Decimal
 
 import oursql
 from sqlalchemy import pool
@@ -40,20 +41,15 @@ performance_data_lock = Lock()
 
 class Datapoint(object):
 
-    __slots__ = ('min', 'max', 'avg', 'count', 'dirty')
+    __slots__ = ('min', 'max', 'avg', 'count', 'dirty', 'phantom')
 
-    def __init__(self, avg=0, min=None, max=None, count=0, **kwargs):
-        if avg != None:
-            avg = float(avg)
-        if min != None:
-            min = float(min)
-        if max != None:
-            max = float(max)
+    def __init__(self, avg=0.0, min=None, max=None, count=0, **kwargs):
         self.avg = avg
         self.min = min
         self.max = max
         self.count = count
         self.dirty = False
+        self.phantom = True
 
     def update(self, value):
         # TODO(el): Counter values
@@ -98,18 +94,27 @@ class DatapointCache(dict):
             else:
                 datapoint = self.dbapi.get_datapoint(self.cursor, interval, plot_id, timestamp)
                 if datapoint:
-                    item = Datapoint(**datapoint)
+                    item = Datapoint(**dict(zip(datapoint.iterkeys(), map(lambda (_, v): float(v) if isinstance(v, Decimal) else v, [(k, v) for (k, v) in dict(**datapoint).iteritems()]))))
+                    item.phantom = False
                 else:
                     item = Datapoint()
             plot_cache[timestamp] = item
         return item
 
-    def generate_parambatch(self, interval):
+    def generate_update_parambatch(self, interval):
         interval_cache = dict.__getitem__(self, interval)
         for plot_id, plot_cache in interval_cache.iteritems():
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
-                if datapoint.dirty:
+                if datapoint.dirty and not datapoint.phantom:
+                    yield datapoint.avg, datapoint.min, datapoint.max, datapoint.count, plot_id, timestamp
+
+    def generate_insert_parambatch(self, interval):
+        interval_cache = dict.__getitem__(self, interval)
+        for plot_id, plot_cache in interval_cache.iteritems():
+            for timestamp, datapoint in sorted(plot_cache.iteritems()):
+                if datapoint.dirty and datapoint.phantom:
                     yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max, datapoint.count
+                    datapoint.phantom = False
 
     def clear_interval(self, interval):
         interval_cache = dict.__getitem__(self, interval)
@@ -383,9 +388,9 @@ class MySQLAPI(object):
         cursor = connection.cursor(oursql.DictCursor)
         try:
             cursor.executemany(
-                '''REPLACE INTO `datapoint_%d` (`plot_id`, `timestamp`, `avg`, `min`, `max`, `count`)
-                VALUES (?, ?, ?, ?, ?, ?)''' % interval,
-                self._datapoint_cache.generate_parambatch(interval))
+                '''UPDATE `datapoint_%d` SET `avg`=?, `min`=?, `max`=?, `count`=?
+                WHERE `plot_id`=? AND `timestamp`=?''' % interval,
+                self._datapoint_cache.generate_update_parambatch(interval))
         except oursql.CollatedWarningsError as warnings:
             log.warn(warnings)
         except:
@@ -393,8 +398,24 @@ class MySQLAPI(object):
             raise
         finally:
             cursor.close()
-        log.debug("Inserted %d datapoints for interval %d in %3fs" % (cursor.rowcount, interval, time() - start))
         connection.commit()
+        log.debug("Updated %d datapoints for interval %d in %3fs" % (cursor.rowcount, interval, time() - start))
+        start = time()
+        cursor = connection.cursor(oursql.DictCursor)
+        try:
+            cursor.executemany(
+                '''INSERT INTO `datapoint_%d` (`plot_id`, `timestamp`, `avg`, `min`, `max`, `count`)
+                VALUES (?, ?, ?, ?, ?, ?)''' % interval,
+                self._datapoint_cache.generate_insert_parambatch(interval))
+        except oursql.CollatedWarningsError as warnings:
+            log.warn(warnings)
+        except:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
+        connection.commit()
+        log.debug("Inserted %d datapoints for interval %d in %3fs" % (cursor.rowcount, interval, time() - start))
         self._datapoint_cache.clear_interval(interval)
 
     def get_performance_data(self, connection, plot_id):
@@ -446,7 +467,7 @@ class MySQLAPI(object):
 
     def drop_partition(self, connection, tablename, partitionname):
         cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('ALTER TABLE `%s` DROP PARTITION g`%s`' % (tablename, partitionname))
+        cursor.execute('ALTER TABLE `%s` DROP PARTITION `%s`' % (tablename, partitionname))
 
     def fetch_hosts(self, connection, host_pattern=None, limit=None, offset=None):
         condition = deque()

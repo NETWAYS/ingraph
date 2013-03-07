@@ -535,7 +535,7 @@
                             enableKeyEvents: true,
                             anchor: '100%',
                             allowBlank: false,
-                            stripCharsRe: /\W/g
+                            stripCharsRe: /[\\/:*?"<>|\0]/g
                         }
                     ],
                     monitorValid: true,
@@ -608,9 +608,9 @@
                 panelConfig.start = panel.store.baseParams.startx;
                 panelConfig.end = panel.store.baseParams.endx;
                 panelConfig.interval = panel.store.baseParams.interval;
-                
+
                 delete panelConfig.group;
-                
+
                 template.panels.push(panelConfig);
             }, this);
 

@@ -228,7 +228,7 @@ class UnixDaemon(object):
     def restart(self):
         self.stop(True)
         self._closepidfile()
-        self.start()
+        return self.start()
 
     def status(self):
         pid = self._getpid()

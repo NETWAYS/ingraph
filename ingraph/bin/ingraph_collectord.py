@@ -321,7 +321,7 @@ def main():
                             pidfile=options.pidfile,
                             format=options.format,
                             log=options.logfile)
-    
+
     if options.logfile and options.logfile != '-':
         collectord.stdout_logger = ingraph.log.FileLikeLogger(collectord.logger,
                                                               logging.INFO)
@@ -345,9 +345,9 @@ def main():
 
     if options.perfdata_dir:
         if not os.access(options.perfdata_dir, os.W_OK):
-            sys.stderr.write("Perfdata directory is not writable.\n"
-                + "Please make sure the perfdata directory is writable so "
-                + "the inGraph daemon can delete/move perfdata files.\n")
+            sys.stderr.write("Perfdata directory '%s' is not writable. "
+                             "Please make sure the perfdata directory is writable so "
+                             "the inGraph daemon can delete/move perfdata files." % options.perfdata_dir)
             sys.exit(1)
 
     getattr(collectord, args[0])()

@@ -54,7 +54,7 @@ def flush(engine, queryqueue):
             print("Exception occured while flushing DB updates")
             traceback.print_exc()
         et = time.time()
-        
+
         print("Flushed %d updates in %f seconds." %
               (len(items), et-st))
 
@@ -63,8 +63,8 @@ def cleanup(engine):
     while True:
         time.sleep(60)
         ingraph.model.cleanup(engine)
-        
-        
+
+
 def daemonized_thread(target, args):
     t = threading.Thread(target=target, args=args)
     t.setDaemon(True)
@@ -76,7 +76,7 @@ class UnsupportedDaemonFunction(Exception): pass
 
 class InGraphd(ingraph.daemon.UnixDaemon):
     name = 'inGraph'
-    
+
     def before_daemonize(self):
         self.logger.info("Starting %s..." % self.name)
         config = ingraph.utils.load_config('ingraph-database.conf')
@@ -85,19 +85,19 @@ class InGraphd(ingraph.daemon.UnixDaemon):
             self.logger.error("Error: You need to set a database connection "
                   "string ('dsn' setting) in your configuration file.")
             sys.exit(1)
-        
+
         if 'xmlrpc_address' not in config or 'xmlrpc_port' not in config:
             self.logger.error("Error: You need to set a bind address/port for "
                   "the XML-RPC interface ('xmlrpc_address' and 'xmlrpc_port' "
                   "settings).")
             sys.exit(1)
-            
+
         if 'xmlrpc_username' not in config or 'xmlrpc_password' not in config:
             self.logger.error("Error: You need to set an XML-RPC username and "
                   "password ('xmlrpc_username' and 'xmlrpc_password' settings)"
                   " in your configuration file.")
             sys.exit(1)
-            
+
         self.logger.info("Connecting to the database...")
         self.engine = None
         try:
@@ -105,7 +105,7 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         except:
             self.logger.exception("Could not connect to the database. Will re-try "
                 "after daemonizing");
-        
+
         self.logger.info("Starting XML-RPC interface on %s:%d..." %
               (config['xmlrpc_address'], config['xmlrpc_port']))
         server = ingraph.xmlrpc.AuthenticatedXMLRPCServer(
@@ -120,14 +120,14 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         server.register_multicall_functions()
         self.server = server
         self.config = config
-        
+
     def run(self):
         if self.engine == None:
             for i in range(1, 12):
                 try:
                     self.engine = ingraph.model.createModelEngine(self.config['dsn'])
                 except:
-                    self.logger.exception("Database connection failed (attempt " 
+                    self.logger.exception("Database connection failed (attempt "
                                           "#%d). Waiting for retry..." % (i))
                     time.sleep(5)
                 else:
@@ -138,7 +138,7 @@ class InGraphd(ingraph.daemon.UnixDaemon):
         rpcmethods = ingraph.api.BackendRPCMethods(self.engine, queryqueue,
             self.logger)
         self.server.register_instance(rpcmethods)
-        
+
         daemonized_thread(flush, (self.engine, queryqueue))
         daemonized_thread(cleanup, (self.engine,))
 
@@ -169,14 +169,14 @@ def main():
                       help="the log level, one of %s [default: %%default]" %
                       ', '.join(LOG_LVLS))
     (options, args) = parser.parse_args()
-    
+
     try:
         if args[0] not in DAEMON_FUNCTIONS:
             raise UnsupportedDaemonFunction()
     except (IndexError, UnsupportedDaemonFunction):
             parser.print_usage()
             sys.exit(1)
-            
+
     ingraphd = InGraphd(chdir=options.chdir,
                         detach=options.detach,
                         pidfile=options.pidfile,
@@ -201,9 +201,8 @@ def main():
         except KeyError:
             sys.stderr.write("Group %s not found.\n" % options.group)
             sys.exit(1)
-    
-    getattr(ingraphd, args[0])()
-    return 0
+
+    return getattr(ingraphd, args[0])()
 
 if __name__ == '__main__':
     sys.exit(main())

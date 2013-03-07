@@ -80,5 +80,5 @@ class CleanupCmd(Subcommand):
         # Remove all None-values from options
         self._cleanup_daemon = CleanupDaemon(**dict((k, v) for k, v in options.__dict__.iteritems() if v is not None))
         # Exec daemon function
-        getattr( self._cleanup_daemon, args[0])()
+        getattr(self._cleanup_daemon, args[0])()
 

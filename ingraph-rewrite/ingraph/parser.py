@@ -152,7 +152,7 @@ class PerfdataParser(object):
         for potential_child_service, plot_label, format in self.find_perfdata(perfdata_no_cruft['perfdata']):
             if potential_child_service:
                 child_service = potential_child_service
-            # Trainling unfilled semicolons can be dropped
+            # Trailing unfilled semicolons can be dropped
             values = re.sub(r';+$', '', format).split(';')
             # value[UOM];[warn];[crit];[min];[max]
             # where min and max are set automatically if missing to 0 and 100 respectively if UOM is `%`

@@ -22,8 +22,7 @@ __all__ = ['add_optparse_logging_options']
 
 
 class LogFormatter(logging.Formatter):
-    """Log formatter with color support used in inGraph.
-    This formatter is enabled automatically by importing `~ingraph.log`."""
+    """Log formatter with color support which is enabled automatically by importing it."""
     def __init__(self, *args, **kwargs):
         logging.Formatter.__init__(self, *args, **kwargs)
         self._color = sys.stderr.isatty()

@@ -350,7 +350,7 @@ def main():
                              "the inGraph daemon can delete/move perfdata files." % options.perfdata_dir)
             sys.exit(1)
 
-    return (collectord, args[0])()
+    return getattr(collectord, args[0])()
 
 if __name__ == '__main__':
     sys.exit(main())

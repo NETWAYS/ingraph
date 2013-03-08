@@ -43,7 +43,7 @@ class inGraph_Renderer_NodeJs extends inGraph_Os_Process
         $image = $process->stdout;
         $errors = $process->stderr;
         if (!self::isPng($image)) {
-            throw new Exception($errors);
+            throw new Exception("Renderer did not receive valid PNG image: " . $image . " Errors: " . $errors);
         }
         $this->close();
         return $image;

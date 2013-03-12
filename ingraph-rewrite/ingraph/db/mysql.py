@@ -122,8 +122,14 @@ class DatapointCache(dict):
         interval_cache = dict.__getitem__(self, interval)
         for plot_cache in interval_cache.itervalues():
             if plot_cache:
-                plot_cache.start = min(plot_cache.start, min(plot_cache.iterkeys()))
-                plot_cache.end = max(plot_cache.end, max(plot_cache.iterkeys()))
+                if not plot_cache.start:
+                    plot_cache.start = min(plot_cache.iterkeys())
+                else:
+                    plot_cache.start = min(plot_cache.start, min(plot_cache.iterkeys()))
+                if not plot_cache.end:
+                    plot_cache.end = max(plot_cache.iterkeys())
+                else:
+                    plot_cache.end = max(plot_cache.end, max(plot_cache.iterkeys()))
             for k in sorted(plot_cache.keys())[6:-6]:
                 del plot_cache[k]
 

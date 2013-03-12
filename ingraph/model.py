@@ -122,7 +122,7 @@ class Host(ModelBase):
         if self.id == None:
             ins = host.insert().values(name=self.name)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             # TODO: should probably just throw an exception instead -
@@ -231,7 +231,7 @@ class Service(ModelBase):
         if self.id == None:
             ins = service.insert().values(name=self.name)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             # TODO: should probably just throw an exception instead -
@@ -333,7 +333,7 @@ class HostService(ModelBase):
             ins = hostservice.insert().values(host_id=self.host.id, service_id=self.service.id, \
                                               parent_hostservice_id=parent_hostservice_id)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             # TODO: should probably just throw an exception instead -
@@ -833,7 +833,7 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
 
             ins = plot.insert().values(hostservice_id=self.hostservice.id, name=self.name, unit=self.unit)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = plot.update().where(plot.c.id==self.id).values(hostservice_id=self.hostservice.id, unit=self.unit)
@@ -919,7 +919,7 @@ class TimeFrame(ModelBase):
                                             retention_period=self.retention_period,
                                             active=self.active)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = timeframe.update().where(timeframe.c.id==self.id).values(interval=self.interval,
@@ -1227,7 +1227,7 @@ class Comment(ModelBase):
                                           text=self.text)
 
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = comment.update().where(comment.c.id==self.id).values(hostservice_id=self.hostservice.id, timestamp=self.timestamp,
@@ -1314,7 +1314,7 @@ class PluginStatus(ModelBase):
                                           status=self.status)
 
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = pluginstatus.update().where(pluginstatus.c.id==self.id).values(status=self.status)

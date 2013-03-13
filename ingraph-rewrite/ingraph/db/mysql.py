@@ -107,7 +107,6 @@ class DatapointCache(dict):
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
                 if datapoint.dirty and not datapoint.phantom:
                     yield datapoint.avg, datapoint.min, datapoint.max, datapoint.count, plot_id, timestamp
-                    datapoint.dirty = False
 
     def generate_insert_parambatch(self, interval):
         interval_cache = dict.__getitem__(self, interval)
@@ -115,8 +114,6 @@ class DatapointCache(dict):
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
                 if datapoint.dirty and datapoint.phantom:
                     yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max, datapoint.count
-                    datapoint.phantom = False
-                    datapoint.dirty = False
 
     def clear_interval(self, interval):
         interval_cache = dict.__getitem__(self, interval)
@@ -130,8 +127,11 @@ class DatapointCache(dict):
                     plot_cache.end = max(plot_cache.iterkeys())
                 else:
                     plot_cache.end = max(plot_cache.end, max(plot_cache.iterkeys()))
-            for k in sorted(plot_cache.keys())[6:-6]:
-                del plot_cache[k]
+                for k in sorted(plot_cache.iterkeys())[6:-6]:
+                    del plot_cache[k]
+                for datapoint in plot_cache.itervalues():
+                    datapoint.phantom = False
+                    datapoint.dirty = False
 
 
 class PerformanceData(Node):
@@ -443,7 +443,7 @@ class MySQLAPI(object):
         cursor = connection.cursor(oursql.DictCursor)
         try:
             cursor.executemany(
-                '''INSERT INTO `performance_data` (
+                '''INSERT IGNORE INTO `performance_data` (
                 `plot_id`, `timestamp`, `lower_limit`, `upper_limit`,
                 `warn_lower`, `warn_upper`, `warn_type`, `crit_lower`, `crit_upper`, `crit_type`)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',

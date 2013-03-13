@@ -29,6 +29,7 @@ import shutil
 from time import time
 
 import ingraph
+from ingraph.subcommand import Subcommand
 from ingraph.daemon import UnixDaemon, get_option_parser
 from ingraph.config import file_config, validate_xmlrpc_config
 from ingraph.db import connect
@@ -38,8 +39,10 @@ from ingraph.scheduler import synchronized
 from ingraph.xmlrpc import AuthenticatedXMLRPCServer
 from ingraph.api import  IngraphAPI
 
+__all__ = ['IngraphdCmd']
+
 log = logging.getLogger(__name__)
-MAX_THREADS = 4
+
 
 class IngraphDaemon(UnixDaemon):
 
@@ -178,17 +181,18 @@ def add_optparse_ingraph_options(parser):
     parser.add_option_group(ingraph_group)
 
 
-def main():
-    parser = get_option_parser(version="%%prog %s" % ingraph.__version__)
-    add_optparse_logging_options(parser)
-    add_optparse_ingraph_options(parser)
-    options, args = parser.parse_args()
-    logging.getLogger().setLevel(getattr(logging, options.logging_level))
-    # Remove all None-values from options
-    ingraphd = IngraphDaemon(**dict((k, v) for k, v in options.__dict__.iteritems() if v is not None))
-    # Exec daemon function
-    getattr(ingraphd, args[0])()
+class IngraphdCmd(Subcommand):
 
+    def __init__(self):
+        self.daemon = None
+        parser = get_option_parser(version="%%prog %s" % ingraph.__version__)
+        add_optparse_logging_options(parser)
+        add_optparse_ingraph_options(parser)
+        Subcommand.__init__(self, name='daemon', parser=parser, help='daemon')
 
-if __name__ == '__main__':
-    sys.exit(main())
+    def __call__(self, options, args):
+        logging.getLogger().setLevel(getattr(logging, options.logging_level))
+        # Remove all None-values from options
+        self.daemon = IngraphDaemon(**dict((k, v) for k, v in options.__dict__.iteritems() if v is not None))
+        # Exec daemon function
+        getattr(self.daemon, args[0])()

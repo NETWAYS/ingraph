@@ -35,11 +35,10 @@ setup(
     author_email = ingraph.__contact__,
     url = ingraph.__url__,
     requires = ['oursql (>=0.9.3)'],
-    packages = ['ingraph.bin.cmd', 'ingraph.bin', 'ingraph.db', 'ingraph'],
+    packages = ['ingraph.cmd', 'ingraph.db', 'ingraph'],
     zip_safe = False,
     entry_points = {
-        'console_scripts': ['ingraphd = ingraph.bin.ingraphd:main',
-                            'ingraph = ingraph.bin.cli:main']
+        'console_scripts': ['ingraph = ingraph.bin:main']
     },
     data_files = [
         ('/etc/init.d', ['contrib/init.d/ingraph']),

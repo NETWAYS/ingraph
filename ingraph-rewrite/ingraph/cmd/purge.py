@@ -24,14 +24,14 @@ from ingraph.subcommand import Subcommand
 from ingraph.daemon import UnixDaemon, get_option_parser
 from ingraph.config import file_config, validate_xmlrpc_config
 
-__all__ = ['CleanupCmd']
+__all__ = ['PurgeCmd']
 
 log = logging.getLogger(__name__)
 
 
-class CleanupDaemon(UnixDaemon):
+class PurgeDaemon(UnixDaemon):
 
-    name = "inGraph - cleanup"
+    name = "inGraph - purge"
 
     def __init__(self, **kwargs):
         try:
@@ -53,7 +53,6 @@ class CleanupDaemon(UnixDaemon):
                                         xmlrpc_config['xmlrpc_address'], xmlrpc_config['xmlrpc_port'])
 
     def before_daemonize(self):
-        log.info("Starting inGraph cleanup..")
         try:
             xmlrpc_config = file_config('ingraph-xmlrpc.conf')
         except IOError as e:
@@ -67,18 +66,18 @@ class CleanupDaemon(UnixDaemon):
         self.api.deleteHostService(self._host_pattern, self._service_pattern)
 
 
-class CleanupCmd(Subcommand):
+class PurgeCmd(Subcommand):
 
     def __init__(self):
-        self.cleanup_daemon = None
-        parser = get_option_parser(version="%%prog %s" % ingraph.__version__, pidfile='/var/run/ingraph/ingraph.cleanup.pid')
+        self.daemon = None
+        parser = get_option_parser(version="%%prog %s" % ingraph.__version__, pidfile='/var/run/ingraph/ingraph.purge.pid')
         parser.add_option('-H', '--hostname', dest='host_pattern', help='hostname')
         parser.add_option('-S', '--servicename', dest='service_pattern', help='servicename')
-        Subcommand.__init__(self, name='cleanup', parser=parser, help='cleanup')
+        Subcommand.__init__(self, name='purge', parser=parser, help='purge')
 
     def __call__(self, options, args):
         # Remove all None-values from options
-        self._cleanup_daemon = CleanupDaemon(**dict((k, v) for k, v in options.__dict__.iteritems() if v is not None))
+        self.daemon = PurgeDaemon(**dict((k, v) for k, v in options.__dict__.iteritems() if v is not None))
         # Exec daemon function
-        getattr(self._cleanup_daemon, args[0])()
+        getattr(self.daemon, args[0])()
 

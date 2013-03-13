@@ -32,7 +32,7 @@ INGRAPH_LOGLEVEL="INFO"
 RETVAL=0
 
 do_action() {
-    python -m ingraph/bin/ingraphd \
+    python -m ingraph/bin daemon \
     -d "$INGRAPH_CHDIR" \
     -p "$INGRAPH_PIDFILE" \
     -u "$INGRAPH_USER" \

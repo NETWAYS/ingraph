@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # Copyright (C) 2012 NETWAYS GmbH, http://netways.de
 #
 # This file is part of inGraph (https://www.netways.org/projects/ingraph).
@@ -15,4 +17,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from ingraph.bin.cmd.cleanup import *
+import sys
+
+from ingraph.subcommand import SubcommandsOptionParser
+from ingraph.cmd.purge import PurgeCmd
+from ingraph.cmd.ingraphd import IngraphdCmd
+
+__all__ = ['main']
+
+
+def main():
+    parser = SubcommandsOptionParser(
+        subcommands = (PurgeCmd(), IngraphdCmd())
+    )
+    options, cmd, cmd_opts, cmd_args = parser.parse_args()
+    cmd(cmd_opts, cmd_args)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -87,11 +87,13 @@ class RecurringJob(object):
             if self._delay:
                 log.debug("%s first execution delayed %ds.." % (self.jobname, self._delay))
                 self._timer = Timer(self._delay, self.run)
+                self._timer.setDaemon(True)
                 self._delay = 0
             else:
                 # TODO(el): !
                 log.debug("%s execution scheduled in %ds.." % (self.jobname, self._interval))
                 self._timer = Timer(self._interval, self.run)
+                self._timer.setDaemon(True)
             self._timer.start()
 
     def stop(self):

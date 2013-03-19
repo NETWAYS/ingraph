@@ -327,7 +327,7 @@ install_common_directories "js${tab}styles" $COMMON_SRC/inGraph/lib $PREFIX/pub
 install_common_directories "templates${tab}views" $COMMON_SRC/inGraph/config $PREFIX/app/modules/inGraph/config "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}-C${tab}-b"
 # mkdir $PREFIX/app/modules/inGraph/lib
 $INSTALL -m 755 -d $PREFIX/app/modules/inGraph/lib
-install_common_directories "action${tab}model${tab}nodejs${tab}php${tab}validator${tab}view" $COMMON_SRC/inGraph/lib $PREFIX/app/modules/inGraph/lib
+install_common_directories "action${tab}model${tab}nodejs${tab}js${tab}php${tab}validator${tab}view" $COMMON_SRC/inGraph/lib $PREFIX/app/modules/inGraph/lib
 
 # Install config xmls
 CONFIGS="$COMMON_SRC/inGraph/config/autoload.xml${tab}\

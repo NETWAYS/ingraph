@@ -42,6 +42,16 @@
         buildTools: function (cfg) {
             cfg.tools = [
                 {
+                    id: 'minus',
+                    scope: this,
+                    handler: function () {
+                        this.items.each(function (panel) {
+                            var tbar = panel.getTopToolbar();
+                            tbar.setVisible(tbar.hidden);
+                        }, this);
+                    }
+                },
+                {
                     id: 'close',
                     scope: this,
                     handler: this.replaceWithMenuItem

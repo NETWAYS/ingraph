@@ -80,6 +80,8 @@ usage () {
     echo "                          [$XMLRPC_PASSWORD]"
     echo "--with-null-tolerance     null tolerance value"
     echo "                          [$NULL_TOLERANCE]"
+    echo "--with-node-bin           Path to Node.js binary"
+    echo "                          [$NODE_BIN]"
     echo
     exit 1
 }

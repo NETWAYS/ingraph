@@ -218,99 +218,103 @@
                     hidden: !this.showDataView
                 },
                 {
-                    ref: 'input',
-                    xtype: 'combo',
-                    emptyText: _('Choose data view'),
+                    xtype: 'container',
                     width: 130,
-                    store: {
-                        xtype: 'jsonstore',
-                        autoDestroy: true,
-                        root: 'frames',
-                        idProperty: 'name',
-                        fields: [
-                            'name',
-                            'start',
-                            {
-                                'name': 'end',
-                                defaultValue: 'now'
+                    items: {
+                        ref: '../input',
+                        xtype: 'combo',
+                        emptyText: _('Choose data view'),
+                        width: 130,
+                        store: {
+                            xtype: 'jsonstore',
+                            autoDestroy: true,
+                            root: 'frames',
+                            idProperty: 'name',
+                            fields: [
+                                'name',
+                                'start',
+                                {
+                                    'name': 'end',
+                                    defaultValue: 'now'
+                                },
+                                {
+                                    'name': 'overview',
+                                    defaultValue: false
+                                },
+                                {
+                                    'name': 'enabled',
+                                    defaultValue: true
+                                },
+                                'adv'
+                            ],
+                            data: {
+                                frames: [
+                                    {
+                                        name: _('One Hour'),
+                                        start: '-1 hour',
+                                        enabled: false,
+                                        adv: _('hourly')
+                                    },
+                                    {
+                                        name: _('Four Hours'),
+                                        start: '-4 hours',
+                                        overview: true,
+                                        adv: _('four-hourly')
+                                    },
+                                    {
+                                        name: _('One Day'),
+                                        start: '-1 day',
+                                        adv: _('daily')
+                                    },
+                                    {
+                                        name: _('One Week'),
+                                        start: '-1 week',
+                                        adv: _('weekly')
+                                    },
+                                    {
+                                        name: _('One Month'),
+                                        start: '-1 month',
+                                        adv: _('monthly')
+                                    },
+                                    {
+                                        name: _('One Year'),
+                                        start: '-1 year',
+                                        adv: _('yearly')
+                                    }
+                                ]
                             },
-                            {
-                                'name': 'overview',
-                                defaultValue: false
-                            },
-                            {
-                                'name': 'enabled',
-                                defaultValue: true
-                            },
-                            'adv'
-                        ],
-                        data: {
-                            frames: [
-                                {
-                                    name: _('One Hour'),
-                                    start: '-1 hour',
-                                    enabled: false,
-                                    adv: _('hourly')
-                                },
-                                {
-                                    name: _('Four Hours'),
-                                    start: '-4 hours',
-                                    overview: true,
-                                    adv: _('four-hourly')
-                                },
-                                {
-                                    name: _('One Day'),
-                                    start: '-1 day',
-                                    adv: _('daily')
-                                },
-                                {
-                                    name: _('One Week'),
-                                    start: '-1 week',
-                                    adv: _('weekly')
-                                },
-                                {
-                                    name: _('One Month'),
-                                    start: '-1 month',
-                                    adv: _('monthly')
-                                },
-                                {
-                                    name: _('One Year'),
-                                    start: '-1 year',
-                                    adv: _('yearly')
+                            listeners: {
+                                single: true,
+                                load: function (store) {
+                                    store.each(function (rec) {
+                                        rec.set('interval', strtotime(rec.get('end')) -
+                                                            strtotime(rec.get('start')));
+                                    });
                                 }
-                            ]
+                            }
                         },
+                        valueField: 'name',
+                        displayField: 'name',
+                        mode: 'local',
+                        triggerAction: 'all',
                         listeners: {
-                            single: true,
-                            load: function (store) {
-                                store.each(function (rec) {
-                                    rec.set('interval', strtotime(rec.get('end')) -
-                                                        strtotime(rec.get('start')));
+                            scope: this,
+                            select: this.onSelectDataView,
+                            render: function (combo) {
+                                Ext.QuickTips.register({
+                                    text: this.inputText,
+                                    target: combo.el
                                 });
+                                var recordIndex = combo.store.find('start', this.activeFrame);
+                                if (recordIndex !== -1) {
+                                    var record = combo.store.getAt(recordIndex);
+                                    combo.setValue(record.get('name'));
+                                    this.onSelectDataView(combo, record, false);
+                                }
                             }
-                        }
-                    },
-                    valueField: 'name',
-                    displayField: 'name',
-                    mode: 'local',
-                    triggerAction: 'all',
-                    listeners: {
-                        scope: this,
-                        select: this.onSelectDataView,
-                        render: function (combo) {
-                            Ext.QuickTips.register({
-                                text: this.inputText,
-                                target: combo.el
-                            });
-                            var recordIndex = combo.store.find('start', this.activeFrame);
-                            if (recordIndex !== -1) {
-                                var record = combo.store.getAt(recordIndex);
-                                combo.setValue(record.get('name'));
-                                this.onSelectDataView(combo, record, false);
-                            }
-                        }
-                    },
-                    hidden: !this.showDataView
+                        },
+                        hidden: !this.showDataView
+                    }
                 },
                 {
                     xtype: 'tbseparator',

@@ -22,8 +22,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     public function fetchServices($hostPattern = '%', $servicePattern = '%',
                                   $offset = 0, $limit = 20)
     {
-        $services = $this->backend->fetchServices($hostPattern, $servicePattern,
-                                                  $limit, $offset);
+        $services = $this->backend->fetchServices($hostPattern, $servicePattern, $offset, $limit);
         $flat = array();
         foreach ($services['services'] as $service) {
             if ($service['parent_service'] !== null) {
@@ -42,7 +41,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         }
 
         return array(
-            'results' => $flat,
+            'services' => $flat,
             'total' => $services['total']
         );
     }
@@ -53,7 +52,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     ) {
         return $this->backend->fetchPlots($hostName, $serviceName,
                                           $parentServiceName, $plotName,
-                                          $offset, $limit);
+                                          $limit, $offset);
     }
 
     public function fetchValues($query, $start = null, $end = null,
@@ -84,10 +83,6 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     
     public function fetchIntervals()
     {
-        $intervals = $this->backend->fetchIntervals();
-        return array(
-            'total' => count($intervals),
-            'results' => array_merge(array(), $intervals)
-        );
+        return  $this->backend->fetchIntervals();
     }
 }

@@ -33,7 +33,7 @@
         },
         panelConfig: {
             tbarConfig: {
-                enable: false
+                hidden: true
             },
             // Do not render any tools
             tools: []

@@ -26,7 +26,7 @@ from threading import Thread, Event
 from tempfile import NamedTemporaryFile
 import errno
 import shutil
-from time import time
+from time import time, sleep
 
 import ingraph
 from ingraph.subcommand import Subcommand
@@ -153,7 +153,11 @@ class IngraphDaemon(UnixDaemon):
         self._server_thread.start()
         try:
             while not self._dismissed.is_set():
-                for filename in sorted(iglob(self._perfdata_pathname), key=lambda file: os.path.getmtime(file), reverse=True)[:50]:
+                files = sorted(iglob(self._perfdata_pathname), key=lambda file: os.path.getmtime(file), reverse=True)
+                if not files:
+                    sleep(30)
+                    continue
+                for filename in files[:50]:
                     self._process_perfdata(filename)
         except KeyboardInterrupt:
             sys.exit(0)
@@ -195,4 +199,4 @@ class IngraphdCmd(Subcommand):
         # Remove all None-values from options
         self.daemon = IngraphDaemon(**dict((k, v) for k, v in options.__dict__.iteritems() if v is not None))
         # Exec daemon function
-        getattr(self.daemon, args[0])()
+        return getattr(self.daemon, args[0])()

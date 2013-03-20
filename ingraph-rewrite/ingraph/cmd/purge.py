@@ -79,5 +79,5 @@ class PurgeCmd(Subcommand):
         # Remove all None-values from options
         self.daemon = PurgeDaemon(**dict((k, v) for k, v in options.__dict__.iteritems() if v is not None))
         # Exec daemon function
-        getattr(self.daemon, args[0])()
+        return getattr(self.daemon, args[0])()
 

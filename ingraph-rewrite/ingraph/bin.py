@@ -31,7 +31,7 @@ def main():
         subcommands = (PurgeCmd(), IngraphdCmd())
     )
     options, cmd, cmd_opts, cmd_args = parser.parse_args()
-    cmd(cmd_opts, cmd_args)
+    return cmd(cmd_opts, cmd_args)
 
 
 if __name__ == '__main__':

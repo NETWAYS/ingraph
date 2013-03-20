@@ -53,7 +53,8 @@ class Datapoint(object):
 
     def update(self, value):
         # TODO(el): Counter values
-        self.avg = self.avg * self.count + value / (self.count + 1)
+        self.avg = (self.avg * self.count + value) / (self.count + 1)
+        #self.avg = self.avg * self.count / (self.count + 1) + value / (self.count + 1)
         self.count += 1
         self.min = value if self.min == None else min(self.min, value)
         self.max = value if self.max == None else max(self.max, value)

@@ -11,8 +11,8 @@
 
             @import url("styles/ingraph.css");
             @import url("styles/ingraphlogo.css");
-            @import url("styles/xflot.css");
-            @import url("styles/xflot-icons.css");
+            @import url("styles/x-flot.css");
+            @import url("styles/x-flot-icons.css");
             @import url("styles/xingraph.css");
         </style>
 

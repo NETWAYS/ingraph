@@ -708,9 +708,12 @@
 
             if (hosts.length > 1) {
                 this.store.each(function (series) {
-                    series.set(
-                        'label',
-                        series.json.host + ': ' + series.get('label'));
+                    var prefix = series.json.host + ': ';
+                    if (series.get('label').indexOf(prefix) !== 0) {
+                        series.set(
+                            'label',
+                            prefix + series.get('label'));
+                    }
                 });
             }
 

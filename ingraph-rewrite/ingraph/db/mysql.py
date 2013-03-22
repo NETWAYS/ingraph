@@ -38,6 +38,8 @@ partition_lock = Lock()
 datapoint_lock = Lock()
 performance_data_lock = Lock()
 
+MAX_DECIMAL = 999999999999999.9
+
 
 class Datapoint(object):
 
@@ -107,14 +109,38 @@ class DatapointCache(dict):
         for plot_id, plot_cache in interval_cache.iteritems():
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
                 if datapoint.dirty and not datapoint.phantom:
-                    yield datapoint.avg, datapoint.min, datapoint.max, datapoint.count, plot_id, timestamp
+                    avg = datapoint.avg
+                    if avg > MAX_DECIMAL:
+                        log.info("Data truncated for column 'avg' at plot_id %d" % plot_id)
+                        avg = MAX_DECIMAL
+                    min_ = datapoint.min
+                    if min_ > MAX_DECIMAL:
+                        log.info("Data truncated for column 'min' at plot_id %d" % plot_id)
+                        min_ = MAX_DECIMAL
+                    max_ = datapoint.max
+                    if max_ > MAX_DECIMAL:
+                        log.info("Data truncated for column 'max' at plot_id %d" % plot_id)
+                        max_ = MAX_DECIMAL
+                    yield avg, min_, max_, datapoint.count, plot_id, timestamp
 
     def generate_insert_parambatch(self, interval):
         interval_cache = dict.__getitem__(self, interval)
         for plot_id, plot_cache in interval_cache.iteritems():
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
                 if datapoint.dirty and datapoint.phantom:
-                    yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max, datapoint.count
+                    avg = datapoint.avg
+                    if avg > MAX_DECIMAL:
+                        log.info("Data truncated for column 'avg' at plot_id %d" % plot_id)
+                        avg = MAX_DECIMAL
+                    min_ = datapoint.min
+                    if min_ > MAX_DECIMAL:
+                        log.info("Data truncated for column 'min' at plot_id %d" % plot_id)
+                        min_ = MAX_DECIMAL
+                    max_ = datapoint.max
+                    if max_ > MAX_DECIMAL:
+                        log.info("Data truncated for column 'max' at plot_id %d" % plot_id)
+                        max_ = MAX_DECIMAL
+                    yield plot_id, timestamp, avg, min_, max_, datapoint.count
 
     def clear_interval(self, interval):
         interval_cache = dict.__getitem__(self, interval)
@@ -186,6 +212,8 @@ class PerformanceDataCache(dict):
 
     def generate_parambatch(self):
         for plot_id, plot_cache in self.iteritems():
+            if not plot_cache:
+                continue
             for i, performance_data in enumerate(plot_cache):
                 if performance_data.phantom:
                     if (performance_data.next != performance_data
@@ -752,8 +780,14 @@ class MySQLAPI(object):
 
     def close(self):
         self._scheduler.stop()
+        if datapoint_lock.locked():
+            datapoint_lock.release()
         log.info("Inserting datapoints currently hold in memory..")
         for interval in self._datapoint_cache.iterkeys():
             self._insert_datapoints(interval)
+        if performance_data_lock.locked():
+            performance_data_lock.release()
         log.info("Inserting performance data currently hold in memory..")
         self._insert_performance_data()
+        log.info("Disposing connections...")
+        pool.clear_managers()

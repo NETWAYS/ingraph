@@ -18,6 +18,8 @@
 
         <script type="text/javascript" src="js/ext/adapter/ext/ext-base.js"></script>
         <script type="text/javascript" src="js/ext/ext-all.js"></script>
+        <!-- for debugging, comment ext-all.js and uncomment this one -->
+        <!-- <script type="text/javascript" src="js/ext/ext-all-debug-w-comments.js"></script> -->
 
         <script type="text/javascript" src="js/ext/examples/ux/TabScrollerMenu.js"></script>
         <script type="text/javascript" src="js/ext/examples/ux/CheckColumn.js"></script>
@@ -56,6 +58,7 @@
         <script type="text/javascript" src="js/ext/ux/flot/AbstractStyleForm.js"></script>
         <script type="text/javascript" src="js/ext/ux/flot/FormWindow.js"></script>
 
+        <script type="text/javascript" src="js/ext/ux/flot/NumberField.js"></script>
         <script type="text/javascript" src="js/ext/ux/flot/AxesConfiguration.js"></script>
         <script type="text/javascript" src="js/ext/ux/flot/AxisStyleForm.js"></script>
         <script type="text/javascript" src="js/ext/ux/flot/Fields.js"></script>

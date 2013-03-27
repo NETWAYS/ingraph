@@ -13,7 +13,7 @@
             @import url("styles/ingraphlogo.css");
             @import url("styles/x-flot.css");
             @import url("styles/x-flot-icons.css");
-            @import url("styles/xingraph.css");
+            @import url("styles/x-ingraph.css");
         </style>
 
         <script type="text/javascript" src="js/ext/adapter/ext/ext-base.js"></script>

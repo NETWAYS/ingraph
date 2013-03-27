@@ -35,6 +35,7 @@ XMLRPC_USER=${XMLRPC_USER-ingraph}
 XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
 NULL_TOLERANCE=${NULL_TOLERANCE-2}
 NODE_BIN=
+WEB_CACHE_DIR=${WEB_CACHE_DIR-$PREFIX/app/cache}
 
 FIND=${FIND-find}
 INSTALL=${INSTALL-install}
@@ -62,6 +63,8 @@ usage () {
     echo "Installation directories:"
     echo "--prefix=PREFIX           installation prefix"
     echo "                          [$PREFIX]"
+    echo "--with-cache-dir=CACHEDIR standalone web cache dir"
+    echo "                          [$WEB_CACHE_DIR]"
     echo
     echo "Configuration:"
     echo "--with-web-user           web user"
@@ -158,6 +161,14 @@ do
             PREFIX=${PREFIX#=}
             [ -z "$PREFIX" ] && {
                 echo "ERROR: expected an absolute directory name for --prefix." >&2
+                exit 1
+            }
+            ;;
+        --with-cache-dir*)
+            WEB_CACHE_DIR=${ARG#--with-cache-dir}
+            WEB_CACHE_DIR=${WEB_CACHE_DIR#=}
+            [ -z "$WEB_CACHE_DIR" ] && {
+                echo "ERROR: expected an absolute directory name for --with-cache-dir." >&2
                 exit 1
             }
             ;;
@@ -281,6 +292,7 @@ do
     F=${FIN%.in}
     $INSTALL -m 644 $FIN $F
     $SED -i -e s,@PREFIX@,$PREFIX, $F
+    $SED -i -e s,@WEB_CACHE_DIR@,$WEB_CACHE_DIR, $F
     $SED -i -e s,@WEB_USER@,$WEB_USER, $F
     $SED -i -e s,@WEB_GROUP@,$WEB_GROUP, $F
     $SED -i -e s,@WEB_PATH@,$WEB_PATH, $F

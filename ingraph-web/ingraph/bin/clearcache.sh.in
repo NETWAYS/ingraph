@@ -1,20 +1,59 @@
-#!/bin/sh
+#!/bin/bash
 
-set -o nounset
-set -e errexit
+PREFIX='@PREFIX@'
+CACHEDIR='@WEB_CACHE_DIR@'
+EXIT=0
+NOTHING=true
 
-CACHEDIR=@PREFIX@/app/cache
-RM_OPTS=${RM_OPTS--f}
-FIND=${FIND-find}
-RM=${RM-rm}
+function msg_start {
+    echo -n "$1 ... "
+}
 
-echo "Clearing cache..."
+function msg_result {
+    EXIT=$?
 
-#$FIND $CACHEDIR -type f ! -empty || {
-#    echo "Nothing to clear."
-#    exit 0
-#}
+    if [[ $EXIT -gt 0 ]]; then
+        echo "fail"
+    else
+        echo "ok"
+    fi
 
-$FIND $CACHEDIR -type f \( \( -execdir $RM $RM_OPTS {} \; -a -execdir echo "Cleared {}" \; \) -o -execdir echo "ERROR: Failed to clear cache due to insufficient permissions" >&2 \; \)
+    NOTHING=false
+}
 
-exit $?
+if [ ! -w "$CACHEDIR" ]; then
+    echo "You don't have filesystem permissions to clear the cache in $CACHEDIR!" >&2
+    exit 1
+fi
+
+if [[ ! -e $PREFIX ]]; then
+    echo "Basedir '$PREFIX' does not exist!"
+    exit 1
+fi
+
+echo "Basedir: $PREFIX Cachedir: $CACHEDIR"
+
+CCDIR="$CACHEDIR/config"
+
+for CUR_CDIR in $CCDIR; do
+    CC_FILES=$(ls $CUR_CDIR/* 2>/dev/null | wc -l)
+    if [[ $CC_FILES -gt 0 ]]; then
+
+        CUR_CNAME=$(basename $CUR_CDIR)
+
+        msg_start "Deleting cache from $CUR_CNAME ($CC_FILES files)"
+
+        find $CUR_CDIR/ -type f -exec rm {} \;
+
+        msg_result
+
+    fi
+done
+
+if [[ $NOTHING == true ]]; then
+    echo "Cache already purged!"
+fi
+
+exit $EXIT
+
+

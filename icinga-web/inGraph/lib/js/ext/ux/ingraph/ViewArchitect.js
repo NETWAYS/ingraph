@@ -75,11 +75,11 @@
             values.end = this.endDateField.strValue ||
                          this.endDateField.getValue() ?
                          this.endDateField.getValue().getTime() / 1000 : null;
-            if (Ext.isNumber(values.ymin)) {
-                flotCfg.yaxis.min = values.ymin;
+            if (Ext.isNumber(parseFloat(values.ymin))) {
+                flotCfg.yaxis.min = parseFloat(values.ymin);
             }
-            if (Ext.isNumber(values.ymax)) {
-                flotCfg.yaxis.max = values.ymax;
+            if (Ext.isNumber(parseFloat(values.ymax))) {
+                flotCfg.yaxis.max = parseFloat(values.ymax);
             }
             switch (values.chartType) {
                 case 'Bar Chart':

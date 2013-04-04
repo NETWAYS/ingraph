@@ -165,7 +165,13 @@
                         module: 'inGraph',
                         action: 'Cronk.View'
                     },
-                    stateuid: stateuid
+                    stateuid: stateuid,
+                    cronkConfig: {
+                        params: {
+                            module: 'inGraph',
+                            action: 'Cronk.View'
+                        }
+                    }
                 },
                 tabPanel = Ext.getCmp('cronk-tabs');
             cronk = Ext.ux.ingraph.icingaweb.Cronk.local(cronk);

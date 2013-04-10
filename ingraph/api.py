@@ -30,7 +30,7 @@ class BackendRPCMethods(object):
         self.queryqueue = queryqueue
         self.logger = logger
         self.shutdown_server = False
-        
+
     def setupTimeFrame(self, interval, retention_period=None):
         tfs = model.TimeFrame.getAll(self.engine)
         for tf in tfs:
@@ -40,17 +40,17 @@ class BackendRPCMethods(object):
                     1, 'Timeframe interval is invalid. Must be multiple of '
                        'existing timeframe or evenly divisible by existing '
                        'larger intervals.')
-            
+
             if tf.interval == interval:
                 tf.retention_period = retention_period
                 tf.save(self.engine)
                 return tf.id
-        
+
         tf = model.TimeFrame(interval, retention_period)
         tf.save(self.engine)
-        
+
         return tf.id
-    
+
     def getTimeFrames(self):
         tfs = model.TimeFrame.getAll(self.engine)
         items = {}
@@ -59,48 +59,48 @@ class BackendRPCMethods(object):
                                        'interval': tf.interval,
                                        'retention-period': tf.retention_period}
         return items
-    
+
     def disableTimeFrame(self, tf_id):
         tf = model.TimeFrame.getByID(self.engine, tf_id)
         tf.active = False;
         tf.save(self.engine)
-        
+
         return True
 
     def _createHost(self, conn, name):
         if name in self.hosts:
             return self.hosts[name]
-        
+
         obj = model.Host.getByName(conn, name)
-        
+
         if obj == None:
             obj = model.Host(name)
             obj.save(conn)
-            
+
         self.hosts[name] = obj
-            
+
         return obj
-    
+
     def _createService(self, conn, name):
         if name in self.services:
             return self.services[name]
 
         obj = model.Service.getByName(conn, name)
-        
+
         if obj == None:
             obj = model.Service(name)
             obj.save(conn)
-        
+
         self.services[name] = obj
-        
+
         return obj
 
     def _createHostService(self, conn, host, service, parent_hostservice):
         hostservice_key = (host, service)
-        
+
         if hostservice_key in self.hostservices:
             return self.hostservices[hostservice_key]
-        
+
         objs = model.HostService.getByHostAndService(conn, host, service,
                                                      parent_hostservice)
         if len(objs) == 0:
@@ -108,19 +108,19 @@ class BackendRPCMethods(object):
             obj.save(conn)
         else:
             obj = objs[0]
-            
+
         self.hostservices[hostservice_key] = obj
-        
+
         return obj
 
     def _createPlot(self, conn, hostservice, name):
         plot_key = (hostservice, name)
         if plot_key in self.plots:
             return self.plots[plot_key]
-        
+
         objs = model.Plot.getByHostServiceAndName(conn, hostservice, name)
-        
-        if len(objs) == 0:    
+
+        if len(objs) == 0:
             obj = model.Plot(hostservice, name)
             obj.save(conn)
         else:
@@ -132,14 +132,13 @@ class BackendRPCMethods(object):
 
     def insertValueBulk(self, updates_raw):
         updates = cPickle.loads(updates_raw)
-        
+
         conn = self.engine.connect()
-        
+
         for update in updates:
-            (host, parent_service, service, plot, timestamp, unit, value, min,
-             max, lower_limit, upper_limit, warn_lower, warn_upper, warn_type,
+            (host, parent_service, service, plot, timestamp, unit, value, lower_limit, upper_limit, warn_lower, warn_upper, warn_type,
              crit_lower, crit_upper, crit_type, pluginstatus) = update
-            
+
             host_obj = self._createHost(conn, host)
             if parent_service != None:
                 parent_service_obj = self._createService(conn, parent_service)
@@ -155,40 +154,40 @@ class BackendRPCMethods(object):
             plot_obj = self._createPlot(conn, hostservice_obj, plot)
 
             queries = plot_obj.buildUpdateQueries(
-                conn, timestamp, unit, value, min, max, lower_limit,
+                conn, timestamp, unit, value, value, value, lower_limit,
                 upper_limit, warn_lower, warn_upper, warn_type, crit_lower,
                 crit_upper, crit_type)
-            
+
             for query in queries:
                 self.queryqueue.put(query)
 
             if pluginstatus in ['warning', 'critical']:
                 status_obj = model.PluginStatus(hostservice_obj, timestamp, pluginstatus)
                 status_obj.save(conn)
-        
+
         conn.close()
 
         return True
 
     def getHosts(self):
         hosts = model.Host.getAll(self.engine)
-        
+
         items = []
-        
+
         for host in hosts:
             items.append(host.name)
-            
+
         return items
-    
+
     def getHostsFiltered(self, pattern, limit=None, offset=None):
         result = model.Host.getByPattern(self.engine,
                                          pattern.replace('*', '%'),
                                          limit, offset)
         items = []
-        
+
         for host in result['hosts']:
             items.append(host.name)
-            
+
         return {'total': result['total'], 'hosts': items}
 
     def getServices(self, host_pattern, service_pattern=None, limit=None,
@@ -208,9 +207,9 @@ class BackendRPCMethods(object):
             item = { 'service': hostservice_obj.service.name,
                      'parent_service': parentservice }
             items.append(item)
-        
+
         return {'total': result['total'], 'services': items}
-    
+
     def _flattenCharts(self, dps):
         charts = []
 
@@ -221,7 +220,7 @@ class BackendRPCMethods(object):
                 hostservice_obj = plot_obj.hostservice
 
                 if hostservice_obj.parent_hostservice != None:
-                    label = hostservice_obj.service.name + '-' + label     
+                    label = hostservice_obj.service.name + '-' + label
 
                 if hostservice_obj.service.name != '':
                     svc_id = ' - ' + hostservice_obj.service.name
@@ -231,11 +230,11 @@ class BackendRPCMethods(object):
                 plot_id = hostservice_obj.host.name + svc_id + ' - ' + plot_obj.name + ' - ' + type
 
                 charts.append({'host': hostservice_obj.host.name,
-                               'service': hostservice_obj.service.name,    
+                               'service': hostservice_obj.service.name,
                                'plot': plot_obj.name, 'type': type,
-                               'label': label, 'unit': plot_obj.unit,      
-                               'start_timestamp': dps['start_timestamp'],  
-                               'end_timestamp': dps['end_timestamp'],      
+                               'label': label, 'unit': plot_obj.unit,
+                               'start_timestamp': dps['start_timestamp'],
+                               'end_timestamp': dps['end_timestamp'],
                                'granularity': dps['granularity'],
                                'data': data,
                                'plot_id': plot_id})
@@ -265,7 +264,7 @@ class BackendRPCMethods(object):
             granularity = None
 
         vquery = {}
-        
+
         for spec in query:
             host = model.Host.getByName(conn, spec['host'])
             service = model.Service.getByName(conn, spec['service'], spec['parent_service'])
@@ -298,7 +297,7 @@ class BackendRPCMethods(object):
             charts.extend(self._flattenCharts(dps))
 
         et = time.time()
-        
+
         self.logger.debug("Got filtered plot values in %f seconds" % (et - st))
         return result
 
@@ -327,12 +326,12 @@ class BackendRPCMethods(object):
 
         for chart in data['charts']:
             chart['data'] = self._optimizePlot(chart['data'])
- 
+
         return data
 
     def shutdown(self):
         self.shutdown_server = True
-        
+
         return True
 
     def addOrUpdateComment(self, comment_id, host, parent_service, service,
@@ -344,7 +343,7 @@ class BackendRPCMethods(object):
 
         if parent_service == '':
             parent_service = None
-        
+
         if parent_service != None:
             parent_service_obj = self._createService(self.engine,
                                                      parent_service)
@@ -375,16 +374,16 @@ class BackendRPCMethods(object):
                    text):
         return self.addOrUpdateComment(None, host, parent_service, service, timestamp,
             author, text)
-    
+
     def deleteComment(self, comment_id):
         comment = model.Comment.getByID(self.engine, comment_id)
         comment.delete(self.engine)
-    
+
     def updateComment(self, comment_id, host, parent_service, service,
                       timestamp, author, text):
         return self.addOrUpdateComment(comment_id, host, parent_service,
             service, timestamp, author, text)
-        
+
     def getPlots(self, host_name, service_name, parent_service_name=None):
         res = []
         host = model.Host.getByName(self.engine, host_name)

@@ -23,7 +23,6 @@ import fileinput
 import re
 import time
 import shutil
-import copy
 import pickle
 import xmlrpclib
 import logging
@@ -32,6 +31,7 @@ import ingraph
 from ingraph import daemon
 from ingraph import utils
 import ingraph.log
+from ingraph.parser import PerfdataParser, InvalidPerfdata
 
 
 class UnsupportedDaemonFunction(Exception): pass
@@ -217,6 +217,7 @@ class Collectord(daemon.UnixDaemon):
         self.api = api
 
     def run(self):
+        parser = PerfdataParser()
         last_flush = time.time()
         updates = []
         while True:
@@ -225,9 +226,31 @@ class Collectord(daemon.UnixDaemon):
             if files:
                 input = fileinput.input(files)
                 for line in input:
-                    update = self._prepare_update(line)
-                    if update:
-                        updates.extend(update)
+                    try:
+                        observation, perfdata = parser.parse(line)
+                    except InvalidPerfdata, e:
+                        sys.stderr.write("%s %s:%i" % (e, input.filename(), input.filelineno()))
+                        continue
+                    for performance_data in perfdata:
+                        parentservice = None
+                        service = observation['service']
+                        if performance_data['child_service']:
+                            parentservice = service
+                            service = performance_data['child_service']
+                        pluginstatus = observation['state']
+                        if pluginstatus == 1:
+                            pluginstatus = 'warning'
+                        if pluginstatus == 2:
+                            pluginstatus = 'critical'
+                        updates.append(
+                            (observation['host'], parentservice, service,
+                             performance_data['label'], observation['timestamp'], performance_data['uom'],
+                             performance_data['value'], performance_data['lower_limit'],
+                             performance_data['upper_limit'], performance_data['warn_lower'],
+                             performance_data['warn_upper'], performance_data['warn_type'],
+                             performance_data['crit_lower'], performance_data['crit_upper'],
+                             performance_data['crit_type'], pluginstatus)
+                        )
                     lines += 1
 
             if last_flush + 30 < time.time() or len(updates) >= 25000:

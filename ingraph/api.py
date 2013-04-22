@@ -138,32 +138,35 @@ class BackendRPCMethods(object):
         for update in updates:
             (host, parent_service, service, plot, timestamp, unit, value, lower_limit, upper_limit, warn_lower, warn_upper, warn_type,
              crit_lower, crit_upper, crit_type, pluginstatus) = update
+            try:
+                host_obj = self._createHost(conn, host)
+                if parent_service != None:
+                    parent_service_obj = self._createService(conn, parent_service)
+                    parent_hostservice_obj = self._createHostService(
+                        conn, host_obj, parent_service_obj, None)
+                else:
+                    parent_hostservice_obj = None
+                service_obj = self._createService(conn, service)
 
-            host_obj = self._createHost(conn, host)
-            if parent_service != None:
-                parent_service_obj = self._createService(conn, parent_service)
-                parent_hostservice_obj = self._createHostService(
-                    conn, host_obj, parent_service_obj, None)
-            else:
-                parent_hostservice_obj = None
-            service_obj = self._createService(conn, service)
+                hostservice_obj = self._createHostService(conn, host_obj,
+                                                          service_obj,
+                                                          parent_hostservice_obj)
+                plot_obj = self._createPlot(conn, hostservice_obj, plot)
 
-            hostservice_obj = self._createHostService(conn, host_obj,
-                                                      service_obj,
-                                                      parent_hostservice_obj)
-            plot_obj = self._createPlot(conn, hostservice_obj, plot)
+                queries = plot_obj.buildUpdateQueries(
+                    conn, timestamp, unit, value, value, value, lower_limit,
+                    upper_limit, warn_lower, warn_upper, warn_type, crit_lower,
+                    crit_upper, crit_type)
 
-            queries = plot_obj.buildUpdateQueries(
-                conn, timestamp, unit, value, value, value, lower_limit,
-                upper_limit, warn_lower, warn_upper, warn_type, crit_lower,
-                crit_upper, crit_type)
+                for query in queries:
+                    self.queryqueue.put(query)
 
-            for query in queries:
-                self.queryqueue.put(query)
-
-            if pluginstatus in ['warning', 'critical']:
-                status_obj = model.PluginStatus(hostservice_obj, timestamp, pluginstatus)
-                status_obj.save(conn)
+                if pluginstatus in ['warning', 'critical']:
+                    status_obj = model.PluginStatus(hostservice_obj, timestamp, pluginstatus)
+                    status_obj.save(conn)
+            except Exception, e:
+                print e
+                continue
 
         conn.close()
 

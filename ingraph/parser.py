@@ -3,7 +3,7 @@
 # This file is part of inGraph (https://www.netways.org/projects/ingraph).
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
+# it under the terms of the GNU General Public License  as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
@@ -201,7 +201,7 @@ class PerfdataParser(object):
                 crit_lower, crit_upper, crit_type = (None,) * 3
             try:
                 min_ = self._parse_decimal(values[3]) * base
-            except IndexError:
+            except (IndexError, ValueError):
                 if uom == 'percent':
                     min_ = float(0)
                 else:

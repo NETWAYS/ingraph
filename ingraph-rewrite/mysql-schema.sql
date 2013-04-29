@@ -104,13 +104,13 @@ CREATE TABLE `pluginstatus` (
 create table `performance_data`(
   `plot_id` int(11) NOT NULL,
   `timestamp` int(11) NOT NULL,
-  `lower_limit` decimal(20,5) DEFAULT NULL,
-  `upper_limit` decimal(20,5) DEFAULT NULL,
-  `warn_lower` decimal(20,5) DEFAULT NULL,
-  `warn_upper` decimal(20,5) DEFAULT NULL,
+  `lower_limit` decimal(63,4) DEFAULT NULL,
+  `upper_limit` decimal(63,4) DEFAULT NULL,
+  `warn_lower` decimal(63,4) DEFAULT NULL,
+  `warn_upper` decimal(63,4) DEFAULT NULL,
   `warn_type` enum('inside','outside') DEFAULT NULL,
-  `crit_lower` decimal(20,5) DEFAULT NULL,
-  `crit_upper` decimal(20,5) DEFAULT NULL,
+  `crit_lower` decimal(63,4) DEFAULT NULL,
+  `crit_upper` decimal(63,4) DEFAULT NULL,
   `crit_type` enum('inside','outside') DEFAULT NULL,
   PRIMARY KEY (`plot_id`, `timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;

@@ -38,8 +38,6 @@ partition_lock = Lock()
 datapoint_lock = Lock()
 performance_data_lock = Lock()
 
-MAX_DECIMAL = 999999999999999.9
-
 
 class Datapoint(object):
 
@@ -109,38 +107,14 @@ class DatapointCache(dict):
         for plot_id, plot_cache in interval_cache.iteritems():
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
                 if datapoint.dirty and not datapoint.phantom:
-                    avg = datapoint.avg
-                    if avg > MAX_DECIMAL:
-                        log.info("Data truncated for column 'avg' at plot_id %d" % plot_id)
-                        avg = MAX_DECIMAL
-                    min_ = datapoint.min
-                    if min_ > MAX_DECIMAL:
-                        log.info("Data truncated for column 'min' at plot_id %d" % plot_id)
-                        min_ = MAX_DECIMAL
-                    max_ = datapoint.max
-                    if max_ > MAX_DECIMAL:
-                        log.info("Data truncated for column 'max' at plot_id %d" % plot_id)
-                        max_ = MAX_DECIMAL
-                    yield avg, min_, max_, datapoint.count, plot_id, timestamp
+                    yield datapoint.avg, datapoint.min, datapoint.max, datapoint.count, plot_id, timestamp
 
     def generate_insert_parambatch(self, interval):
         interval_cache = dict.__getitem__(self, interval)
         for plot_id, plot_cache in interval_cache.iteritems():
             for timestamp, datapoint in sorted(plot_cache.iteritems()):
                 if datapoint.dirty and datapoint.phantom:
-                    avg = datapoint.avg
-                    if avg > MAX_DECIMAL:
-                        log.info("Data truncated for column 'avg' at plot_id %d" % plot_id)
-                        avg = MAX_DECIMAL
-                    min_ = datapoint.min
-                    if min_ > MAX_DECIMAL:
-                        log.info("Data truncated for column 'min' at plot_id %d" % plot_id)
-                        min_ = MAX_DECIMAL
-                    max_ = datapoint.max
-                    if max_ > MAX_DECIMAL:
-                        log.info("Data truncated for column 'max' at plot_id %d" % plot_id)
-                        max_ = MAX_DECIMAL
-                    yield plot_id, timestamp, avg, min_, max_, datapoint.count
+                    yield plot_id, timestamp, datapoint.avg, datapoint.min, datapoint.max, datapoint.count
 
     def clear_interval(self, interval):
         interval_cache = dict.__getitem__(self, interval)
@@ -391,9 +365,9 @@ class MySQLAPI(object):
             '''CREATE TABLE `datapoint_%d` (
                 `plot_id` int(11) NOT NULL,
                 `timestamp` int(11) NOT NULL,
-                `min` decimal(20,5) NOT NULL,
-                `max` decimal(20,5) NOT NULL,
-                `avg` decimal(20,5) NOT NULL,
+                `min` decimal(63,4) NOT NULL,
+                `max` decimal(63,4) NOT NULL,
+                `avg` decimal(63,4) NOT NULL,
                 `count` int(11) NOT NULL,
                 PRIMARY KEY (`plot_id`, `timestamp`)
             ) ENGINE=InnoDB DEFAULT CHARSET=latin1

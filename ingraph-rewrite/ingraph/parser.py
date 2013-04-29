@@ -39,11 +39,29 @@ class PerfdataParser(object):
         'HOSTCHECKCOMMAND': lambda v: ('check_command', v.split('!', 1)[0])
     }
 
-    find_perfdata = re.compile('(?:([^: ]+::[^:]+)::)?([^= ]+)=\s*([+-]?[0-9e,.]+)').findall
+    find_perfdata = re.compile(
+        '\s*'                                        # Strip whitespaces at the beginning
+                                                     # Parse check_multi label format into child_service if existing
+        '((?P<child_service>[^ =\']+)::(?P<check_command>[^ =\']+)::)?'
+        '(?P<sq>[\'])?'                              # Single quotes around the label are optional
+        '(?P<plot_label>(?(sq)[^=\']+|[^ =\']+))'    # Disallow single quote and equals sign for plot label
+                                                     # If spaces are in the label the single quotes around the label are required
+        '(?(sq)(?P=sq))'                             # Single quotes around the label are optional
+        '=(?P<plot_perfdata>[^ ]+)'                  # Performance data is space separated
+    ).finditer
 
-    match_quantitative_value = re.compile('(?P<value>[+-]?[0-9e,.]+)\s*(?P<uom>.*?)').match
+    match_quantitative_value = re.compile(
+        '(?P<value>[+-]?[0-9]*[.,]?[0-9]+(?:[eE][-+]?[0-9]+)?)'
+        '\s*'
+        '(?P<uom>[A-Za-z%]+)?'
+    ).match
 
-    match_range = re.compile('(?P<inside>@(?=[^:]+:))?(?P<start>[^:]+(?=:))?:?(?P<end>(?(start)[^:]+|(?<!:)[^:]+))?').match
+    match_range = re.compile(
+        '(?P<inside>@(?=[^:]+:))?'
+        '(?P<start>[^:]+(?=:))?'
+        ':?'
+        '(?P<end>(?(start)[^:]+|(?<!:)[^:]+))?'
+    ).match
 
     binary_suffix = {
         'B': 1,
@@ -56,7 +74,7 @@ class PerfdataParser(object):
     }
 
     decimal_suffix = {
-        'K': 1000 ** 1,
+        'K': 1000,
         'M': 1000 ** 2,
         'G': 1000 ** 3,
         'T': 1000 ** 4,
@@ -65,9 +83,10 @@ class PerfdataParser(object):
     }
 
     time_suffix = {
-        's': 1,
-        'ms': 10 ** (-3),
-        'us': 10 ** (-6)
+        'S': 1,
+        'MS': 10 ** (-3),
+        'US': 10 ** (-6),
+        'NS': 10 ** (-9)
     }
 
     def _parse_decimal(self, value):
@@ -89,51 +108,46 @@ class PerfdataParser(object):
 
     def _parse_quantitative_value(self, value_string):
         match = self.__class__.match_quantitative_value(value_string)
-        sfx = match.group('uom').upper()
-        if sfx == '%':
-            base = 1
-            uom = 'percent'
-        elif sfx == 'C':
-            base = 1
-            uom = 'counter'
-        elif sfx in self.__class__.binary_suffix:
-            base = self.__class__.binary_suffix[sfx]
-            uom = 'byte'
-        elif sfx in self.__class__.decimal_suffix:
-            base = self.__class__.decimal_suffix[sfx]
-            uom = 'raw'
-        elif sfx in self.__class__.time_suffix:
-            base = self.__class__.time_suffix[sfx]
-            uom = 'time'
-        else:
+        try:
+            sfx = match.group('uom').upper()
+            if sfx == '%':
+                base = 1
+                uom = 'percent'
+            elif sfx == 'C':
+                base = 1
+                uom = 'counter'
+            elif sfx in self.__class__.binary_suffix:
+                base = self.__class__.binary_suffix[sfx]
+                uom = 'byte'
+            elif sfx in self.__class__.decimal_suffix:
+                base = self.__class__.decimal_suffix[sfx]
+                uom = 'raw'
+            else:
+                base = self.__class__.time_suffix[sfx]
+                uom = 'time'
+        except (AttributeError, KeyError):
             base = 1
             uom = 'raw'
         return match.group('value'), uom, base
 
     def _parse_threshold(self, value_string):
         match = self.__class__.match_range(value_string)
-        if not match or not match.group('start') and not match.group('end'):
-            raise InvalidPerfdata("Invalid performance data: warn or crit (%s) are not in the range format. "
+        if value_string and not match.group('start') and not match.group('end'):
+            raise InvalidPerfdata("Invalid performance data: warn or crit are not in the range format: `%s`. "
                                   "Please refer to http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT "
-                                  "for more information." % value_string)
+                                  "for more information." % (value_string,))
         return match.group('start'), match.group('end'), 'inside' if match.group('inside') else 'outside'
 
     def parse(self, perfdata_line):
-        # TODO(el): Parse plugin output, save check_command, save state
-        """
-        (^|\s|\()(?P<data>-?\d[\d\.\,]*)(\)|\s|$)
-        (^|\s|\()(?P<data>-?\d[\d\.\,]*)\s+(?P<uom>[a-zA-Z]+)\b
-        (?P<uom>[A-Za-z0-9]{3,})[\=\:]\s+(?P<data>-?\d[\d\.\,]*)
-        (^|\s|\()(?P<data>-?\d[\d\.\,]*)(?P<uom>[a-zA-Z\%]{1,3})
-        """
         perfdata_no_cruft = {}
         tokens = perfdata_line.strip().split('\t')
         for token in tokens:
             try:
                 key, value = token.split('::', 1)
             except:
-                raise InvalidPerfdata("Invalid performance data: Unable to split token (%s) "
-                                      "by double colon (`::`) into key-value pair." % token)
+                continue
+                # raise InvalidPerfdata("Invalid performance data: Unable to split token (%s) "
+                #                       "by double colon (`::`) into key-value pair." % (token,))
             try:
                 key, value = self.__class__._key_extraction_fn[key](value)
             except KeyError:
@@ -148,12 +162,16 @@ class PerfdataParser(object):
         if 'service' not in perfdata_no_cruft:
             perfdata_no_cruft['service'] = ''
         perfdata = []
-        child_service = None
-        for potential_child_service, plot_label, format in self.find_perfdata(perfdata_no_cruft['perfdata']):
-            if potential_child_service:
-                child_service = potential_child_service
+        child_service, check_command = (None,) * 2
+        for match in self.find_perfdata(perfdata_no_cruft['perfdata']):
+            if match.group('child_service'):
+                # Set child service for all following performance data until new child service found
+                child_service = match.group('child_service')
+                check_command = match.group('check_command')
+            if check_command:
+                perfdata_no_cruft['check_command'] = check_command
             # Trailing unfilled semicolons can be dropped
-            values = re.sub(r';+$', '', format).split(';')
+            values = re.sub(r';+$', '', match.group('plot_perfdata')).split(';')
             # value[UOM];[warn];[crit];[min];[max]
             # where min and max are set automatically if missing to 0 and 100 respectively if UOM is `%`
             try:
@@ -161,7 +179,10 @@ class PerfdataParser(object):
                 value = self._parse_decimal(value)
                 value *= base
             except (ValueError, AttributeError):
-                raise InvalidPerfdata("Invalid performance data: Measurement `%s=%s (%r)` does not contain a valid value." % (plot_label, format, values))
+                continue
+                # raise InvalidPerfdata("Invalid performance data: Measurement `%s=%s (%r)` "
+                #                       "does not contain a valid value." %
+                #                       (match.group('plot_label'), match.group('plot_perfdata'), values))
             try:
                 warn_lower, warn_upper, warn_type = self._parse_threshold(values[1])
                 if warn_lower:
@@ -171,7 +192,7 @@ class PerfdataParser(object):
                     warn_upper = self._parse_decimal(warn_upper)
                     warn_upper *= base
             except IndexError:
-                warn_lower, warn_upper, warn_type = None, None, None
+                warn_lower, warn_upper, warn_type = (None,) * 3
             try:
                 crit_lower, crit_upper, crit_type = self._parse_threshold(values[2])
                 if crit_lower:
@@ -181,10 +202,10 @@ class PerfdataParser(object):
                     crit_upper = self._parse_decimal(crit_upper)
                     crit_upper *= base
             except IndexError:
-                crit_lower, crit_upper, crit_type = None, None, None
+                crit_lower, crit_upper, crit_type = (None,) * 3
             try:
                 min_ = self._parse_decimal(values[3]) * base
-            except IndexError:
+            except (IndexError, ValueError):
                 if uom == 'percent':
                     min_ = float(0)
                 else:
@@ -197,7 +218,7 @@ class PerfdataParser(object):
                 else:
                     max_ = None
             perfdata.append({
-                'label': plot_label,
+                'label': match.group('plot_label'),
                 'child_service': child_service,
                 'value': value,
                 'uom': uom,
@@ -210,5 +231,9 @@ class PerfdataParser(object):
                 'crit_upper': crit_upper,
                 'crit_type': crit_type
             })
+        if perfdata_no_cruft['perfdata'] and not perfdata:
+            raise InvalidPerfdata("Invalid performance data: Not in the \"Nagios plugins\" format: `%s`. "
+                                  "Please refer to http://nagiosplug.sourceforge.net/developer-guidelines.html#AEN201 "
+                                  "for more information." % (perfdata_no_cruft['perfdata'],))
         perfdata_no_cruft.pop('perfdata')
         return perfdata_no_cruft, perfdata

@@ -222,7 +222,7 @@
         // private
         injectDefaults: function () {
             this.tips = Ext.applyIf(
-                // In case this component got not explecitly configured with a
+                // In case this component got not explicitly configured with a
                 // tips property it's undefined else don't overwrite defined keys
                 this.tips || {},
                 {

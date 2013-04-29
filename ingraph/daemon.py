@@ -186,9 +186,7 @@ class UnixDaemon(object):
 
         if self.log and self.log != '-':
             self.addLoggingHandler(
-                logging.handlers.RotatingFileHandler(
-                     self.log, maxBytes=2**11*5, backupCount=4)) # 4 files,
-                                                                 # 5MB each
+                logging.handlers.RotatingFileHandler(self.log, maxBytes=100 << 20, backupCount=4)) # 4 files, # 100 MB each
 
         self.before_daemonize()
         if self.detach:

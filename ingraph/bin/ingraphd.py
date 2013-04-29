@@ -46,9 +46,7 @@ def flush(engine, queryqueue):
         st = time.time()
         try:
             conn = engine.connect()
-            transaction = conn.begin()
             ingraph.model.Plot.executeUpdateQueries(conn, items)
-            transaction.commit()
             conn.close()
         except Exception:
             print("Exception occured while flushing DB updates")

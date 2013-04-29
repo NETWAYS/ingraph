@@ -161,9 +161,9 @@ class BackendRPCMethods(object):
                 for query in queries:
                     self.queryqueue.put(query)
 
-                if pluginstatus in ['warning', 'critical']:
-                    status_obj = model.PluginStatus(hostservice_obj, timestamp, pluginstatus)
-                    status_obj.save(conn)
+                # if pluginstatus in ['warning', 'critical']:
+                #     status_obj = model.PluginStatus(hostservice_obj, timestamp, pluginstatus)
+                #     status_obj.save(conn)
             except Exception, e:
                 print e
                 continue

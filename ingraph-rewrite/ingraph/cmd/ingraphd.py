@@ -106,11 +106,11 @@ class IngraphDaemon(UnixDaemon):
         start = time()
         log.info("Parsing performance data file %s.." % filename)
         f = open(filename)
-        for lineno, line in enumerate(f):
+        for lineno, line in enumerate(f, start=1):
             try:
                 observation, perfdata = parser.parse(line)
             except InvalidPerfdata, e:
-                log.warn("%s %s:%i" % (e, filename, lineno + 1))
+                log.warn("%s %s:%i" % (e, filename, lineno))
                 continue
             host_service_record = self.connection.get_host_service_guaranteed(observation['host'], observation['service'])
             for performance_data in perfdata:

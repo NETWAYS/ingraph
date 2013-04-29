@@ -217,7 +217,7 @@ class UnixDaemon(object):
         if self._detach:
             self._check_logfile_permissions()
             self._daemonize()
-            #self._close_fds(self._pidfp.fileno())
+            # self._close_fds(self._pidfp.fileno())
             if self._logfile and self._logfile != '-':
                 # Remove all already attached handlers
                 del logging.getLogger().handlers[:]
@@ -284,7 +284,7 @@ class DaemonOptionParser(optparse.OptionParser):
         return options, args
 
 
-def get_option_parser(usage="Usage: %%prog [options]", version=None, chdir='/etc/ingraph', pidfile='/var/run/ingraph/ingraph.pid'):
+def get_option_parser(usage="Usage: %%prog [options]", version=None, chdir='/etc/ingraph', pidfile='/var/run/ingraph/ingraphd.pid'):
     usage += " {%s}" % '|'.join(DAEMON_FUNCTIONS)
     parser = DaemonOptionParser(usage=usage, version=version)
     start_stop_group = optparse.OptionGroup(parser, "Start and stop",

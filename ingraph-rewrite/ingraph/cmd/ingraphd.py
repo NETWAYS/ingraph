@@ -61,17 +61,17 @@ class IngraphDaemon(UnixDaemon):
 
     def before_daemonize(self):
         try:
-            databse_config = file_config('ingraph-database.conf')
+            database_config = file_config('ingraph-database.conf')
         except IOError as e:
             log.critical(e)
             sys.exit(1)
-        log.debug("Connecting to the database..")
         try:
-            self._dsn = databse_config['dsn']
-            self.connection = connect(databse_config['dsn'])
+            self._dsn = database_config['dsn']
         except KeyError:
             log.critical("You need to set a database connection string (`dsn` setting) in your database configuration file.")
             sys.exit(1)
+        log.debug("Connecting to the database..")
+        self.connection = connect(database_config['dsn'])
         try:
             aggregates_config = file_config('ingraph-aggregates.conf')
         except IOError as e:
@@ -99,7 +99,11 @@ class IngraphDaemon(UnixDaemon):
         except IOError as e:
             log.critical(e)
             sys.exit(1)
-        validate_xmlrpc_config(xmlrpc_config)
+        try:
+            validate_xmlrpc_config(xmlrpc_config)
+        except Exception as e:
+            log.critical(e)
+            sys.exit(1)
         self._xmlrpc_config = xmlrpc_config
 
     def _process_perfdata(self, filename, parser=PerfdataParser()):
@@ -197,6 +201,6 @@ class IngraphdCmd(Subcommand):
     def __call__(self, options, args):
         logging.getLogger().setLevel(getattr(logging, options.logging_level))
         # Remove all None-values from options
-        self.daemon = IngraphDaemon(**dict((k, v) for k, v in options.__dict__.iteritems() if v is not None))
+        self.daemon = IngraphDaemon(**dict((k, v) for k, v in vars(options).iteritems() if v is not None))
         # Exec daemon function
         return getattr(self.daemon, args[0])()

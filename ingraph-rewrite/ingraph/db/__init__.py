@@ -43,7 +43,11 @@ class IngraphDatabase(object):
             user, passwd = user.split(':', 1)
         except ValueError:
             passwd = None
-        self.dbapi = self.__class__._dialects[dialect.lower()](user, passwd, host, port, db)
+        try:
+            self.dbapi = self.__class__._dialects[dialect.lower()](user, passwd, host, port, db)
+        except KeyError:
+            raise Exception("Database dialect `%s` not supported. Supported dialects are: %s." %
+                            (dialect, ', '.join(self.__class__._dialects.iterkeys())))
 
     @memoize(cache=get_cache('host'))
     def get_host(self, host_name):

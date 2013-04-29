@@ -17,7 +17,6 @@
 
 import logging
 import os.path
-import sys
 
 log = logging.getLogger(__name__)
 
@@ -34,10 +33,8 @@ def file_config(filename):
 
 def validate_xmlrpc_config(xmlrpc_config):
     if 'xmlrpc_address' not in xmlrpc_config or 'xmlrpc_port' not in xmlrpc_config:
-        log.critical("You need to set a bind address/port for the XML-RPC interface "
-                     "'xmlrpc_address' and 'xmlrpc_port' settings).")
-        sys.exit(1)
+        raise Exception("You need to set a bind address/port for the XML-RPC interface "
+                        "'xmlrpc_address' and 'xmlrpc_port' settings).")
     if 'xmlrpc_username' not in xmlrpc_config or 'xmlrpc_password' not in xmlrpc_config:
-        log.critical("You need to set an XML-RPC username and password "
-                     "'xmlrpc_username' and 'xmlrpc_password' settings).")
-        sys.exit(1)
+        raise Exception("You need to set an XML-RPC username and password "
+                        "'xmlrpc_username' and 'xmlrpc_password' settings).")

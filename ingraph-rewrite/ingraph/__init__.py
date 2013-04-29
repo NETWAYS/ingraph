@@ -19,8 +19,8 @@ import sys
 
 import ingraph.log
 
-if sys.version_info[:2] < (2, 4):
-    sys.exit('inGraph requires Python version 2.4 or later')
+if sys.version_info[:2] < (2, 6):
+    sys.exit('inGraph requires Python version 2.6 or later')
 elif sys.version_info[:2] >= (3,):
     sys.exit('inGraph is not yet compatible with Python 3')
 

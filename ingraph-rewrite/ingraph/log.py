@@ -44,10 +44,10 @@ class LogFormatter(logging.Formatter):
         return formatted_message
 
 
-def add_optparse_logging_options(parser):
-    log_lvls = ('INFO', 'WARNING', 'ERROR', 'CRITICAL', 'DEBUG')
-    parser.add_option('-v', '--verbose', dest='logging_level', default='DEBUG', choices=log_lvls,
-                      help="Print verbose informational messages. One of %s. [default: %%default]" % ', '.join(log_lvls))
+def add_optparse_logging_options(parser, default_loglevel='DEBUG'):
+    LOGLEVELS = ('INFO', 'WARNING', 'ERROR', 'CRITICAL', 'DEBUG')
+    parser.add_option('-v', '--verbose', dest='logging_level', default=default_loglevel, choices=LOGLEVELS,
+                      help="Print verbose informational messages. One of %s. [default: %%default]" % ', '.join(LOGLEVELS))
 
 
 channel = logging.StreamHandler()

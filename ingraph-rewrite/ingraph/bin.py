@@ -20,7 +20,7 @@
 import sys
 
 from ingraph.subcommand import SubcommandsOptionParser
-from ingraph.cmd.purge import PurgeCmd
+from ingraph.cmd.purged import PurgedCmd
 from ingraph.cmd.ingraphd import IngraphdCmd
 
 __all__ = ['main']
@@ -28,7 +28,7 @@ __all__ = ['main']
 
 def main():
     parser = SubcommandsOptionParser(
-        subcommands = (PurgeCmd(), IngraphdCmd())
+        subcommands = (PurgedCmd(), IngraphdCmd())
     )
     options, cmd, cmd_opts, cmd_args = parser.parse_args()
     return cmd(cmd_opts, cmd_args)

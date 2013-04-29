@@ -37,12 +37,12 @@ class PurgeDaemon(UnixDaemon):
         try:
             self._host_pattern = kwargs.pop('host_pattern')
         except KeyError:
-            log.critical("Required.")
+            log.critical("Mandatory argument -H|--hostname missing.")
             sys.exit(1)
         try:
             self._service_pattern = kwargs.pop('service_pattern')
         except KeyError:
-            log.critical("Required.")
+            log.critical("Mandatory argument -S|--servicename missing.")
             sys.exit(1)
         self._xmlrpc_config = None
         self.api = None
@@ -58,7 +58,11 @@ class PurgeDaemon(UnixDaemon):
         except IOError as e:
             log.critical(e)
             sys.exit(1)
-        validate_xmlrpc_config(xmlrpc_config)
+        try:
+            validate_xmlrpc_config(xmlrpc_config)
+        except Exception as e:
+            log.critical(e)
+            sys.exit(1)
         self._xmlrpc_config = xmlrpc_config
 
     def run(self):
@@ -66,18 +70,18 @@ class PurgeDaemon(UnixDaemon):
         self.api.deleteHostService(self._host_pattern, self._service_pattern)
 
 
-class PurgeCmd(Subcommand):
+class PurgedCmd(Subcommand):
 
     def __init__(self):
         self.daemon = None
-        parser = get_option_parser(version="%%prog %s" % ingraph.__version__, pidfile='/var/run/ingraph/ingraph.purge.pid')
+        parser = get_option_parser(version="%%prog %s" % ingraph.__version__, pidfile='/var/run/ingraph/ingraph-purged.pid')
         parser.add_option('-H', '--hostname', dest='host_pattern', help='hostname')
         parser.add_option('-S', '--servicename', dest='service_pattern', help='servicename')
         Subcommand.__init__(self, name='purge', parser=parser, help='purge')
 
     def __call__(self, options, args):
         # Remove all None-values from options
-        self.daemon = PurgeDaemon(**dict((k, v) for k, v in options.__dict__.iteritems() if v is not None))
+        self.daemon = PurgeDaemon(**dict((k, v) for k, v in vars(options).iteritems() if v is not None))
         # Exec daemon function
         return getattr(self.daemon, args[0])()
 

@@ -22,7 +22,7 @@ except ImportError:
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Enum, Sequence, ForeignKey, Index, create_engine, \
-    and_, or_, tuple_
+    and_, or_, tuple_, DDL
 try:
     from sqlalchemy import event
 except ImportError:
@@ -33,6 +33,8 @@ from time import time
 from weakref import WeakValueDictionary
 from OrderedDict import OrderedDict
 from decimal import Decimal
+from itertools import chain, imap
+from cStringIO import StringIO
 
 dbload_min_timestamp = None
 dbload_max_timestamp = None
@@ -613,7 +615,7 @@ class Plot(ModelBase):
             values = {
                 'plot_id': self.id,
                 'timeframe_id': tf.id,
-                'timestamp': timestamp - timestamp % tf.interval,
+                'timestamp': int(timestamp - timestamp % tf.interval),
                 'min': min_,
                 'max': max_,
                 'avg': value,
@@ -638,72 +640,40 @@ class Plot(ModelBase):
         return queries
 
     @staticmethod
-    def _quoteNumber(value):
-        if value == None:
-            return 'NULL'
-        else:
-            return "'%s'" % (value)
-
-    @staticmethod
     def executeUpdateQueries(conn, queries):
         if not queries:
             return
+        # queries[:] = aggregate_queries(queries)
         if conn.dialect.name == 'mysql':
+            values = ('(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s),' * len(queries))[:-1]
             trans = conn.begin()
             try:
-                sql_values = ', '.join(["""
-(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-""" % (Plot._quoteNumber(query['plot_id']), Plot._quoteNumber(query['timeframe_id']), Plot._quoteNumber(query['timestamp']),
-       Plot._quoteNumber(query['min']), Plot._quoteNumber(query['max']), Plot._quoteNumber(query['avg']), Plot._quoteNumber(query['count']),
-       Plot._quoteNumber(query['lower_limit']), Plot._quoteNumber(query['upper_limit']),
-       Plot._quoteNumber(query['warn_lower']), Plot._quoteNumber(query['warn_upper']), Plot._quoteNumber(query['warn_type']),
-       Plot._quoteNumber(query['crit_lower']), Plot._quoteNumber(query['crit_upper']), Plot._quoteNumber(query['crit_type']))
-                                        for query in queries])
-                sql_query = """
-    INSERT INTO datapoint (plot_id, timeframe_id, timestamp,
-                           min, max, avg, count,
-                           lower_limit, upper_limit,
-                           warn_lower, warn_upper, warn_type,
-                           crit_lower, crit_upper, crit_type)
-    VALUES
-    %s
-    ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count + 1),
-                            count = count + 1,
-                            min = IF(min < VALUES(min), min, VALUES(min)),
-                            max = IF(max > VALUES(max), max, VALUES(max))
-    """ % (sql_values)
-                conn.execute(sql_query)
+                conn.execute("""INSERT INTO datapoint VALUES %s
+                             ON DUPLICATE KEY UPDATE
+                             avg = (count * avg + VALUES(avg)) / (count + 1),
+                             count = count + 1,
+                             min = IF(min < VALUES(min), min, VALUES(min)),
+                             max = IF(max > VALUES(max), max, VALUES(max))""" % (values,),
+                             tuple(chain(*imap(lambda q: (q[c.name] for c in datapoint.c), queries))))
                 trans.commit()
             except:
                 trans.rollback()
                 raise
         elif conn.dialect.name == 'postgresql':
+            buff = StringIO()
+            for query in queries:
+                print >>buff, "\t".join(imap(str, tuple(query[c.name] for c in datapoint.c)))
+            buff.seek(0)
             trans = conn.begin()
+            cursor = conn.connection.cursor()
             try:
-                # TODO(el): If the datapoint does not yet exist, it'll get inserted and updated too.
-                conn.execute("""
-                INSERT INTO datapoint SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                WHERE NOT EXISTS (SELECT 1 FROM datapoint WHERE plot_id = %s AND timeframe_id = %s AND timestamp = %s)
-                """, [(query['plot_id'], query['timeframe_id'], query['timestamp'], query['min'], query['max'], query['avg'],
-                       query['lower_limit'], query['upper_limit'], query['warn_lower'], query['warn_upper'],
-                       query['warn_type'], query['crit_lower'], query['crit_upper'], query['crit_type'], query['count'],
-                       query['plot_id'], query['timeframe_id'], query['timestamp']) for query in queries])
-                conn.execute("""
-                UPDATE datapoint SET
-                    avg = (count * avg + %s) / (count + 1),
-                    count = count + 1,
-                    min = LEAST(min, %s),
-                    max = GREATEST(max, %s)
-                WHERE
-                    plot_id = %s
-                    AND timeframe_id = %s
-                    AND timestamp = %s
-                """, [(query['avg'], query['min'], query['max'], query['plot_id'], query['timeframe_id'],
-                       query['timestamp']) for query in queries])
+                # Psycopg DB API extension
+                cursor.copy_from(buff, datapoint.name, null='None')
                 trans.commit()
             except:
                 trans.rollback()
                 raise
+            del buff # Del and recreate - faster than reset and truncate
         else:
             raise Exception("Database dialect %s not supported." % (conn.dialect.name,))
 
@@ -1310,14 +1280,48 @@ creates a DB connection
 '''
 def createModelEngine(dsn):
     global dbload_min_timestamp, dbload_max_timestamp
-
+    fn = """CREATE FUNCTION update_existing() RETURNS TRIGGER AS $update_existing$
+         DECLARE
+             existing RECORD;
+         BEGIN
+             SELECT INTO existing * FROM datapoint
+                 WHERE (plot_id, timeframe_id, timestamp) = (NEW.plot_id, NEW.timeframe_id, NEW.timestamp);
+             IF NOT FOUND THEN -- INSERT
+                 RETURN NEW;
+             ELSE
+                 UPDATE datapoint SET
+                     avg = (existing.avg * existing.count + NEW.avg) / (existing.count + 1),
+                     min = LEAST(existing.min, NEW.min),
+                     max = GREATEST(existing.max, NEW.max),
+                     count = existing.count + 1
+                 WHERE
+                     plot_id = existing.plot_id
+                     AND timeframe_id = existing.timeframe_id
+                     AND timestamp = existing.timestamp;
+                 RETURN NULL; -- DON'T INSERT
+             END IF;
+         END;
+         $update_existing$ LANGUAGE plpgsql;"""
+    trigg = """CREATE TRIGGER update_existing
+            BEFORE INSERT ON datapoint
+            FOR EACH ROW EXECUTE PROCEDURE update_existing();"""
+    triggd = 'DROP TRIGGER update_existing();'
+    fnd = 'DROP FUNCTION update_existing();'
     event_obj = SetTextFactory()
-
     if hasattr(event, 'listen'):
         engine = create_engine(dsn)
         event.listen(engine, 'connect', event_obj.connect)
+        event.listen(datapoint, 'before_create', DDL(fn).execute_if(dialect='postgresql'))
+        event.listen(datapoint, 'after_create', DDL(trigg).execute_if(dialect='postgresql'))
+        event.listen(datapoint, 'before_drop', DDL(triggd).execute_if(dialect='postgresql'))
+        event.listen(datapoint, 'before_drop', DDL(fnd).execute_if(dialect='postgresql'))
     else:
+        # < 0.7 compat
         engine = create_engine(dsn, listeners=[event_obj])
+        DDL(fn, on='postgresql').execute_at('after-create', datapoint)
+        DDL(trigg, on='postgresql').execute_at('after-create', datapoint)
+        DDL(triggd, on='postgresql').execute_at('before-drop', datapoint)
+        DDL(fnd, on='postgresql').execute_at('before-drop', datapoint)
 
     #engine.echo = True
 
@@ -1346,5 +1350,20 @@ def cleanup(conn):
     try:
         DataPoint.cleanupOldData(conn)
         PluginStatus.cleanupOldData(conn)
-    except Exception as e:
+    except Exception, e:
         print e
+
+
+def aggregate_queries(queries):
+    mem = {}
+    for query in queries:
+        key = '%s%s%s' % (query['plot_id'], query['timeframe_id'], query['timestamp'])
+        if key not in mem:
+            mem[key] = query
+        else:
+            i = mem[key]
+            i['avg'] = (i['count'] * i['avg'] + query['avg']) / (i['count'] + 1)
+            i['min'] = min(i['min'], query['min'])
+            i['max'] = max(i['max'], query['max'])
+            i['count'] += 1
+    return mem.values()

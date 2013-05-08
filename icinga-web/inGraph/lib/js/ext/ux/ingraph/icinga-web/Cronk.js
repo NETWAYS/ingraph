@@ -169,9 +169,7 @@
                                             mode: 'time'
                                         },
                                         yaxis: {
-                                            tickDecimals: 0,
-                                            minTickSize: 1,
-                                            ticks: 2,
+                                            ticks: 3,
                                             showLabel: false
                                         },
                                         grid: {
@@ -229,7 +227,7 @@
                     tip.targetXY = cfg.e.getXY();
                     tip.showAt([-1000, -1000]);
                 }
-                
+
                 tip.mon(tip.target, {
                     scope: tip,
                     mouseout: tip.onTargetOut.createSequence(function () {

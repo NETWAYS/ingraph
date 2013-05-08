@@ -63,7 +63,7 @@
             formatTime: function (v) {
                 var sign = v >= 0 ? 1 : -1;
                 v = Math.abs(v);
-                
+
                 /* If value is less than one, use a smaller unit */
                 if (v < 1) {
                     var pow = calcPow(v, timeSpec.base, timeSpec.units.length,
@@ -73,7 +73,7 @@
                         unit: timeSpec.units[pow]
                     };
                 }
-                
+
                 /* After 48h switch to days */
                 if (v > 48 * 60 * 60) {
                     return {
@@ -81,7 +81,7 @@
                         unit: 'd'
                     };
                 }
-                
+
                 /* After 120minutes switch to hours */
                 if (v > 120 * 60) {
                     return {
@@ -89,7 +89,7 @@
                         unit: 'h'
                     };
                 }
-                
+
                 /* After 10minutes switch to minutes */
                 if (v > 60 * 10) {
                     return {
@@ -97,7 +97,7 @@
                         unit: 'm'
                     };
                 }
-                
+
                 /* Default */
                 return {
                     value: v * sign,
@@ -220,9 +220,11 @@
                 if (v > 0 && this.units[this.unit] !== undefined) {
                     var callback = this.units[this.unit],
                         format = callback.call(this, v);
-                    return format.value.toFixed(axis.tickDecimals) + ' ' + format.unit;
+//                    return format.value.toFixed(axis.tickDecimals) + ' ' + format.unit;
+                    return format.value + ' ' + format.unit;
                 }
-                return v.toFixed(axis.tickDecimals);
+//                return v.toFixed(axis.tickDecimals);
+                return v;
             }
         };
     }());

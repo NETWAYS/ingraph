@@ -220,11 +220,9 @@
                 if (v > 0 && this.units[this.unit] !== undefined) {
                     var callback = this.units[this.unit],
                         format = callback.call(this, v);
-//                    return format.value.toFixed(axis.tickDecimals) + ' ' + format.unit;
-                    return format.value + ' ' + format.unit;
+                    return format.value.toFixed(axis.tickDecimals) + ' ' + format.unit;
                 }
-//                return v.toFixed(axis.tickDecimals);
-                return v;
+                return v.toFixed(axis.tickDecimals);
             }
         };
     }());

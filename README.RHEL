@@ -1,0 +1,36 @@
+inGraph RHEL Package README
+===========================
+
+This document describes the basic steps to setup inGraph.
+
+Scripts to configure inGraph can be found in
+/usr/share/doc/inGraph*/examples
+
+enable_perfdata_processing.sh & add_perfdata_processing_commands.sh
+will activate the processing of perfdata, but it will only work with a default
+configuration. For more complex installations create the entries manually.
+Check https://www.netways.org/projects/ingraph/wiki for more information
+
+inGraph requires its own database e.g. "ingraph".
+Start the script to create a sample mysql ingraph db.
+# ./create-mysql-db.sh
+
+Enable processing of performance data
+# ./enable_perfdata_processing.sh /etc/icinga/icinga.cfg /var/spool/icinga/perfdata
+
+Add perfdata processing commands to commands.cfg
+# ./add_perfdata_processing_commands.sh /etc/icinga/objects/commands.cfg /var/spool/icinga/perfdata
+
+Restart Icinga
+# /etc/init.d/icinga restart
+
+Start the services. inGraph will start to collect the performance data.
+It takes some minutes until results are visible.
+# service ingraph start
+# service ingraph-collector start
+
+Enable both services to be restarted after a reboot.
+
+# chkconfig ingraph on
+# chkconfig ingraph-collector on
+

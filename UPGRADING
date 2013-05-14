@@ -21,3 +21,50 @@ distinguish between distributed and user templates. Hence you have to merge your
 changes back in.
 
 4. Start daemons.
+
+UPGRADING FROM 1.0.x TO 1.0.2
+-----------------------------
+1. Stop daemons:
+    $ service ingraph-collector stop
+    $ service ingraph stop
+
+2. Install inGraph as you did with version 1.0.x. For instructions please see the
+file called INSTALL. The setup script will not overwrite existing
+configuration files. However initscripts will be replaced.
+
+3. If you changed any of the graph templates they got backuped with the '.bak'
+suffix before getting overwritten. Currently there is no support to
+distinguish between distributed and user templates. Hence you have to merge your
+changes back in.
+
+4. This affects PostgreSQL users only: inGraph version 1.0.2 introduces massive performance
+improvements but requires you to manually extend the ingraph database schema as seen below.
+    CREATE LANGUAGE plpgsql;
+
+    CREATE FUNCTION update_existing() RETURNS TRIGGER AS $update_existing$
+        DECLARE
+            existing RECORD;
+        BEGIN
+            SELECT INTO existing * FROM datapoint
+                WHERE (plot_id, timeframe_id, timestamp) = (NEW.plot_id, NEW.timeframe_id, NEW.timestamp);
+            IF NOT FOUND THEN
+                RETURN NEW; -- INSERT
+            ELSE
+                UPDATE datapoint SET
+                    avg = (existing.avg * existing.count + NEW.avg) / (existing.count + 1),
+                    min = LEAST(existing.min, NEW.min),
+                    max = GREATEST(existing.max, NEW.max),
+                    count = existing.count + 1
+                WHERE
+                    plot_id = existing.plot_id
+                    AND timeframe_id = existing.timeframe_id
+                    AND timestamp = existing.timestamp;
+                RETURN NULL; -- DON'T INSERT
+            END IF;
+        END;
+    $update_existing$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER update_existing BEFORE INSERT ON datapoint
+        FOR EACH ROW EXECUTE PROCEDURE update_existing();
+
+5. Start daemons.

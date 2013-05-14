@@ -2,7 +2,7 @@
 
 set -o nounset
 
-VERSION=1.0.1
+VERSION=1.0.2
 
 SCRIPT=$(readlink -f "$0")
 DIR=$(dirname "$SCRIPT")
@@ -78,10 +78,10 @@ install_files () (
     D=$1
     DEST=$2
     INSTALL_OPTS=${3-}
-    
+
     # Exclude .in suffixed files and inGraph.xml
     FILES=$(for F in $($FIND $D -maxdepth 1 -type f ! -name \*.in ! -path \*/config/inGraph.xml); do echo $F; done)
-    
+
     [ -n "$FILES" ] && $INSTALL -m 644 $INSTALL_OPTS -t $DEST $FILES
 )
 
@@ -184,14 +184,14 @@ fi
 $GETENT passwd $WEB_USER > /dev/null
 [ $? -ne 0 ] && {
     echo "ERROR: Web user $WEB_USER: no such user" >&2
-    
+
     usage
 }
 
 $GETENT group $WEB_GROUP > /dev/null
 [ $? -ne 0 ] && {
     echo "ERROR: Web group $WEB_GROUP: no such group" >&2
-    
+
     usage
 }
 
@@ -264,17 +264,29 @@ else
     for D in $($FIND $SRC -type d ! -path $SRC/config/templates ! -path $SRC/config/views)
     do
         $INSTALL -m 755 -d $PREFIX/app/modules/inGraph${D##$SRC}
-    
+
         [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}"
     done
-    
+
+    # Backup modified templates
+    if [ -d "$PREFIX/app/modules/inGraph/config/templates" ] && [ "$(ls -A "$PREFIX/app/modules/inGraph/config/templates")" ]
+    then
+        for TEMPLATE in $PREFIX/app/modules/inGraph/config/templates/*.json
+        do
+            if [ "$(md5sum "$SRC/config/templates/${TEMPLATE##$PREFIX/app/modules/inGraph/config/templates/}" | cut -d ' ' -f 1)" != "$(md5sum "$TEMPLATE" | cut -d ' ' -f 1)" ]
+            then
+                cp -u -b "$TEMPLATE" "${TEMPLATE}.bak"
+            fi
+        done
+    fi
+
     for D in $($FIND $SRC -type d -path $SRC/config/templates -o -path $SRC/config/views)
     do
         $INSTALL -m 755 -o $WEB_USER -g $WEB_GROUP -d $PREFIX/app/modules/inGraph${D##$SRC}
-        
-        [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}" "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}-C${tab}-b"
+
+        [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}" "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}"
     done
-    
+
     # If inGraph.xml does not exist install it
     [ ! -r $PREFIX/app/modules/inGraph/config/inGraph.xml ] && {
         $INSTALL -m 644 -t $PREFIX/app/modules/inGraph/config $SRC/config/inGraph.xml

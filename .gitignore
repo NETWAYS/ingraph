@@ -3,3 +3,6 @@
 MANIFEST
 contrib/init.d/ingraph-collector
 setup.py
+build/
+dist/
+ingraph.egg-info/

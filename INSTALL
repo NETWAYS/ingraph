@@ -22,8 +22,8 @@ Requirements
       SQLAlchemy is an open source SQL toolkit and object-relational mapper for
       Python. It is designed for efficient and high-performing database access.
       You should use the latest available version, though any version greater or
-      equal to 0.6.0 is supported.
-      
+      equal to 0.6.3 is supported.
+
       If the desired version is not shipped with your distribution's repository
       you may have to install SQLAlchemy from source.
 
@@ -32,7 +32,7 @@ Requirements
       database, the appropiate Python Database API driver has to be installed.
       The following table provides an overview of major dialects with their
       associated distribution driver package name respectively.
-      
+
       (R)DBMS    |  Debian          |   SUSE            |  Red Hat, CentOS
       -------------------------------------------------------------------
       MySQL      |  python-mysqldb  |   python-mysql    |  MySQL-python
@@ -42,7 +42,7 @@ Requirements - Packages
 -----------------------
       - python-devel
       - python-setuptools
-      - python-sqlalchemy >= 0.6.0
+      - python-sqlalchemy >= 0.6.3
       - gcc (optional, SQLAlchemy includes C extensions which provide an
         extra speed boost. But SQLAlchemy will install just fine if gcc
         is missing)
@@ -63,8 +63,9 @@ the check_ingraph plugin to retrieve data for generating graphs.
 
 The following command installs
     inGraph to the standard location for third-party Python modules,
-    initscripts to /etc/init.d and
-    configuration files to /etc/ingraph:
+    initscripts to /etc/init.d,
+    configuration files to /etc/ingraph,
+    and the ingraph user with /etc/ingraph as the value for the login directory:
 
     $ ./setup-daemons.sh --install
 
@@ -118,8 +119,7 @@ Database Setup
 inGraph requires its own database, e.g. "ingraph". Since the database schema is
 automatically set up or modified (if needed) when starting the ingraph daemon,
 the database user needs appropriate permissions for CREATE TABLE, CREATE INDEX,
-etc. MySQL is the recommended DBMS for inGraph. PostgreSQL should work just fine
-too but has received less testing.
+etc. MySQL is the recommended DBMS for inGraph but PostgreSQL should work just fine too.
 
 Setup MySQL:
     mysql> CREATE DATABASE ingraph;
@@ -133,6 +133,8 @@ Setup PostgreSQL:
     postgres=# ALTER USER ingraph WITH PASSWORD 'changeme';
     postgres=# CREATE DATABASE ingraph;
     postgres=# GRANT ALL ON DATABASE ingraph TO ingraph;
+    postgres=# \c ingraph;
+    ingraph=# CREATE LANGUAGE plpgsql;
 
 Configuration - Backend
 -----------------------
@@ -175,18 +177,18 @@ be created if you change any of the following default arguments.
     INGRAPH_PIDFILE=/var/run/ingraph/ingraphd.pid
     INGRAPH_USER=ingraph
 
-/etc/default/ingraph-collector or /etc/sysconfig/ingraph-collectior
-    INGRAPH_COLLECTOR_CHDIR="/etc/ingraph" 
-    INGRAPH_COLLECTOR_PIDFILE="/var/run/ingraph/ingraph-collectord.pid" 
-    INGRAPH_COLLECTOR_PERFDATA_DIR="/usr/local/icinga/var/perfdata" 
-    INGRAPH_COLLECTOR_PERFDATA_PATTERN="*-perfdata.*[0-9]" 
-    INGRAPH_COLLECTOR_FILE_LIMIT="50" 
+/etc/default/ingraph-collector or /etc/sysconfig/ingraph-collector
+    INGRAPH_COLLECTOR_CHDIR="/etc/ingraph"
+    INGRAPH_COLLECTOR_PIDFILE="/var/run/ingraph/ingraph-collectord.pid"
+    INGRAPH_COLLECTOR_PERFDATA_DIR="/usr/local/icinga/var/perfdata"
+    INGRAPH_COLLECTOR_PERFDATA_PATTERN="*-perfdata.*[0-9]"
+    INGRAPH_COLLECTOR_FILE_LIMIT="50"
     # Collector file mode, one of "BACKUP" or "REMOVE":
     # Use "BACKUP" to keep processed files with .bak extension.
-    INGRAPH_COLLECTOR_FILE_MODE="REMOVE" 
-    INGRAPH_COLLECTOR_SLEEPSECS="60" 
-    INGRAPH_COLLECTOR_USER="ingraph" 
-    INGRAPH_COLLECTOR_GROUP="icinga" 
+    INGRAPH_COLLECTOR_FILE_MODE="REMOVE"
+    INGRAPH_COLLECTOR_SLEEPSECS="60"
+    INGRAPH_COLLECTOR_USER="ingraph"
+    INGRAPH_COLLECTOR_GROUP="icinga"
     INGRAPH_COLLECTOR_LOGFILE="-" # - = stdout/stderr
 
 Configuration - Frontend
@@ -218,13 +220,13 @@ files there. Adjust users, groups and paths to your environment.
 
 icinga.cfg
     process_performance_data=1
-    
+
     service_perfdata_file=/usr/local/icinga/var/perfdata/service-perfdata
     service_perfdata_file_template=DATATYPE::SERVICEPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tSERVICEDESC::$SERVICEDESC$\tSERVICEPERFDATA::$SERVICEPERFDATA$\tSERVICECHECKCOMMAND::$SERVICECHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$\tSERVICESTATE::$SERVICESTATE$\tSERVICESTATETYPE::$SERVICESTATETYPE$
     service_perfdata_file_mode=a
     service_perfdata_file_processing_interval=30
     service_perfdata_file_processing_command=process-service-perfdata-file
-    
+
     host_perfdata_file=/usr/local/icinga/var/perfdata/host-perfdata
     host_perfdata_file_template=DATATYPE::HOSTPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tHOSTPERFDATA::$HOSTPERFDATA$\tHOSTCHECKCOMMAND::$HOSTCHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$
     host_perfdata_file_mode=a
@@ -236,7 +238,7 @@ commands.cfg
         command_name    process-service-perfdata-file
         command_line    /bin/mv /usr/local/icinga/var/perfdata/service-perfdata /usr/local/icinga/var/perfdata/service-perfdata.$TIMET$
     }
-    
+
     define command {
         command_name    process-host-perfdata-file
         command_line    /bin/mv /usr/local/icinga/var/perfdata/host-perfdata /usr/local/icinga/var/perfdata/host-perfdata.$TIMET$
@@ -255,7 +257,7 @@ Starting The Daemons
 Activate initscripts (you may use update-rc.d, chkconfig or insserv, ...
 depending on your system):
     $ chkconfig ingraph on
-    $ chkconfig ingraph-collector on 
+    $ chkconfig ingraph-collector on
 
 Start daemons:
     $ service ingraph start

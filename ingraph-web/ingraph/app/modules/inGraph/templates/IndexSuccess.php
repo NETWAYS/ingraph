@@ -56,7 +56,7 @@
                     ]
                 });
 
-                <?php if(isset($t['host']) || isset($t['view'])) { $cfg = json_encode($t, true);
+                <?php if(isset($t['host']) || isset($t['view'])) { $cfg = json_encode($t);
     echo <<<JS
 var cfg = $cfg;
             addTab(cfg);

@@ -22,7 +22,7 @@ except ImportError:
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Enum, Sequence, ForeignKey, Index, create_engine, \
-    and_, or_, tuple_
+    and_, or_, tuple_, DDL
 try:
     from sqlalchemy import event
 except ImportError:
@@ -32,10 +32,14 @@ from sqlalchemy.interfaces import PoolListener
 from time import time
 from weakref import WeakValueDictionary
 from OrderedDict import OrderedDict
-from traceback import print_exc
+from decimal import Decimal
+from itertools import chain, imap
+from cStringIO import StringIO
 
 dbload_min_timestamp = None
 dbload_max_timestamp = None
+MAX_DECIMAL = Decimal('9'*15 + '.' + '9'*5)
+TO_DECIMAL = lambda f: Decimal('%.5f' % (f,))
 
 '''
 Base class for all DB model classes.
@@ -59,7 +63,7 @@ class ModelBase(object):
     '''
     def activate(self):
         assert self.identity() != None
-        
+
         cls = self.__class__
 
         if not cls in ModelBase.active_objects:
@@ -70,13 +74,13 @@ class ModelBase(object):
     '''
     retrieve an instance from the active_objects dictionary, returns None
     if no matching instance was found
-    '''        
+    '''
     def get(cls, id, **kwargs):
         if not cls in ModelBase.active_objects or not id in ModelBase.active_objects[cls]:
             return None
         else:
             return ModelBase.active_objects[cls][id]
-    
+
     get = classmethod(get)
 
     '''
@@ -90,14 +94,14 @@ class ModelBase(object):
     '''
     def modified(self):
         return self.identity() == None
-    
+
     '''
     returns whether the object was saved; this may return False even when modified()
     is True due to delayed saving
     '''
     def shouldSave(self):
         return True
-    
+
     '''
     persists the object in the DB
     '''
@@ -109,7 +113,7 @@ metadata = MetaData()
 host = Table('host', metadata,
     Column('id', Integer, Sequence('host_id_seq'), nullable=False, primary_key=True),
     Column('name', String(128), nullable=False, unique=True),
-    
+
     mysql_engine='InnoDB'
 )
 
@@ -122,7 +126,7 @@ class Host(ModelBase):
         if self.id == None:
             ins = host.insert().values(name=self.name)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             # TODO: should probably just throw an exception instead -
@@ -132,45 +136,45 @@ class Host(ModelBase):
 
     def getByID(conn, id):
         obj = Host.get(id)
-        
+
         if obj == None:
             sel = host.select().where(host.c.id==id)
             res = conn.execute(sel)
             row = res.fetchone()
-            
+
             assert row != None
 
             obj = Host(row[host.c.name])
             obj.id = row[host.c.id]
             obj.activate()
-        
+
         return obj
-    
+
     getByID = staticmethod(getByID)
 
     def getByName(conn, name):
         sel = host.select().where(host.c.name==name)
         result = conn.execute(sel)
         row = result.fetchone()
-        
+
         if row == None:
             return None
 
         obj = Host.get(row[host.c.id])
-        
+
         if obj == None:
             obj = Host(name)
             obj.id = row[host.c.id]
             obj.activate()
-            
+
         return obj
 
     getByName = staticmethod(getByName)
-    
+
     def getByPattern(conn, sql_filter, limit=None, offset=None):
         sel = select([func.count()]).select_from(host).where(host.c.name.like(sql_filter))
         total = conn.execute(sel).scalar()
-        
+
         if limit == None and offset == None:
             sel = host.select()
         else:
@@ -178,19 +182,19 @@ class Host(ModelBase):
 
         sel = sel.where(host.c.name.like(sql_filter)).order_by(host.c.name)
         result = conn.execute(sel)
-        
+
         objs = []
-        
+
         for row in result:
             obj = Host.get(row[host.c.id])
-            
+
             if obj == None:
                 obj = Host(row[host.c.name])
                 obj.id = row[host.c.id]
                 obj.activate()
-                
+
             objs.append(obj)
-            
+
         return {'hosts': objs, 'total': total}
 
     getByPattern = staticmethod(getByPattern)
@@ -198,19 +202,19 @@ class Host(ModelBase):
     def getAll(conn):
         sel = host.select()
         result = conn.execute(sel)
-        
+
         objs = []
-        
+
         for row in result:
             obj = Host.get(row[host.c.id])
-            
+
             if obj == None:
                 obj = Host(row[host.c.name])
                 obj.id = row[host.c.id]
                 obj.activate()
-                
+
             objs.append(obj)
-            
+
         return objs
 
     getAll = staticmethod(getAll)
@@ -218,7 +222,7 @@ class Host(ModelBase):
 service = Table('service', metadata,
     Column('id', Integer, Sequence('service_id_seq'), nullable=False, primary_key=True),
     Column('name', String(128), nullable=False, unique=True),
-    
+
     mysql_engine='InnoDB'
 )
 
@@ -231,7 +235,7 @@ class Service(ModelBase):
         if self.id == None:
             ins = service.insert().values(name=self.name)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             # TODO: should probably just throw an exception instead -
@@ -241,18 +245,18 @@ class Service(ModelBase):
 
     def getByID(conn, id):
         obj = Service.get(id)
-        
+
         if obj == None:
             sel = service.select().where(service.c.id==id)
             res = conn.execute(sel)
             row = res.fetchone()
-            
+
             assert row != None
 
             obj = Service(row[service.c.name])
             obj.id = row[service.c.id]
             obj.activate()
-        
+
         return obj
 
     getByID = staticmethod(getByID)
@@ -261,17 +265,17 @@ class Service(ModelBase):
         sel = service.select().where(service.c.name==name)
         result = conn.execute(sel)
         row = result.fetchone()
-        
+
         if row == None:
             return None
 
         obj = Service.get(row[service.c.id])
-        
+
         if obj == None:
             obj = Service(name)
             obj.id = row[service.c.id]
             obj.activate()
-                
+
         return obj
 
     getByName = staticmethod(getByName)
@@ -279,19 +283,19 @@ class Service(ModelBase):
     def getByPattern(conn, pattern):
         sel = service.select().where(service.c.name.like(pattern))
         result = conn.execute(sel)
-        
+
         objs = []
-        
+
         for row in result:
             obj = Service.get(row[service.c.id])
-            
+
             if obj == None:
                 obj = Service(row[service.c.name])
                 obj.id = row[service.c.id]
                 obj.activate()
-            
+
             objs.append(obj)
-                
+
         return objs
 
     getByPattern = staticmethod(getByPattern)
@@ -302,9 +306,9 @@ hostservice = Table('hostservice', metadata,
     Column('service_id', Integer, ForeignKey('service.id'), nullable=False),
     Column('parent_hostservice_id', Integer, ForeignKey('hostservice.id')),
     Column('check_command', String(128), nullable=True),
-    
+
     UniqueConstraint('host_id', 'service_id', 'parent_hostservice_id', name='uc_hs_1'),
-    
+
     mysql_engine='InnoDB'
 )
 
@@ -320,20 +324,20 @@ class HostService(ModelBase):
             if self.host.id == None:
                 self.host.save(conn)
                 assert self.host.id != None
-            
+
             if self.service.id == None:
                 self.service.save(conn)
                 assert self.service.id != None
-    
+
             if self.parent_hostservice != None:
                 parent_hostservice_id = self.parent_hostservice.id
             else:
                 parent_hostservice_id = None
-    
+
             ins = hostservice.insert().values(host_id=self.host.id, service_id=self.service.id, \
                                               parent_hostservice_id=parent_hostservice_id)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             # TODO: should probably just throw an exception instead -
@@ -345,12 +349,12 @@ class HostService(ModelBase):
 
     def getByID(conn, id):
         obj = HostService.get(id)
-    
+
         if obj == None:
             sel = hostservice.select().where(hostservice.c.id==id)
             res = conn.execute(sel)
             row = res.fetchone()
-            
+
             assert row != None
 
             host = Host.getByID(conn, row[hostservice.c.host_id])
@@ -362,36 +366,36 @@ class HostService(ModelBase):
                 parent_hostservice = None
 
             obj = HostService(host, service, parent_hostservice)
-            obj.id = row[hostservice.c.id]            
+            obj.id = row[hostservice.c.id]
             obj.activate()
-        
+
         return obj
-    
+
     getByID = staticmethod(getByID)
-    
+
     def getByHostAndService(conn, host, service, parent_hostservice):
         cond = hostservice.c.host_id==host.id
-        
+
         if service != None:
             cond = and_(cond, hostservice.c.service_id==service.id)
-            
+
         if parent_hostservice != None:
             cond = and_(cond, hostservice.c.parent_hostservice_id==parent_hostservice.id)
-                    
+
         sel = hostservice.select().where(cond)
         result = conn.execute(sel)
-        
+
         objs = []
-        
+
         for row in result:
             obj = HostService.get(row[hostservice.c.id])
-            
+
             if obj == None:
                 if service == None:
                     svc = Service.getByID(conn, row[hostservice.c.service_id])
                 else:
                     svc = service
-                    
+
                 if parent_hostservice == None and row[hostservice.c.parent_hostservice_id] != None:
                     phs = HostService.getByID(conn, row[hostservice.c.parent_hostservice_id])
                 else:
@@ -400,7 +404,7 @@ class HostService(ModelBase):
                 obj = HostService(host, svc, phs)
                 obj.id = row[hostservice.c.id]
                 obj.activate()
-                
+
             objs.append(obj)
 
         return objs
@@ -413,7 +417,7 @@ class HostService(ModelBase):
 
         if service_pattern == None or service_pattern == '':
             service_pattern = '%'
-            
+
         cond = and_(host.c.name.like(host_pattern), \
                     service.c.name.like(service_pattern))
 
@@ -421,26 +425,26 @@ class HostService(ModelBase):
 
         sel = select([func.count()], from_obj=[from_obj]).where(cond)
         total = conn.execute(sel).scalar()
-        
+
         if limit == None and offset == None:
             sel = hostservice.select(from_obj=[from_obj])
         else:
             sel = hostservice.select(from_obj=[from_obj], limit=limit, offset=offset)
-            
+
         # TODO: find matching sub-services with matching parent_service
-                    
+
         sel = sel.where(cond)
         result = conn.execute(sel)
-        
+
         objs = []
-        
+
         for row in result:
             obj = HostService.get(row[hostservice.c.id])
-            
+
             if obj == None:
                 hst = Host.getByID(conn, row[hostservice.c.host_id])
                 svc = Service.getByID(conn, row[hostservice.c.service_id])
-                    
+
                 if row[hostservice.c.parent_hostservice_id] != None:
                     phs = HostService.getByID(conn, row[hostservice.c.parent_hostservice_id])
                 else:
@@ -449,7 +453,7 @@ class HostService(ModelBase):
                 obj = HostService(hst, svc, phs)
                 obj.id = row[hostservice.c.id]
                 obj.activate()
-                
+
             objs.append(obj)
 
         return {
@@ -462,30 +466,30 @@ class HostService(ModelBase):
     def getByHost(conn, host):
         sel = hostservice.select().where(hostservice.c.host_id==host.id)
         result = conn.execute(sel)
-        
+
         objs = []
-        
+
         for row in result:
             obj = HostService.get(row[hostservice.c.id])
-            
+
             if obj == None:
                 service_obj = Service.getByID(conn, row[hostservice.c.service_id])
-            
+
                 parent_hostservice_id = row[hostservice.c.parent_hostservice_id]
-                
+
                 if parent_hostservice_id != None:
                     parent_hostservice = HostService.getByID(conn, parent_hostservice_id)
                 else:
                     parent_hostservice = None
-                
+
                 obj = HostService(host, service_obj, parent_hostservice)
                 obj.id = row[hostservice.c.id]
                 obj.activate()
-                
+
             objs.append(obj)
 
         return objs
-    
+
     getByHost = staticmethod(getByHost)
 
 plot = Table('plot', metadata,
@@ -493,9 +497,9 @@ plot = Table('plot', metadata,
     Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False),
     Column('name', String(128), nullable=False),
     Column('unit', String(16)),
-    
+
     UniqueConstraint('hostservice_id', 'name', name='uc_plot_1'),
-    
+
     mysql_engine='InnoDB'
 )
 
@@ -505,12 +509,12 @@ class Plot(ModelBase):
         self.name = name
         self.hostservice = hostservice
         self.unit = None
-        
+
         self.current_timestamp = None
         self.current_interval = None
         self.cache_tfs = None
         self.cache_dps = None
-        
+
         self.last_value = 0
         self.last_update = None
 
@@ -540,55 +544,66 @@ class Plot(ModelBase):
                 # ordinary counter reset
                 print("Counter reset detected: last_value: %d, value: %d" % (last_value, value))
                 last_value = 0
-    
+
         return (value - last_value) / (timestamp - last_timestamp)
 
     _calculateRateHelper = staticmethod(_calculateRateHelper)
 
-    def buildUpdateQueries(self, conn, timestamp, unit, value, min, max, lower_limit, upper_limit,
-                    warn_lower, warn_upper, warn_type, crit_lower, crit_upper, crit_type):
+    def buildUpdateQueries(self, conn, timestamp, unit, value, min_, max_, lower_limit, upper_limit,
+                           warn_lower, warn_upper, warn_type, crit_lower, crit_upper, crit_type):
 
         tfs = TimeFrame.getAll(conn)
-        
+
         # no timeframes -> nothing to do here
         if len(tfs) == 0:
             return []
 
         value = float(value)
-        
+
         if lower_limit != None:
             lower_limit = float(lower_limit)
-
             if value < lower_limit:
                 value = lower_limit
+            lower_limit = min(TO_DECIMAL(lower_limit), MAX_DECIMAL)
 
         if upper_limit != None:
             upper_limit = float(upper_limit)
-            
             # some plugins return lower_limit==upper_limit,
             # lets just ignore that non-sense...
             if value > upper_limit and lower_limit != upper_limit:
                 value = upper_limit
-    
+            upper_limit = min(TO_DECIMAL(upper_limit), MAX_DECIMAL)
+
         value_raw = value
 
         if unit == 'counter':
             value = Plot._calculateRateHelper(self.last_update, timestamp, self.last_value, value)
-            min = None
-            max = None
+            min_ = None
+            max_ = None
 
         self.last_value = value_raw
         self.last_update = timestamp
-        
+
         # _calculateRateHelper returns None if it can't figure out the rate (yet)
         if value == None:
             return []
 
-        if min == None or min > value:
-            min = value
-            
-        if max == None or max < value:
-            max = value
+        value = min(TO_DECIMAL(value), MAX_DECIMAL)
+
+        if min_ == None or min_ > value:
+            min_ = value
+        if max_ == None or max_ < value:
+            max_ = value
+
+        if warn_lower != None:
+            warn_lower = min(TO_DECIMAL(warn_lower), MAX_DECIMAL)
+        if warn_upper != None:
+            warn_upper = min(TO_DECIMAL(warn_upper), MAX_DECIMAL)
+        if crit_lower != None:
+            crit_lower = min(TO_DECIMAL(crit_lower), MAX_DECIMAL)
+        if crit_upper != None:
+            crit_upper = min(TO_DECIMAL(crit_upper), MAX_DECIMAL)
+
 
         now = time()
 
@@ -600,9 +615,9 @@ class Plot(ModelBase):
             values = {
                 'plot_id': self.id,
                 'timeframe_id': tf.id,
-                'timestamp': timestamp - timestamp % tf.interval,
-                'min': min,
-                'max': max,
+                'timestamp': int(timestamp - timestamp % tf.interval),
+                'min': min_,
+                'max': max_,
                 'avg': value,
                 'count': 1,
                 'unit': unit,
@@ -615,7 +630,7 @@ class Plot(ModelBase):
                 'crit_upper': crit_upper,
                 'crit_type': crit_type
             }
-            
+
             queries.append(values)
 
         if self.unit == None:
@@ -624,141 +639,52 @@ class Plot(ModelBase):
 
         return queries
 
-    def _quoteNumber(value):
-        if value == None:
-            return 'NULL'
-        else:
-            return "'%s'" % (value)
-        
-    _quoteNumber = staticmethod(_quoteNumber)
-
+    @staticmethod
     def executeUpdateQueries(conn, queries):
-        global dbload_max_timestamp
-
-        if len(queries) == 0:
+        if not queries:
             return
-
+        # queries[:] = aggregate_queries(queries)
         if conn.dialect.name == 'mysql':
-            sql_values = ', '.join(["""
-(%s, %s, %s,
- %s, %s, %s, %s,
- %s, %s,
- %s, %s, %s,
- %s, %s, %s)
-""" % (Plot._quoteNumber(query['plot_id']), Plot._quoteNumber(query['timeframe_id']), Plot._quoteNumber(query['timestamp']),
-       Plot._quoteNumber(query['min']), Plot._quoteNumber(query['max']), Plot._quoteNumber(query['avg']), Plot._quoteNumber(query['count']),
-       Plot._quoteNumber(query['lower_limit']), Plot._quoteNumber(query['upper_limit']),
-       Plot._quoteNumber(query['warn_lower']), Plot._quoteNumber(query['warn_upper']), Plot._quoteNumber(query['warn_type']),
-       Plot._quoteNumber(query['crit_lower']), Plot._quoteNumber(query['crit_upper']), Plot._quoteNumber(query['crit_type']))
-                              for query in queries])
-
-            sql_query = """
-INSERT INTO datapoint (plot_id, timeframe_id, timestamp,
-                       min, max, avg, count,
-                       lower_limit, upper_limit,
-                       warn_lower, warn_upper, warn_type,
-                       crit_lower, crit_upper, crit_type)
-VALUES
-%s
-ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count + 1),
-                        count = count + 1,
-                        min = IF(min < VALUES(min), min, VALUES(min)),
-                        max = IF(max > VALUES(max), max, VALUES(max))
-""" % (sql_values)
-
-            conn.execute(sql_query)
-        else:
-            # TODO: fix this mess
-            st = time()
-            dps = {}
-            conds = []
+            values = ('(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s),' * len(queries))[:-1]
+            trans = conn.begin()
+            try:
+                conn.execute("""INSERT INTO datapoint VALUES %s
+                             ON DUPLICATE KEY UPDATE
+                             avg = (count * avg + VALUES(avg)) / (count + 1),
+                             count = count + 1,
+                             min = IF(min < VALUES(min), min, VALUES(min)),
+                             max = IF(max > VALUES(max), max, VALUES(max))""" % (values,),
+                             tuple(chain(*imap(lambda q: (q[c.name] for c in datapoint.c), queries))))
+                trans.commit()
+            except:
+                trans.rollback()
+                raise
+        elif conn.dialect.name == 'postgresql':
+            buff = StringIO()
             for query in queries:
-                dps[(query['plot_id'], query['timeframe_id'], query['timestamp'])] = query
-                
-                if query['timestamp'] > dbload_max_timestamp:
-                    continue
-                
-                cond = and_(datapoint.c.plot_id==query['plot_id'],
-                            datapoint.c.timeframe_id==query['timeframe_id'],
-                            datapoint.c.timestamp==query['timestamp'])
-                conds.append(cond)
-
-            dpsdb = {}
-            
-            if len(conds) > 0:
-                result = conn.execute(select(columns=[datapoint.c.plot_id, datapoint.c.timeframe_id,
-                                                        datapoint.c.timestamp, datapoint.c.min,
-                                                        datapoint.c.max, datapoint.c.avg, datapoint.c.count],
-                                             from_obj=[datapoint]).where(or_(*conds)))
-    
-                for row in result:
-                    dp = (row[datapoint.c.plot_id], row[datapoint.c.timeframe_id], row[datapoint.c.timestamp])
-                    dpsdb[dp]= {
-                        'min': row[datapoint.c.min],
-                        'max': row[datapoint.c.max],
-                        'avg': row[datapoint.c.avg],
-                        'count': row[datapoint.c.count],
-                    }
-
-            inserts = []
-            updates = []
-
-            for dp, query in dps.items():
-                row = {}
-
-                if query['timestamp'] > dbload_max_timestamp:
-                    dbload_max_timestamp = query['timestamp']
-
-                if dp in dpsdb:
-                    row = dpsdb[dp]
-                    
-                    # update
-                    if query['min'] < row['min']:
-                        row['min'] = query['min']
-                        
-                    if query['max'] > row['max']:
-                        row['max'] = query['max']
-                        
-                    row['avg'] = row['count'] * (row['avg'] / (row['count'] + 1)) + \
-                                           query['avg'] / (row['count'] + 1)
-                    row['count'] = row['count'] + 1
-                    
-                    updates.append(row)
-                else:
-                    row = {
-                        'min': query['min'],
-                        'max': query['max'],
-                        'avg': query['avg'],
-                        'count': 1
-                    }
-
-                    inserts.append(query)
-                
-                dpsdb[dp] = row
-
-            et = time()
-            
-            print "(SLOW) update prep: %f" % (et - st)
-
-            if len(inserts) > 0:
-                conn.execute(datapoint.insert(), inserts)
-            
-            for update in updates:
-                cond = and_(datapoint.c.plot_id==update['plot_id'],
-                            datapoint.c.timeframe_id==update['timeframe_id'],
-                            datapoint.c.timestamp==update['timestamp'])
-                conn.execute(datapoint.update().where(cond).values(update))
-    
-    executeUpdateQueries = staticmethod(executeUpdateQueries)
+                print >>buff, "\t".join(imap(str, tuple(query[c.name] for c in datapoint.c)))
+            buff.seek(0)
+            trans = conn.begin()
+            cursor = conn.connection.cursor()
+            try:
+                # Psycopg DB API extension
+                cursor.copy_from(buff, datapoint.name, null='None')
+                trans.commit()
+            except:
+                trans.rollback()
+                raise
+            del buff # Del and recreate - faster than reset and truncate
+        else:
+            raise Exception("Database dialect %s not supported." % (conn.dialect.name,))
 
     def getByID(conn, id):
         obj = Plot.get(id)
-        
+
         if obj == None:
             sel = plot.select().where(plot.c.id==id)
             res = conn.execute(sel)
             row = res.fetchone()
-            
+
             assert row != None
 
             obj = Plot()
@@ -770,27 +696,27 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
         return obj
 
     getByID = staticmethod(getByID)
-    
+
     def getByHostServiceAndName(conn, hostservice, name):
         cond = plot.c.hostservice_id==hostservice.id
-        
+
         if name != None and name != '':
             cond = and_(cond, plot.c.name==name)
-            
+
         sel = plot.select().where(cond)
         result = conn.execute(sel)
-        
+
         objs = []
-        
+
         for row in result:
             obj = Plot.get(row[plot.c.id])
-            
+
             if obj == None:
                 obj = Plot(hostservice, row[plot.c.name])
                 obj.id = row[plot.c.id]
                 obj.unit = row[plot.c.unit]
                 obj.activate()
-        
+
             objs.append(obj)
 
         return objs
@@ -802,12 +728,12 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
         .where(host.c.name==hostname)
 
         result = conn.execute(sel)
-        
+
         objs = []
-        
+
         for row in result:
             obj = Plot.get(row[plot.c.id])
-        
+
             if obj == None:
                 hs = HostService.getByID(conn, row[plot.c.hostservice_id])
                 obj = Plot(hs, row[plot.c.name])
@@ -820,17 +746,17 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
         return objs
 
     getByHost = staticmethod(getByHost)
-    
+
     def save(self, conn):
         if self.id == None:
             if self.hostservice.id == None:
                 self.hostservice.save(conn)
-                
+
             assert self.hostservice.id != None
 
             ins = plot.insert().values(hostservice_id=self.hostservice.id, name=self.name, unit=self.unit)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = plot.update().where(plot.c.id==self.id).values(hostservice_id=self.hostservice.id, unit=self.unit)
@@ -838,19 +764,19 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
 
     def activate(self):
         ModelBase.activate(self)
-        
+
 timeframe = Table('timeframe', metadata,
     Column('id', Integer, Sequence('timeframe_id_seq'), nullable=False, primary_key=True),
     Column('interval', Integer, nullable=False),
     Column('retention_period', Integer),
     Column('active', Boolean, nullable=False),
-    
+
     mysql_engine='InnoDB'
 )
 
-class TimeFrame(ModelBase):    
+class TimeFrame(ModelBase):
     cache_tfs = None
-    
+
     def __init__(self, interval, retention_period=None, active=True):
         self.id = None
         self.interval = interval
@@ -865,65 +791,65 @@ class TimeFrame(ModelBase):
                 sel = sel.where(timeframe.c.active==True)
 
             sel = sel.order_by(timeframe.c.interval.asc())
-            
+
             objs = []
-            
+
             for row in conn.execute(sel):
                 id = row[timeframe.c.id]
                 obj = TimeFrame.get(id)
-                
+
                 if obj == None:
                     obj = TimeFrame(row[timeframe.c.interval], row[timeframe.c.retention_period], row[timeframe.c.active])
                     obj.id = id
                     obj.activate()
-                
+
                 objs.append(obj)
-                
+
             if include_inactive:
                 return objs
 
             TimeFrame.cache_tfs = objs
-            
+
         return TimeFrame.cache_tfs
-    
+
     getAll = staticmethod(getAll)
 
     def getByID(conn, id):
         obj = TimeFrame.get(id)
-        
+
         if obj == None:
-            
+
             sel = timeframe.select().where(timeframe.c.id==id)
             res = conn.execute(sel)
             row = res.fetchone()
-            
+
             obj = TimeFrame(row[timeframe.c.interval], row[timeframe.c.retention_period], row[timeframe.c.active])
             obj.id = row[timeframe.c.id]
             obj.activate()
-            
+
         return obj
-        
+
     getByID = staticmethod(getByID)
 
     def invalidateCache():
         TimeFrame.cache_tfs = None
-        
+
     invalidateCache = staticmethod(invalidateCache)
-    
+
     def save(self, conn):
         if self.id == None:
             ins = timeframe.insert().values(interval=self.interval,
                                             retention_period=self.retention_period,
                                             active=self.active)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = timeframe.update().where(timeframe.c.id==self.id).values(interval=self.interval,
                                                               retention_period=self.retention_period,
                                                               active=self.active)
             result = conn.execute(upd)
-        
+
         self.invalidateCache()
 
 datapoint = Table('datapoint', metadata,
@@ -993,15 +919,15 @@ class DataPoint(object):
 
         if granularity == None:
             now = time()
-            
+
             for tf in tfs:
                 if tf.retention_period != None and now - tf.retention_period > start_timestamp:
                     continue
-                
+
                 if granularity == None or tf.interval < granularity:
                     granularity = tf.interval
-                
-            granularity = max(granularity, (end_timestamp - start_timestamp) / 125) 
+
+            granularity = max(granularity, (end_timestamp - start_timestamp) / 125)
 
         data_tf = None
 
@@ -1010,9 +936,9 @@ class DataPoint(object):
                 break
 
             data_tf = tf
-        
+
         granularity = data_tf.interval
-        
+
         start_timestamp -= 1.5 * granularity
         end_timestamp += 1.5 * granularity
 
@@ -1020,49 +946,49 @@ class DataPoint(object):
             start_timestamp = max(start_timestamp, data_tf.retention_period - 2 * granularity)
 
         assert granularity > 0
-        
+
         # properly align interval with the timeframe
         start_timestamp = start_timestamp - start_timestamp % granularity
-        
+
         hostservices = set([plot.hostservice for plot in plots])
         comment_objs = Comment.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
-        
+
         comments = []
-        
+
         for comment_obj in comment_objs:
             if comment_obj.hostservice.parent_hostservice != None:
                 parent_service = comment_obj.hostservice.parent_hostservice.service.name
             else:
                 parent_service = None
-            
+
             comments.append({ 'id': comment_obj.id, 'host': comment_obj.hostservice.host.name,
                      'parent_service': parent_service,
                      'service': comment_obj.hostservice.service.name,
                      'timestamp': comment_obj.timestamp, 'comment_timestamp': comment_obj.comment_timestamp,
                      'author': comment_obj.author, 'text': comment_obj.text })
 
-        status_objs = PluginStatus.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
+        # status_objs = PluginStatus.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
 
         statusdata = []
 
-        for status_obj in status_objs:
-            if status_obj.hostservice.parent_hostservice != None:
-                parent_service = status_obj.hostservice.parent_hostservice.service.name,
-
-            else:
-                parent_service = None
-
-            statusdata.append({ 'id': status_obj.id, 'host': status_obj.hostservice.host.name,
-                     'parent_service': parent_service,
-                     'service': status_obj.hostservice.service.name,
-                     'timestamp': status_obj.timestamp, 'status': status_obj.status })
+        # for status_obj in status_objs:
+        #     if status_obj.hostservice.parent_hostservice != None:
+        #         parent_service = status_obj.hostservice.parent_hostservice.service.name,
+        #
+        #     else:
+        #         parent_service = None
+        #
+        #     statusdata.append({ 'id': status_obj.id, 'host': status_obj.hostservice.host.name,
+        #              'parent_service': parent_service,
+        #              'service': status_obj.hostservice.service.name,
+        #              'timestamp': status_obj.timestamp, 'status': status_obj.status })
         st = time()
 
         sql_types = [datapoint.c.plot_id, datapoint.c.timestamp]
         for type in types_map.keys():
             if type in types:
                 sql_types.append(types_map[type])
-            
+
 
         plot_conds = tuple_(datapoint.c.plot_id).in_([(plot.id,) for plot in plots])
         sel = select(sql_types,
@@ -1087,7 +1013,7 @@ class DataPoint(object):
 
             for type in query[plot]:
                 chart[type] = []
-                
+
             charts[plot] = chart
             prev_rows[plot] = None
 
@@ -1115,7 +1041,7 @@ class DataPoint(object):
 
             for type in query[plot]:
                 chart[type].append((ts, row[types_map[type]]))
-            
+
             prev_rows[plot] = row
 
         et = time()
@@ -1128,22 +1054,22 @@ class DataPoint(object):
     getValuesByInterval = staticmethod(getValuesByInterval)
 
     def cleanupOldData(conn):
-        tfs = TimeFrame.getAll(conn, True)
-
-        for tf in tfs:
+        for tf in TimeFrame.getAll(conn, True):
             if tf.retention_period == None:
                 continue
-        
-            # DELETE .... LIMIT is a MySQL extention
             if conn.dialect.name == 'mysql':
                 delsql = "DELETE FROM datapoint WHERE timeframe_id=%d AND timestamp < %d LIMIT 25000" % (tf.id, time() - tf.retention_period)
+            elif conn.dialect.name == 'postgresql':
+                delsql = ('DELETE FROM datapoint WHERE ctid = ANY(ARRAY(SELECT ctid FROM datapoint WHERE '
+                          'timeframe_id = %d AND timestamp < %d ORDER BY timestamp LIMIT 25000))') % (tf.id,
+                                                                                                      time() - tf.retention_period)
             else:
-                delsql = datapoint.delete(and_(datapoint.c.timeframe_id==tf.id, datapoint.c.timestamp < time() - tf.retention_period))
-            
+                delsql = datapoint.delete(and_(datapoint.c.timeframe_id==tf.id,
+                                               datapoint.c.timestamp < time() - tf.retention_period))
             conn.execute(delsql)
-    
+
     cleanupOldData = staticmethod(cleanupOldData)
-    
+
 comment = Table('comment', metadata,
     Column('id', Integer, Sequence('comment_id_seq'), nullable=False, primary_key=True),
     Column('hostservice_id', Integer, ForeignKey('hostservice.id'), nullable=False, primary_key=True),
@@ -1163,15 +1089,15 @@ class Comment(ModelBase):
         self.comment_timestamp = time()
         self.author = author
         self.text = text
-    
+
     def getByID(conn, id):
         obj = Comment.get(id)
-        
+
         if obj == None:
             sel = comment.select().where(comment.c.id==id)
             res = conn.execute(sel)
             row = res.fetchone()
-            
+
             assert row != None
 
             hostservice = HostService.getByID(conn, row[comment.c.hostservice_id])
@@ -1180,34 +1106,34 @@ class Comment(ModelBase):
             obj.id = row[comment.c.id]
             obj.comment_timestamp = row[comment.c.comment_timestamp]
             obj.activate()
-        
+
         return obj
-    
-    getByID = staticmethod(getByID) 
-    
+
+    getByID = staticmethod(getByID)
+
     def getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp):
         conds = or_(*[comment.c.hostservice_id == hostservice.id for hostservice in hostservices])
-        
+
         sel = comment.select().where(and_(conds, comment.c.timestamp.between(start_timestamp, end_timestamp)))
         result = conn.execute(sel)
-        
+
         objs = []
-        
+
         for row in result:
             obj = Comment.get(row[comment.c.id])
-            
+
             if obj == None:
                 hostservice = HostService.getByID(conn, row[comment.c.hostservice_id])
-    
+
                 obj = Comment(hostservice, row[comment.c.timestamp], row[comment.c.author], row[comment.c.text])
                 obj.id = row[comment.c.id]
                 obj.comment_timestamp = row[comment.c.comment_timestamp]
                 obj.activate()
-            
+
             objs.append(obj)
-            
+
         return objs
-                
+
     getByHostServicesAndInterval = staticmethod(getByHostServicesAndInterval)
 
     def save(self, conn):
@@ -1216,7 +1142,7 @@ class Comment(ModelBase):
         if self.id == None:
             if self.hostservice.id == None:
                 self.hostservice.save(conn)
-                
+
             assert self.hostservice.id != None
 
             ins = comment.insert().values(hostservice_id=self.hostservice.id, timestamp=self.timestamp,
@@ -1224,18 +1150,18 @@ class Comment(ModelBase):
                                           text=self.text)
 
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = comment.update().where(comment.c.id==self.id).values(hostservice_id=self.hostservice.id, timestamp=self.timestamp,
                                                                        comment_timestamp=self.comment_timestamp, author=self.author,
                                                                        text=self.text)
             conn.execute(upd)
-            
+
     def delete(self, conn):
         if self.id == None:
             return
-        
+
         conn.execute(comment.delete().where(comment.c.id==self.id))
 
 pluginstatus = Table('pluginstatus', metadata,
@@ -1255,15 +1181,15 @@ class PluginStatus(ModelBase):
         self.hostservice = hostservice
         self.timestamp = timestamp
         self.status = status
-    
+
     def getByID(conn, id):
         obj = PluginStatus.get(id)
-        
+
         if obj == None:
             sel = pluginstatus.select().where(pluginstatus.c.id==id)
             res = conn.execute(sel)
             row = res.fetchone()
-            
+
             assert row != None
 
             hostservice = HostService.getByID(conn, row[pluginstatus.c.hostservice_id])
@@ -1271,56 +1197,56 @@ class PluginStatus(ModelBase):
             obj = PluginStatus(hostservice, row[pluginstatus.c.timestamp], row[pluginstatus.c.status])
             obj.id = row[pluginstatus.c.id]
             obj.activate()
-        
+
         return obj
-    
-    getByID = staticmethod(getByID) 
-    
+
+    getByID = staticmethod(getByID)
+
     def getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp):
         conds = or_(*[pluginstatus.c.hostservice_id == hostservice.id for hostservice in hostservices])
-        
+
         sel = pluginstatus.select().where(and_(conds, pluginstatus.c.timestamp.between(start_timestamp, end_timestamp)))
         result = conn.execute(sel)
-        
+
         objs = []
-        
+
         for row in result:
             obj = PluginStatus.get(row[pluginstatus.c.id])
-            
+
             if obj == None:
                 hostservice = HostService.getByID(conn, row[pluginstatus.c.hostservice_id])
-    
+
                 obj = PluginStatus(hostservice, row[pluginstatus.c.timestamp], row[pluginstatus.c.status])
                 obj.id = row[pluginstatus.c.id]
                 obj.activate()
-            
+
             objs.append(obj)
-            
+
         return objs
-                
+
     getByHostServicesAndInterval = staticmethod(getByHostServicesAndInterval)
 
     def save(self, conn):
         if self.id == None:
             if self.hostservice.id == None:
                 self.hostservice.save(conn)
-                
+
             assert self.hostservice.id != None
 
             ins = pluginstatus.insert().values(hostservice_id=self.hostservice.id, timestamp=self.timestamp,
                                           status=self.status)
 
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = pluginstatus.update().where(pluginstatus.c.id==self.id).values(status=self.status)
             conn.execute(upd)
-            
+
     def delete(self, conn):
         if self.id == None:
             return
-        
+
         conn.execute(pluginstatus.delete().where(pluginstatus.c.id==self.id))
 
     def cleanupOldData(conn):
@@ -1337,9 +1263,9 @@ class PluginStatus(ModelBase):
 
         if retention_period != None:
             delsql = pluginstatus.delete(pluginstatus.c.timestamp < time() - retention_period)
-            
+
             conn.execute(delsql)
-    
+
     cleanupOldData = staticmethod(cleanupOldData)
 
 class SetTextFactory(PoolListener):
@@ -1354,27 +1280,52 @@ creates a DB connection
 '''
 def createModelEngine(dsn):
     global dbload_min_timestamp, dbload_max_timestamp
-
+    fn = """CREATE FUNCTION update_existing() RETURNS TRIGGER AS $update_existing$
+         DECLARE
+             existing RECORD;
+         BEGIN
+             SELECT INTO existing * FROM datapoint
+                 WHERE (plot_id, timeframe_id, timestamp) = (NEW.plot_id, NEW.timeframe_id, NEW.timestamp);
+             IF NOT FOUND THEN -- INSERT
+                 RETURN NEW;
+             ELSE
+                 UPDATE datapoint SET
+                     avg = (existing.avg * existing.count + NEW.avg) / (existing.count + 1),
+                     min = LEAST(existing.min, NEW.min),
+                     max = GREATEST(existing.max, NEW.max),
+                     count = existing.count + 1
+                 WHERE
+                     plot_id = existing.plot_id
+                     AND timeframe_id = existing.timeframe_id
+                     AND timestamp = existing.timestamp;
+                 RETURN NULL; -- DON'T INSERT
+             END IF;
+         END;
+         $update_existing$ LANGUAGE plpgsql;"""
+    trigg = """CREATE TRIGGER update_existing
+            BEFORE INSERT ON datapoint
+            FOR EACH ROW EXECUTE PROCEDURE update_existing();"""
+    triggd = 'DROP TRIGGER update_existing();'
+    fnd = 'DROP FUNCTION update_existing();'
     event_obj = SetTextFactory()
-
     if hasattr(event, 'listen'):
         engine = create_engine(dsn)
         event.listen(engine, 'connect', event_obj.connect)
+        event.listen(datapoint, 'before_create', DDL(fn).execute_if(dialect='postgresql'))
+        event.listen(datapoint, 'after_create', DDL(trigg).execute_if(dialect='postgresql'))
+        event.listen(datapoint, 'before_drop', DDL(triggd).execute_if(dialect='postgresql'))
+        event.listen(datapoint, 'before_drop', DDL(fnd).execute_if(dialect='postgresql'))
     else:
+        # < 0.7 compat
         engine = create_engine(dsn, listeners=[event_obj])
+        DDL(fn, on='postgresql').execute_at('after-create', datapoint)
+        DDL(trigg, on='postgresql').execute_at('after-create', datapoint)
+        DDL(triggd, on='postgresql').execute_at('before-drop', datapoint)
+        DDL(fnd, on='postgresql').execute_at('before-drop', datapoint)
 
     #engine.echo = True
 
     conn = engine.connect()
-
-    # sqlite3-specific optimization
-    try:
-        conn.execute('PRAGMA locking_mode=exclusive')
-        conn.execute('PRAGMA journal_mode=WAL')
-        conn.execute('PRAGMA wal_autocheckpoint=0')
-        conn.execute('PRAGMA cache_size=1000000')
-    except:
-        pass
 
     metadata.create_all(engine)
 
@@ -1383,10 +1334,10 @@ def createModelEngine(dsn):
 
     if dbload_min_timestamp == None:
         dbload_min_timestamp = time()
-    
+
     sel = select([func.max(datapoint.c.timestamp, type_=Integer).label('maxtimestamp')])
     dbload_max_timestamp = conn.execute(sel).scalar()
-    
+
     if dbload_max_timestamp == None:
         dbload_max_timestamp = 0
 
@@ -1395,20 +1346,24 @@ def createModelEngine(dsn):
     return engine
 
 
-def exec_vacuum(conn):
-    try:
-        conn.execute('VAUUM')
-    except:
-        pass
-    
-
-def exec_pragma(conn, pragma):
-    try:
-        conn.execute('PRAGMA %s' % pragma)
-    except:
-        pass
-    
-
 def cleanup(conn):
-    DataPoint.cleanupOldData(conn)
-    PluginStatus.cleanupOldData(conn)
+    try:
+        DataPoint.cleanupOldData(conn)
+        PluginStatus.cleanupOldData(conn)
+    except Exception, e:
+        print e
+
+
+def aggregate_queries(queries):
+    mem = {}
+    for query in queries:
+        key = '%s%s%s' % (query['plot_id'], query['timeframe_id'], query['timestamp'])
+        if key not in mem:
+            mem[key] = query
+        else:
+            i = mem[key]
+            i['avg'] = (i['count'] * i['avg'] + query['avg']) / (i['count'] + 1)
+            i['min'] = min(i['min'], query['min'])
+            i['max'] = max(i['max'], query['max'])
+            i['count'] += 1
+    return mem.values()

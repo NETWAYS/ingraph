@@ -12,6 +12,9 @@ XMLRPC_HOST=${XMLRPC_HOST-127.0.0.1}
 XMLRPC_PORT=${XMLRPC_PORT-5000}
 XMLRPC_USER=${XMLRPC_USER-ingraph}
 XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
+INGRAPH_USER=${INGRAPH_USER-ingraph}
+INGRAPH_COLLECTOR_GROUP=${INGRAPH_COLLECTOR_GROUP-icinga}
+LOG_DIR=${LOG_DIR-/var/log/ingraph}
 
 PYTHON_OPTS=${PYTHON_OPTS-install}
 
@@ -54,6 +57,8 @@ usage () {
     echo "                          [$XMLRPC_USER]"
     echo "--with-xmlrpc-password    xml-rpc password"
     echo "                          [$XMLRPC_PASSWORD]"
+    echo "--with-log-dir            directory for the log files"
+    echo "                          [$LOG_DIR]"
     echo
     exit 1
 }
@@ -94,7 +99,7 @@ do
         --with-bin-dir*)
             BIN_DIR=${ARG#--with-bin-dir}
             BIN_DIR=${BIN_DIR#=}
-            [ -z "$LIB_DIR" ] && {
+            [ -z "$BIN_DIR" ] && {
                 echo "ERROR: expected an absolute directory name for --with-bin-dir" >&2
                 exit 1
             }
@@ -131,6 +136,14 @@ do
                 exit 1
             }
             ;;
+        --with-log-dir*)
+            LOG_DIR=${ARG#--with-log-dir}
+            LOG_DIR=${LOG_DIR#=}
+            [ -z "$LOG_DIR" ] && {
+                echo "ERROR: expected an absolute directory name for --with-log-dir" >&2
+                exit 1
+            }
+            ;;
         --help | -h)
             usage
             ;;
@@ -150,7 +163,7 @@ then
     usage
 fi
 
-echo "(1/3) Preparing *.in files..."
+echo "(1/4) Preparing *.in files..."
 
 # Prepare *.in files
 for FIN in $($FIND $DIR/*.in $DIR/examples -type f -name \*.in)
@@ -163,17 +176,23 @@ do
     $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
     $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
 done
-FIN=$DIR/contrib/init.d/ingraph-collector.in
-F=${FIN%.in}
-$INSTALL -m 755 $FIN $F
-$SED -i -e s,@CONFIG_DIR@,$CONFIG_DIR, $F
-$SED -i -e s,@XMLRPC_HOST@,$XMLRPC_HOST, $F
-$SED -i -e s,@XMLRPC_PORT@,$XMLRPC_PORT, $F
-$SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
-$SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
+for FIN in $($FIND $DIR/contrib/init.d/ -type f -name \*.in)
+do
+    F=${FIN%.in}
+    # Install initscripts with the execute bit set
+    $INSTALL -m 755 $FIN $F
+    $SED -i -e s,@CONFIG_DIR@,$CONFIG_DIR, $F
+    $SED -i -e s,@XMLRPC_HOST@,$XMLRPC_HOST, $F
+    $SED -i -e s,@XMLRPC_PORT@,$XMLRPC_PORT, $F
+    $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
+    $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
+    $SED -i -e s,@INGRAPH_COLLECTOR_GROUP@,$INGRAPH_COLLECTOR_GROUP, $F
+    $SED -i -e s,@INGRAPH_USER@,$INGRAPH_USER, $F
+    $SED -i -e s,@LOG_DIR@,$LOG_DIR, $F
+done
 
 # Install files from the ingraph directory
-echo "(2/3) Running setup.py..."
+echo "(2/4) Running setup.py..."
 
 [ -n "$LIB_DIR" ] && {
     PYTHON_OPTS="$PYTHON_OPTS --install-lib=$LIB_DIR"
@@ -185,10 +204,17 @@ echo "(2/3) Running setup.py..."
 $PYTHON setup.py $PYTHON_OPTS
 
 # Create ingraph user
-echo "(3/3) Creating \"ingraph\" user..."
+echo "(3/4) Creating ingraph user..."
 
-if ! id ingraph >/dev/null 2>&1; then
-	useradd -b /etc/ingraph -M ingraph
+if ! id "$INGRAPH_USER" >/dev/null 2>&1; then
+    useradd -b $CONFIG_DIR -M "$INGRAPH_USER"
+fi
+
+# Create log directory
+echo "(4/4) Creating log directory..."
+
+if [ ! -d "$LOG_DIR" ]; then
+    $INSTALL -m 755 -o "$INGRAPH_USER" -d "$LOG_DIR"
 fi
 
 echo "Done."

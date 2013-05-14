@@ -520,18 +520,19 @@
                     series.set(field.name, templateValue);
                 });
             }, this);
-            
+
             var hosts = [];
-            
+
             this.store.each(function (series) {
-                
+
                 if (-1 === hosts.indexOf(series.json.host)) {
                     hosts.push(series.json.host);
                 }
-                
-                var convert = series.get('convert');
 
-                if (!convert) {
+                var convert = series.get('convert'),
+                    converted = series.get('_converted');
+
+                if (!convert || converted) {
                     // Skip
                     return true;
                 }
@@ -571,6 +572,8 @@
                         xy[1] = y;
                     }
                 });
+
+                series.set('_converted', true);
             }, this);
 
             if (this.autoYAxes === true) {
@@ -694,7 +697,7 @@
 //                            yaxis.set('max', 100);
 //                        }
                     }
-                    
+
                     /*
                      * TODO(el): Set baseline on every load if not user-defined.
                      * Store needs sort of locking prior to that.
@@ -705,7 +708,7 @@
 //                    }
                 });
             }
-            
+
             if (hosts.length > 1) {
                 this.store.each(function (series) {
                     series.set(

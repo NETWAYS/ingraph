@@ -16,10 +16,10 @@
 # Description: Description.
 ### END INIT INFO
 
-INGRAPH_CHDIR="/etc/ingraph"
+INGRAPH_CHDIR="@CONFIG_DIR@"
 INGRAPH_PIDFILE="/var/run/ingraph/ingraphd.pid"
-INGRAPH_USER="ingraph"
-INGRAPH_LOGFILE="-" # stdout/stderr
+INGRAPH_USER="@INGRAPH_USER@"
+INGRAPH_LOGFILE="@LOG_DIR@/ingraph.log"
 
 [ -r /etc/default/ingraph ] && . /etc/default/ingraph
 [ -r /etc/sysconfig/ingraph ] && . /etc/sysconfig/ingraph

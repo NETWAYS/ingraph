@@ -40,7 +40,7 @@ if (!Ext.ux.ingraph.Urls.available) {
             view = null;
         return {
             init: function() {
-                var cfg = Ext.apply(<?php echo json_encode($t, true); ?>, {
+                var cfg = Ext.apply(<?php echo json_encode($t); ?>, {
                         tbarConfig: {
                             enable: false
                         },

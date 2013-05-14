@@ -36,6 +36,10 @@ class FileLikeLogger(object):
     def close(self):
         for handler in self._logger.handlers:
             handler.close()
-            
+
     def __del__(self):
-        self.close()
+        try:
+            self.close()
+        except Exception:
+            # For simplicity, swallow everything
+            pass

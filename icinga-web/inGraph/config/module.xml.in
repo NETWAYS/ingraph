@@ -6,7 +6,9 @@
         <module enabled="true">
             <settings>
                 <setting name="title">inGraph</setting>
-                <setting name="version">1.0.1</setting>
+ 
+               <setting name="version">2.0</setting>
+
                 <setting name="authors">
                     <ae:parameter name="info@netways.de">NETWAYS GmbH</ae:parameter>
                 </setting>

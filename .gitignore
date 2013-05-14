@@ -7,5 +7,3 @@ contrib/init.d/ingraph
 contrib/init.d/ingraph-collector
 ingraph.egg-info/
 MANIFEST
-setup.py
-

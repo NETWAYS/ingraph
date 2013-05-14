@@ -19,7 +19,7 @@
 
 set -o nounset
 
-VERSION=1.0.1
+VERSION=1.0.2
 
 SCRIPT=$(readlink -f "$0")
 DIR=$(dirname "$SCRIPT")
@@ -336,10 +336,19 @@ install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $C
 install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $COMMON_SRC/inGraph/validate $PREFIX/app/modules/inGraph/validate
 install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $COMMON_SRC/inGraph/views $PREFIX/app/modules/inGraph/views
 install_common_directories "js${tab}styles" $COMMON_SRC/inGraph/lib $PREFIX/pub
-install_common_directories "templates${tab}views" $COMMON_SRC/inGraph/config $PREFIX/app/modules/inGraph/config "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}-C${tab}-b"
-# mkdir $PREFIX/app/modules/inGraph/lib
-$INSTALL -m 755 -d $PREFIX/app/modules/inGraph/lib
-install_common_directories "action${tab}model${tab}nodejs${tab}js${tab}php${tab}validator${tab}view" $COMMON_SRC/inGraph/lib $PREFIX/app/modules/inGraph/lib
+# Backup modified templates
+if [ -d "$PREFIX/app/modules/inGraph/config/templates" ] && [ "$(ls -A "$PREFIX/app/modules/inGraph/config/templates")" ]
+then
+    for TEMPLATE in $PREFIX/app/modules/inGraph/config/templates/*.json
+    do
+        if [ "$(md5sum "$COMMON_SRC/inGraph/config/templates/${TEMPLATE##$PREFIX/app/modules/inGraph/config/templates/}" | cut -d ' ' -f 1)" != "$(md5sum "$TEMPLATE" | cut -d ' ' -f 1)" ]
+        then
+            cp -u -b "$TEMPLATE" "${TEMPLATE}.bak"
+        fi
+    done
+fi
+install_common_directories "templates${tab}views" $COMMON_SRC/inGraph/config $PREFIX/app/modules/inGraph/config "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}"
+install_common_directories "action${tab}model${tab}nodejs${tab}js${tab}php${tab}view" $COMMON_SRC/inGraph/lib $PREFIX/app/modules/inGraph/lib
 
 # Install config xmls
 CONFIGS="$COMMON_SRC/inGraph/config/autoload.xml${tab}\

@@ -512,6 +512,10 @@
                 defaultValue: null
             },
             {
+                name: '_converted',
+                defaultValue: false
+            },
+            {
                 name: 'type',
                 defaultValue: null
             },

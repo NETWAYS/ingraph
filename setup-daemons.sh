@@ -1,21 +1,4 @@
 #!/bin/sh
-#
-# Copyright (C) 2012 NETWAYS GmbH, http://netways.de
-#
-# This file is part of inGraph.
-#
-# inGraph is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or any later version.
-#
-# inGraph is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for mor
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
-#
 
 set -o nounset
 
@@ -29,6 +12,9 @@ XMLRPC_HOST=${XMLRPC_HOST-127.0.0.1}
 XMLRPC_PORT=${XMLRPC_PORT-5000}
 XMLRPC_USER=${XMLRPC_USER-ingraph}
 XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
+INGRAPH_USER=${INGRAPH_USER-ingraph}
+INGRAPH_COLLECTOR_GROUP=${INGRAPH_COLLECTOR_GROUP-icinga}
+LOG_DIR=${LOG_DIR-/var/log/ingraph}
 
 PYTHON_OPTS=${PYTHON_OPTS-install}
 
@@ -71,6 +57,8 @@ usage () {
     echo "                          [$XMLRPC_USER]"
     echo "--with-xmlrpc-password    xml-rpc password"
     echo "                          [$XMLRPC_PASSWORD]"
+    echo "--with-log-dir            directory for the log files"
+    echo "                          [$LOG_DIR]"
     echo
     exit 1
 }
@@ -111,7 +99,7 @@ do
         --with-bin-dir*)
             BIN_DIR=${ARG#--with-bin-dir}
             BIN_DIR=${BIN_DIR#=}
-            [ -z "$LIB_DIR" ] && {
+            [ -z "$BIN_DIR" ] && {
                 echo "ERROR: expected an absolute directory name for --with-bin-dir" >&2
                 exit 1
             }
@@ -148,6 +136,14 @@ do
                 exit 1
             }
             ;;
+        --with-log-dir*)
+            LOG_DIR=${ARG#--with-log-dir}
+            LOG_DIR=${LOG_DIR#=}
+            [ -z "$LOG_DIR" ] && {
+                echo "ERROR: expected an absolute directory name for --with-log-dir" >&2
+                exit 1
+            }
+            ;;
         --help | -h)
             usage
             ;;
@@ -167,7 +163,7 @@ then
     usage
 fi
 
-echo "(1/3) Preparing *.in files..."
+echo "(1/4) Preparing *.in files..."
 
 # Prepare *.in files
 for FIN in $($FIND $DIR/*.in $DIR/examples -type f -name \*.in)
@@ -190,10 +186,13 @@ do
     $SED -i -e s,@XMLRPC_PORT@,$XMLRPC_PORT, $F
     $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
     $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
+    $SED -i -e s,@INGRAPH_COLLECTOR_GROUP@,$INGRAPH_COLLECTOR_GROUP, $F
+    $SED -i -e s,@INGRAPH_USER@,$INGRAPH_USER, $F
+    $SED -i -e s,@LOG_DIR@,$LOG_DIR, $F
 done
 
 # Install files from the ingraph directory
-echo "(2/3) Running setup.py..."
+echo "(2/4) Running setup.py..."
 
 [ -n "$LIB_DIR" ] && {
     PYTHON_OPTS="$PYTHON_OPTS --install-lib=$LIB_DIR"
@@ -205,10 +204,17 @@ echo "(2/3) Running setup.py..."
 $PYTHON setup.py $PYTHON_OPTS
 
 # Create ingraph user
-echo "(3/3) Creating \"ingraph\" user..."
+echo "(3/4) Creating ingraph user..."
 
-if ! id ingraph >/dev/null 2>&1; then
-    useradd -b $CONFIG_DIR -M ingraph
+if ! id "$INGRAPH_USER" >/dev/null 2>&1; then
+    useradd -b $CONFIG_DIR -M "$INGRAPH_USER"
+fi
+
+# Create log directory
+echo "(4/4) Creating log directory..."
+
+if [ ! -d "$LOG_DIR" ]; then
+    $INSTALL -m 755 -o "$INGRAPH_USER" -d "$LOG_DIR"
 fi
 
 echo "Done."

@@ -207,6 +207,7 @@
                 this.el.addClass(this.iconCls);
                 this.relayEvents(this.el, ['mouseover', 'mouseout', 'click']);
                 this.initEventMixin(this);
+                Ext.BoxComponent.prototype.afterRender.call(this);
             }
         });
         Ext.override(

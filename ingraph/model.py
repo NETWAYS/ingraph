@@ -22,7 +22,7 @@ except ImportError:
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Enum, Sequence, ForeignKey, Index, create_engine, \
-    and_, or_, tuple_
+    and_, or_, tuple_, DDL
 try:
     from sqlalchemy import event
 except ImportError:
@@ -32,10 +32,14 @@ from sqlalchemy.interfaces import PoolListener
 from time import time
 from weakref import WeakValueDictionary
 from OrderedDict import OrderedDict
-from traceback import print_exc
+from decimal import Decimal
+from itertools import chain, imap
+from cStringIO import StringIO
 
 dbload_min_timestamp = None
 dbload_max_timestamp = None
+MAX_DECIMAL = Decimal('9'*15 + '.' + '9'*5)
+TO_DECIMAL = lambda f: Decimal('%.5f' % (f,))
 
 '''
 Base class for all DB model classes.
@@ -122,7 +126,7 @@ class Host(ModelBase):
         if self.id == None:
             ins = host.insert().values(name=self.name)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             # TODO: should probably just throw an exception instead -
@@ -231,7 +235,7 @@ class Service(ModelBase):
         if self.id == None:
             ins = service.insert().values(name=self.name)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             # TODO: should probably just throw an exception instead -
@@ -331,19 +335,17 @@ class HostService(ModelBase):
             else:
                 parent_hostservice_id = None
 
-            ins = hostservice.insert().values(
-                host_id=self.host.id, service_id=self.service.id,
-                parent_hostservice_id=parent_hostservice_id,
-                check_command=self.check_command)
+            ins = hostservice.insert().values(host_id=self.host.id, service_id=self.service.id, \
+                                              parent_hostservice_id=parent_hostservice_id)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
-            upd = hostservice.update().where(hostservice.c.id==self.id).values(
-                # host_id=self.host.id,
-                # service_id=self.service.id,
-                # parent_hostservice_id=self.parent_hostservice.id,
-                check_command=self.check_command)
+            # TODO: should probably just throw an exception instead -
+            # as changing a service's host/service ids doesn't make any sense
+            upd = hostservice.update().where(hostservice.c.id==self.id).values(host_id=self.host.id, \
+                                                                               service_id=self.service.id, \
+                                                                               parent_hostservice_id=self.parent_hostservice.id)
             conn.execute(upd)
 
     @staticmethod
@@ -360,8 +362,7 @@ class HostService(ModelBase):
                     conn, row[hostservice.c.parent_hostservice_id])
             else:
                 parent_hostservice = None
-            hostservice_ = HostService(host, service, parent_hostservice,
-                                      row[hostservice.c.check_command])
+            hostservice_ = HostService(host, service, parent_hostservice)
             hostservice_.id = row[hostservice.c.id]
             hostservice_.activate()
         return hostservice_
@@ -394,8 +395,7 @@ class HostService(ModelBase):
                 else:
                     phs = parent_hostservice
 
-                obj = HostService(host, svc, phs,
-                                  row[hostservice.c.check_command])
+                obj = HostService(host, svc, phs)
                 obj.id = row[hostservice.c.id]
                 obj.activate()
 
@@ -465,9 +465,7 @@ class HostService(ModelBase):
                     parent_hostservice = HostService.getByID(conn, parent_hostservice_id)
                 else:
                     parent_hostservice = None
-
-                obj = HostService(host, service_obj, parent_hostservice,
-                                  row[hostservice.c.check_command])
+                obj = HostService(host, service_obj, parent_hostservice)
                 obj.id = row[hostservice.c.id]
                 obj.activate()
 
@@ -534,8 +532,8 @@ class Plot(ModelBase):
 
     _calculateRateHelper = staticmethod(_calculateRateHelper)
 
-    def buildUpdateQueries(self, conn, timestamp, unit, value, min, max, lower_limit, upper_limit,
-                    warn_lower, warn_upper, warn_type, crit_lower, crit_upper, crit_type):
+    def buildUpdateQueries(self, conn, timestamp, unit, value, min_, max_, lower_limit, upper_limit,
+                           warn_lower, warn_upper, warn_type, crit_lower, crit_upper, crit_type):
 
         tfs = TimeFrame.getAll(conn)
 
@@ -547,24 +545,23 @@ class Plot(ModelBase):
 
         if lower_limit != None:
             lower_limit = float(lower_limit)
-
             if value < lower_limit:
                 value = lower_limit
+            lower_limit = min(TO_DECIMAL(lower_limit), MAX_DECIMAL)
 
         if upper_limit != None:
             upper_limit = float(upper_limit)
-
             # some plugins return lower_limit==upper_limit,
             # lets just ignore that non-sense...
             if value > upper_limit and lower_limit != upper_limit:
                 value = upper_limit
-
+            upper_limit = min(TO_DECIMAL(upper_limit), MAX_DECIMAL)
         value_raw = value
 
         if unit == 'counter':
             value = Plot._calculateRateHelper(self.last_update, timestamp, self.last_value, value)
-            min = None
-            max = None
+            min_ = None
+            max_ = None
 
         self.last_value = value_raw
         self.last_update = timestamp
@@ -573,11 +570,21 @@ class Plot(ModelBase):
         if value == None:
             return []
 
-        if min == None or min > value:
-            min = value
+        value = min(TO_DECIMAL(value), MAX_DECIMAL)
 
-        if max == None or max < value:
-            max = value
+        if min_ == None or min_ > value:
+            min_ = value
+        if max_ == None or max_ < value:
+            max_ = value
+
+        if warn_lower != None:
+            warn_lower = min(TO_DECIMAL(warn_lower), MAX_DECIMAL)
+        if warn_upper != None:
+            warn_upper = min(TO_DECIMAL(warn_upper), MAX_DECIMAL)
+        if crit_lower != None:
+            crit_lower = min(TO_DECIMAL(crit_lower), MAX_DECIMAL)
+        if crit_upper != None:
+            crit_upper = min(TO_DECIMAL(crit_upper), MAX_DECIMAL)
 
         now = time()
 
@@ -589,9 +596,9 @@ class Plot(ModelBase):
             values = {
                 'plot_id': self.id,
                 'timeframe_id': tf.id,
-                'timestamp': timestamp - timestamp % tf.interval,
-                'min': min,
-                'max': max,
+                'timestamp': int(timestamp - timestamp % tf.interval),
+                'min': min_,
+                'max': max_,
                 'avg': value,
                 'count': 1,
                 'unit': unit,
@@ -613,130 +620,54 @@ class Plot(ModelBase):
 
         return queries
 
-    def _quoteNumber(value):
-        if value == None:
-            return 'NULL'
-        else:
-            return "'%s'" % (value)
-
-    _quoteNumber = staticmethod(_quoteNumber)
-
+    @staticmethod
     def executeUpdateQueries(conn, queries):
-        global dbload_max_timestamp
-
-        if len(queries) == 0:
+        if not queries:
             return
-
+        # queries[:] = aggregate_queries(queries)
         if conn.dialect.name == 'mysql':
-            sql_values = ', '.join(["""
-(%s, %s, %s,
- %s, %s, %s, %s,
- %s, %s,
- %s, %s, %s,
- %s, %s, %s)
-""" % (Plot._quoteNumber(query['plot_id']), Plot._quoteNumber(query['timeframe_id']), Plot._quoteNumber(query['timestamp']),
-       Plot._quoteNumber(query['min']), Plot._quoteNumber(query['max']), Plot._quoteNumber(query['avg']), Plot._quoteNumber(query['count']),
-       Plot._quoteNumber(query['lower_limit']), Plot._quoteNumber(query['upper_limit']),
-       Plot._quoteNumber(query['warn_lower']), Plot._quoteNumber(query['warn_upper']), Plot._quoteNumber(query['warn_type']),
-       Plot._quoteNumber(query['crit_lower']), Plot._quoteNumber(query['crit_upper']), Plot._quoteNumber(query['crit_type']))
-                              for query in queries])
-
-            sql_query = """
-INSERT INTO datapoint (plot_id, timeframe_id, timestamp,
-                       min, max, avg, count,
-                       lower_limit, upper_limit,
-                       warn_lower, warn_upper, warn_type,
-                       crit_lower, crit_upper, crit_type)
-VALUES
-%s
-ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count + 1),
-                        count = count + 1,
-                        min = IF(min < VALUES(min), min, VALUES(min)),
-                        max = IF(max > VALUES(max), max, VALUES(max))
-""" % (sql_values)
-
-            conn.execute(sql_query)
-        else:
-            # TODO: fix this mess
-            st = time()
-            dps = {}
-            conds = []
+            values = ('(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s),' * len(queries))[:-1]
+            trans = conn.begin()
+            try:
+                conn.execute("""INSERT INTO datapoint VALUES %s
+                             ON DUPLICATE KEY UPDATE
+                             avg = (count * avg + VALUES(avg)) / (count + 1),
+                             count = count + 1,
+                             min = IF(min < VALUES(min), min, VALUES(min)),
+                             max = IF(max > VALUES(max), max, VALUES(max))""" % (values,),
+                             tuple(chain(*imap(lambda q: (q[c.name] for c in datapoint.c), queries))))
+                trans.commit()
+            except:
+                trans.rollback()
+                raise
+        elif conn.dialect.name == 'postgresql':
+            buff = StringIO()
             for query in queries:
-                dps[(query['plot_id'], query['timeframe_id'], query['timestamp'])] = query
+                print >>buff, "\t".join(imap(str, tuple(query[c.name] for c in datapoint.c)))
+            buff.seek(0)
+            trans = conn.begin()
+            cursor = conn.connection.cursor()
+            try:
+                # Psycopg DB API extension
+                cursor.copy_from(buff, datapoint.name, null='None')
+                trans.commit()
+            except:
+                trans.rollback()
+                raise
+            del buff # Del and recreate - faster than reset and truncate
+        else:
+            raise Exception("Database dialect %s not supported." % (conn.dialect.name,))
 
-                if query['timestamp'] > dbload_max_timestamp:
-                    continue
+    def getByID(conn, id):
+        obj = Plot.get(id)
 
-                cond = and_(datapoint.c.plot_id==query['plot_id'],
-                            datapoint.c.timeframe_id==query['timeframe_id'],
-                            datapoint.c.timestamp==query['timestamp'])
-                conds.append(cond)
+        if obj == None:
+            sel = plot.select().where(plot.c.id==id)
+            res = conn.execute(sel)
+            row = res.fetchone()
 
-            dpsdb = {}
-
-            if len(conds) > 0:
-                result = conn.execute(select(columns=[datapoint.c.plot_id, datapoint.c.timeframe_id,
-                                                        datapoint.c.timestamp, datapoint.c.min,
-                                                        datapoint.c.max, datapoint.c.avg, datapoint.c.count],
-                                             from_obj=[datapoint]).where(or_(*conds)))
-
-                for row in result:
-                    dp = (row[datapoint.c.plot_id], row[datapoint.c.timeframe_id], row[datapoint.c.timestamp])
-                    dpsdb[dp]= {
-                        'min': row[datapoint.c.min],
-                        'max': row[datapoint.c.max],
-                        'avg': row[datapoint.c.avg],
-                        'count': row[datapoint.c.count],
-                    }
-
-            inserts = []
-            updates = []
-
-            for dp, query in dps.items():
-                row = {}
-
-                if query['timestamp'] > dbload_max_timestamp:
-                    dbload_max_timestamp = query['timestamp']
-
-                if dp in dpsdb:
-                    row = dpsdb[dp]
-
-                    # update
-                    if query['min'] < row['min']:
-                        row['min'] = query['min']
-
-                    if query['max'] > row['max']:
-                        row['max'] = query['max']
-
-                    row['avg'] = row['count'] * (row['avg'] / (row['count'] + 1)) + \
-                                           query['avg'] / (row['count'] + 1)
-                    row['count'] = row['count'] + 1
-
-                    updates.append(row)
-                else:
-                    row = {
-                        'min': query['min'],
-                        'max': query['max'],
-                        'avg': query['avg'],
-                        'count': 1
-                    }
-
-                    inserts.append(query)
-
-                dpsdb[dp] = row
-
-            et = time()
-
-            print "(SLOW) update prep: %f" % (et - st)
-
-            if len(inserts) > 0:
-                conn.execute(datapoint.insert(), inserts)
-
-            for update in updates:
-                cond = and_(datapoint.c.plot_id==update['plot_id'],
-                            datapoint.c.timeframe_id==update['timeframe_id'],
-                            datapoint.c.timestamp==update['timestamp'])
-                conn.execute(datapoint.update().where(cond).values(update))
+            assert row != None
+>>>>>>> maint/1.0.2
 
     executeUpdateQueries = staticmethod(executeUpdateQueries)
 
@@ -828,7 +759,7 @@ ON DUPLICATE KEY UPDATE avg = count * (avg / (count + 1)) + VALUES(avg) / (count
 
             ins = plot.insert().values(hostservice_id=self.hostservice.id, name=self.name, unit=self.unit)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = plot.update().where(plot.c.id==self.id).values(hostservice_id=self.hostservice.id, unit=self.unit)
@@ -914,7 +845,7 @@ class TimeFrame(ModelBase):
                                             retention_period=self.retention_period,
                                             active=self.active)
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = timeframe.update().where(timeframe.c.id==self.id).values(interval=self.interval,
@@ -1039,21 +970,21 @@ class DataPoint(object):
                      'timestamp': comment_obj.timestamp, 'comment_timestamp': comment_obj.comment_timestamp,
                      'author': comment_obj.author, 'text': comment_obj.text })
 
-        status_objs = PluginStatus.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
+        # status_objs = PluginStatus.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
 
         statusdata = []
 
-        for status_obj in status_objs:
-            if status_obj.hostservice.parent_hostservice != None:
-                parent_service = status_obj.hostservice.parent_hostservice.service.name,
-
-            else:
-                parent_service = None
-
-            statusdata.append({ 'id': status_obj.id, 'host': status_obj.hostservice.host.name,
-                     'parent_service': parent_service,
-                     'service': status_obj.hostservice.service.name,
-                     'timestamp': status_obj.timestamp, 'status': status_obj.status })
+        # for status_obj in status_objs:
+        #     if status_obj.hostservice.parent_hostservice != None:
+        #         parent_service = status_obj.hostservice.parent_hostservice.service.name,
+        #
+        #     else:
+        #         parent_service = None
+        #
+        #     statusdata.append({ 'id': status_obj.id, 'host': status_obj.hostservice.host.name,
+        #              'parent_service': parent_service,
+        #              'service': status_obj.hostservice.service.name,
+        #              'timestamp': status_obj.timestamp, 'status': status_obj.status })
         st = time()
 
         sql_types = [datapoint.c.plot_id, datapoint.c.timestamp]
@@ -1126,18 +1057,18 @@ class DataPoint(object):
     getValuesByInterval = staticmethod(getValuesByInterval)
 
     def cleanupOldData(conn):
-        tfs = TimeFrame.getAll(conn, True)
-
-        for tf in tfs:
+        for tf in TimeFrame.getAll(conn, True):
             if tf.retention_period == None:
                 continue
-
-            # DELETE .... LIMIT is a MySQL extention
             if conn.dialect.name == 'mysql':
                 delsql = "DELETE FROM datapoint WHERE timeframe_id=%d AND timestamp < %d LIMIT 25000" % (tf.id, time() - tf.retention_period)
+            elif conn.dialect.name == 'postgresql':
+                delsql = ('DELETE FROM datapoint WHERE ctid = ANY(ARRAY(SELECT ctid FROM datapoint WHERE '
+                          'timeframe_id = %d AND timestamp < %d ORDER BY timestamp LIMIT 25000))') % (tf.id,
+                                                                                                      time() - tf.retention_period)
             else:
-                delsql = datapoint.delete(and_(datapoint.c.timeframe_id==tf.id, datapoint.c.timestamp < time() - tf.retention_period))
-
+                delsql = datapoint.delete(and_(datapoint.c.timeframe_id==tf.id,
+                                               datapoint.c.timestamp < time() - tf.retention_period))
             conn.execute(delsql)
 
     cleanupOldData = staticmethod(cleanupOldData)
@@ -1222,7 +1153,7 @@ class Comment(ModelBase):
                                           text=self.text)
 
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = comment.update().where(comment.c.id==self.id).values(hostservice_id=self.hostservice.id, timestamp=self.timestamp,
@@ -1309,7 +1240,7 @@ class PluginStatus(ModelBase):
                                           status=self.status)
 
             result = conn.execute(ins)
-            self.id = result.last_inserted_ids()[0]
+            self.id = result.inserted_primary_key[0]
             self.activate()
         else:
             upd = pluginstatus.update().where(pluginstatus.c.id==self.id).values(status=self.status)
@@ -1352,27 +1283,52 @@ creates a DB connection
 '''
 def createModelEngine(dsn):
     global dbload_min_timestamp, dbload_max_timestamp
-
+    fn = """CREATE FUNCTION update_existing() RETURNS TRIGGER AS $update_existing$
+         DECLARE
+             existing RECORD;
+         BEGIN
+             SELECT INTO existing * FROM datapoint
+                 WHERE (plot_id, timeframe_id, timestamp) = (NEW.plot_id, NEW.timeframe_id, NEW.timestamp);
+             IF NOT FOUND THEN -- INSERT
+                 RETURN NEW;
+             ELSE
+                 UPDATE datapoint SET
+                     avg = (existing.avg * existing.count + NEW.avg) / (existing.count + 1),
+                     min = LEAST(existing.min, NEW.min),
+                     max = GREATEST(existing.max, NEW.max),
+                     count = existing.count + 1
+                 WHERE
+                     plot_id = existing.plot_id
+                     AND timeframe_id = existing.timeframe_id
+                     AND timestamp = existing.timestamp;
+                 RETURN NULL; -- DON'T INSERT
+             END IF;
+         END;
+         $update_existing$ LANGUAGE plpgsql;"""
+    trigg = """CREATE TRIGGER update_existing
+            BEFORE INSERT ON datapoint
+            FOR EACH ROW EXECUTE PROCEDURE update_existing();"""
+    triggd = 'DROP TRIGGER update_existing();'
+    fnd = 'DROP FUNCTION update_existing();'
     event_obj = SetTextFactory()
-
     if hasattr(event, 'listen'):
         engine = create_engine(dsn)
         event.listen(engine, 'connect', event_obj.connect)
+        event.listen(datapoint, 'before_create', DDL(fn).execute_if(dialect='postgresql'))
+        event.listen(datapoint, 'after_create', DDL(trigg).execute_if(dialect='postgresql'))
+        event.listen(datapoint, 'before_drop', DDL(triggd).execute_if(dialect='postgresql'))
+        event.listen(datapoint, 'before_drop', DDL(fnd).execute_if(dialect='postgresql'))
     else:
+        # < 0.7 compat
         engine = create_engine(dsn, listeners=[event_obj])
+        DDL(fn, on='postgresql').execute_at('after-create', datapoint)
+        DDL(trigg, on='postgresql').execute_at('after-create', datapoint)
+        DDL(triggd, on='postgresql').execute_at('before-drop', datapoint)
+        DDL(fnd, on='postgresql').execute_at('before-drop', datapoint)
 
     #engine.echo = True
 
     conn = engine.connect()
-
-    # sqlite3-specific optimization
-    try:
-        conn.execute('PRAGMA locking_mode=exclusive')
-        conn.execute('PRAGMA journal_mode=WAL')
-        conn.execute('PRAGMA wal_autocheckpoint=0')
-        conn.execute('PRAGMA cache_size=1000000')
-    except:
-        pass
 
     metadata.create_all(engine)
 
@@ -1393,20 +1349,24 @@ def createModelEngine(dsn):
     return engine
 
 
-def exec_vacuum(conn):
-    try:
-        conn.execute('VAUUM')
-    except:
-        pass
-
-
-def exec_pragma(conn, pragma):
-    try:
-        conn.execute('PRAGMA %s' % pragma)
-    except:
-        pass
-
-
 def cleanup(conn):
-    DataPoint.cleanupOldData(conn)
-    PluginStatus.cleanupOldData(conn)
+    try:
+        DataPoint.cleanupOldData(conn)
+        PluginStatus.cleanupOldData(conn)
+    except Exception, e:
+        print e
+
+
+def aggregate_queries(queries):
+    mem = {}
+    for query in queries:
+        key = '%s%s%s' % (query['plot_id'], query['timeframe_id'], query['timestamp'])
+        if key not in mem:
+            mem[key] = query
+        else:
+            i = mem[key]
+            i['avg'] = (i['count'] * i['avg'] + query['avg']) / (i['count'] + 1)
+            i['min'] = min(i['min'], query['min'])
+            i['max'] = max(i['max'], query['max'])
+            i['count'] += 1
+    return mem.values()

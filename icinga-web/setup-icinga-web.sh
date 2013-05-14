@@ -1,25 +1,8 @@
 #!/bin/sh
-#
-# Copyright (C) 2012 NETWAYS GmbH, http://netways.de
-#
-# This file is part of inGraph.
-#
-# inGraph is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or any later version.
-#
-# inGraph is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for mor
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
-#
 
 set -o nounset
 
-VERSION=1.0.1
+VERSION=1.0.2
 
 SCRIPT=$(readlink -f "$0")
 DIR=$(dirname "$SCRIPT")
@@ -34,7 +17,6 @@ XMLRPC_USER=${XMLRPC_USER-ingraph}
 XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
 NULL_TOLERANCE=${NULL_TOLERANCE-2}
 TEMPLATE_SUFFIX=
-NODE_BIN=
 
 FIND=${FIND-find}
 INSTALL=${INSTALL-install}
@@ -82,8 +64,6 @@ usage () {
     echo "                          [$XMLRPC_PASSWORD]"
     echo "--with-null-tolerance     null tolerance value"
     echo "                          [$NULL_TOLERANCE]"
-    echo "--with-node-bin           Path to Node.js binary"
-    echo "                          [$NODE_BIN]"
     echo
     exit 1
 }
@@ -182,14 +162,6 @@ do
                 exit 1
             }
             ;;
-        --with-node-bin*)
-            NODE_BIN=${ARG#--with-node-bin}
-            NODE_BIN=${NODE_BIN#=}
-            [ -z "$NODE_BIN" ] && {
-                echo "ERROR: expected an absolute directory name for --with-node-bin." >&2
-                exit 1
-            }
-            ;;
         --help | -h)
             usage
             ;;
@@ -278,7 +250,6 @@ do
     $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
     $SED -i -e s,@NULL_TOLERANCE@,$NULL_TOLERANCE, $F
     $SED -i -e s,@TEMPLATE_SUFFIX@,$TEMPLATE_SUFFIX, $F
-    $SED -i -e s,@NODE_BIN@,$NODE_BIN, $F
 done
 
 # Install from the inGraph directory
@@ -297,11 +268,23 @@ else
         [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}"
     done
 
+    # Backup modified templates
+    if [ -d "$PREFIX/app/modules/inGraph/config/templates" ] && [ "$(ls -A "$PREFIX/app/modules/inGraph/config/templates")" ]
+    then
+        for TEMPLATE in $PREFIX/app/modules/inGraph/config/templates/*.json
+        do
+            if [ "$(md5sum "$SRC/config/templates/${TEMPLATE##$PREFIX/app/modules/inGraph/config/templates/}" | cut -d ' ' -f 1)" != "$(md5sum "$TEMPLATE" | cut -d ' ' -f 1)" ]
+            then
+                cp -u -b "$TEMPLATE" "${TEMPLATE}.bak"
+            fi
+        done
+    fi
+
     for D in $($FIND $SRC -type d -path $SRC/config/templates -o -path $SRC/config/views)
     do
         $INSTALL -m 755 -o $WEB_USER -g $WEB_GROUP -d $PREFIX/app/modules/inGraph${D##$SRC}
 
-        [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}" "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}-C${tab}-b"
+        [ $? -eq 0 ] && install_files "$D" "$PREFIX/app/modules/inGraph${D##$SRC}" "-o${tab}$WEB_USER${tab}-g${tab}$WEB_GROUP${tab}"
     done
 
     # If inGraph.xml does not exist install it

@@ -95,8 +95,7 @@ class BackendRPCMethods(object):
 
         return obj
 
-    def _createHostService(self, conn, host, service, parent_hostservice=None,
-                           check_command=None):
+    def _createHostService(self, conn, host, service, parent_hostservice):
         hostservice_key = (host, service)
 
         if hostservice_key in self.hostservices:
@@ -105,13 +104,10 @@ class BackendRPCMethods(object):
         objs = model.HostService.getByHostAndService(conn, host, service,
                                                      parent_hostservice)
         if len(objs) == 0:
-            obj = model.HostService(host, service, parent_hostservice, check_command)
+            obj = model.HostService(host, service, parent_hostservice)
             obj.save(conn)
         else:
             obj = objs[0]
-            if obj.check_command != check_command:
-                obj.check_command = check_command
-                obj.save(conn)
 
         self.hostservices[hostservice_key] = obj
 
@@ -140,48 +136,62 @@ class BackendRPCMethods(object):
         conn = self.engine.connect()
 
         for update in updates:
-            (host, parent_service, service, plot, timestamp, unit, value, min,
-             max, lower_limit, upper_limit, warn_lower, warn_upper, warn_type,
-             crit_lower, crit_upper, crit_type, pluginstatus, check_command) = update
+            (host, parent_service, service, plot, timestamp, unit, value, lower_limit, upper_limit, warn_lower, warn_upper, warn_type,
+             crit_lower, crit_upper, crit_type, pluginstatus) = update
+            try:
+                host_obj = self._createHost(conn, host)
+                if parent_service != None:
+                    parent_service_obj = self._createService(conn, parent_service)
+                    parent_hostservice_obj = self._createHostService(
+                        conn, host_obj, parent_service_obj, None)
+                else:
+                    parent_hostservice_obj = None
+                service_obj = self._createService(conn, service)
 
-            host_obj = self._createHost(conn, host)
-            if parent_service != None:
-                parent_service_obj = self._createService(conn, parent_service)
-                parent_hostservice_obj = self._createHostService(
-                    conn, host_obj, parent_service_obj)
-            else:
-                parent_hostservice_obj = None
-            service_obj = self._createService(conn, service)
+                hostservice_obj = self._createHostService(conn, host_obj,
+                                                          service_obj,
+                                                          parent_hostservice_obj)
+                plot_obj = self._createPlot(conn, hostservice_obj, plot)
 
-            hostservice_obj = self._createHostService(conn, host_obj,
-                                                      service_obj,
-                                                      parent_hostservice_obj,
-                                                      check_command)
-            plot_obj = self._createPlot(conn, hostservice_obj, plot)
+                queries = plot_obj.buildUpdateQueries(
+                    conn, timestamp, unit, value, value, value, lower_limit,
+                    upper_limit, warn_lower, warn_upper, warn_type, crit_lower,
+                    crit_upper, crit_type)
 
-            queries = plot_obj.buildUpdateQueries(
-                conn, timestamp, unit, value, min, max, lower_limit,
-                upper_limit, warn_lower, warn_upper, warn_type, crit_lower,
-                crit_upper, crit_type)
+                for query in queries:
+                    self.queryqueue.put(query)
 
-            for query in queries:
-                self.queryqueue.put(query)
-
-            if pluginstatus in ['warning', 'critical']:
-                status_obj = model.PluginStatus(hostservice_obj, timestamp, pluginstatus)
-                status_obj.save(conn)
+                # if pluginstatus in ['warning', 'critical']:
+                #     status_obj = model.PluginStatus(hostservice_obj, timestamp, pluginstatus)
+                #     status_obj.save(conn)
+            except Exception, e:
+                print e
+                continue
 
         conn.close()
 
         return True
 
-    def getHosts(self, pattern, limit=None, offset=None):
-        result = model.Host.getByPattern(
-            self.engine, pattern.replace('*', '%'), limit, offset)
-        return {
-            'total': result['total'],
-            'hosts': [{'host': host.name} for host in result['hosts']]
-        }
+    def getHosts(self):
+        hosts = model.Host.getAll(self.engine)
+
+        items = []
+
+        for host in hosts:
+            items.append(host.name)
+
+        return items
+
+    def getHostsFiltered(self, pattern, limit=None, offset=None):
+        result = model.Host.getByPattern(self.engine,
+                                         pattern.replace('*', '%'),
+                                         limit, offset)
+        items = []
+
+        for host in result['hosts']:
+            items.append(host.name)
+
+        return {'total': result['total'], 'hosts': items}
 
     def getServices(self, host_pattern, service_pattern=None, limit=None,
                     offset=None):

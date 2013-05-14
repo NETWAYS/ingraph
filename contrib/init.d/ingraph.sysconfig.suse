@@ -1,0 +1,3 @@
+INGRAPH_CHDIR=/etc/ingraph
+INGRAPH_PIDFILE=/var/run/ingraph/ingraphd.pid
+INGRAPH_USER=ingraph

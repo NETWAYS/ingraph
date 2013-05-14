@@ -40,9 +40,9 @@ Requirements
 
 Requirements - Packages
 -----------------------
-        - python-devel
+    - python-devel
     - python-setuptools
-    - python-sqlalchemy >= 0.6.0
+    - python-sqlalchemy >= 0.6.3
     - gcc (optional, SQLAlchemy includes C extensions which provide an
       extra speed boost. But SQLAlchemy will install just fine if gcc
       is missing)
@@ -119,8 +119,7 @@ Database Setup
 inGraph requires its own database, e.g. "ingraph". Since the database schema is
 automatically set up or modified (if needed) when starting the ingraph daemon,
 the database user needs appropriate permissions for CREATE TABLE, CREATE INDEX,
-etc. MySQL is the recommended DBMS for inGraph. PostgreSQL should work just fine
-too but has received less testing.
+etc. MySQL is the recommended DBMS for inGraph but PostgreSQL should work just fine too.
 
 Setup MySQL:
     mysql> CREATE DATABASE ingraph;
@@ -134,6 +133,8 @@ Setup PostgreSQL:
     postgres=# ALTER USER ingraph WITH PASSWORD 'changeme';
     postgres=# CREATE DATABASE ingraph;
     postgres=# GRANT ALL ON DATABASE ingraph TO ingraph;
+    postgres=# \c ingraph;
+    ingraph=# CREATE LANGUAGE plpgsql;
 
 Configuration - Backend
 -----------------------

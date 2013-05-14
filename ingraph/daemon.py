@@ -66,8 +66,8 @@ class UnixDaemon(object):
         self.logger.addHandler(handler)
 
     def _daemonize(self):
-        try: 
-            pid = os.fork() 
+        try:
+            pid = os.fork()
             if pid > 0:
                 os._exit(0)
         except OSError, e:
@@ -75,8 +75,8 @@ class UnixDaemon(object):
                              (e.errno, e.strerror))
             os._exit(1)
         os.setsid() # os.setpgrp?
-        try: 
-            pid = os.fork() 
+        try:
+            pid = os.fork()
             if pid > 0:
                 os._exit(0)
         except OSError, e:
@@ -164,7 +164,7 @@ class UnixDaemon(object):
         self.pidfp.truncate()
         self.pidfp.write(str(os.getpid()))
         self.pidfp.flush()
-    
+
     def _redirect_stream(self, source, target):
         try:
             targetfd = target.fileno()
@@ -177,7 +177,7 @@ class UnixDaemon(object):
         if pid:
             sys.stderr.write("pidfile %s already exists. Daemon already "
                              "running?\n" % self.pidfile)
-            sys.exit(1)
+            sys.exit(0)
 
         os.umask(self.umask)
         os.chdir(self.chdir)
@@ -186,10 +186,8 @@ class UnixDaemon(object):
 
         if self.log and self.log != '-':
             self.addLoggingHandler(
-                logging.handlers.RotatingFileHandler(
-                     self.log, maxBytes=2**11*5, backupCount=4)) # 4 files,
-                                                                 # 5MB each
-        
+                logging.handlers.RotatingFileHandler(self.log, maxBytes=100 << 20, backupCount=4)) # 4 files, # 100 MB each
+
         self.before_daemonize()
         if self.detach:
             self._daemonize()
@@ -200,20 +198,21 @@ class UnixDaemon(object):
                 sys.stdout = self.stdout_logger
             if self.stderr_logger:
                 sys.stderr = self.stderr_logger
-        
+
         signal.signal(signal.SIGTERM, self._SIGTERM)
         atexit.register(self._atexit)
- 
+
         self._writepid()
-        
+
         self.run()
+        return 0
 
     def stop(self, ignore_error=False):
         pid = self._getpid()
         if not pid and not ignore_error:
             sys.stderr.write("pidfile %s does not exist. Daemon not running?\n"
                              % self.pidfile)
-            sys.exit(1)
+            sys.exit(0)
 
         try:
             if pid and pid != True:
@@ -222,23 +221,27 @@ class UnixDaemon(object):
         except OSError, e:
             if e.errno != errno.ESRCH:
                 raise e
+        return 0
 
     def restart(self):
         self.stop(True)
         self._closepidfile()
-        self.start()
+        return self.start()
 
     def status(self):
         pid = self._getpid()
+        exit_status_code = 0
         if pid:
             sys.stdout.write("%s daemon running with pid: %i\n" %
                              (self.name, pid))
         else:
             sys.stdout.write("%s daemon not running\n" %
                              self.name)
-    
+            exit_status_code = 3
+        return exit_status_code
+
     def run(self):
         pass
-    
+
     def before_daemonize(self):
         pass

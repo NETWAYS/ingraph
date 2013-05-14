@@ -1,10 +1,35 @@
-inGraph x (YYYY-MM-DD)
+inGraph 2.0 (YYYY-MM-DD)
 
 - icinga-web Module
     * Implement view architect cronk to up views easily (kudos to Geberit AG for sponsoring this feature)
 
 - Both ingraph-web and icinga-web Module
     * Implement forecasting (Thank you Geberit AG for sponsoring)
+
+
+inGraph 1.0.2 (2013-05-20)
+
+This version of inGraph is a bug fix maintenance release,
+including the following significant fixes:
+
+- Setup
+    * Add --with-log-dir switch, enable logging to /var/log/ingraph by default (Bug #1333)
+    * Fix "install: invalid option -- 'C'" (Bug #1774)
+
+- Both ingraph-web and icinga-web Module
+    * Fix IE scrolling issues (Bug #1824)
+
+- ingraphd
+    * Improve PostgreSQL performance (Bug #1826)
+    * Fix use of deprecated SQLAlchmey features (Bug #1938 and Bug #1878)
+    * Fix crash on any database error (Bug #1964 and Bug #1890)
+    * Disable pluginstatus (Bug #1888 and Bug #2019)
+
+- ingraph-collectord
+    * Harden parser against malformed performance data (Bug #1964)
+
+- Both ingraphd and ingraph-collectord
+    * Fix exit status codes (Bug #1892)
 
 
 inGraph 1.0.1 (2012-11-12)

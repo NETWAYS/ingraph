@@ -21,6 +21,10 @@ class inGraph_Provider_ViewsSuccessView extends inGraphBaseView
 {
     public function executeJson(AgaviRequestDataHolder $rd)
     {
-        return json_encode($this->getAttribute('views'));
+        $views = $this->getAttribute('views');
+        foreach ($views as &$view) {
+            $view = array($view);
+        }
+        return json_encode($views);
     }
 }

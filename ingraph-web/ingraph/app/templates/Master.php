@@ -39,6 +39,8 @@
         <script type="text/javascript" src="js/flot/jquery.flot.fillbetween.js"></script>
         <script type="text/javascript" src="js/flot/jquery.flot.highlight.js"></script>
 
+        <script type="text/javascript" src="js/flot-axislabels/jquery.flot.axislabels.js"></script>
+
         <script type="text/javascript" src="js/AppKit.js"></script>
         <script type="text/javascript" src="js/gettext.js"></script>
         <script type="text/javascript" src="js/Messages.js"></script>

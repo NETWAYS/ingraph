@@ -19,7 +19,7 @@
                     </parameter>
                     <parameter name="preview">
                         <parameter name="height">200</parameter>
-                        <parameter name="width">660</parameter>
+                        <parameter name="width">750</parameter>
                         <parameter name="start">-1 day</parameter>
                         <parameter name="overview">20%</parameter>
                     </parameter>

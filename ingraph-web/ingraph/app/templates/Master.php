@@ -59,6 +59,7 @@
         <script type="text/javascript" src="js/ext/ux/flot/FormWindow.js"></script>
 
         <script type="text/javascript" src="js/ext/ux/flot/NumberField.js"></script>
+        <script type="text/javascript" src="js/ext/ux/flot/SpinnerField.js"></script>
         <script type="text/javascript" src="js/ext/ux/flot/AxesConfiguration.js"></script>
         <script type="text/javascript" src="js/ext/ux/flot/AxisStyleForm.js"></script>
         <script type="text/javascript" src="js/ext/ux/flot/Fields.js"></script>

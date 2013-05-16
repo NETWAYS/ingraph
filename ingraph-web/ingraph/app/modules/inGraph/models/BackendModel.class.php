@@ -22,7 +22,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     public function fetchServices($hostPattern = '%', $servicePattern = '%',
                                   $offset = 0, $limit = 20)
     {
-        $services = $this->backend->fetchServices($hostPattern, $servicePattern, $offset, $limit);
+        $services = $this->backend->fetchServices($hostPattern, $servicePattern, $limit, $offset);
         $flat = array();
         foreach ($services['services'] as $service) {
             if ($service['parent_service'] !== null) {

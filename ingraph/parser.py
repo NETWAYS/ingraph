@@ -25,12 +25,16 @@ class InvalidPerfdata(Exception): pass
 
 class PerfdataParser(object):
     """Parser for performance data files written by Icinga."""
+
     _key_extraction_fn = {
         'TIMET': lambda v: ('timestamp', float(v)),
         'HOSTNAME': lambda v: ('host', v),
         'SERVICEDESC': lambda v: ('service', v),
-        'HOSTSTATE': lambda v: ('state', {'UP': 0, 'DOWN': 1, 'UNREACHABLE': 2}.get(v)),
-        'SERVICESTATE': lambda v: ('state', {'OK': 0, 'WARNING': 1, 'CRITICAL': 2, 'UNKNOWN': 3}.get(v)),
+        'HOSTSTATE': lambda v: ('state', {'UP': 0, 'DOWN': 1,
+                                          'UNREACHABLE': 2}.get(v)),
+        'SERVICESTATE': lambda v: ('state', {'OK': 0, 'WARNING': 1,
+                                             'CRITICAL': 2,
+                                             'UNKNOWN': 3}.get(v)),
         'HOSTSTATEID': lambda v: ('state', v),
         'SERVICESTATEID': lambda v: ('state', v),
         'HOSTPERFDATA': lambda v: ('perfdata', v),
@@ -40,13 +44,19 @@ class PerfdataParser(object):
     }
 
     find_perfdata = re.compile(
-        '\s*'                                        # Strip whitespaces at the beginning
-        '((?P<child_service>[^ =\']+::[^ =\']+)::)?' # Parse check_multi label format into child_service if existing
-        '(?P<sq>[\'])?'                              # Single quotes around the label are optional
-        '(?P<plot_label>(?(sq)[^=\']+|[^ =\']+))'    # Disallow single quote and equals sign for plot label
-                                                     # If spaces are in the label the single quotes around the label are required
-        '(?(sq)(?P=sq))'                             # Single quotes around the label are optional
-        '=(?P<plot_perfdata>[^ ]+)'                  # Performance data is space separated
+        # Strip whitespaces at the beginning
+        '\s*'
+        # Parse check_multi label format into child_service if existing
+        '((?P<child_service>[^ =\']+::[^ =\']+)::)?'
+        # Single quotes around the label are optional
+        '(?P<sq>[\'])?'
+        # Disallow single quote and equals sign for plot label but if spaces
+        # are in the label the single quotes around the label are required
+        '(?P<plot_label>(?(sq)[^=\']+|[^ =\']+))'
+        # Single quotes around the label are optional
+        '(?(sq)(?P=sq))'
+        # Performance data is space separated
+        '=(?P<plot_perfdata>[^ ]+)'
     ).finditer
 
     match_quantitative_value = re.compile(
@@ -93,7 +103,8 @@ class PerfdataParser(object):
         comma_count = value.count(',')
         last_period = value.rfind('.')
         period_count = value.count('.')
-        if period_count > 1 and not comma_count or comma_count > 1 and not period_count:
+        if period_count > 1 and not comma_count or comma_count > 1 and not\
+                period_count:
             # Values like 1,000,000; 1.000.000
             value = float(value.replace(',', '').replace('.', ''))
         elif last_comma > last_period:
@@ -101,7 +112,8 @@ class PerfdataParser(object):
             value = float(value.replace('.', '').replace(',', '.'))
         else:
             # Values like 1,0; 1,000.0; 1.0
-            # Note that values like 1,0 are treated comma-less whereas 1.0 is treated with comma
+            # Note that values like 1,0 are treated comma-less whereas 1.0 is
+            # treated with comma
             value = float(value.replace(',', ''))
         return value
 
@@ -132,10 +144,13 @@ class PerfdataParser(object):
     def _parse_threshold(self, value_string):
         match = self.__class__.match_range(value_string)
         if value_string and not match.group('start') and not match.group('end'):
-            raise InvalidPerfdata("Invalid performance data: warn or crit are not in the range format: `%s`. "
-                                  "Please refer to http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT "
-                                  "for more information." % (value_string,))
-        return match.group('start'), match.group('end'), 'inside' if match.group('inside') else 'outside'
+            raise InvalidPerfdata(
+                "Invalid performance data: warn or crit are not in the range "
+                "format: `%s`. Please refer to "
+                "http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT "
+                "for more information." % (value_string,))
+        return match.group('start'), match.group('end'),\
+            'inside' if match.group('inside') else 'outside'
 
     def parse(self, perfdata_line):
         perfdata_no_cruft = {}
@@ -145,8 +160,6 @@ class PerfdataParser(object):
                 key, value = token.split('::', 1)
             except:
                 continue
-                #raise InvalidPerfdata("Invalid performance data: Unable to split token (%s) "
-                #                      "by double colon (`::`) into key-value pair." % token)
             try:
                 key, value = self.__class__._key_extraction_fn[key](value)
             except KeyError:
@@ -157,30 +170,34 @@ class PerfdataParser(object):
         if ('perfdata' not in perfdata_no_cruft or
             'host' not in perfdata_no_cruft or
             'state' not in perfdata_no_cruft):
-            raise InvalidPerfdata("Invalid performance data: Line is missing `host`, `state`, or `perfdata`.")
+            raise InvalidPerfdata(
+                "Invalid performance data: Line is missing `host`, `state`, "
+                "or `perfdata`.")
         if 'service' not in perfdata_no_cruft:
             perfdata_no_cruft['service'] = ''
         perfdata = []
         child_service = None
         for match in self.find_perfdata(perfdata_no_cruft['perfdata']):
             if match.group('child_service'):
-                # Set child service for all following performance data until new child service found
+                # Set child service for all following performance data until
+                # new child service found
                 child_service = match.group('child_service')
             # Trailing unfilled semicolons can be dropped
-            values = re.sub(r';+$', '', match.group('plot_perfdata')).split(';')
+            values = re.sub(
+                r';+$', '', match.group('plot_perfdata')).split(';')
             # value[UOM];[warn];[crit];[min];[max]
-            # where min and max are set automatically if missing to 0 and 100 respectively if UOM is `%`
+            # where min and max are set automatically if missing to 0 and 100
+            # respectively if UOM is `%`
             try:
                 value, uom, base = self._parse_quantitative_value(values[0])
                 value = self._parse_decimal(value)
                 value *= base
-            except (ValueError, AttributeError):
+            except (ValueError,      # Value is a string
+                    AttributeError): # Value is None
                 continue
-                #raise InvalidPerfdata("Invalid performance data: Measurement `%s=%s (%r)` "
-                #                      "does not contain a valid value." %
-                #                      (match.group('plot_label'), match.group('plot_perfdata'), values))
             try:
-                warn_lower, warn_upper, warn_type = self._parse_threshold(values[1])
+                warn_lower, warn_upper, warn_type = self._parse_threshold(
+                    values[1])
                 if warn_lower:
                     warn_lower = self._parse_decimal(warn_lower)
                     warn_lower *= base
@@ -188,9 +205,14 @@ class PerfdataParser(object):
                     warn_upper = self._parse_decimal(warn_upper)
                     warn_upper *= base
             except IndexError:
+                # Warning threshold missing
                 warn_lower, warn_upper, warn_type = (None,) * 3
+            except ValueError:
+                # Value is a string
+                continue
             try:
-                crit_lower, crit_upper, crit_type = self._parse_threshold(values[2])
+                crit_lower, crit_upper, crit_type = self._parse_threshold(
+                    values[2])
                 if crit_lower:
                     crit_lower = self._parse_decimal(crit_lower)
                     crit_lower *= base
@@ -198,10 +220,12 @@ class PerfdataParser(object):
                     crit_upper = self._parse_decimal(crit_upper)
                     crit_upper *= base
             except IndexError:
+                # Critical threshold missing
                 crit_lower, crit_upper, crit_type = (None,) * 3
             try:
                 min_ = self._parse_decimal(values[3]) * base
-            except (IndexError, ValueError):
+            except (IndexError,  # Min is missing
+                    ValueError): # Min is None
                 if uom == 'percent':
                     min_ = float(0)
                 else:
@@ -209,6 +233,7 @@ class PerfdataParser(object):
             try:
                 max_ = self._parse_decimal(values[4]) * base
             except IndexError:
+                # Max is missing
                 if uom == 'percent':
                     max_ = float(100)
                 else:
@@ -228,8 +253,14 @@ class PerfdataParser(object):
                 'crit_type': crit_type
             })
         if perfdata_no_cruft['perfdata'] and not perfdata:
-            raise InvalidPerfdata("Invalid performance data: Not in the \"Nagios plugins\" format: `%s`. "
-                                  "Please refer to http://nagiosplug.sourceforge.net/developer-guidelines.html#AEN201 "
-                                  "for more information." % (perfdata_no_cruft['perfdata'],))
+            # Limit output of malformed performance data to  50 characters
+            invalid_perfdata = (perfdata_no_cruft['perfdata'][:50] + '...') if\
+                len(perfdata_no_cruft['perfdata']) > 53 else\
+                perfdata_no_cruft['perfdata']
+            raise InvalidPerfdata(
+                "Invalid performance data: Not in the \"Nagios plugins\" "
+                "format: `%s`. Please refer to "
+                "http://nagiosplug.sourceforge.net/developer-guidelines.html#AEN201 "
+                "for more information." % (invalid_perfdata,))
         perfdata_no_cruft.pop('perfdata')
         return perfdata_no_cruft, perfdata

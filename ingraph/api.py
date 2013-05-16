@@ -172,34 +172,24 @@ class BackendRPCMethods(object):
 
         return True
 
-    def getHosts(self):
-        hosts = model.Host.getAll(self.engine)
-
-        items = []
-
-        for host in hosts:
-            items.append(host.name)
-
-        return items
-
-    def getHostsFiltered(self, pattern, limit=None, offset=None):
-        result = model.Host.getByPattern(self.engine,
-                                         pattern.replace('*', '%'),
-                                         limit, offset)
-        items = []
-
-        for host in result['hosts']:
-            items.append(host.name)
-
-        return {'total': result['total'], 'hosts': items}
+    def getHosts(self, pattern, limit=None, offset=None):
+        result = model.Host.getByPattern(
+            self.engine, pattern.replace('*', '%'), limit, offset)
+        return {
+            'total': result['total'],
+            'hosts': [{'host': host.name} for host in result['hosts']]
+        }
 
     def getServices(self, host_pattern, service_pattern=None, limit=None,
                     offset=None):
+        print limit, offset
         result = model.HostService.getByHostAndServicePattern(
             self.engine, host_pattern.replace('*', '%'),
-            service_pattern.replace('*', '%'), limit, offset)
+            service_pattern.replace('*', '%'), limit=limit, offset=offset)
 
         items = []
+
+        print result
 
         for hostservice_obj in result['services']:
             if hostservice_obj.parent_hostservice == None:
@@ -391,29 +381,18 @@ class BackendRPCMethods(object):
                  parent_service_name_pattern=None, plot_name_pattern=None,
                  limit=None, offset=None):
         plots = []
-        hostservices = []
-        if parent_service_name_pattern:
-            parent_services = model.Service.getByPattern(
-                self.engine, parent_service_name_pattern)
-            if not parent_services:
-                parent_services = [None]
-        else:
-            parent_services = [None]
-        for parent_service in parent_services:
-            hostservices.extend(
-                model.HostService.getByHostAndServicePattern(
-                    self.engine,
-                    host_name_pattern,
-                    service_name_pattern,
-                    parent_service).get('services'))
+        hostservices = model.HostService.getByHostAndServicePattern(
+            self.engine, host_name_pattern, service_name_pattern,
+            parent_service_name_pattern)
         cache = set()
         res =  model.Plot.getByHostServiceIdsAndName(
             self.engine,
-            [hostservice.id for hostservice in hostservices if
+            [hostservice.id for hostservice in hostservices.get('services') if
              hostservice.id not in cache and not
              cache.add(hostservice.id)],
-            plot_name_pattern,
+            plot_name_pattern or '%',
             limit, offset)
+        print res
         for plot in res.get('plots'):
             if plot.hostservice.parent_hostservice:
                 parent_service_name = plot.hostservice.parent_hostservice.service.name

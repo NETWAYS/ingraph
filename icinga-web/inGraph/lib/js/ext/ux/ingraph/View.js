@@ -205,7 +205,7 @@
 
                 this.panels.each(function (panel) {
                     var query = Ext.encode(
-                        Ext.ux.ingraph.Util.buildQuery(panel.json.series));
+                        inGraph.format.query(panel.json.series));
 
                     panel.json.flot = $.extend(true, {},
                                                view.content.flot || {},
@@ -274,7 +274,7 @@
 
                 this.panels.each(function (panel) {
                     var query = Ext.encode(
-                            Ext.ux.ingraph.Util.buildQuery(
+                            inGraph.format.query(
                                 panel.get('series') || template.content.series)),
                         titleTemplate = new Ext.XTemplate(panel.get('title'));
 
@@ -792,10 +792,10 @@
                         xaxis: {
                             show: true,
                             mode: 'time',
-                            tickFormatter: Ext.ux.ingraph.Util.xTickFormatter
+                            tickFormatter: inGraph.flot.xTickFormatter
                         },
                         yaxis: {
-                            tickFormatter: Ext.ux.ingraph.Util.yTickFormatter
+                            tickFormatter: inGraph.flot.yTickFormatter
                         },
                         selection: {
                             mode: 'x'
@@ -838,7 +838,7 @@
                             xaxis: {
                                 show: true,
                                 mode: 'time',
-                                tickFormatter: Ext.ux.ingraph.Util.xTickFormatter
+                                tickFormatter: inGraph.flot.xTickFormatter
                             },
                             yaxis: {
                                 show: false

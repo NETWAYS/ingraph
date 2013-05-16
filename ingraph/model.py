@@ -354,7 +354,7 @@ class HostService(ModelBase):
         if not hostservice_:
             if not row:
                 row = conn.execute(
-                    hostservice_.select().where(hostservice.c.id == id)).fetchone()
+                    hostservice.select().where(hostservice.c.id == id)).fetchone()
             host = Host.getByID(conn, row[hostservice.c.host_id])
             service = Service.getByID(conn, row[hostservice.c.service_id])
             if row[hostservice.c.parent_hostservice_id] :
@@ -428,16 +428,19 @@ class HostService(ModelBase):
             parent_hostservice_ids = [row[hostservice.c.id] for row in
                                       conn.execute(select(
                                           [hostservice.c.id],
-                                          from_obj=[hostservice.join(service)]).where(
-                                              service.c.name.like(parent_hostservice_name_pattern)))]
+                                          from_obj=[hostservice.join(service).join(host)]).where(
+                                              and_(host.c.name.like(host_name_pattern),
+                                                   service.c.name.like(parent_hostservice_name_pattern))))]
             countQuery = select(
                 [func.count()],
-                from_obj=[hostservice]).where(
-                    hostservice.c.id.in_(parent_hostservice_ids))
+                from_obj=[hostservice.join(service)]).where(
+                    and_(service.c.name.like(service_name_pattern),
+                         hostservice.c.parent_hostservice_id.in_(parent_hostservice_ids)))
             selectQuery = hostservice.select(
-                from_obj=[hostservice],
+                from_obj=[hostservice.join(service)],
                 limit=limit, offset=offset).where(
-                    hostservice.c.id.in_(parent_hostservice_ids))
+                    and_(service.c.name.like(service_name_pattern),
+                         hostservice.c.parent_hostservice_id.in_(parent_hostservice_ids)))
         return {
                 'services': [HostService.getByID(conn,
                                                  row[hostservice.c.id], row) for
@@ -657,19 +660,6 @@ class Plot(ModelBase):
             del buff # Del and recreate - faster than reset and truncate
         else:
             raise Exception("Database dialect %s not supported." % (conn.dialect.name,))
-
-    def getByID(conn, id):
-        obj = Plot.get(id)
-
-        if obj == None:
-            sel = plot.select().where(plot.c.id==id)
-            res = conn.execute(sel)
-            row = res.fetchone()
-
-            assert row != None
->>>>>>> maint/1.0.2
-
-    executeUpdateQueries = staticmethod(executeUpdateQueries)
 
     @staticmethod
     def getByID(conn, id, row=None):

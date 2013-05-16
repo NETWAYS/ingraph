@@ -28,11 +28,7 @@ RETVAL=0
 
 do_action() {
     python -m ingraph/bin/ingraphd -d "$INGRAPH_CHDIR" -p "$INGRAPH_PIDFILE" \
-<<<<<<< HEAD
-	-u "$INGRAPH_USER" -o "$INGRAPH_LOGFILE" "$1"
-=======
-    -u "$INGRAPH_USER" -o "$INGRAPH_LOGFILE" "$1"
->>>>>>> maint/1.0.2
+        -u "$INGRAPH_USER" -o "$INGRAPH_LOGFILE" "$1"
     RETVAL="$?"
 }
 

@@ -17,11 +17,11 @@
  
 Name:		inGraph
 Summary:	NETWAYS inGraph Addon for Icinga
-Version:	1.0.1
-Release:	1.1
+Version:	1.0.2
+Release:	1
 Url:		https://www.netways.org/projects/ingraph/files
 License:	GPL-3.0
-Group:		System/Monitoring
+Group:		Applications/System
 Source:		%{name}.%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-build
 %if "%{_vendor}" == "suse"
@@ -71,11 +71,14 @@ This package is optimized for Icinga-web and not the standalone version.
 %prep
 #uFIXME
 #%setup -qn ingraph
-%setup -qn ingraph-ingraph
+#%setup -qn ingraph-ingraph
+%setup -qn %{name}.%{version}
 
 %build
 
 %install
+%{__rm} -rf %{buildroot}
+
 # Install backend
 python setup.py install --prefix=%{_prefix} --root=%{buildroot}
 
@@ -168,6 +171,9 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %{insserv_cleanup}
 %endif
 
+%clean
+%{__rm} -rf %{buildroot}
+
 %files 
 %defattr(-,root,root)
 %if "%{_vendor}" == "suse"
@@ -213,6 +219,9 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %endif
 
 %changelog
+* Mon May 20 2013 michael.friedrich@netways.de
+- bump to 1.0.2
+
 * Wed Feb 13 2013 michael.friedrich@netways.de
 - templates and views are config noreplace
 - icinga web config must not be overwritten

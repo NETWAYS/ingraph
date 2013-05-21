@@ -23,8 +23,8 @@ class inGraph_Provider_PlotsAction extends inGraphBaseAction
     {
         try {
             $plots = $this->getBackend()->fetchPlots(
-                $rd->getParameter('host', '%'),
-                $rd->getParameter('service', ''),
+                $rd->getParameter('host', null),
+                $rd->getParameter('service', null),
                 $rd->getParameter('parentService', null),
                 $rd->getParameter('plot', null),
                 $rd->getParameter('offset', null),

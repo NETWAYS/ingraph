@@ -25,6 +25,10 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         $services = $this->backend->fetchServices($hostPattern, $servicePattern, $limit, $offset);
         $flat = array();
         foreach ($services['services'] as $service) {
+            if ($service['service'] === '') {
+                // Exclude the host chart as it is not displayed in the icinga-web module too
+                continue;
+            }
             if ($service['parent_service'] !== null) {
                 $flat[] = array(
                     'name' => $service['parent_service'] . ' - '

@@ -411,8 +411,10 @@ class HostService(ModelBase):
                                    limit=None, offset=None):
         if not host_name_pattern:
             host_name_pattern = '%'
-        if not service_name_pattern:
-            service_name_pattern = '%'
+            if not service_name_pattern:
+                service_name_pattern = '%'
+        elif not service_name_pattern:
+            service_name_pattern = '' 
         if not parent_hostservice_name_pattern:
             countQuery = select(
                 [func.count()],

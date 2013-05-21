@@ -142,7 +142,6 @@
                     this.lastDate = null;
                 }
                 var d = new Date(v);
-                d = new Date(v - d.getTimezoneOffset() * 60 * 1000);
                 var fmt = '%b %d %y %H:%M';
                 if (this.lastDate) {
                     if (this.lastDate.getFullYear() === d.getFullYear() &&

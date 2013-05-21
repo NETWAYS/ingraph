@@ -244,6 +244,10 @@
             {
                 name: 'unit',
                 defaultValue: null
+            },
+            {
+                name: 'timezone',
+                defaultValue: null
             }
         ]);
 

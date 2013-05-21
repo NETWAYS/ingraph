@@ -792,6 +792,7 @@
                         xaxis: {
                             show: true,
                             mode: 'time',
+                            timezone: 'browser',
                             tickFormatter: inGraph.flot.xTickFormatter
                         },
                         yaxis: {

@@ -189,6 +189,8 @@ class PerfdataParser(object):
                     warn_upper *= base
             except IndexError:
                 warn_lower, warn_upper, warn_type = (None,) * 3
+            except ValueError:
+                continue
             try:
                 crit_lower, crit_upper, crit_type = self._parse_threshold(values[2])
                 if crit_lower:
@@ -199,6 +201,8 @@ class PerfdataParser(object):
                     crit_upper *= base
             except IndexError:
                 crit_lower, crit_upper, crit_type = (None,) * 3
+            except ValueError:
+                continue
             try:
                 min_ = self._parse_decimal(values[3]) * base
             except (IndexError, ValueError):

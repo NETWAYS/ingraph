@@ -35,18 +35,23 @@ import ingraph.log
 def flush(engine, queryqueue):
     while True:
         print("Queue size: %d" % queryqueue.qsize())
-        items = []
+        items = {}
         while len(items) < 5000:
             try:
                 item = queryqueue.get(timeout=10)
             except Queue.Empty:
                 break
-            items.append(item)
+            try:
+                items[item['timeframe_id']].append(item)
+            except KeyError:
+                items[item['timeframe_id']] = []
+                items[item['timeframe_id']].append(item)
 
         st = time.time()
         try:
             conn = engine.connect()
-            ingraph.model.Plot.executeUpdateQueries(conn, items)
+            for timeframe_id, values in items.iteritems():
+                ingraph.model.Plot.executeUpdateQueries(conn, timeframe_id, values)
             conn.close()
         except Exception:
             print("Exception occured while flushing DB updates")

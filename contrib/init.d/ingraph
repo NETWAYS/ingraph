@@ -19,7 +19,7 @@
 INGRAPH_CHDIR="/etc/ingraph"
 INGRAPH_PIDFILE="/var/run/ingraph/ingraphd.pid"
 INGRAPH_USER="ingraph"
-INGRAPH_LOGFILE="-" # stdout/stderr
+INGRAPH_LOGFILE="/var/log/ingraph/ingraph.log"
 
 [ -r /etc/default/ingraph ] && . /etc/default/ingraph
 [ -r /etc/sysconfig/ingraph ] && . /etc/sysconfig/ingraph

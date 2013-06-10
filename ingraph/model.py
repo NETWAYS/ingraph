@@ -640,21 +640,21 @@ class Plot(ModelBase):
         return queries
 
     @staticmethod
-    def executeUpdateQueries(conn, queries):
+    def executeUpdateQueries(conn, timeframe_id, queries):
         if not queries:
             return
         # queries[:] = aggregate_queries(queries)
         if conn.dialect.name == 'mysql':
-            values = ('(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s),' * len(queries))[:-1]
+            values = ('(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s),' * len(queries))[:-1]
             trans = conn.begin()
             try:
-                conn.execute("""INSERT INTO datapoint VALUES %s
+                conn.execute("""INSERT INTO `datapoint_%d` VALUES %s
                              ON DUPLICATE KEY UPDATE
                              avg = (count * avg + VALUES(avg)) / (count + 1),
                              count = count + 1,
                              min = IF(min < VALUES(min), min, VALUES(min)),
-                             max = IF(max > VALUES(max), max, VALUES(max))""" % (values,),
-                             tuple(chain(*imap(lambda q: (q[c.name] for c in datapoint.c), queries))))
+                             max = IF(max > VALUES(max), max, VALUES(max))""" % (TimeFrame.getByID(conn, timeframe_id).interval, values),
+                             tuple(chain(*imap(lambda q: (q[c.name] for c in datapoint.c if c.name != 'timeframe_id'), queries))))
                 trans.commit()
             except:
                 trans.rollback()
@@ -662,13 +662,13 @@ class Plot(ModelBase):
         elif conn.dialect.name == 'postgresql':
             buff = StringIO()
             for query in queries:
-                print >>buff, "\t".join(imap(str, tuple(query[c.name] for c in datapoint.c)))
+                print >>buff, "\t".join(imap(str, tuple(query[c.name] for c in datapoint.c if c.name != 'timeframe_id')))
             buff.seek(0)
             trans = conn.begin()
             cursor = conn.connection.cursor()
             try:
                 # Psycopg DB API extension
-                cursor.copy_from(buff, datapoint.name, null='None')
+                cursor.copy_from(buff, '`datapoint_%d`' % (TimeFrame.getByID(conn, timeframe_id).interval,), null='None')
                 trans.commit()
             except:
                 trans.rollback()
@@ -954,7 +954,6 @@ class DataPoint(object):
         comment_objs = Comment.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
 
         comments = []
-
         for comment_obj in comment_objs:
             if comment_obj.hostservice.parent_hostservice != None:
                 parent_service = comment_obj.hostservice.parent_hostservice.service.name
@@ -967,10 +966,8 @@ class DataPoint(object):
                      'timestamp': comment_obj.timestamp, 'comment_timestamp': comment_obj.comment_timestamp,
                      'author': comment_obj.author, 'text': comment_obj.text })
 
-        # status_objs = PluginStatus.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
-
+        # satus_objs = PluginStatus.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
         statusdata = []
-
         # for status_obj in status_objs:
         #     if status_obj.hostservice.parent_hostservice != None:
         #         parent_service = status_obj.hostservice.parent_hostservice.service.name,
@@ -982,25 +979,30 @@ class DataPoint(object):
         #              'parent_service': parent_service,
         #              'service': status_obj.hostservice.service.name,
         #              'timestamp': status_obj.timestamp, 'status': status_obj.status })
+
         st = time()
-
-        sql_types = [datapoint.c.plot_id, datapoint.c.timestamp]
-        for type in types_map.keys():
-            if type in types:
-                sql_types.append(types_map[type])
-
-
-        plot_conds = tuple_(datapoint.c.plot_id).in_([(plot.id,) for plot in plots])
-        sel = select(sql_types,
-                     and_(datapoint.c.timeframe_id==data_tf.id,
-                          plot_conds,
-                          between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % data_tf.interval, end_timestamp))) \
-                .order_by(datapoint.c.timestamp.asc())
+        sel = """SELECT `plot_id`, `timestamp` %s FROM `datapoint_%d` WHERE
+              `plot_id` = %%s AND `timestamp` BETWEEN %d AND %d ORDER BY
+              `timestamp` ASC""" %\
+              (', '.join(chain([''], map(lambda t: '`%s`' % (t,), types))), data_tf.interval, start_timestamp, end_timestamp)
+        # sql_types = [datapoint.c.plot_id, datapoint.c.timestamp]
+        # for type in types_map.keys():
+        #     if type in types:
+        #         sql_types.append(types_map[type])
+        #
+        #
+        # plot_conds = tuple_(datapoint.c.plot_id).in_([(plot.id,) for plot in plots])
+        # sel = select(sql_types,
+        #              and_(datapoint.c.timeframe_id==data_tf.id,
+        #                   plot_conds,
+        #                   between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % data_tf.interval, end_timestamp))) \
+        #         .order_by(datapoint.c.timestamp.asc())
         et = time()
         print "Building SQL query took %f seconds" % (et - st)
 
         st = time()
-        result = conn.execute(sel)
+        # result = conn.execute(sel)
+        result = conn.execute(sel, *imap(lambda plot: (plot.id,), plots))
         et = time()
 
         print "SQL query took %f seconds" % (et - st)
@@ -1030,7 +1032,7 @@ class DataPoint(object):
 
             ts = row[datapoint.c.timestamp]
 
-            plot_types = query[plot]
+            # plot_types = query[plot]
 
             if prev_row != None and \
                     row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > (null_tolerance + 1) * granularity:
@@ -1040,7 +1042,10 @@ class DataPoint(object):
                     chart[type].append((ts_null, None))
 
             for type in query[plot]:
-                chart[type].append((ts, row[types_map[type]]))
+                try:
+                    chart[type].append((ts, float(row[types_map[type]])))
+                except TypeError:
+                    chart[type].append((ts, row[types_map[type]]))
 
             prev_rows[plot] = row
 
@@ -1329,17 +1334,24 @@ def createModelEngine(dsn):
 
     metadata.create_all(engine)
 
-    sel = select([func.min(datapoint.c.timestamp, type_=Integer).label('mintimestamp')])
-    dbload_min_timestamp = conn.execute(sel).scalar()
-
-    if dbload_min_timestamp == None:
-        dbload_min_timestamp = time()
-
-    sel = select([func.max(datapoint.c.timestamp, type_=Integer).label('maxtimestamp')])
-    dbload_max_timestamp = conn.execute(sel).scalar()
-
-    if dbload_max_timestamp == None:
-        dbload_max_timestamp = 0
+    dbload_min_timestamp = time()
+    dbload_max_timestamp = 0
+    for tf in TimeFrame.getAll(conn):
+        dbload_min_timestamp = min(dbload_min_timestamp,
+                                   conn.execute('select min(`timestamp`) from `datapoint_%d`' % (tf.interval,)).scalar())
+        dbload_max_timestamp = max(dbload_max_timestamp,
+                                   conn.execute('select max(`timestamp`) from `datapoint_%d`' % (tf.interval,)).scalar())
+    # sel = select([func.min(datapoint.c.timestamp, type_=Integer).label('mintimestamp')])
+    # dbload_min_timestamp = conn.execute(sel).scalar()
+    #
+    # if dbload_min_timestamp == None:
+    #     dbload_min_timestamp = time()
+    #
+    # sel = select([func.max(datapoint.c.timestamp, type_=Integer).label('maxtimestamp')])
+    # dbload_max_timestamp = conn.execute(sel).scalar()
+    #
+    # if dbload_max_timestamp == None:
+    #     dbload_max_timestamp = 0
 
     conn.close()
 

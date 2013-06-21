@@ -153,7 +153,8 @@
                 panels.push(panel);
             }, this);
             var view = new Ext.ux.ingraph.View({
-                    stateId: stateuid
+                    stateId: stateuid,
+                    stateful: true
                 }),
                 cronk = {
                     id: Ext.id(),

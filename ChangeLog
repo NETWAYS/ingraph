@@ -1,3 +1,9 @@
+inGraph 1.0.2-datapartition (NOTRELEASED)
+
+This is a branch version that supports database partitioning.
+
+The version is not supported officially!
+
 inGraph 1.0.2 (2013-05-20)
 
 This version of inGraph is a bug fix maintenance release,

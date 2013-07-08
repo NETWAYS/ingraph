@@ -36,7 +36,8 @@ def flush(engine, queryqueue):
     while True:
         print("Queue size: %d" % queryqueue.qsize())
         items = {}
-        while len(items) < 5000:
+        count = 0
+        while count < 5000:
             try:
                 item = queryqueue.get(timeout=10)
             except Queue.Empty:
@@ -46,6 +47,7 @@ def flush(engine, queryqueue):
             except KeyError:
                 items[item['timeframe_id']] = []
                 items[item['timeframe_id']].append(item)
+            count += 1
 
         st = time.time()
         try:
@@ -59,7 +61,7 @@ def flush(engine, queryqueue):
         et = time.time()
 
         print("Flushed %d updates in %f seconds." %
-              (len(items), et-st))
+              (count, et-st))
 
 
 def cleanup(engine):

@@ -556,11 +556,11 @@
                     snapshot = Ext.pluck(this.store.getRange(),
                                          'data');
 
-                Ext.each(series.get('data'), function (xy) {
+                Ext.each(series.get('data'), function (xy, index) {
                     var y;
                     try {
                         y = convertFn.call(scope, xy[1],
-                                           xy[0], snapshot);
+                                           xy[0], snapshot, index);
                     } catch (e) {
                         // TODO(el): Notify
                         AppKit.log(e);

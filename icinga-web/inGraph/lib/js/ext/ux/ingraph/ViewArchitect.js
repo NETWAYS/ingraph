@@ -128,7 +128,7 @@
                     end: values.end,
                     interval: values.interval
                 };
-                this.store.query(values.groupby, group).each(function (series) {
+                this.store.query(values.groupby, group, false, false, true).each(function (series) {
                     panel.series.push({
                         host: series.data.host,
                         service: series.data.service,

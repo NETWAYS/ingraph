@@ -982,9 +982,12 @@ class DataPoint(object):
 
         st = time()
         sel = """SELECT `plot_id`, `timestamp` %s FROM `datapoint_%d` WHERE
-              `plot_id` = %%s AND `timestamp` BETWEEN %d AND %d ORDER BY
-              `timestamp` ASC""" %\
-              (', '.join(chain([''], map(lambda t: '`%s`' % (t,), types))), data_tf.interval, start_timestamp, end_timestamp)
+              `plot_id` IN ( %s ) AND `timestamp` BETWEEN %d AND %d ORDER BY
+              `timestamp` ASC""" % (
+              ', '.join(chain([''], map(lambda t: '`%s`' % (t,), types))),
+              data_tf.interval,
+              ', '.join(map(lambda plot: str(plot.id), plots)),
+              start_timestamp, end_timestamp)
         # sql_types = [datapoint.c.plot_id, datapoint.c.timestamp]
         # for type in types_map.keys():
         #     if type in types:
@@ -1001,8 +1004,7 @@ class DataPoint(object):
         print "Building SQL query took %f seconds" % (et - st)
 
         st = time()
-        # result = conn.execute(sel)
-        result = conn.execute(sel, *imap(lambda plot: (plot.id,), plots))
+        result = conn.execute(sel)
         et = time()
 
         print "SQL query took %f seconds" % (et - st)

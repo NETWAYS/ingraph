@@ -17,8 +17,8 @@
  
 Name:		inGraph
 Summary:	NETWAYS inGraph Addon for Icinga
-Version:	1.0.1
-Release:	1.1
+Version:	1.0.2
+Release:	1%{?dist}%{?custom}
 Url:		https://www.netways.org/projects/ingraph/files
 License:	GPL-3.0
 Group:		System/Monitoring
@@ -213,6 +213,9 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %endif
 
 %changelog
+* Thu Aug 15 2013 michael.friedrich@netways.de
+- change revision
+
 * Wed Feb 13 2013 michael.friedrich@netways.de
 - templates and views are config noreplace
 - icinga web config must not be overwritten

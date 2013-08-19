@@ -25,7 +25,7 @@
         parseDate: function (value) {
             var date = _parseDate.call(this, value),
                 t;
-            if (!date) {
+            if (!date && value) {
                 // Try strtotime if the original parse fails
                 t = strtotime(value);
                 if (t !== false) {

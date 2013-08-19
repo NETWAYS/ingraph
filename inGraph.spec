@@ -32,6 +32,11 @@ BuildArch:	noarch
 %endif
 %endif
 
+%if 0%{?rhel} && 0%{?rhel} <= 5
+%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
+%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
+%endif
+
 #icinga-web >= 1.5.0 will work,but requires some additional patching
 Requires:	icinga-web >= 1.6.0
 Requires:	python >= 2.4.0

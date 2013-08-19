@@ -10,7 +10,7 @@
         parseDate: function (value) {
             var d = _parseDate.call(this, value);
 
-            if (!d) {
+            if (!d && value) {
                 var t = strtotime(value);
                 if (t !== false) {
                     this.strValue = value;

@@ -1,4 +1,4 @@
-include README AUTHORS LICENSE
+recursive-include doc README AUTHORS LICENSE
 recursive-include ingraph *.py
 recursive-include contrib *
 recursive-include examples *

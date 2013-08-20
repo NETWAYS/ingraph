@@ -4,7 +4,7 @@
 # Copyright (c) 2012 mopp@gmx.net
 #
 # Revised and modified for RHEL support by Michael Friedrich
-# Copyright (c) 2012 Netways GMbH
+# Copyright (c) 2012-2013 Netways GMbH
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -178,10 +178,10 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %if "%{_vendor}" == "suse"
 %{_sbindir}/rcingraph
 %{_sbindir}/rcingraph-collector
-%doc AUTHORS LICENSE README TODO README.SUSE
+%doc doc/AUTHORS doc/LICENSE doc/README doc/TODO doc/ChangeLog doc/README.SUSE
 %endif
 %if "%{_vendor}" == "redhat"
-%doc AUTHORS LICENSE README TODO README.RHEL
+%doc doc/AUTHORS doc/LICENSE doc/README doc/TODO doc/ChangeLog doc/README.RHEL
 %endif
 %attr(755,root,root) %{_defaultdocdir}/%{name}/examples/
 %config(noreplace) %attr(0755,%{apacheuser},%{apachegroup}) %{_datadir}/icinga-web/app/modules/inGraph/config/views/

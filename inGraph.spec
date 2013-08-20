@@ -56,7 +56,7 @@ BuildRequires:	fdupes
 %endif
 
 %if "%{_vendor}" == "suse"
-%define apacheconfdir {%_sysconfdir}/apache2/conf.d
+%define apacheconfdir %{_sysconfdir}/apache2/conf.d
 %define apacheuser wwwrun
 %define apachegroup www
 %define docdir %{_defaultdocdir}

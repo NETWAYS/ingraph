@@ -16,14 +16,15 @@
 # published by the Open Source Initiative.
  
 Name:		inGraph
-Summary:	NETWAYS inGraph Addon for Icinga
+Summary:	NETWAYS inGraph Addon for Icinga/Nagios
 Version:	1.0.2
 Release:	1%{?dist}%{?custom}
 Url:		https://www.netways.org/projects/ingraph/files
 License:	GPL-3.0
 Group:		System/Monitoring
-Source:		%{name}.%{version}.tar.gz
-BuildRoot:	%{_tmppath}/%{name}-%{version}-build
+Source:		%{name}-%{version}.tar.gz
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root
+
 %if "%{_vendor}" == "suse"
 %if 0%{?suse_version} && 0%{?suse_version} <= 1110
 %{!?python_sitelib: %global python_sitelib %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
@@ -37,50 +38,87 @@ BuildArch:	noarch
 %{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %endif
 
-#icinga-web >= 1.5.0 will work,but requires some additional patching
-Requires:	icinga-web >= 1.6.0
 Requires:	python >= 2.4.0
+%if "%{_vendor}" == "suse"
 Requires:	python-SQLAlchemy >= 0.6.0
 Requires:	python-mysql
+%else
+#Requires:	python-sqlalchemy >= 0.6.0
+Requires:       MySQL-python
+#EL6 ship 0.5.5 only
+%endif
+BuildRequires:	python-devel
+BuildRequires:	python-setuptools
 %if "%{_vendor}" == "suse"
-Requires:	php5-curl
-Requires:	php5-xmlrpc
 Requires(pre):	%fillup_prereq
 Requires(pre):	%insserv_prereq
 BuildRequires:	fdupes
 %endif
-%if "%{_vendor}" == "rhel"
-Requires:	php-xmlrpc
-%endif
-BuildRequires:	python-devel
-BuildRequires:	python-setuptools
 
 %if "%{_vendor}" == "suse"
-%define         apacheuser wwwrun
-%define         apachegroup www
-%define         docdir %{_defaultdocdir}
+%define apacheconfdir {%_sysconfdir}/apache2/conf.d
+%define apacheuser wwwrun
+%define apachegroup www
+%define docdir %{_defaultdocdir}
 %endif
-%if "%{_vendor}" == "rhel"
-%define         apacheuser apache
-%define         apachegroup apache
-%define         docdir %{_defaultdocdir}
+%if "%{_vendor}" == "redhat"
+%define apacheconfdir %{_sysconfdir}/httpd/conf.d
+%define apacheuser apache
+%define apachegroup apache
+%define docdir %{_defaultdocdir}
 %endif
-%define         icingawebdir /usr/share/icinga-web
-%define         clearcache %{_sbindir}/icinga-web-clearcache
+%define icingawebdir /usr/share/icinga-web
+%define clearcache %{_sbindir}/icinga-web-clearcache
+%define ingraphwebdir /usr/share/ingraph-web
+%define ingraphwebclearcache /usr/share/ingraph-web/bin/clearcache.sh
 
 %description
 Netways inGraph is a flexible, open source charting tool for Icinga and Nagios, which collects performance data in a database and displays the results in a web interface.
+This package only contains the backend daemons, frontend packages are seperated.
 
-This package is optimized for Icinga-web and not the standalone version.
+%package web
+Summary:        %{name} web user interface (standalone)
+Group:          Applications/System
+Requires:       %{name} = %{version}-%{release}
+%if "%{_vendor}" == "suse"
+Requires:	php5-curl
+Requires:	php5-xmlrpc
+%endif
+%if "%{_vendor}" == "redhat"
+Requires:	php-xmlrpc
+%endif
+
+%description web
+This package contains the %{name} standalone web interface.
+
+%package icinga-web
+Summary:        %{name} web user interface (icinga web)
+Group:          Applications/System
+Requires:	icinga-web >= 1.6.0
+%if "%{_vendor}" == "suse"
+Requires:	php5-curl
+Requires:	php5-xmlrpc
+%endif
+%if "%{_vendor}" == "redhat"
+Requires:	php-xmlrpc
+%endif
+
+%description icinga-web
+This package contains the %{name} web interface integrated into
+Icinga Web.
+
 
 %prep
 #uFIXME
 #%setup -qn ingraph
-%setup -qn ingraph-ingraph
+#%setup -qn ingraph-ingraph
+%setup -qn %{name}-%{version}
 
 %build
 
 %install
+%{__rm} -rf %{buildroot}
+
 # Install backend
 python setup.py install --prefix=%{_prefix} --root=%{buildroot}
 
@@ -109,8 +147,21 @@ install -D -m 755 contrib/icinga/enable_perfdata_processing.sh %{buildroot}%{_de
 %{__mkdir_p} %{buildroot}%{_localstatedir}/spool/icinga/perfdata
 %endif
 
+# Install frontend for standalone Web
+cd ingraph-web/
+# To prevent copy and permission problems use the current user for installation.
+# Permissions are corrected in the RPM
+./setup-ingraph-web.sh --install --prefix=%{buildroot}%{ingraphwebdir} --with-web-user=$(%{__id} -un) --with-web-group=$(%{__id} -gn)
+# fix prefix
+%{__sed} -i "s@CACHEDIR=.*@CACHEDIR='%{ingraphwebdir}/app/cache'@g" %{buildroot}%{ingraphwebdir}/bin/clearcache.sh
+# install apache config
+%{__sed} -i 's@Alias /ingraph.*@Alias /ingraph %{ingraphwebdir}/pub@g' ingraph.conf
+%{__sed} -i 's@<Directory.*@<Directory %{ingraphwebdir}/pub>@g' ingraph.conf
+%{__mkdir_p} %{buildroot}%{apacheconfdir}
+install -m 644 ingraph.conf %{buildroot}%{apacheconfdir}
+cd ..
 
-# Install frontend for Icinga
+# Install frontend for Icinga Web
 %{__mkdir_p} %{buildroot}%{icingawebdir}/app/config
 #Simulating an installed icinga version >= 1.6.n
 cat << EOF > %{buildroot}%{icingawebdir}/app/config/icinga.xml
@@ -118,12 +169,13 @@ cat << EOF > %{buildroot}%{icingawebdir}/app/config/icinga.xml
 <setting name="version.minor">6</setting>
 EOF
 cd icinga-web/
-#./setup-icinga-web.sh --install --prefix=%{buildroot}%{icingawebdir} --with-web-user=%{apacheuser} --with-web-group=%{apachegroup}
 # To prevent copy and permission problems use the current user for installation.
 # Permissions are corrected in the RPM
 ./setup-icinga-web.sh --install --prefix=%{buildroot}%{icingawebdir} --with-web-user=$(%{__id} -un) --with-web-group=$(%{__id} -gn)
 rm %{buildroot}%{icingawebdir}/app/config/icinga.xml
+cd ..
 
+# 
 %if "%{_vendor}" == "suse"
 %{__mkdir_p} %{buildroot}%{_sbindir}
 %{__ln_s} ../../%{_sysconfdir}/init.d/ingraph  "%{buildroot}%{_sbindir}/rcingraph"
@@ -139,8 +191,6 @@ rm %{buildroot}%{icingawebdir}/app/config/icinga.xml
 %{_sbindir}/useradd -c 'inGraph User' -G icinga -s /sbin/nologin -r ingraph 2> /dev/null || :
 
 %post
-if [[ -x %{clearcache} ]]; then %{clearcache}; fi
-
 %if "%{_vendor}" == "suse"
 %{fillup_and_insserv -n ingraph}
 %{fillup_and_insserv -n ingraph-collector}
@@ -149,6 +199,12 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 /sbin/chkconfig --add ingraph
 /sbin/chkconfig --add ingraph-collector
 %endif
+
+%post web
+if [[ -x %{ingraphwebclearcache} ]]; then %{ingraphwebclearcache}; fi
+
+%post icinga-web
+if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 
 %preun
 %if "%{_vendor}" == "suse"
@@ -166,12 +222,17 @@ fi
 
 
 %postun
-if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %if "%{_vendor}" == "suse"
 %restart_on_update ingraph-collector
 %restart_on_update ingraph
 %{insserv_cleanup}
 %endif
+
+%postun web
+if [[ -x %{ingraphwebclearcache} ]]; then %{ingraphwebclearcache}; fi
+
+%postun icinga-web
+if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 
 %files 
 %defattr(-,root,root)
@@ -184,10 +245,6 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %doc doc/AUTHORS doc/LICENSE doc/README doc/TODO doc/ChangeLog doc/README.RHEL
 %endif
 %attr(755,root,root) %{_defaultdocdir}/%{name}/examples/
-%config(noreplace) %attr(0755,%{apacheuser},%{apachegroup}) %{_datadir}/icinga-web/app/modules/inGraph/config/views/
-%config(noreplace) %attr(0755,%{apacheuser},%{apachegroup}) %{_datadir}/icinga-web/app/modules/inGraph/config/templates/
-%config(noreplace) %{_datadir}/icinga-web/app/modules/inGraph/config/*.xml
-%{_datadir}/icinga-web/
 %if "%{_vendor}" == "suse"
 %{_localstatedir}/adm/fillup-templates/sysconfig.ingraph*
 %endif
@@ -204,7 +261,7 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %attr(0755,root,root) %{_bindir}/check_ingraph
 %attr(0755,root,root) %{_bindir}/ingraph-collectord
 %attr(0755,root,root) %{_bindir}/ingraphd
-%{python_sitelib}/
+%{python_sitelib}
 %attr(0755,root,root) %{python_sitelib}/ingraph/bin/check_ingraph.py
 %attr(0755,root,root) %{python_sitelib}/ingraph/bin/ingraph_collectord.py
 %attr(0755,root,root) %{python_sitelib}/ingraph/bin/ingraphd.py
@@ -217,7 +274,31 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %dir %attr(0775,icinga,icinga) %{_localstatedir}/spool/icinga/perfdata
 %endif
 
+%files web
+%defattr(-,root,root)
+%config(noreplace) %{apacheconfdir}/ingraph.conf
+%defattr(-,icinga,icinga,-)
+%dir %attr(0775,icinga,icinga) %{ingraphwebdir}
+%{ingraphwebdir}
+%attr(774,%{apacheuser},%{apachegroup}) %{ingraphwebdir}/app/cache
+%attr(774,%{apacheuser},%{apachegroup}) %{ingraphwebdir}/app/modules/inGraph/cache
+%config(noreplace) %attr(774,%{apacheuser},%{apachegroup}) %{ingraphwebdir}/app/modules/inGraph/config/templates/*
+%config(noreplace) %attr(774,%{apacheuser},%{apachegroup}) %{ingraphwebdir}/app/modules/inGraph/config/views/*
+%config(noreplace) %{ingraphwebdir}/app/modules/inGraph/config/inGraph.xml
+
+
+%files icinga-web
+%defattr(-,icinga,icinga,-)
+%dir %{icingawebdir}
+%{icingawebdir}
+%config(noreplace) %attr(774,%{apacheuser},%{apachegroup}) %{icingawebdir}/app/modules/inGraph/config/templates/*
+%config(noreplace) %attr(774,%{apacheuser},%{apachegroup}) %{icingawebdir}/app/modules/inGraph/config/views/*
+%config(noreplace) %{icingawebdir}/app/modules/inGraph/config/inGraph.xml
+
 %changelog
+* Tue Aug 20 2013 michael.friedrich@netways.de
+- split frontend into -web, -icinga-web sub packages
+
 * Thu Aug 15 2013 michael.friedrich@netways.de
 - change revision
 

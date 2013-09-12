@@ -273,9 +273,7 @@
                 }
 
                 this.panels.each(function (panel) {
-                    var query = Ext.encode(
-                            inGraph.format.query(
-                                panel.get('series') || template.content.series)),
+                    var query = Ext.encode(template.query),
                         titleTemplate = new Ext.XTemplate(panel.get('title'));
 
                     var cfg = this.buildPanelCfg(

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ * Copyright (C) 2013 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
  *
@@ -18,3 +18,6 @@
  */
 
 inGraph_Loader_SplAutoloader::getInstance()->register();
+
+$GraphiteLoader = new SplClassLoader('Graphite', realpath(__DIR__ . '/lib/php/'));
+$GraphiteLoader->register();

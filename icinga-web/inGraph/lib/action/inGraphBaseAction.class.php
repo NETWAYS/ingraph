@@ -40,7 +40,7 @@ class inGraphBaseAction extends IcingaBaseAction
 
     public function executeRead(AgaviRequestDataHolder $rd)
     {
-        return $this->getDefaultViewName();
+        return $this->executeWrite($rd);
     }
 
     public function executeWrite(AgaviRequestDataHolder $rd)
@@ -74,8 +74,7 @@ class inGraphBaseAction extends IcingaBaseAction
     {
         if (null === $this->backend) {
             $this->backend = $this->getContext()->getModel(
-                'Backend', 'inGraph',
-                AgaviConfig::get('modules.ingraph.xmlrpc')
+                'Backend', 'inGraph'
             );
         }
         return $this->backend;

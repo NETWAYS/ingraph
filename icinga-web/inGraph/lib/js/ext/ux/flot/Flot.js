@@ -36,7 +36,6 @@
         /**
          * @cfg {Number} refreshBuffer
          * Milliseconds to delay plot refresh on store's update event.
-         * Defaults to <tt>200</tt>.
          */
         refreshBuffer: 200,
 
@@ -500,8 +499,10 @@
             this.store.suspendEvents();
 
             this.template.each(function (seriesTemplate) {
-                var series = this.store.getById(seriesTemplate.id);
+                console.log("seriesTemplate: ", seriesTemplate);
+                var series = this.store.query('plot_id', seriesTemplate.get('plot_id')).first();
                 if (!series) {
+                    console.log(seriesTemplate.get('plot_id'), this.store.query('plot_id', seriesTemplate.get('plot_id')));
                     // TODO(el): Notify?
                     // Skip
                     return true;
@@ -524,7 +525,7 @@
             var hosts = [];
 
             this.store.each(function (series) {
-
+                console.log("series: ", series);
                 if (-1 === hosts.indexOf(series.json.host)) {
                     hosts.push(series.json.host);
                 }
@@ -677,7 +678,7 @@
                         series.set('yaxis', yaxis.id);
                     }
 
-                    var seriesTemplate = this.template.getById(series.id);
+                    var seriesTemplate = this.template.query('plot_id', series.get('plot_id')).first();
                     if (seriesTemplate) {
                         // Series template may not exist, i.e. removed via dialog
                         seriesTemplate.set('yaxis', series.get('yaxis'));
@@ -945,7 +946,7 @@
                     this.store.resumeEvents();
                 } // Eof no series undefined
 
-                if (this.absolute) {
+                if (false && this.absolute) {
                     // Force full view of x-axis range even if there's no data
                     var min = this.store.getStartX(),
                         max = this.store.getEndX();

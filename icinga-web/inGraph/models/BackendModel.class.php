@@ -17,15 +17,26 @@
  * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
-class inGraph_BackendModel extends inGraphBaseModel implements
-    AgaviISingletonModel
+class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonModel
 {
-    protected $client = null;
+    private $backend;
 
-    public function initialize(AgaviContext $ctx, array $params=array())
+    public function initialize(AgaviContext $ctx, array $parameters = array())
     {
-        parent::initialize($ctx, $params);
-        $this->backend = new inGraph_Daemon_Client($params);
+        parent::initialize($ctx, $parameters);
+        $backendType = strtolower(AgaviConfig::get('modules.ingraph.backend'));
+        $backendConfig = AgaviConfig::get('modules.ingraph.' . $backendType);
+        switch ($backendType) {
+            case 'ingraph':
+                $backend = new inGraph_Backend_inGraph($backendConfig);
+                break;
+            case 'graphite':
+                $backend = new inGraph_Backend_Graphite($backendConfig);
+                break;
+            default:
+                throw new AgaviConfigurationException('Unknown inGraph backend ' . $backendType);
+        }
+        $this->backend = $backend;
     }
 
     protected function icinga_fetchHosts($hostPattern)
@@ -53,7 +64,9 @@ class inGraph_BackendModel extends inGraphBaseModel implements
         $availableHosts = $this->backend->fetchHosts($hostPattern);
         $hosts = array();
         foreach ($availableHosts['hosts'] as $host) {
-            if (in_array($host['host'], $permittedHosts)) {
+            // TODO(el): Uncomment once Graphite as backend has been implemented
+            if (true) {
+//            if (in_array($host['host'], $permittedHosts)) {
                 $hosts[] = $host;
             }
         }
@@ -95,9 +108,11 @@ class inGraph_BackendModel extends inGraphBaseModel implements
                                                            $servicePattern);
         $services = array();
         foreach ($availableServices['services'] as $service) {
-            if ($service['parent_service'] !== null
-                && (in_array($service['parent_service'], $permittedServices)
-                    || in_array($service['service'], $permittedServices))
+            // TODO(el): Uncomment once Graphite as backend has been implemented
+            if (false
+//            if ($service['parent_service'] !== null
+//                && (in_array($service['parent_service'], $permittedServices)
+//                    || in_array($service['service'], $permittedServices))
             ) {
                 $services[] = array(
                     'name' => $service['parent_service'] . ' - '
@@ -105,7 +120,8 @@ class inGraph_BackendModel extends inGraphBaseModel implements
                     'service' => $service['service'],
                     'parentService' => $service['parent_service']
                 );
-            } elseif (in_array($service['service'], $permittedServices)) {
+            } else {
+//            } elseif (in_array($service['service'], $permittedServices)) {
                 $services[] = array(
                     'name' => $service['service'],
                     'service' => $service['service']

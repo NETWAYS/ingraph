@@ -60,7 +60,6 @@
 
         constructor: function (cfg) {
             Ext.applyIf(cfg, {
-                idProperty: 'plot_id',
                 root: 'charts',
                 fields: Ext.ux.flot.Fields.seriesFields()
             });
@@ -141,7 +140,7 @@
                 Ext.copyTo(
                     series,
                     rec.json,
-                    ['host', 'service', 'plot', 'type']
+                    ['host', 'parent_service', 'service', 'plot', 'type']
                 );
                 json.push(series);
             });

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ * Copyright (C) 2013 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
  *
@@ -23,7 +23,7 @@ class inGraph_Provider_HostsAction extends inGraphBaseAction
     {
         try {
             $hosts = $this->getBackend()->fetchHosts(
-                $rd->getParameter('query', '%'),
+                $rd->getParameter('query', '*'),
                 $rd->getParameter('offset', 0),
                 $rd->getParameter('limit', 20)
             );

@@ -36,7 +36,8 @@
         var byteSpec = {
                 base: 1024,
                 units: ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
-            }, timeSpec = {
+            },
+            timeSpec = {
                 base: 1000,
                 units: ['s', 'ms', 'ns', 'ps']
             },

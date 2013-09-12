@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ * Copyright (C) 2013 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
  *
@@ -18,19 +18,15 @@
  */
 
 /**
- * inGraph_JsonFileIterator
- *
- * Accept files with <tt>.json</tt> suffix
- *
- * @author Eric Lippmann <eric.lippmann@netways.de>
- * @package inGraph
+ * Filter accepting files with <tt>.json</tt> suffix
  */
-class inGraph_JsonFileIterator extends FilterIterator
+class inGraph_Template_JsonFileIterator extends FilterIterator
 {
     /**
      * Accept files with <tt>.json</tt> suffix
+     *
      * @return bool Whether the current element of the iterator is acceptable
-     * through this filter
+     *              through this filter
      */
     public function accept()
     {

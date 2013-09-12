@@ -504,10 +504,6 @@
                 defaultValue: true
             },
             {
-                name: 'id',
-                defaultValue: null
-            },
-            {
                 name: 'group',
                 defaultValue: null
             },
@@ -518,10 +514,6 @@
             {
                 name: '_converted',
                 defaultValue: false
-            },
-            {
-                name: 'type',
-                defaultValue: null
             },
             {
                 name: 'fill',
@@ -538,6 +530,15 @@
             {
                 name: 'stack',
                 defaultValue: null
+            },
+            {
+                name: 'plot_id',
+                convert: function (v, rec) {
+                    if (rec.parent_service === undefined) {
+                        rec.parent_service = null;
+                    }
+                    return String.format('{host}.{parent_service}.{service}.{plot}.{type}', rec);
+                }
             }
         ]);
 

@@ -421,13 +421,6 @@
                 {
                     text: _('Template'),
                     menu: [
-//                        {
-//                            text: _('Save'),
-//                            iconCls: 'xflot-icon-save',
-//                            scope: this,
-//                            disabled: true,
-//                            handler: this.saveTemplateHandler
-//                        },
                         {
                             text: _('Save As View'),
                             iconCls: 'xflot-icon-save-new',
@@ -622,14 +615,6 @@
 //                ,success: function () { console.log(arguments);},
 //                failure: function () { console.log(arguments);}
             });
-        },
-
-        saveTemplateHandler: function () {
-            if (this.template.isDefault === true) {
-                url = Ext.ux.ingraph.Urls.templates.create;
-            } else {
-                this.saveTemplate(this.template.re, Ext.ux.ingraph.Urls.templates.update, this.template.name);
-            }
         },
 
         /**

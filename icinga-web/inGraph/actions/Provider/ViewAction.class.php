@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ * Copyright (C) 2013 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
  *
@@ -19,61 +19,64 @@
 
 class inGraph_Provider_ViewAction extends inGraphBaseAction
 {
-    protected $plots = array(); // Plots cache
+    private $plots = array(); // Plots cache
 
     public function executeWrite(AgaviRequestDataHolder $rd)
     {
-        $manager = new inGraph_Views_Manager(
-            AgaviConfig::get('modules.ingraph.views'));
-        $view = $manager->fetchView($rd->getParameter('view'));
-        $content = $view->getContent();
+        $manager = new inGraph_Template_Manager(AgaviConfig::get('modules.ingraph.views'));
+        $manager->collectTemplates();
+        $view       = $manager->fetchTemplateByFileName($rd->getParameter('view'));
+        $content    = $view->getContent();
         if (!isset($content['panels']) || !is_array($content['panels'])) {
             return $this->setError(
-                'Invalid configuration for key "panels", expteced array in ' .
-                    $rd->getParameter('view') . '.json');
+                'Invalid configuration for key "panels", expteced array in '
+                . $view->getSplFileInfo()->getRealPath()
+            );
         }
         foreach ($content['panels'] as &$panel) {
-            $compiled = array();
             if (!isset($panel['series']) || !is_array($panel['series'])) {
                 return $this->setError(
-                    'Invalid configuration for key "series", expteced array in ' .
-                        $rd->getParameter('view') . '.json');
+                    'Invalid configuration for key "series", expteced array in '
+                    . $view->getSplFileInfo()->getRealPath()
+                );
             }
-
-            foreach ($panel['series'] as $seriesStub) {
+            foreach ($panel['series'] as /* $i => */ &$series) {
                 try {
-                    $plots = $this->getPlots($seriesStub);
+                    $plots = $this->getPlots($series);
                 } catch(inGraph_XmlRpc_Exception $e) {
                     return $this->setError($e->getMessage());
                 }
-                $series = $seriesStub;
-                while (($matchedPlotIndex = $view->compileSingleSeries(
-                            $series, $series['host'],
-                            $plots['plots'])
-                       ) !== false
-                ) {
-                    $compiled[] = $series;
-                    unset($plots['plots'][$matchedPlotIndex]);
-                    $series = $seriesStub;
+                $valid = false;
+                foreach ($plots['plots'] as $plot) {
+                    if ($view->matches($series['re'], $plot['plot'])) {
+                        $series += $plot;
+                        $valid = true;
+                        break;
+                    }
                 }
+                if (!$valid) {
+                    $series = null;
+                }
+//                unset($panel['series'][$i]);
             }
-            $panel['series'] = $compiled;
+            $panel['series'] = array_filter($panel['series']);
         }
-        $this->setAttribute('view', array(
-            'name' => $view->getInfo()->getBasename(),
-            'content' => $content
-        ));
+        $this->setAttribute(
+            'view',
+            array(
+                'name'      => $view->getSplFileInfo()->getBasename(),
+                'content'   => $content
+            )
+        );
         return $this->getDefaultViewName();
     }
 
-    protected function getPlots($series)
+    private function getPlots($series)
     {
-        $parentService = isset($series['parentService']) ?
-            $series['parentService'] : null;
+        $parentService = isset($series['parentService']) ? $series['parentService'] : null;
         $key = $series['host'] . $parentService . $series['service'];
         if (!isset($this->plots[$key])) {
-            $this->plots[$key] = $this->getBackend()->fetchPlots(
-                $series['host'], $series['service'], $parentService);
+            $this->plots[$key] = $this->getBackend()->fetchPlots($series['host'], $series['service'], $parentService);
         }
         return $this->plots[$key];
     }

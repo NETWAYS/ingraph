@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ * Copyright (C) 2013 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
  *
@@ -22,7 +22,7 @@ class inGraph_Provider_ViewsSuccessView extends inGraphBaseView
     public function executeJson(AgaviRequestDataHolder $rd)
     {
         $views = $this->getAttribute('views');
-        foreach ($views as &$view) {
+        foreach ($views['views'] as &$view) {
             $view = array($view);
         }
         return json_encode($views);

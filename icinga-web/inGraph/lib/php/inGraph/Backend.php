@@ -29,108 +29,81 @@ interface inGraph_Backend
      * $hosts = $backend->fetchHosts('*');
      *
      * // Fetch all hosts prefixed with 'node'
-     * $hosts = $backend->fetchHosts('node%');
+     * $hosts = $backend->fetchHosts('node*');
      * </code>
      *
-     * @param string $hostPattern may contain '%' or '*' as wildcard character
-     * @param int $limit optional constrain the number of rows returned
-     * @param int $offset optional offset of the first row to return
-     * @return array
-     * <ul style="list-style-type: none;">
-     *     <li><b>int</b> <i>total</i> total number of records found</li>
-     *     <li><b>string[]</b> <i>hosts</i> list of host names</li>
-     * </ul>
+     * @param   string      $hostPattern
+     * @param   int|null    $limit          Constrain the number of rows returned
+     * @param   int         $offset         Offset of the first row to return
+     *
+     * @return  array
      */
     public function fetchHosts($pattern, $limit = null, $offset = 0);
 
     /**
      * Fetch services
      *
-     * @param string $hostPattern may contain '%' or '*' as wildcard character
-     * @param string $servicePattern may contain '%' or '*' as wildcard character
-     * @param int $limit optional constrain the number of rows returned
-     * @param int $offset optional offset of the first row to return
-     * @return array
-     * <ul style="list-style-type: none;">
-     *     <li><b>int</b> <i>total</i> number of records found</li>
-     *     <li><b>array</b> <i>services</i>
-     *         <ul style="list-style-type: none;">
-     *             <li><b>string</b> <i>service</i></li>
-     *             <li><b>string</b> <i>parent_service</i></li>
-     *         </ul>
-     *     </li>
-     * </ul>
+     * @param   string      $hostPattern
+     * @param   string      $servicePattern
+     * @param   int|null    $limit          Constrain the number of rows returned
+     * @param   int         $offset         Offset of the first row to return
+     *
+     * @return  array
      */
     public function fetchServices($hostPattern, $servicePattern, $limit = null, $offset = 0);
 
     /**
      * Fetch plots
      *
-     * @param string $hostNamePattern may contain '%' as wildcard character
-     * @param string $serviceNamePattern may contain '%' as wildcard character
-     * @param string $parentServiceNamePattern may contain '%' as wildcard character
-     * @param string $plotNamePattern may contain '%' as wildcard character
-     * @param int $limit optional constrain the number of rows returned
-     * @param int $offset optional offset of the first row to return
-     * @return array
-     * <ul style="list-style-type: none;">
-     *     <li><b>int</b> <i>total</i> number of records found</li>
-     *     <li><b>array</b> <i>plots</i>
-     *         <ul style="list-style-type: none;">
-     *             <li><b>int</b> <i>id</i></li>
-     *             <li><b>string</b> <i>host</i></li>*
-     *             <li><b>string</b> <i>service</i></li>
-     *             <li><b>string</b> <i>parent_service</i></li>
-     *             <li><b>string</b> <i>plot</i></li>
-     *         </ul>
-     *     </li>
-     * </ul>
+     * @param   string      $hostPattern
+     * @param   string      $servicePattern
+     * @param   string      $parentServicePattern
+     * @param   string      $plotPattern
+     * @param   int|null    $limit                  Constrain the number of rows returned
+     * @param   int         $offset                 Offset of the first row to return
+     *
+     * @return  array
      */
-    public function fetchPlots();
+    public function fetchPlots(
+        $hostPattern, $servicePattern, $parentServicePattern, $plotPattern, $limit = null, $offset = 0
+    );
 
     /**
      * Fetch values
      *
-     * @param array $query
-     * @param int|null $start optional start timestamp of the first value to return
-     * @param int $end optional end timestamp of the last value to return
-     * @param int $interval optional x offset between two datapoints
-     * @param int $nullTolerance optional specify how many consecutive datapoints may be missing before inserting null values
-     * @return array
-     * <ul style="list-style-type: none;">
-     *     <li><b>int</b> <i>min_timestamp timestamp</i> of first available data</li>
-     *     <li><b>int</b> <i>max_timestamp timestamp</i> of last available data</li>
-     *     <li><b>array</b> <i>comments</i></li>
-     *     <li><b>array</b> <i>statusdata</i></li>
-     *     <li><b>array</b> <i>charts</i></li>
-     * </ul>
+     * @param   array       $query
+     * @param   int|null    $start  Start timestamp of the first value to return
+     * @param   int|null    $end    End timestamp of the last value to return
+     *
+     * @return  array
      */
-    public function fetchValues();
+    public function fetchValues($query, $start = null, $end = null);
 
     /**
      * Create comment
      *
-     * @param string $hostName
-     * @param string|null $parent_service
-     * @param string $serviceName
-     * @param int $timestamp
-     * @param string $author
-     * @param string $comment
-     * @return int id
+     * @param   string      $host
+     * @param   string|null $parentService
+     * @param   string      $service
+     * @param   int         $timestamp
+     * @param   string      $author
+     * @param   string      $comment
+     *
+     * @return  int
      */
     public function createComment();
 
     /**
      * Update comment
      *
-     * @param int $id
-     * @param string $hostName
-     * @param string|null $parent_service
-     * @param string $serviceName
-     * @param int $timestamp
-     * @param string $author
-     * @param string $comment
-     * @return int id
+     * @param   string      $host
+     * @param   string|null $parentService
+     * @param   string      $service
+     * @param   int         $timestamp
+     * @param   string      $author
+     * @param   string      $comment
+     *
+     * @return  int
      */
     public function updateComment();
 
@@ -138,7 +111,6 @@ interface inGraph_Backend
      * Delete comment
      *
      * @param int $id
-     * @return void
      */
     public function deleteComment();
 }

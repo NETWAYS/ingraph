@@ -45,17 +45,29 @@ class inGraph_Template_Template
         $this->fileInfo = $fileInfo;
     }
 
+    /**
+     * @param   SplFileInfo $fileInfo
+     *
+     * @return  inGraph_Template_Template
+     * @throws  inGraph_Exception
+     */
     public static function createFromSplFileInfo(SplFileInfo $fileInfo)
     {
-        if (
-            $fileInfo->isReadable() === false
-            || ($content = file_get_contents($fileInfo->getRealpath())) === false
-        ) {
-            throw new inGraph_Exception('Cannot read template file '. $fileInfo->getRealPath());
+        try {
+            $fileObject = $fileInfo->openFile('r');
+        } catch (RuntimeException $e) {
+            throw new inGraph_Exception($e->getMessage());
         }
+        if ($fileObject->flock(LOCK_SH) === false) {
+            throw new inGraph_Exception('Couldn\'t get the lock');
+        }
+        ob_start();
+        $fileObject->fpassthru();
+        $content = ob_get_contents();
+        ob_end_clean();
         $content = str_replace(array("\r", "\n"), array('', ''), $content);
         if (($content = json_decode($content, true)) === null) {
-            throw new inGraph_Exception('Cannot decode template file '. $fileInfo->getRealPath());
+            throw new inGraph_Exception('Can\'t decode template file '. $fileInfo->getRealPath());
         }
         return new self($content, $fileInfo);
     }
@@ -81,6 +93,22 @@ class inGraph_Template_Template
     public function applyDefaults(inGraph_Template_Template $defaults)
     {
         $this->content = $this->assocArrayMergeRecursive($this->content, $defaults->content);
+        // Rename label to axisLabel
+        if (isset($this->content['flot'])) {
+            if (isset($this->content['flot']['yaxis'])) {
+                $yaxis =& $this->content['flot']['yaxis'];
+                $yaxis['axisLabel'] = $yaxis['label'];
+                unset($yaxis['label']);
+            }
+            if (isset($this->content['flot']['yaxes'])) {
+                foreach ($this->content['flot']['yaxes'] as &$yaxis) {
+                    if (isset($yaxis['label'])) {
+                        $yaxis['axisLabel'] = $yaxis['label'];
+                        unset($yaxis['label']);
+                    }
+                }
+            }
+        }
         return $this;
     }
 
@@ -101,21 +129,7 @@ class inGraph_Template_Template
                 if ($this->matches($series['re'], $plot['plot'])) {
                     $compiledContent['series'][]    = $series + $plot;
                     $query[]                        = array('type' => $series['type']) + $plot;
-                }
-            }
-        }
-        if (isset($this->content['flot'])) {
-            if (isset($this->content['flot']['yaxis'])) {
-                $yaxis =& $this->content['flot']['yaxis'];
-                $yaxis['axisLabel'] = $yaxis['label'];
-                unset($yaxis['label']);
-            }
-            if (isset($this->content['flot']['yaxes'])) {
-                foreach ($this->content['flot']['yaxes'] as &$yaxis) {
-                    if (isset($yaxis['label'])) {
-                        $yaxis['axisLabel'] = $yaxis['label'];
-                        unset($yaxis['label']);
-                    }
+                    break;
                 }
             }
         }
@@ -143,5 +157,35 @@ class inGraph_Template_Template
     public function getSplFileInfo()
     {
         return $this->fileInfo;
+    }
+
+    /**
+     * Save template to the file system
+     *
+     * @return self
+     * @throws inGraph_Exception
+     */
+    public function save()
+    {
+        try {
+            $fileObject = $this->fileInfo->openFile('w');
+        } catch (RuntimeException $e) {
+            throw new inGraph_Exception($e->getMessage());
+        }
+        if ($fileObject->flock(LOCK_EX) === false) {
+            throw new inGraph_Exception('Couldn\'t get the lock');
+        }
+        $encodedContent = inGraph_Json::prettyPrint(json_encode($this->content));
+        if ($fileObject->fwrite($encodedContent) === null) {
+            throw new inGraph_Exception('Can\t write to file ' . $this->fileInfo->getRealPath());
+        }
+        $fileObject->flock(LOCK_UN);
+        return $this;
+    }
+
+    public function setContent(array $content)
+    {
+        $this->content = $content;
+        return $this;
     }
 }

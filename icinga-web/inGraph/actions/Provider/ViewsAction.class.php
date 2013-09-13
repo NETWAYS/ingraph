@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ * Copyright (C) 2013 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
  *
@@ -21,15 +21,18 @@ class inGraph_Provider_ViewsAction extends inGraphBaseAction
 {
     public function executeWrite(AgaviRequestDataHolder $rd)
     {
-        $manager = new inGraph_Views_Manager(
-            AgaviConfig::get('modules.ingraph.views'));
-        $this->setAttribute('views', array(
-            'total' => $manager->getCount(),
-            'views' => $manager->getViewNames(
-                $rd->getParameter('offset', 0),
-                $rd->getParameter('limit', 20)
+        $manager = new inGraph_Template_Manager(AgaviConfig::get('modules.ingraph.views'));
+        $manager->collectTemplates();
+        $this->setAttribute(
+            'views',
+            array(
+                'total' => $manager->getCount(),
+                'views' => $manager->getTemplateNames(
+                    $rd->getParameter('limit', 20),
+                    $rd->getParameter('offset', 0)
+                )
             )
-        ));
+        );
         return $this->getDefaultViewName();
     }
 }

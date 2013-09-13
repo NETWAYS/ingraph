@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ * Copyright (C) 2013 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
  *
@@ -17,17 +17,20 @@
  * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
-class inGraph_Views_UpdateAction extends inGraphBaseAction
+class inGraph_Views_CreateOrUpdateAction extends inGraphBaseAction
 {
     public function executeWrite(AgaviRequestDataHolder $rd)
     {
-        $manager = new inGraph_View_Manager(
-            AgaviConfig::get('modules.ingraph.views'));
-        $view = $manager->fetchView($rd->getParameter('name'));
-        $content = json_decode($rd->getParameter('content'), true);
-        $view->update($content);
+        $fileInfo = new SplFileInfo(
+            sprintf(
+                '%s/%s.json',
+                rtrim(AgaviConfig::get('modules.ingraph.views')['path'], '/'),
+                basename($rd->getParameter('name'), '.json')
+            )
+        );
+        $template = new inGraph_Template_Template($rd->getParameter('content'), $fileInfo);
         try {
-            $view->save();
+            $template->save();
         } catch (inGraph_Exception $e) {
             return $this->setError($e->getMessage());
         }

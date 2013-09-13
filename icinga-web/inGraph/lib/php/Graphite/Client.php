@@ -22,7 +22,7 @@ class Client
      *
      * @var int
      */
-    protected $timeout = 30;
+    private $timeout = 30;
 
     /**
      * Create Graphite Client
@@ -56,7 +56,7 @@ class Client
      */
     private function decodeResponse($response)
     {
-        $decodedResponse = json_decode($response, true /* assoc */);
+        $decodedResponse = json_decode($response, true);
         if ($decodedResponse === null) {
             throw new EncodingException('Got invalid JSON response from Graphite: "' . $response . '"');
         }

@@ -9,7 +9,7 @@
             <settings>
 
                 <setting name="title">inGraph</setting>
-                <setting name="version">1.0.2</setting>
+                <setting name="version">1.0.3</setting>
 
                 <setting name="authors">
                     <ae:parameter name="info@netways.de">NETWAYS GmbH</ae:parameter>

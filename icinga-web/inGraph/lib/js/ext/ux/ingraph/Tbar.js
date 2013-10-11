@@ -25,14 +25,14 @@
                             type: 'text',
                             tag: 'input',
                             cls: 'x-hidden',
-                            name: 'start',
+                            name: 'startx',
                             value: this.store.getStartX()
                         },
                         {
                             type: 'text',
                             tag: 'input',
                             cls: 'x-hidden',
-                            name: 'end',
+                            name: 'endx',
                             value: this.store.getEndX()
                         },
                         {

@@ -23,6 +23,7 @@ Url:		https://www.netways.org/projects/ingraph/files
 License:	GPL-3.0
 Group:		System/Monitoring
 Source:		%{name}-%{version}.tar.gz
+Patch0:		sqlalchemy-el6.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root
 
 %if "%{_vendor}" == "suse"
@@ -42,10 +43,14 @@ Requires:	python >= 2.4.0
 %if "%{_vendor}" == "suse"
 Requires:	python-SQLAlchemy >= 0.6.0
 Requires:	python-mysql
-%else
-#Requires:	python-sqlalchemy >= 0.6.0
+%endif
+%if "%{_vendor}" == "redhat"
 Requires:       MySQL-python
-#EL6 ship 0.5.5 only
+%if 0%{?el5}
+#no supported version yet
+%else
+Requires:	python-sqlalchemy0.8
+%endif
 %endif
 BuildRequires:	python-devel
 BuildRequires:	python-setuptools
@@ -109,10 +114,14 @@ Icinga Web.
 
 
 %prep
-#uFIXME
-#%setup -qn ingraph
-#%setup -qn ingraph-ingraph
 %setup -qn %{name}-%{version}
+%if "%{_vendor}" == "redhat"
+%if 0%{?el5}
+#no supported version yet
+%else
+%patch0
+%endif
+%endif
 
 %build
 

@@ -73,7 +73,7 @@ BuildRequires:	fdupes
 %define docdir %{_defaultdocdir}
 %endif
 %define icingawebdir /usr/share/icinga-web
-%define clearcache %{_sbindir}/icinga-web-clearcache
+%define clearcache %{_bindir}/icinga-web-clearcache
 %define ingraphwebdir /usr/share/ingraph-web
 %define ingraphwebclearcache /usr/share/ingraph-web/bin/clearcache.sh
 
@@ -307,6 +307,7 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %changelog
 * Mon Oct 14 2013 dirk.goetz@netways.de
 - added support for sqlalchemy package version on el6
+- fixed location of icinga-web-clearcache
 
 * Tue Aug 20 2013 michael.friedrich@netways.de
 - split frontend into -web, -icinga-web sub packages

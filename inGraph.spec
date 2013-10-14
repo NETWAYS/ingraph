@@ -305,6 +305,9 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 %config(noreplace) %{icingawebdir}/app/modules/inGraph/config/inGraph.xml
 
 %changelog
+* Mon Oct 14 2013 dirk.goetz@netways.de
+- added support for sqlalchemy package version on el6
+
 * Tue Aug 20 2013 michael.friedrich@netways.de
 - split frontend into -web, -icinga-web sub packages
 

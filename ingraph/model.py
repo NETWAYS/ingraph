@@ -22,7 +22,7 @@ except ImportError:
 
 from sqlalchemy import MetaData, UniqueConstraint, Table, Column, Integer, \
     Boolean, Numeric, String, Enum, Sequence, ForeignKey, Index, create_engine, \
-    and_, or_, tuple_, DDL
+    and_, or_, tuple_, DDL, text, bindparam
 try:
     from sqlalchemy import event
 except ImportError:
@@ -416,16 +416,36 @@ class HostService(ModelBase):
         elif not service_name_pattern:
             service_name_pattern = '' 
         if not parent_hostservice_name_pattern:
-            countQuery = select(
-                [func.count()],
-                from_obj=[hostservice.join(service).join(host)]).where(
-                    and_(host.c.name.like(host_name_pattern),
-                         service.c.name.like(service_name_pattern)))
-            selectQuery = hostservice.select(
-                from_obj=[hostservice.join(service).join(host)],
-                limit=limit, offset=offset).where(
-                    and_(host.c.name.like(host_name_pattern),
-                         service.c.name.like(service_name_pattern)))
+            countQuery = text("""
+SELECT count(hs.id)
+FROM hostservice hs
+INNER JOIN host h ON hs.host_id = h.id
+INNER JOIN service s ON hs.service_id = s.id
+LEFT JOIN hostservice phs ON hs.parent_hostservice_id = phs.id
+LEFT JOIN service ps ON phs.service_id = ps.id
+WHERE h.name LIKE :host
+  AND (s.name LIKE :service
+       OR ps.name LIKE :service)
+""", bindparams=[bindparam('host', host_name_pattern),
+                 bindparam('service', service_name_pattern)])
+            selectQuery = """
+SELECT hs.*
+FROM hostservice hs
+INNER JOIN host h ON hs.host_id = h.id
+INNER JOIN service s ON hs.service_id = s.id
+LEFT JOIN hostservice phs ON hs.parent_hostservice_id = phs.id
+LEFT JOIN service ps ON phs.service_id = ps.id
+WHERE h.name LIKE :host
+  AND (s.name LIKE :service
+       OR ps.name LIKE :service)
+"""
+            if limit:
+                selectQuery += "LIMIT {0}".format(limit)
+            if offset:
+                selectQuery += "OFFSET {0}".format(offset)
+            selectQuery = text(selectQuery,
+                               bindparams=[bindparam('host', host_name_pattern),
+                                           bindparam('service', service_name_pattern)])
         else:
             parent_hostservice_ids = [row[hostservice.c.id] for row in
                                       conn.execute(select(

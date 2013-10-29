@@ -25,7 +25,7 @@ INGRAPH_COLLECTOR_FILE_MODE="REMOVE"
 INGRAPH_COLLECTOR_SLEEPSECS="60"
 INGRAPH_COLLECTOR_USER="ingraph"
 INGRAPH_COLLECTOR_GROUP="icinga"
-INGRAPH_COLLECTOR_LOGFILE="-" # stdout/stderr
+INGRAPH_COLLECTOR_LOGFILE="/var/log/ingraph/ingraph-collector.log"
 
 [ -r /etc/default/ingraph-collector ] && . /etc/default/ingraph-collector
 [ -r /etc/sysconfig/ingraph-collector ] && . /etc/sysconfig/ingraph-collector

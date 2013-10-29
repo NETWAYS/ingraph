@@ -23,16 +23,21 @@ import fileinput
 import re
 import time
 import shutil
-import pickle
+import cPickle as pickle
 import xmlrpclib
 import logging
+import socket
+import struct
 
 import ingraph
 from ingraph import daemon
 from ingraph import utils
 import ingraph.log
+import string
 from ingraph.parser import PerfdataParser, InvalidPerfdata
 
+
+CARBON_METRIC_TRANSLATION_TABLE = string.maketrans('. ', '__')
 
 class UnsupportedDaemonFunction(Exception): pass
 
@@ -41,8 +46,9 @@ class Collectord(daemon.UnixDaemon):
     name = 'inGraph-collector'
     check_multi_regex = re.compile('^([^:]+::[^:]+)::([^:]+)$')
 
-    def __init__(self, perfdata_dir, pattern, limit, sleeptime, mode, format,
-                 **kwargs):
+    def __init__(self, backend, perfdata_dir, pattern, limit, sleeptime, mode,
+                 format, **kwargs):
+        self.backend = backend
         self.perfpattern = perfdata_dir + '/' + pattern
         self.sleeptime = sleeptime
         self.limit = limit
@@ -185,7 +191,7 @@ class Collectord(daemon.UnixDaemon):
                 check_command = logdata['check_command']
             except KeyError:
                 check_command = None
-            
+
             update = (logdata['host'], upd_parentservice, upd_service,
                       upd_plotname, logdata['timestamp'], uom, raw_value,
                       raw_value, raw_value, min_value, max_value, warn_lower,
@@ -196,33 +202,105 @@ class Collectord(daemon.UnixDaemon):
 
     def before_daemonize(self):
         self.logger.info("Starting %s..." % self.name)
-        config = utils.load_config('ingraph-xmlrpc.conf')
-        config = utils.load_config('ingraph-aggregates.conf', config)
+        if self.backend == 'xmlrpc':
+            config = utils.load_config('ingraph-xmlrpc.conf')
+            config = utils.load_config('ingraph-aggregates.conf', config)
 
-        url = utils.get_xmlrpc_url(config)
-        api = xmlrpclib.ServerProxy(url, allow_none=True)
+            url = utils.get_xmlrpc_url(config)
+            api = xmlrpclib.ServerProxy(url, allow_none=True)
 
-        tfs = api.getTimeFrames()
-        intervals = tfs.keys()
+            tfs = api.getTimeFrames()
+            intervals = tfs.keys()
 
-        for aggregate in config['aggregates']:
-            interval = aggregate['interval']
+            for aggregate in config['aggregates']:
+                interval = aggregate['interval']
 
-            if str(interval) in intervals:
-                intervals.remove(str(interval))
+                if str(interval) in intervals:
+                    intervals.remove(str(interval))
 
-            if 'retention-period' in aggregate:
-                retention_period = aggregate['retention-period']
+                if 'retention-period' in aggregate:
+                    retention_period = aggregate['retention-period']
+                else:
+                    retention_period = None
+
+                api.setupTimeFrame(interval, retention_period)
+
+            for interval in intervals:
+                tf = tfs[interval]
+                api.disableTimeFrame(tf['id'])
+
+            self.api = api
+        else:
+            config = utils.load_config('ingraph-carbon.conf')
+            self.carbon_address = config['carbon_address']
+            self.carbon_port = config['carbon_port']
+            self.naming_scheme = config['naming_scheme']
+            self.connect_carbon()
+
+    def connect_carbon(self):
+        self.logger.debug("Connecting to carbon at %s:%s",
+                          self.carbon_address, self.carbon_port)
+        self.carbon_sock = socket.socket()
+        try:
+            self.carbon_sock.connect((self.carbon_address, self.carbon_port))
+            self.logger.debug("Successfully connected to carbon")
+            return True
+        except Exception as e:
+            self.logger.warning("Can't connect to carbon at %s:%s: %s",
+                                self.carbon_address, self.carbon_port, e)
+            return False
+
+    def send_to_carbon(self, message):
+        while True:
+            try:
+                # self.carbon_sock.sendall(message) will result in a
+                # broken pipe exception :(
+                bytes_sent_total = 0
+                message_length = len(message)
+                while bytes_sent_total < message_length:
+                    bytes_sent = self.carbon_sock.send(
+                        message[bytes_sent_total:])
+                    if bytes_sent == 0:
+                        raise RuntimeError
+                    bytes_sent_total += bytes_sent
+            except Exception as e:
+                self.logger.critical("Can't send message to carbon: %s", e)
+                self.carbon_sock.close()
+                if self.connect_carbon():
+                    self.logger.debug("Successfully reconnected to carbon")
+                else:
+                    self.logger.warning(
+                        "Carbon not responding; sleeping 30 seconds"
+                    )
+                    time.sleep(30)
             else:
-                retention_period = None
+                break
 
-            api.setupTimeFrame(interval, retention_period)
-
-        for interval in intervals:
-            tf = tfs[interval]
-            api.disableTimeFrame(tf['id'])
-
-        self.api = api
+    def store_metrics(self, metrics):
+        if self.backend == 'xmlrpc':
+            while True:
+                try:
+                    self.api.insertValueBulk(pickle.dumps(metrics))
+                except Exception:
+                    time.sleep(60)
+                else:
+                    break
+        else:
+            batch = []
+            for metric in metrics[:10]:
+                batch.append(
+                    (
+                        self.naming_scheme
+                        .replace('<host>',metric[0].translate(CARBON_METRIC_TRANSLATION_TABLE))
+                        .replace('<service>', metric[2].translate(CARBON_METRIC_TRANSLATION_TABLE))
+                        .replace('<metric>', metric[3].translate(CARBON_METRIC_TRANSLATION_TABLE)),
+                        (metric[4], metric[6])
+                    )
+                )
+            payload = pickle.dumps(batch)
+            header = struct.pack("!L", len(payload))
+            message = header + payload
+            self.send_to_carbon(message)
 
     def run(self):
         parser = PerfdataParser()
@@ -232,12 +310,15 @@ class Collectord(daemon.UnixDaemon):
             lines = 0
             files = glob.glob(self.perfpattern)[:self.limit]
             if files:
+                self.logger.debug("Parsing %d performance data files..",
+                                  len(files))
                 input = fileinput.input(files)
                 for line in input:
                     try:
                         observation, perfdata = parser.parse(line)
                     except InvalidPerfdata, e:
-                        sys.stderr.write("%s %s:%i" % (e, input.filename(), input.filelineno()))
+                        print >> sys.stderr, "%s %s:%i" %\
+                            (e, input.filename(), input.filelineno())
                         continue
                     for performance_data in perfdata:
                         parentservice = None
@@ -263,15 +344,9 @@ class Collectord(daemon.UnixDaemon):
 
             if last_flush + 30 < time.time() or len(updates) >= 25000:
                 if updates:
-                    updates_pickled = pickle.dumps(updates)
+                    self.logger.debug("Storing metrics..")
                     st = time.time()
-                    while True:
-                        try:
-                            self.api.insertValueBulk(updates_pickled)
-                        except Exception:
-                            time.sleep(60)
-                        else:
-                            break
+                    self.store_metrics(updates)
                     et = time.time()
                     print "%d updates (approx. %d lines) took %f seconds" % \
                           (len(updates), lines, et - st)
@@ -286,12 +361,13 @@ class Collectord(daemon.UnixDaemon):
                 elif self.mode == 'REMOVE':
                     for file in files:
                         os.remove(file)
+            self.logger.debug("Sleeping %d seconds..", self.sleeptime)
             time.sleep(self.sleeptime)
 
 
 def main():
     DAEMON_FUNCTIONS = ['start', 'stop', 'restart', 'status']
-    LOG_LVLS = ('INFO', 'WARNING', 'ERROR', 'CRITICAL')
+    LOG_LVLS = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
     PERFDATA_FORMATS = ('ingraph', 'pnp')
     PERFDATA_MODES = ('BACKUP', 'REMOVE')
     usage = 'Usage: %%prog [options] {%s}' % '|'.join(DAEMON_FUNCTIONS)
@@ -333,6 +409,9 @@ def main():
                       choices=LOG_LVLS,
                       help="the log level, one of: %s "
                            "[default: %%default]" % ', '.join(LOG_LVLS))
+    parser.add_option('-b', '--backend', default='xmlrpc',
+                      choices=('xmlrpc', 'carbon'),
+                      help="which backend to use; one of xmlrpc or carbon")
     (options, args) = parser.parse_args()
 
     try:
@@ -342,7 +421,8 @@ def main():
             parser.print_usage()
             sys.exit(1)
 
-    collectord = Collectord(perfdata_dir=options.perfdata_dir,
+    collectord = Collectord(backend=options.backend,
+                            perfdata_dir=options.perfdata_dir,
                             pattern=options.pattern,
                             limit=options.limit,
                             sleeptime=options.sleeptime,

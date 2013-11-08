@@ -112,7 +112,8 @@ class inGraph_Template_Manager
     public function fetchTemplate($subject)
     {
         foreach ($this->templates as $template) {
-            if ($template->matches($template->getContent()['re'], $subject)) {
+            $content = $template->getContent();
+            if ($template->matches($content['re'], $subject)) {
                 return $template->applyDefaults($this->default);
             }
         }

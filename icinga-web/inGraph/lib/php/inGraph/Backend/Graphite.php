@@ -84,7 +84,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
     }
 
     public function fetchPlots(
-        $hostPattern, $servicePattern, $parentServicePattern, $plotPattern, $limit = null, $offset = 0
+        $hostPattern, $servicePattern, $parentServicePattern, $plotPattern = '*', $limit = null, $offset = 0
     ) {
         $metrics = $this->findMetric(
             str_replace(

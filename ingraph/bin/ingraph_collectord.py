@@ -37,7 +37,7 @@ import string
 from ingraph.parser import PerfdataParser, InvalidPerfdata
 
 
-CARBON_METRIC_TRANSLATION_TABLE = string.maketrans('. ', '__')
+CARBON_METRIC_TRANSLATION_TABLE = string.maketrans('. /', '___')
 
 class UnsupportedDaemonFunction(Exception): pass
 

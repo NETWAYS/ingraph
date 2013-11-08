@@ -129,7 +129,6 @@ class inGraph_Template_Template
                 if ($this->matches($series['re'], $plot['plot'])) {
                     $compiledContent['series'][]    = $series + $plot;
                     $query[]                        = array('type' => $series['type']) + $plot;
-                    break;
                 }
             }
         }

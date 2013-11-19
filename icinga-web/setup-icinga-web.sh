@@ -171,7 +171,7 @@ do
         --with-backend*)
             BACKEND=${ARG#--with-backend}
             BACKEND=${BACKEND#=}
-            [ -z "$BACKEND" ] || ( [ "$BACKEND" -ne "ingraph" ] || [ "$BACKEND" -ne "carbon" ] ) && {
+            [ -z "$BACKEND" ] && ( [ "$BACKEND" != "ingraph" ] && [ "$BACKEND" != "carbon" ] ) && {
                 echo "ERROR: expected either ingraph or carbon as backend" >&2
                 exit 1
             }

@@ -19,8 +19,14 @@
         <ae:parameter name="nullTolerance">@NULL_TOLERANCE@</ae:parameter>
     </setting>
 
-    <setting name="templates">
+    <setting name="graphite">
+        <ae:parameter name="serverAddress">@GRAPHITE_URL@</ae:parameter>
+        <ae:parameter name="namingScheme"><![CDATA[ingraph.<host>.<service>.<metric>]]></ae:parameter>
+    </setting>
 
+    <setting name="backend">@BACKEND@</setting>
+
+    <setting name="templates">
         <!-- Absoulte directory to inGraph json templates -->
         <ae:parameter name="dir">%core.module_dir%/inGraph/config/templates</ae:parameter>
 
@@ -29,7 +35,6 @@
     </setting>
 
     <setting name="views">
-
         <!-- Absoulte directory to inGraph json views -->
         <ae:parameter name="dir">%core.module_dir%/inGraph/config/views</ae:parameter>
 

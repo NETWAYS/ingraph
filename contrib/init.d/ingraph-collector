@@ -26,6 +26,7 @@ INGRAPH_COLLECTOR_SLEEPSECS="60"
 INGRAPH_COLLECTOR_USER="ingraph"
 INGRAPH_COLLECTOR_GROUP="icinga"
 INGRAPH_COLLECTOR_LOGFILE="/var/log/ingraph/ingraph-collector.log"
+INGRAPH_COLLECTOR_BACKEND="carbon"
 
 [ -r /etc/default/ingraph-collector ] && . /etc/default/ingraph-collector
 [ -r /etc/sysconfig/ingraph-collector ] && . /etc/sysconfig/ingraph-collector
@@ -38,7 +39,8 @@ do_action() {
     -e "$INGRAPH_COLLECTOR_PERFDATA_PATTERN" \
     -l "$INGRAPH_COLLECTOR_FILE_LIMIT" -m "$INGRAPH_COLLECTOR_FILE_MODE" \
     -s "$INGRAPH_COLLECTOR_SLEEPSECS" -u "$INGRAPH_COLLECTOR_USER" \
-    -g "$INGRAPH_COLLECTOR_GROUP" -o "$INGRAPH_COLLECTOR_LOGFILE" "$1"
+    -g "$INGRAPH_COLLECTOR_GROUP" -o "$INGRAPH_COLLECTOR_LOGFILE" \
+    -b "$INGRAPH_COLLECTOR_BACKEND" "$1"
     RETVAL="$?"
 }
 

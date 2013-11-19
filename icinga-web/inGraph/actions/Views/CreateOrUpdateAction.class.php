@@ -21,10 +21,11 @@ class inGraph_Views_CreateOrUpdateAction extends inGraphBaseAction
 {
     public function executeWrite(AgaviRequestDataHolder $rd)
     {
-        $fileInfo = new SplFileInfo(
+        $config     = AgaviConfig::get('modules.ingraph.views');
+        $fileInfo   = new SplFileInfo(
             sprintf(
                 '%s/%s.json',
-                rtrim(AgaviConfig::get('modules.ingraph.views')['path'], '/'),
+                rtrim($config['path'], '/'),
                 basename($rd->getParameter('name'), '.json')
             )
         );

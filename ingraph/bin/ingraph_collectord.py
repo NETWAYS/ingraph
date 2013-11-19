@@ -287,7 +287,7 @@ class Collectord(daemon.UnixDaemon):
                     break
         else:
             batch = []
-            for metric in metrics[:10]:
+            for metric in metrics:
                 batch.append(
                     (
                         self.naming_scheme

@@ -15,6 +15,7 @@ XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
 INGRAPH_USER=${INGRAPH_USER-ingraph}
 INGRAPH_COLLECTOR_GROUP=${INGRAPH_COLLECTOR_GROUP-icinga}
 LOG_DIR=${LOG_DIR-/var/log/ingraph}
+BACKEND=${BACKEND-ingraph}
 
 PYTHON_OPTS=${PYTHON_OPTS-install}
 
@@ -59,6 +60,8 @@ usage () {
     echo "                          [$XMLRPC_PASSWORD]"
     echo "--with-log-dir            directory for the log files"
     echo "                          [$LOG_DIR]"
+    echo "--with-backend            which backend to use, may be one of ingraph or carbon"
+    echo "                          [$BACKEND]"
     echo
     exit 1
 }
@@ -144,6 +147,14 @@ do
                 exit 1
             }
             ;;
+        --with-backend*)
+            BACKEND=${ARG#--with-backend}
+            BACKEND=${BACKEND#=}
+            [ -z "$BACKEND" ] || ( [ "$BACKEND" -ne "ingraph" ] || [ "$BACKEND" -ne "carbon" ] ) && {
+                echo "ERROR: expected either ingraph or carbon as backend" >&2
+                exit 1
+            }
+            ;;
         --help | -h)
             usage
             ;;
@@ -189,6 +200,7 @@ do
     $SED -i -e s,@INGRAPH_COLLECTOR_GROUP@,$INGRAPH_COLLECTOR_GROUP, $F
     $SED -i -e s,@INGRAPH_USER@,$INGRAPH_USER, $F
     $SED -i -e s,@LOG_DIR@,$LOG_DIR, $F
+    $SED -i -e s,@BACKEND@,$BACKEND, $F
 done
 
 # Install files from the ingraph directory

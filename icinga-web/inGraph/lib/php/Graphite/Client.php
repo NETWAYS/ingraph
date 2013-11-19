@@ -86,7 +86,8 @@ class Client
             CURLOPT_PROXY           => '',
             CURLOPT_HTTPHEADER      => array(
                 'Expect:'  // Bypass "Expect: 100-continue" timeouts
-            )
+            ),
+            CURLOPT_SSL_VERIFYPEER  => false
         ));
 
         $response = curl_exec($ch);
@@ -99,6 +100,11 @@ class Client
         $response = $this->decodeResponse($response);
 
         return $response;
+    }
+
+    private function escape($subject)
+    {
+        return str_replace(array('/', ' '), '_', $subject);
     }
 
     /**
@@ -114,7 +120,7 @@ class Client
             'metrics/find',
             array(
                 'format'    => 'completer',
-                'query'     => $pattern
+                'query'     => $this->escape($pattern)
             )
         );
         return array(

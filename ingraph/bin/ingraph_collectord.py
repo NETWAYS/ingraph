@@ -28,6 +28,7 @@ import xmlrpclib
 import logging
 import socket
 import struct
+import itertools
 
 import ingraph
 from ingraph import daemon
@@ -40,6 +41,13 @@ from ingraph.parser import PerfdataParser, InvalidPerfdata
 CARBON_METRIC_TRANSLATION_TABLE = string.maketrans('. /', '___')
 
 class UnsupportedDaemonFunction(Exception): pass
+
+
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx
+    args = [iter(iterable)] * n
+    return itertools.izip_longest(fillvalue=fillvalue, *args)
 
 
 class Collectord(daemon.UnixDaemon):
@@ -286,21 +294,25 @@ class Collectord(daemon.UnixDaemon):
                 else:
                     break
         else:
-            batch = []
-            for metric in metrics:
-                batch.append(
-                    (
-                        self.naming_scheme
-                        .replace('<host>',metric[0].translate(CARBON_METRIC_TRANSLATION_TABLE))
-                        .replace('<service>', metric[2].translate(CARBON_METRIC_TRANSLATION_TABLE))
-                        .replace('<metric>', metric[3].translate(CARBON_METRIC_TRANSLATION_TABLE)),
-                        (metric[4], metric[6])
+            for metrics_chunk in grouper(metrics, 1000):
+                batch = []
+                for metric in metrics_chunk:
+                    if not metric:
+                        break
+                    batch.append(
+                        (
+                            self.naming_scheme
+                            .replace('<host>',metric[0].translate(CARBON_METRIC_TRANSLATION_TABLE))
+                            .replace('<service>', metric[2].translate(CARBON_METRIC_TRANSLATION_TABLE))
+                            .replace('<metric>', metric[3].translate(CARBON_METRIC_TRANSLATION_TABLE)),
+                            (metric[4], metric[6])
+                        )
                     )
-                )
-            payload = pickle.dumps(batch)
-            header = struct.pack("!L", len(payload))
-            message = header + payload
-            self.send_to_carbon(message)
+                if batch:
+                    payload = pickle.dumps(batch)
+                    header = struct.pack("!L", len(payload))
+                    message = header + payload
+                    self.send_to_carbon(message)
 
     def run(self):
         parser = PerfdataParser()

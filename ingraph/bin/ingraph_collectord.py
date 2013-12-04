@@ -37,6 +37,10 @@ import ingraph.log
 import string
 from ingraph.parser import PerfdataParser, InvalidPerfdata
 
+import json
+import fcntl
+from base64 import urlsafe_b64encode as b64enc
+
 
 CARBON_METRIC_TRANSLATION_TABLE = string.maketrans('. /', '___')
 
@@ -55,7 +59,7 @@ class Collectord(daemon.UnixDaemon):
     check_multi_regex = re.compile('^([^:]+::[^:]+)::([^:]+)$')
 
     def __init__(self, backend, perfdata_dir, pattern, limit, sleeptime, mode,
-                 format, **kwargs):
+                 format, static_metrics_path, **kwargs):
         self.backend = backend
         self.perfpattern = perfdata_dir + '/' + pattern
         self.sleeptime = sleeptime
@@ -63,6 +67,8 @@ class Collectord(daemon.UnixDaemon):
         self.mode = mode
         self.format = format
         super(Collectord, self).__init__(**kwargs)
+        self.checked_hosts_services = {}
+        self.static_metrics_path = static_metrics_path
 
     def _parse_update_pnp(self, tokens):
         logdata = {}
@@ -284,6 +290,101 @@ class Collectord(daemon.UnixDaemon):
             else:
                 break
 
+    def export_static_metrics(self, metric):
+        """
+        Export static metrics to file system
+        Format: JSON
+
+        Assuming:
+        * host name at metric[0]
+        * service name at metric[2]
+        * timestamp at metric[4]
+
+        service_data's keys have to be u'...'
+
+        Storing host metrics in:    static_metrics_path
+                        / b64enc(host name) .json
+        Storing service metrics in: static_metrics_path
+                        / b64enc(host name) / b64enc(service name) .json
+
+        b64enc encodes a string to URL-safe base64 (urlsafe_b64encode)
+        '+' -> '-'
+        '/' -> '_'
+        """
+        host_name = metric[0]
+        service_name = metric[2]
+        host_path = os.path.join(self.static_metrics_path, b64enc(host_name))
+        service_path = host_path + ('' if len(service_name) == 0 else
+                            os.path.join('', b64enc(service_name))) + '.json'
+        # Create entry for host in checked_hosts_services (RAM)
+        # and mkdir host_path (file system)
+        # if not present yet
+        if host_name not in self.checked_hosts_services:
+            self.checked_hosts_services[host_name] = {}
+            if not os.access(host_path, os.F_OK):
+                os.mkdir(host_path, 0o0775)  # rwxrwxr-x
+        service_data = {  # actual metric
+            u'timestamp': metric[4],
+        }
+        i = 7  # Assuming min, max, warn_* and crit_* at metric[7:15]
+        for key in (
+                u'lower_limit',
+                u'upper_limit',
+                u'warn_lower',
+                u'warn_upper',
+                u'warn_type',
+                u'crit_lower',
+                u'crit_upper',
+                u'crit_type'):
+            service_data[key] = metric[i]
+            i += 1
+        data_changed = 0
+        #    file system
+        # 0  nothing to do  (data hasn't been changed)
+        # 1  (re-)create    (invalid JSON or file is not present)
+        # 2  append         (data has been changed)
+        tmp_data = [service_data]  # metrics list
+        # Create entry for service in checked_hosts_services[host_name] (RAM)
+        # if not present yet
+        if service_name not in self.checked_hosts_services[host_name]:
+            if os.access(service_path, os.F_OK):
+                with open(service_path) as f:
+                    fcntl.lockf(f, fcntl.LOCK_SH)
+                    try:
+                        tmp_data = json.loads(f.read())
+                    except ValueError:  # invalid JSON
+                        data_changed = 1
+                        self.logger.warning(
+                            "Invalid JSON in '%s' (%s)! Re-creating file.",
+                            service_path,
+                            host_name
+                        )
+                    fcntl.lockf(f, fcntl.LOCK_UN)
+            else:  # file is not present
+                data_changed = 1
+            # Save the actual metric in RAM if going to (re-)create the file
+            # Else save the old metric
+            self.checked_hosts_services[host_name][service_name] = \
+                        (tmp_data[-1] if data_changed == 0 else service_data)
+        # Compare old and new data if not going to (re-)create the file
+        if data_changed == 0 and service_data[u'timestamp'] > \
+            self.checked_hosts_services[host_name][service_name][u'timestamp']:
+            for key in self.checked_hosts_services[host_name][service_name]:
+                # Ignore timestamp changes
+                if key != u'timestamp' and service_data[key] != \
+                    self.checked_hosts_services[host_name][service_name][key]:
+                    data_changed = 2
+                    # Append new data to array if the data has been changed
+                    tmp_data.append(service_data)
+                    break
+        if data_changed != 0:
+            # Write the data to file if going to (re-)create the file
+            # or if the data has been changed
+            with open(service_path, 'w') as f:
+                fcntl.lockf(f, fcntl.LOCK_EX)
+                f.write(json.dumps(tmp_data))
+                fcntl.lockf(f, fcntl.LOCK_UN)
+
     def store_metrics(self, metrics):
         if self.backend == 'xmlrpc':
             while True:
@@ -308,6 +409,7 @@ class Collectord(daemon.UnixDaemon):
                             (metric[4], metric[6])
                         )
                     )
+                    self.export_static_metrics(metric)
                 if batch:
                     payload = pickle.dumps(batch)
                     header = struct.pack("!L", len(payload))
@@ -424,6 +526,7 @@ def main():
     parser.add_option('-b', '--backend', default='xmlrpc',
                       choices=('xmlrpc', 'carbon'),
                       help="which backend to use; one of xmlrpc or carbon")
+    parser.add_option('--static-metrics-path', dest='static_metrics_path')
     (options, args) = parser.parse_args()
 
     try:
@@ -432,6 +535,11 @@ def main():
     except (IndexError, UnsupportedDaemonFunction):
             parser.print_usage()
             sys.exit(1)
+
+    if not options.static_metrics_path:
+        print >> sys.stderr, "Static metrics directory not given. " \
+                             "(--static-metrics-path)"
+        sys.exit(1)
 
     collectord = Collectord(backend=options.backend,
                             perfdata_dir=options.perfdata_dir,
@@ -443,7 +551,8 @@ def main():
                             detach=options.detach,
                             pidfile=options.pidfile,
                             format=options.format,
-                            log=options.logfile)
+                            log=options.logfile,
+                            static_metrics_path=options.static_metrics_path)
 
     if options.logfile and options.logfile != '-':
         collectord.stdout_logger = ingraph.log.FileLikeLogger(collectord.logger,
@@ -466,12 +575,17 @@ def main():
             sys.stderr.write("Group %s not found.\n" % options.group)
             sys.exit(1)
 
-    if options.perfdata_dir:
-        if not os.access(options.perfdata_dir, os.W_OK):
-            sys.stderr.write("Perfdata directory '%s' is not writable. "
-                             "Please make sure the perfdata directory is writable so "
-                             "the inGraph daemon can delete/move perfdata files." % options.perfdata_dir)
-            sys.exit(1)
+    if options.perfdata_dir and not os.access(options.perfdata_dir, os.W_OK):
+        sys.stderr.write("Perfdata directory '%s' is not writable. "
+                         "Please make sure the perfdata directory is writable so "
+                         "the inGraph daemon can delete/move perfdata files.\n" % options.perfdata_dir)
+        sys.exit(1)
+
+    if options.static_metrics_path and not os.access(options.static_metrics_path, os.W_OK):
+        sys.stderr.write("Static metrics directory '%s' is not writable. "
+                         "Please make sure the static metrics directory is writable so "
+                         "the inGraph daemon can write static metrics files.\n" % options.static_metrics_path)
+        sys.exit(1)
 
     return getattr(collectord, args[0])()
 

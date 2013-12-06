@@ -298,6 +298,7 @@ class Collectord(daemon.UnixDaemon):
         Assuming:
         * host name at metric[0]
         * service name at metric[2]
+        * plot name at metric[3]
         * timestamp at metric[4]
 
         service_data's keys have to be u'...'
@@ -311,11 +312,15 @@ class Collectord(daemon.UnixDaemon):
         '+' -> '-'
         '/' -> '_'
         """
-        host_name = metric[0]
-        service_name = metric[2]
+        host_name = metric[0].translate(CARBON_METRIC_TRANSLATION_TABLE)
+        service_name = metric[2].translate(CARBON_METRIC_TRANSLATION_TABLE)
+        plot_name = metric[3].translate(CARBON_METRIC_TRANSLATION_TABLE)
         host_path = os.path.join(self.static_metrics_path, b64enc(host_name))
-        service_path = host_path + ('' if len(service_name) == 0 else
-                            os.path.join('', b64enc(service_name))) + '.json'
+        if len(service_name) == 0:
+            service_path = host_path
+        else:
+            service_path = os.path.join(host_path, b64enc(service_name))
+        plot_path = os.path.join(service_path, b64enc(plot_name) + '.json')
         # Create entry for host in checked_hosts_services (RAM)
         # and mkdir host_path (file system)
         # if not present yet
@@ -323,7 +328,7 @@ class Collectord(daemon.UnixDaemon):
             self.checked_hosts_services[host_name] = {}
             if not os.access(host_path, os.F_OK):
                 os.mkdir(host_path, 0o0775)  # rwxrwxr-x
-        service_data = {  # actual metric
+        plot_data = {  # actual metric
             u'timestamp': metric[4],
         }
         i = 7  # Assuming min, max, warn_* and crit_* at metric[7:15]
@@ -336,19 +341,23 @@ class Collectord(daemon.UnixDaemon):
                 u'crit_lower',
                 u'crit_upper',
                 u'crit_type'):
-            service_data[key] = metric[i]
+            plot_data[key] = metric[i]
             i += 1
         data_changed = 0
         #    file system
         # 0  nothing to do  (data hasn't been changed)
         # 1  (re-)create    (invalid JSON or file is not present)
         # 2  append         (data has been changed)
-        tmp_data = [service_data]  # metrics list
+        tmp_data = [plot_data]  # metrics list
         # Create entry for service in checked_hosts_services[host_name] (RAM)
         # if not present yet
         if service_name not in self.checked_hosts_services[host_name]:
-            if os.access(service_path, os.F_OK):
-                with open(service_path) as f:
+            self.checked_hosts_services[host_name][service_name] = {}
+            if len(service_name) != 0 and not os.access(service_path, os.F_OK):
+                os.mkdir(service_path, 0o0775)  # rwxrwxr-x
+        if plot_name not in self.checked_hosts_services[host_name][service_name]:
+            if os.access(plot_path, os.F_OK):
+                with open(plot_path) as f:
                     fcntl.lockf(f, fcntl.LOCK_SH)
                     try:
                         tmp_data = json.loads(f.read())
@@ -356,7 +365,7 @@ class Collectord(daemon.UnixDaemon):
                         data_changed = 1
                         self.logger.warning(
                             "Invalid JSON in '%s' (%s)! Re-creating file.",
-                            service_path,
+                            plot_path,
                             host_name
                         )
                     fcntl.lockf(f, fcntl.LOCK_UN)
@@ -364,23 +373,23 @@ class Collectord(daemon.UnixDaemon):
                 data_changed = 1
             # Save the actual metric in RAM if going to (re-)create the file
             # Else save the old metric
-            self.checked_hosts_services[host_name][service_name] = \
-                        (tmp_data[-1] if data_changed == 0 else service_data)
+            self.checked_hosts_services[host_name][service_name][plot_name] = \
+                            (tmp_data[-1] if data_changed == 0 else plot_data)
         # Compare old and new data if not going to (re-)create the file
-        if data_changed == 0 and service_data[u'timestamp'] > \
-            self.checked_hosts_services[host_name][service_name][u'timestamp']:
-            for key in self.checked_hosts_services[host_name][service_name]:
+        if data_changed == 0 and plot_data[u'timestamp'] > \
+            self.checked_hosts_services[host_name][service_name][plot_name][u'timestamp']:
+            for key in self.checked_hosts_services[host_name][service_name][plot_name]:
                 # Ignore timestamp changes
-                if key != u'timestamp' and service_data[key] != \
-                    self.checked_hosts_services[host_name][service_name][key]:
+                if key != u'timestamp' and plot_data[key] != \
+                    self.checked_hosts_services[host_name][service_name][plot_name][key]:
                     data_changed = 2
                     # Append new data to array if the data has been changed
-                    tmp_data.append(service_data)
+                    tmp_data.append(plot_data)
                     break
         if data_changed != 0:
             # Write the data to file if going to (re-)create the file
             # or if the data has been changed
-            with open(service_path, 'w') as f:
+            with open(plot_path, 'w') as f:
                 fcntl.lockf(f, fcntl.LOCK_EX)
                 f.write(json.dumps(tmp_data))
                 fcntl.lockf(f, fcntl.LOCK_UN)

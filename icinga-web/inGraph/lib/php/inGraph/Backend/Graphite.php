@@ -25,6 +25,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
             0,
             strpos($config['namingScheme'], '<service>')
         )  . '<service>';
+        $this->staticMetricsPath = $config['staticMetricsPath'];
         $this->metricFormat = substr(
             $config['namingScheme'],
             0,
@@ -118,7 +119,31 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
         $charts = array();
         foreach ($query as $spec) {
             if ($spec['type'] !== 'avg') {
-                continue;
+                // Type is for example 'warn_lower'
+                // TODO: Create data array for this type
+                $data = array();
+                // $a = 'index';
+                // $dict['index'] = 1;
+                // $dict[$a] = 1
+                $jsonPath = $this->staticMetricsPath . '/' . base64_encode($spec['host'])
+                    . ($spec['service'] === '' ? '' : '/' . base64_encode($spec['service']))
+                    . '/' . base64_encode($spec['plot']) . '.json';
+                if (is_readable($jsonPath)) {
+                    $jsonData = json_decode(file_get_contents($jsonPath), true);
+                } else {
+                    die ("$jsonPath not readable");
+                }
+                foreach ($jsonData as $jsonMetric) {
+                    $data[] = array($jsonMetric['timestamp'], $jsonMetric[$spec['type']]);
+                    // Öl in Euro
+                }
+                // TODO: Iterate $jsonData because there could be more than one static metric (item)
+                    // TODO: in the loop: Add array of timestamp and metric value to the type's data array
+                // TODO: var_dump data array and die
+                $charts[] = array(
+                        'label' => $spec['plot'] . ' ' . $spec['type'],// Create label: 'plotName type, e.g. "load1 warn_upper"
+                        'data'  => $data// the data array
+                    ) + $spec;
             }
             $target = sprintf(
                 'legendValue(substr(keepLastValue(%s)), "last", "avg", "min", "max")',

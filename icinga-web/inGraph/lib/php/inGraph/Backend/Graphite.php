@@ -12,6 +12,8 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
 
     private $pattern;
 
+    private $metricsCache = array();
+
     public function __construct(array $config = array())
     {
         parent::__construct($config['serverAddress']);
@@ -119,30 +121,30 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
         $charts = array();
         foreach ($query as $spec) {
             if ($spec['type'] !== 'avg') {
-                // Type is for example 'warn_lower'
-                // TODO: Create data array for this type
                 $data = array();
-                // $a = 'index';
-                // $dict['index'] = 1;
-                // $dict[$a] = 1
                 $jsonPath = $this->staticMetricsPath . '/' . base64_encode($spec['host'])
                     . ($spec['service'] === '' ? '' : '/' . base64_encode($spec['service']))
                     . '/' . base64_encode($spec['plot']) . '.json';
-                if (is_readable($jsonPath)) {
-                    $jsonData = json_decode(file_get_contents($jsonPath), true);
-                } else {
-                    die ("$jsonPath not readable");
+                if (!array_key_exists($spec['host'], $this->metricsCache)) {
+                    $this->metricsCache[$spec['host']] = array();
                 }
+                if (!array_key_exists($spec['service'], $this->metricsCache[$spec['host']])) {
+                    $this->metricsCache[$spec['host']][$spec['service']] = array();
+                }
+                if (!array_key_exists($spec['plot'], $this->metricsCache[$spec['host']][$spec['service']])) {
+                    if (is_readable($jsonPath)) {
+                        $this->metricsCache[$spec['host']][$spec['service']][$spec['plot']] = json_decode(file_get_contents($jsonPath), true);
+                    } else {
+                        continue;
+                    }
+                }
+                $jsonData = $this->metricsCache[$spec['host']][$spec['service']][$spec['plot']];
                 foreach ($jsonData as $jsonMetric) {
                     $data[] = array($jsonMetric['timestamp'], $jsonMetric[$spec['type']]);
-                    // Öl in Euro
                 }
-                // TODO: Iterate $jsonData because there could be more than one static metric (item)
-                    // TODO: in the loop: Add array of timestamp and metric value to the type's data array
-                // TODO: var_dump data array and die
                 $charts[] = array(
-                        'label' => $spec['plot'] . ' ' . $spec['type'],// Create label: 'plotName type, e.g. "load1 warn_upper"
-                        'data'  => $data// the data array
+                        'label' => $spec['plot'] . ' ' . $spec['type'],
+                        'data'  => $data
                     ) + $spec;
             }
             $target = sprintf(

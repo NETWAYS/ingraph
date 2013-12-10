@@ -31,6 +31,7 @@ import struct
 import itertools
 
 import ingraph
+import ingraph.xmlrpc
 from ingraph import daemon
 from ingraph import utils
 import ingraph.log
@@ -39,6 +40,7 @@ from ingraph.parser import PerfdataParser, InvalidPerfdata
 
 import json
 import fcntl
+import threading
 from base64 import urlsafe_b64encode as b64enc
 
 
@@ -246,6 +248,23 @@ class Collectord(daemon.UnixDaemon):
             self.api = api
         else:
             config = utils.load_config('ingraph-carbon.conf')
+            config = utils.load_config('ingraph-collector-xmlrpc.conf', config)
+            if 'collector_xmlrpc_address' not in config or \
+                    'collector_xmlrpc_port' not in config or \
+                    'collector_xmlrpc_address' not in config or \
+                    'collector_xmlrpc_port' not in config:
+                print >> sys.stderr, "You have to configure "\
+"'collector_xmlrpc_address', 'collector_xmlrpc_port', "\
+"'collector_xmlrpc_user' and 'collector_xmlrpc_password' in "\
+"'ingraph-collector-xmlrpc.conf'!"
+                sys.exit(1)
+            else:
+                self.collector_xmlrpc_address = \
+                                            config['collector_xmlrpc_address']
+                self.collector_xmlrpc_port = config['collector_xmlrpc_port']
+                self.collector_xmlrpc_user = config['collector_xmlrpc_user']
+                self.collector_xmlrpc_password = \
+                                            config['collector_xmlrpc_password']
             self.carbon_address = config['carbon_address']
             self.carbon_port = config['carbon_port']
             self.naming_scheme = config['naming_scheme']
@@ -290,6 +309,19 @@ class Collectord(daemon.UnixDaemon):
             else:
                 break
 
+    def b64paths(self, host_name, service_name, plot_name):
+        host_path = os.path.join(self.static_metrics_path, b64enc(host_name))
+        if len(service_name) == 0:
+            service_path = host_path
+        else:
+            service_path = os.path.join(host_path, b64enc(service_name))
+        plot_path = os.path.join(service_path, b64enc(plot_name) + '.json')
+        return {
+            'host': host_path,
+            'service': service_path,
+            'plot': plot_path,
+        }
+
     def export_static_metrics(self, metric):
         """
         Export static metrics to file system
@@ -315,12 +347,14 @@ class Collectord(daemon.UnixDaemon):
         host_name = metric[0].translate(CARBON_METRIC_TRANSLATION_TABLE)
         service_name = metric[2].translate(CARBON_METRIC_TRANSLATION_TABLE)
         plot_name = metric[3].translate(CARBON_METRIC_TRANSLATION_TABLE)
-        host_path = os.path.join(self.static_metrics_path, b64enc(host_name))
-        if len(service_name) == 0:
-            service_path = host_path
-        else:
-            service_path = os.path.join(host_path, b64enc(service_name))
-        plot_path = os.path.join(service_path, b64enc(plot_name) + '.json')
+        the_b64paths = self.b64paths(
+            host_name=host_name,
+            service_name=service_name,
+            plot_name=plot_name
+        )
+        host_path=the_b64paths['host']
+        service_path=the_b64paths['service']
+        plot_path=the_b64paths['plot']
         # Create entry for host in checked_hosts_services (RAM)
         # and mkdir host_path (file system)
         # if not present yet
@@ -425,67 +459,115 @@ class Collectord(daemon.UnixDaemon):
                     message = header + payload
                     self.send_to_carbon(message)
 
+    def get_static_metrics(self, host_name, service_name, plot_name):
+        plot_path = self.b64paths(
+            host_name=host_name,
+            service_name=service_name,
+            plot_name=plot_name
+        )['plot']
+        if os.access(plot_path, os.R_OK):
+            with open(plot_path) as f:
+                fcntl.lockf(f, fcntl.LOCK_SH)
+                try:
+                    tmp_data = json.loads(f.read())
+                except ValueError:  # invalid JSON
+                    self.logger.warning(
+                        "Invalid JSON in '%s' (%s)!",
+                        plot_path,
+                        host_name
+                    )
+                    return None
+                else:
+                    return tmp_data
+                finally:
+                    fcntl.lockf(f, fcntl.LOCK_UN)
+        else:
+            return None
+
     def run(self):
         parser = PerfdataParser()
         last_flush = time.time()
         updates = []
-        while True:
-            lines = 0
-            files = glob.glob(self.perfpattern)[:self.limit]
-            if files:
-                self.logger.debug("Parsing %d performance data files..",
-                                  len(files))
-                input = fileinput.input(files)
-                for line in input:
-                    try:
-                        observation, perfdata = parser.parse(line)
-                    except InvalidPerfdata, e:
-                        print >> sys.stderr, "%s %s:%i" %\
-                            (e, input.filename(), input.filelineno())
-                        continue
-                    for performance_data in perfdata:
-                        parentservice = None
-                        service = observation['service']
-                        if performance_data['child_service']:
-                            parentservice = service
-                            service = performance_data['child_service']
-                        pluginstatus = observation['state']
-                        if pluginstatus == 1:
-                            pluginstatus = 'warning'
-                        if pluginstatus == 2:
-                            pluginstatus = 'critical'
-                        updates.append(
-                            (observation['host'], parentservice, service,
-                             performance_data['label'], observation['timestamp'], performance_data['uom'],
-                             performance_data['value'], performance_data['lower_limit'],
-                             performance_data['upper_limit'], performance_data['warn_lower'],
-                             performance_data['warn_upper'], performance_data['warn_type'],
-                             performance_data['crit_lower'], performance_data['crit_upper'],
-                             performance_data['crit_type'], pluginstatus)
-                        )
-                    lines += 1
-
-            if last_flush + 30 < time.time() or len(updates) >= 25000:
-                if updates:
-                    self.logger.debug("Storing metrics..")
-                    st = time.time()
-                    self.store_metrics(updates)
-                    et = time.time()
-                    print "%d updates (approx. %d lines) took %f seconds" % \
-                          (len(updates), lines, et - st)
-                updates = []
-                last_flush = time.time()
+        if self.backend != 'xmlrpc':
+            self.AuthenticatedXMLRPCServer = \
+                ingraph.xmlrpc.AuthenticatedXMLRPCServer(
+                    (
+                        self.collector_xmlrpc_address,
+                        self.collector_xmlrpc_port
+                    ),
+                    self.logger,
+                    allow_none=True)
+            self.AuthenticatedXMLRPCServer.required_username = \
+                                                self.collector_xmlrpc_user
+            self.AuthenticatedXMLRPCServer.required_password = \
+                                                self.collector_xmlrpc_password
+            self.AuthenticatedXMLRPCServer.register_introspection_functions()
+            self.AuthenticatedXMLRPCServer.register_function(
+                self.get_static_metrics, 'get_static_metrics')
+            self.XMLRPCServerThread = threading.Thread(
+                target=self.AuthenticatedXMLRPCServer.serve_forever)
+            self.XMLRPCServerThread.daemon = True
+            self.XMLRPCServerThread.start()
+        try:
+            while True:
                 lines = 0
+                files = glob.glob(self.perfpattern)[:self.limit]
+                if files:
+                    self.logger.debug("Parsing %d performance data files..",
+                                      len(files))
+                    input = fileinput.input(files)
+                    for line in input:
+                        try:
+                            observation, perfdata = parser.parse(line)
+                        except InvalidPerfdata, e:
+                            print >> sys.stderr, "%s %s:%i" %\
+                                (e, input.filename(), input.filelineno())
+                            continue
+                        for performance_data in perfdata:
+                            parentservice = None
+                            service = observation['service']
+                            if performance_data['child_service']:
+                                parentservice = service
+                                service = performance_data['child_service']
+                            pluginstatus = observation['state']
+                            if pluginstatus == 1:
+                                pluginstatus = 'warning'
+                            if pluginstatus == 2:
+                                pluginstatus = 'critical'
+                            updates.append(
+                                (observation['host'], parentservice, service,
+                                 performance_data['label'], observation['timestamp'], performance_data['uom'],
+                                 performance_data['value'], performance_data['lower_limit'],
+                                 performance_data['upper_limit'], performance_data['warn_lower'],
+                                 performance_data['warn_upper'], performance_data['warn_type'],
+                                 performance_data['crit_lower'], performance_data['crit_upper'],
+                                 performance_data['crit_type'], pluginstatus)
+                            )
+                        lines += 1
 
-            if files:
-                if self.mode == 'BACKUP':
-                    for file in files:
-                        shutil.move(file, file + '.bak')
-                elif self.mode == 'REMOVE':
-                    for file in files:
-                        os.remove(file)
-            self.logger.debug("Sleeping %d seconds..", self.sleeptime)
-            time.sleep(self.sleeptime)
+                if last_flush + 30 < time.time() or len(updates) >= 25000:
+                    if updates:
+                        self.logger.debug("Storing metrics..")
+                        st = time.time()
+                        self.store_metrics(updates)
+                        et = time.time()
+                        print "%d updates (approx. %d lines) took %f seconds" % \
+                              (len(updates), lines, et - st)
+                    updates = []
+                    last_flush = time.time()
+                    lines = 0
+
+                if files:
+                    if self.mode == 'BACKUP':
+                        for file in files:
+                            shutil.move(file, file + '.bak')
+                    elif self.mode == 'REMOVE':
+                        for file in files:
+                            os.remove(file)
+                self.logger.debug("Sleeping %d seconds..", self.sleeptime)
+                time.sleep(self.sleeptime)
+        except KeyboardInterrupt:
+            print >> sys.stderr, "Ctrl-C pressed -- terminating..."
 
 
 def main():

@@ -14,7 +14,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
 
     private $metricsCache = array();
 
-    private $xmlrpc;
+    private $rpcClient;
 
     public function __construct(array $config = array())
     {
@@ -42,7 +42,17 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                 $this->metricFormat
             )
         );
-        $this->xmlrpc = new inGraph_XmlRpc_Client($config['xmlrpc']);
+        switch ($config['rpcProtocol'])
+        {
+            case 'json':
+                $this->rpcClient = new inGraph_JsonRpc_Client($config['rpcEndpoint']);
+                break;
+            case 'xml':
+                $this->rpcClient = new inGraph_XmlRpc_Client($config['rpcEndpoint']);
+                break;
+            default:
+                throw new Exception;
+        }
     }
 
     public function fetchHosts($pattern, $limit = null, $offset = 0)
@@ -136,7 +146,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                 }
                 if (!array_key_exists($spec['plot'], $this->metricsCache[$spec['host']][$spec['service']])) {
                     if (is_readable($jsonPath)) {
-                        $this->metricsCache[$spec['host']][$spec['service']][$spec['plot']] = $this->xmlrpc->call(
+                        $this->metricsCache[$spec['host']][$spec['service']][$spec['plot']] = $this->rpcClient->call(
                             'get_static_metrics', array($spec['host'], $spec['service'], $spec['plot']));
                     } else {
                         continue;

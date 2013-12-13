@@ -36,6 +36,8 @@ XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
 NULL_TOLERANCE=${NULL_TOLERANCE-2}
 NODE_BIN=
 WEB_CACHE_DIR=${WEB_CACHE_DIR-$PREFIX/app/cache}
+BACKEND=${BACKEND-ingraph}
+GRAPHITE_URL=${GRAPHITE_URL-http://127.0.0.1}
 
 FIND=${FIND-find}
 INSTALL=${INSTALL-install}
@@ -85,6 +87,10 @@ usage () {
     echo "                          [$NULL_TOLERANCE]"
     echo "--with-node-bin           Path to Node.js binary"
     echo "                          [$NODE_BIN]"
+    echo "--with-backend            which backend to use, may be one of ingraph or carbon"
+    echo "                          [$BACKEND]"
+    echo "--with-graphite-web-url   URL to graphite-web when using carbon as backend"
+    echo "                          [$GRAPHITE_URL]"
     echo
     exit 1
 }
@@ -236,6 +242,22 @@ do
                 exit 1
             }
             ;;
+        --with-backend*)
+            BACKEND=${ARG#--with-backend}
+            BACKEND=${BACKEND#=}
+            [ -z "$BACKEND" ] && ( [ "$BACKEND" != "ingraph" ] && [ "$BACKEND" != "carbon" ] ) && {
+                echo "ERROR: expected either ingraph or carbon as backend" >&2
+                exit 1
+            }
+            ;;
+        --with-graphite-web-url*)
+            GRAPHITE_URL=${ARG#--with-graphite-web-url}
+            GRAPHITE_URL=${GRAPHITE_URL#=}
+            [ -z "$GRAPHITE_URL" ] && {
+                echo "ERROR: graphite web URL must not be empty" >&2
+                exit 1
+            }
+            ;;
         --with-node-bin*)
             NODE_BIN=${ARG#--with-node-bin}
             NODE_BIN=${NODE_BIN#=}
@@ -301,6 +323,8 @@ do
     $SED -i -e s,@XMLRPC_USER@,$XMLRPC_USER, $F
     $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
     $SED -i -e s,@NULL_TOLERANCE@,$NULL_TOLERANCE, $F
+    $SED -i -e s,@BACKEND@,$BACKEND, $F
+    $SED -i -e s,@GRAPHITE_URL@,$GRAPHITE_URL, $F
     $SED -i -e s,@NODE_BIN@,$NODE_BIN, $F
 done
 
@@ -330,11 +354,11 @@ $INSTALL -m 755 -o $WEB_USER -g $WEB_GROUP -d $PREFIX/app/log $PREFIX/app/cache
 # Install direcotries and files from icinga-web module
 echo "(4/4) Installing directories and files from common source..."
 
-install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $COMMON_SRC/inGraph/actions $PREFIX/app/modules/inGraph/actions
-install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $COMMON_SRC/inGraph/cache $PREFIX/app/modules/inGraph/cache
-install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $COMMON_SRC/inGraph/templates $PREFIX/app/modules/inGraph/templates
-install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $COMMON_SRC/inGraph/validate $PREFIX/app/modules/inGraph/validate
-install_common_directories "Comments${tab}Provider${tab}Templates${tab}Views" $COMMON_SRC/inGraph/views $PREFIX/app/modules/inGraph/views
+install_common_directories "Comments${tab}Provider${tab}Views" $COMMON_SRC/inGraph/actions $PREFIX/app/modules/inGraph/actions
+install_common_directories "Comments${tab}Provider${tab}Views" $COMMON_SRC/inGraph/cache $PREFIX/app/modules/inGraph/cache
+install_common_directories "Comments${tab}Provider${tab}Views" $COMMON_SRC/inGraph/templates $PREFIX/app/modules/inGraph/templates
+install_common_directories "Comments${tab}Provider${tab}Views" $COMMON_SRC/inGraph/validate $PREFIX/app/modules/inGraph/validate
+install_common_directories "Comments${tab}Provider${tab}Views" $COMMON_SRC/inGraph/views $PREFIX/app/modules/inGraph/views
 install_common_directories "js${tab}styles" $COMMON_SRC/inGraph/lib $PREFIX/pub
 # Backup modified templates
 if [ -d "$PREFIX/app/modules/inGraph/config/templates" ] && [ "$(ls -A "$PREFIX/app/modules/inGraph/config/templates")" ]
@@ -383,6 +407,8 @@ then
     $SED -i s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $PREFIX/app/modules/inGraph/config/inGraph.xml
     $SED -i s,@NULL_TOLERANCE@,$NULL_TOLERANCE, $PREFIX/app/modules/inGraph/config/inGraph.xml
     $SED -i s,@NODE_BIN@,$NODE_BIN, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@BACKEND@,$BACKEND, $PREFIX/app/modules/inGraph/config/inGraph.xml
+    $SED -i s,@GRAPHITE_URL@,$GRAPHITE_URL, $PREFIX/app/modules/inGraph/config/inGraph.xml
 fi
 
 echo

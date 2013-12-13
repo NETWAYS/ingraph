@@ -28,7 +28,7 @@
 
     <setting name="templates">
         <!-- Absoulte directory to inGraph json templates -->
-        <ae:parameter name="dir">%core.module_dir%/inGraph/config/templates</ae:parameter>
+        <ae:parameter name="path">%core.module_dir%/inGraph/config/templates</ae:parameter>
 
         <!-- Relative filename for the default template -->
         <ae:parameter name="default">default.json</ae:parameter>
@@ -36,7 +36,7 @@
 
     <setting name="views">
         <!-- Absoulte directory to inGraph json views -->
-        <ae:parameter name="dir">%core.module_dir%/inGraph/config/views</ae:parameter>
+        <ae:parameter name="path">%core.module_dir%/inGraph/config/views</ae:parameter>
 
         <!-- Relative filename for the default view -->
         <ae:parameter name="default">default.json</ae:parameter>

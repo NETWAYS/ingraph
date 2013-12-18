@@ -117,6 +117,8 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
             // e.g. {metric}.average they're not leaves.
             preg_match($this->pattern, $metric['path'], $matches);
             $plots[] = array(
+                'plot_id'           => sprintf(
+                    '%s - %s - %s', $matches['host'], $matches['service'], $matches['metric']),
                 'plot'              => $matches['metric'],
                 'host'              => $matches['host'],
                 'service'           => $matches['service'],
@@ -171,8 +173,10 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
             );
             foreach ($this->fetchMetric($target, $start, $end) as $metric) {
                 $charts[] = array(
-                    'label' => $metric['target'],
-                    'data'  => array_map('array_reverse', $metric['datapoints'])
+                    'plot_id'   => sprintf(
+                        '%s - %s - %s - %s', $spec['host'], $spec['service'], $spec['plot'], $spec['type']),
+                    'label'     => $metric['target'],
+                    'data'      => array_map('array_reverse', $metric['datapoints'])
                 ) + $spec;
             }
         }

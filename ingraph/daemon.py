@@ -88,8 +88,8 @@ class UnixDaemon(object):
         sys.exit(0)
 
     def _atexit(self):
-        self._delpid()
         self.cleanup()
+        self._delpid()
 
     def cleanup(self):
         pass
@@ -204,8 +204,13 @@ class UnixDaemon(object):
 
         self._writepid()
 
-        self.run()
-        return 0
+        try:
+            self.run()
+        except KeyboardInterrupt:
+            print >> sys.stderr, "Ctrl-C pressed -- terminating..."
+            sys.exit(0)
+        finally:
+            return 0
 
     def stop(self, ignore_error=False):
         pid = self._getpid()

@@ -494,77 +494,82 @@ class Collectord(daemon.UnixDaemon):
         last_flush = time.time()
         updates = []
         if self.backend != 'xmlrpc':
-            self.PyJsonRpcHttpRequestHandler.required_username = self.collector_jsonrpc_user
-            self.PyJsonRpcHttpRequestHandler.required_password = self.collector_jsonrpc_password
-            self.PyJsonRpcHttpRequestHandler.methods['get_static_metrics'] = self.get_static_metrics
+            class PyJsonRpcHttpRequestHandler(AuthenticatedHTTPRequestHandler):
+                methods = {
+                    'get_static_metrics': self.get_static_metrics
+                }
+                required_username = self.collector_jsonrpc_user
+                required_password = self.collector_jsonrpc_password
             self.JSONRPCServer = pyjsonrpc.ThreadingHttpServer(
                 server_address = (self.collector_jsonrpc_address, self.collector_jsonrpc_port),
-                RequestHandlerClass = self.PyJsonRpcHttpRequestHandler
+                RequestHandlerClass = PyJsonRpcHttpRequestHandler
             )
-            self.JSONRPCServerThread = threading.Thread(target=self.JSONRPCServer.serve_forever)
-            self.JSONRPCServerThread.daemon = True
-            self.JSONRPCServerThread.start()
-        try:
-            while True:
+            JSONRPCServerThread = threading.Thread(target=self.JSONRPCServer.serve_forever)
+            JSONRPCServerThread.daemon = True
+            JSONRPCServerThread.start()
+        while True:
+            lines = 0
+            files = glob.glob(self.perfpattern)[:self.limit]
+            if files:
+                self.logger.debug("Parsing %d performance data files..",
+                                  len(files))
+                input = fileinput.input(files)
+                for line in input:
+                    try:
+                        observation, perfdata = parser.parse(line)
+                    except InvalidPerfdata, e:
+                        print >> sys.stderr, "%s %s:%i" %\
+                            (e, input.filename(), input.filelineno())
+                        continue
+                    for performance_data in perfdata:
+                        parentservice = None
+                        service = observation['service']
+                        if performance_data['child_service']:
+                            parentservice = service
+                            service = performance_data['child_service']
+                        pluginstatus = observation['state']
+                        if pluginstatus == 1:
+                            pluginstatus = 'warning'
+                        if pluginstatus == 2:
+                            pluginstatus = 'critical'
+                        updates.append(
+                            (observation['host'], parentservice, service,
+                             performance_data['label'], observation['timestamp'], performance_data['uom'],
+                             performance_data['value'], performance_data['lower_limit'],
+                             performance_data['upper_limit'], performance_data['warn_lower'],
+                             performance_data['warn_upper'], performance_data['warn_type'],
+                             performance_data['crit_lower'], performance_data['crit_upper'],
+                             performance_data['crit_type'], pluginstatus)
+                        )
+                    lines += 1
+
+            if last_flush + 30 < time.time() or len(updates) >= 25000:
+                if updates:
+                    self.logger.debug("Storing metrics..")
+                    st = time.time()
+                    self.store_metrics(updates)
+                    et = time.time()
+                    print "%d updates (approx. %d lines) took %f seconds" % \
+                          (len(updates), lines, et - st)
+                updates = []
+                last_flush = time.time()
                 lines = 0
-                files = glob.glob(self.perfpattern)[:self.limit]
-                if files:
-                    self.logger.debug("Parsing %d performance data files..",
-                                      len(files))
-                    input = fileinput.input(files)
-                    for line in input:
-                        try:
-                            observation, perfdata = parser.parse(line)
-                        except InvalidPerfdata, e:
-                            print >> sys.stderr, "%s %s:%i" %\
-                                (e, input.filename(), input.filelineno())
-                            continue
-                        for performance_data in perfdata:
-                            parentservice = None
-                            service = observation['service']
-                            if performance_data['child_service']:
-                                parentservice = service
-                                service = performance_data['child_service']
-                            pluginstatus = observation['state']
-                            if pluginstatus == 1:
-                                pluginstatus = 'warning'
-                            if pluginstatus == 2:
-                                pluginstatus = 'critical'
-                            updates.append(
-                                (observation['host'], parentservice, service,
-                                 performance_data['label'], observation['timestamp'], performance_data['uom'],
-                                 performance_data['value'], performance_data['lower_limit'],
-                                 performance_data['upper_limit'], performance_data['warn_lower'],
-                                 performance_data['warn_upper'], performance_data['warn_type'],
-                                 performance_data['crit_lower'], performance_data['crit_upper'],
-                                 performance_data['crit_type'], pluginstatus)
-                            )
-                        lines += 1
 
-                if last_flush + 30 < time.time() or len(updates) >= 25000:
-                    if updates:
-                        self.logger.debug("Storing metrics..")
-                        st = time.time()
-                        self.store_metrics(updates)
-                        et = time.time()
-                        print "%d updates (approx. %d lines) took %f seconds" % \
-                              (len(updates), lines, et - st)
-                    updates = []
-                    last_flush = time.time()
-                    lines = 0
+            if files:
+                if self.mode == 'BACKUP':
+                    for file in files:
+                        shutil.move(file, file + '.bak')
+                elif self.mode == 'REMOVE':
+                    for file in files:
+                        os.remove(file)
+            self.logger.debug("Sleeping %d seconds..", self.sleeptime)
+            time.sleep(self.sleeptime)
 
-                if files:
-                    if self.mode == 'BACKUP':
-                        for file in files:
-                            shutil.move(file, file + '.bak')
-                    elif self.mode == 'REMOVE':
-                        for file in files:
-                            os.remove(file)
-                self.logger.debug("Sleeping %d seconds..", self.sleeptime)
-                time.sleep(self.sleeptime)
-        except KeyboardInterrupt:
-            print >> sys.stderr, "Ctrl-C pressed -- terminating..."
-
+    def cleanup(self):
+        try:
+            self.JSONRPCServer.shutdown()
+        except AttributeError:
+            pass
 
 def main():
     DAEMON_FUNCTIONS = ['start', 'stop', 'restart', 'status']

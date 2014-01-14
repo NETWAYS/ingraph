@@ -22,7 +22,6 @@ import bisect
 from time import time
 from threading import Lock
 from operator import itemgetter
-from collections import deque
 from decimal import Decimal
 
 import oursql
@@ -306,57 +305,6 @@ class MySQLAPI(object):
         self._scheduler.add(RotationJob("Rotating %s" % tablename, ahead + retention_period - now, retention_period * 2,
                                         self._rotate_partition, tablename, ahead, retention_period * 2))
 
-    def drop_table(self, connection, tablename):
-        connection.cursor().execute('DROP TABLE %s' % tablename, plain_query=True)
-
-    def get_host(self, connection, host_name):
-        cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('SELECT * FROM `host` WHERE `name` = ?', (host_name,))
-        return cursor.fetchone()
-
-    def insert_host(self, connection, host_name):
-        cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('INSERT INTO `host` (`name`) VALUES (?)', (host_name,))
-        return self.get_host(connection, host_name)
-
-    def get_service(self, connection, service_name):
-        cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('SELECT * FROM `service` WHERE `name` = ?', (service_name,))
-        return cursor.fetchone()
-
-    def insert_service(self, connection, service_name):
-        cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('INSERT INTO `service` (`name`) VALUES (?)', (service_name,))
-        return self.get_service(connection, service_name)
-
-    def get_host_service(self, connection, host_id, service_id, parent_hostservice_id=None):
-        cursor = connection.cursor(oursql.DictCursor)
-        query = 'SELECT * FROM `hostservice` WHERE `host_id` = ? AND `service_id` = ?'
-        params = [host_id, service_id]
-        if parent_hostservice_id:
-            query += ' AND `parent_hostservice_id` = ?'
-            params.append(parent_hostservice_id)
-        cursor.execute(query, params)
-        return cursor.fetchone()
-
-    def insert_host_service(self, connection, host_id, service_id, parent_hostservice_id=None):
-        cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('INSERT INTO `hostservice` (`host_id`, `service_id`, `parent_hostservice_id`) VALUES (?, ?, ?)',
-                       (host_id, service_id, parent_hostservice_id))
-        return self.get_host_service(connection, host_id, service_id, parent_hostservice_id)
-
-    def get_plot(self, connection, host_service_id, plot_name):
-        cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('SELECT * FROM `plot` WHERE `hostservice_id` = ? AND `name` = ?',
-                       (host_service_id, plot_name))
-        return cursor.fetchone()
-
-    def insert_plot(self, connection, host_service_id, plot_name, plot_uom):
-        cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('INSERT INTO `plot` (`hostservice_id`, `name`, `unit`) VALUES (?, ?, ?)',
-                       (host_service_id, plot_name, plot_uom))
-        return self.get_plot(connection, host_service_id, plot_name)
-
     def fetch_datapoint_tables(self, connection):
         cursor = connection.cursor()
         cursor.execute('SHOW TABLES LIKE "datapoint_%"', plain_query=True)
@@ -635,24 +583,6 @@ class MySQLAPI(object):
         start -= 1.5 * interval
         end += 1.5 * interval
         return start, end, interval
-
-    def fetch_datapoints(self, connection, plot_ids, start, end, interval, null_tolerance=0):
-        if not plot_ids:
-            return []
-        cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('''SELECT * FROM `datapoint_%d`
-                          WHERE `timestamp` BETWEEN ? AND ? AND `plot_id` IN (%s)
-                          ORDER BY `timestamp` ASC''' % (interval, ','.join(map(str, plot_ids))), (start, end))
-        return cursor
-
-    def fetch_performance_data(self, connection, plot_ids, start, end):
-        if not plot_ids:
-            return []
-        cursor = connection.cursor(oursql.DictCursor)
-        cursor.execute('''SELECT * FROM `performance_data`
-                          WHERE `timestamp` BETWEEN ? AND ? AND `plot_id` IN (?)
-                          ORDER BY `timestamp` ASC''', (start, end, ','.join(map(repr, plot_ids))))
-        return cursor
 
     def delete_datapoints(self, connection, parambatch):
         start = time()

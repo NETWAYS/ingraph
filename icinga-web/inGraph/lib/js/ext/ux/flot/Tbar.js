@@ -24,50 +24,6 @@
     Ext.ns('Ext.ux.flot');
     Ext.ux.flot.Tbar = Ext.extend(Ext.Toolbar, {
         /**
-         * Whether to show the paging controls.
-         */
-        showDataView: true,
-        /**
-         * Whether to show the calendar button.
-         */
-        showCalendar: true,
-        /**
-         * Whether to show the refresh button.
-         */
-        showRefresh: true,
-        /**
-         * Whether to show the sync button.
-         */
-        showSync: true,
-        /**
-         * Whether to show the combobox to enable/disable datapoints.
-         */
-        showDatapoints: true,
-        /**
-         * Whether to show the combobox to enable/disable period averages.
-         */
-        showPeriodAverage: true,
-        /**
-         * Whether to show the combobox to enable/disable spline.
-         */
-        showSmooth: false,
-        /**
-         * Whether to show the settings button.
-         */
-        showSettings: true,
-        /**
-         * Whether to show the comments button.
-         */
-        showComments: false,
-        /**
-         * Whether to show the prediction button.
-         */
-        showPrediction: true,
-        /**
-         * Whether to show the export controls.
-         */
-        showExport: true,
-        /**
          * @cfg {Boolean} prependButtons
          * Whether to insert any configured <tt>items</tt> or <tt>buttons</tt>
          * <i>before</i> the built-in controls. Defaults to <tt>false</tt>.
@@ -77,7 +33,6 @@
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
          */
         pageTextIfDisabled: _('Please choose a data view first'),
-
         /**
          * The quicktip text displayed for the paging controls if older data not available.
          * <b>Note</b>: quick tips must be initialized for the quicktip to show.
@@ -201,8 +156,7 @@
                     iconCls: 'x-tbar-page-first',
                     disabled: true,
                     handler: this.moveFirst,
-                    scope: this,
-                    hidden: !this.showDataView
+                    scope: this
                 },
                 {
                     ref: 'prev',
@@ -210,12 +164,10 @@
                     iconCls: 'x-tbar-page-prev',
                     disabled: true,
                     handler: this.movePrevious,
-                    scope: this,
-                    hidden: !this.showDataView
+                    scope: this
                 },
                 {
-                    xtype: 'tbseparator',
-                    hidden: !this.showDataView
+                    xtype: 'tbseparator'
                 },
                 {
                     xtype: 'container',
@@ -312,13 +264,11 @@
                                     this.onSelectDataView(combo, record, false);
                                 }
                             }
-                        },
-                        hidden: !this.showDataView
+                        }
                     }
                 },
                 {
-                    xtype: 'tbseparator',
-                    hidden: !this.showDataView
+                    xtype: 'tbseparator'
                 },
                 {
                     ref: 'next',
@@ -326,8 +276,7 @@
                     iconCls: 'x-tbar-page-next',
                     disabled: true,
                     handler: this.moveNext,
-                    scope: this,
-                    hidden: !this.showDataView
+                    scope: this
                 },
                 {
                     ref: 'last',
@@ -335,23 +284,19 @@
                     iconCls: 'x-tbar-page-last',
                     disabled: true,
                     handler: this.moveLast,
-                    scope: this,
-                    hidden: !this.showDataView
+                    scope: this
                 },
                 {
-                    xtype: 'tbseparator',
-                    hidden: !this.showDataView
+                    xtype: 'tbseparator'
                 },
                 {
                     iconCls: 'x-flot-calendar-icon',
                     tooltip: this.calendarText,
                     scope: this,
-                    handler: this.calendarHandler,
-                    hidden: !this.showCalendar
+                    handler: this.calendarHandler
                 },
                 {
-                    xtype: 'tbseparator',
-                    hidden: !this.showCalendar
+                    xtype: 'tbseparator'
                 },
                 {
                     ref: 'refresh',
@@ -359,12 +304,10 @@
                     iconCls: 'x-tbar-loading',
                     disabled: true,
                     handler: this.doRefresh,
-                    scope: this,
-                    hidden: !this.showRefresh
+                    scope: this
                 },
                 {
-                    xtype: 'tbseparator',
-                    hidden: !this.showRefresh
+                    xtype: 'tbseparator'
                 },
                 {
                     ref: 'sync',
@@ -372,12 +315,10 @@
                     iconCls: 'x-flot-sync-icon',
                     disabled: true,
                     handler: this.syncHandler,
-                    scope: this,
-                    hidden: !this.showSync
+                    scope: this
                 },
                 {
-                    xtype: 'tbseparator',
-                    hidden: !this.showSync
+                    xtype: 'tbseparator'
                 },
                 {
                     ref: 'datapoints',
@@ -388,12 +329,10 @@
                     handler: this.datapointsHandler,
                     style: {
                         marginTop: '0px'
-                    },
-                    hidden: !this.showDatapoints
+                    }
                 },
                 {
-                    xtype: 'tbseparator',
-                    hidden: !this.showDatapoints
+                    xtype: 'tbseparator'
                 },
                 {
                     ref: 'periodAverage',
@@ -404,12 +343,10 @@
                     handler: this.periodAverageHandler,
                     style: {
                         marginTop: '0px'
-                    },
-                    hidden: !this.showPeriodAverage
+                    }
                 },
                 {
-                    xtype: 'tbseparator',
-                    hidden: !this.showPeriodAverage
+                    xtype: 'tbseparator'
                 },
                 {
                     ref: 'smooth',
@@ -420,48 +357,40 @@
                     handler: this.smoothHandler,
                     style: {
                         marginTop: '0px'
-                    },
-                    hidden: !this.showSmooth
+                    }
                 },
                 {
                     xtype: 'tbseparator',
-                    hidden: !this.showSmooth
                 },
                 {
                     ref: 'settings',
                     tooltip: this.settingsText,
                     iconCls: 'x-flot-settings-icon',
                     scope: this,
-                    handler: this.settingsHandler,
-                    hidden: !this.showSettings
+                    handler: this.settingsHandler
                 },
                 {
-                    xtype: 'tbseparator',
-                    hidden: !this.showComments
+                    xtype: 'tbseparator'
                 },
                 {
                     ref: 'comments',
                     tooltip: this.commentsText,
                     iconCls: 'x-flot-comment-icon',
                     scope: this,
-                    handler: this.commentsHandler,
-                    hidden: !this.showComments
+                    handler: this.commentsHandler
                 },
                 {
-                    xtype: 'tbseparator',
-                    hidden: !this.showPrediction
+                    xtype: 'tbseparator'
                 },
                 {
                     ref: 'prediction',
                     tooltip: this.predictionText,
                     iconCls: 'x-flot-forecast-icon',
                     scope: this,
-                    handler: this.predictionHandler,
-                    hidden: !this.showPrediction
+                    handler: this.predictionHandler
                 },
                 {
-                    xtype: 'tbfill',
-                    hidden: !this.showExport
+                    xtype: 'tbfill'
                 },
                 {
                     ref: 'download',
@@ -485,16 +414,14 @@
                                 handler: this.doDownload.createDelegate(this, ['png'])
                             }
                         ]
-                    },
-                    hidden: !this.showExport
+                    }
                 },
                 {
                     ref: 'print',
                     tooltip: this.printText,
                     iconCls: 'x-flot-print-icon',
                     scope: this,
-                    handler: this.printHandler,
-                    hidden: !this.showExport
+                    handler: this.printHandler
                 }
             ];
             var userItems = this.items || this.buttons;

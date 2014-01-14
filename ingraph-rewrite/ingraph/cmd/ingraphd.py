@@ -32,10 +32,10 @@ import ingraph
 from ingraph.subcommand import Subcommand
 from ingraph.daemon import UnixDaemon, get_option_parser
 from ingraph.config import file_config, validate_xmlrpc_config
-from ingraph.db import connect
+from ingraph.db import create_store
 from ingraph.parser import PerfdataParser, InvalidPerfdata
 from ingraph.log import add_optparse_logging_options
-from ingraph.scheduler import synchronized
+from ingraph.synchronize import synchronized
 from ingraph.xmlrpc import AuthenticatedXMLRPCServer
 from ingraph.api import  IngraphAPI
 
@@ -53,7 +53,7 @@ class IngraphDaemon(UnixDaemon):
         self._perfdata_dir = kwargs.pop('perfdata_dir')
         self._perfdata_pattern = kwargs.pop('perfdata_pattern')
         self._perfdata_pathname = os.path.join(self._perfdata_dir, self._perfdata_pattern)
-        self.connection = None
+        self._store = None
         self._server = None
         self._server_thread = None
         self._dismissed = Event()
@@ -71,7 +71,7 @@ class IngraphDaemon(UnixDaemon):
             log.critical("You need to set a database connection string (`dsn` setting) in your database configuration file.")
             sys.exit(1)
         log.debug("Connecting to the database..")
-        self.connection = connect(database_config['dsn'])
+        self._store = create_store(database_config['dsn'])
         try:
             aggregates_config = file_config('ingraph-aggregates.conf')
         except IOError as e:
@@ -90,7 +90,7 @@ class IngraphDaemon(UnixDaemon):
             if e.errno == errno.EACCES:
                 log.critical("Performance data directory %s is not writable. "
                              "Please make sure that the directory is writable for the inGraph daemon user so "
-                             "processed files are moved or deleted accordingly." % self._perfdata_dir)
+                             "processed files are moved or deleted accordingly." % (self._perfdata_dir,))
                 sys.exit(1)
             # Not a permission error
             raise
@@ -110,23 +110,28 @@ class IngraphDaemon(UnixDaemon):
         start = time()
         log.info("Parsing performance data file %s.." % filename)
         f = open(filename)
+        connection = self._store.connect()
         for lineno, line in enumerate(f, start=1):
             try:
                 observation, perfdata = parser.parse(line)
             except InvalidPerfdata, e:
                 log.warn("%s %s:%i" % (e, filename, lineno))
                 continue
-            host_service_record = self.connection.get_host_service_guaranteed(observation['host'], observation['service'])
+            hostservice_record = self._store.get_hostservice_guaranteed(
+                connection, observation['host'], observation['service'])
             for performance_data in perfdata:
                 if performance_data['child_service']:
-                    parent_host_service_record = self.connection.get_host_service_guaranteed(
+                    parent_hostservice_record = self._store.get_hostservice_guaranteed(
                         observation['host'], performance_data.pop('child_service'), observation['service'])
-                    hostservice_id = parent_host_service_record['id']
+                    hostservice_id = parent_hostservice_record['id']
                 else:
-                    hostservice_id = host_service_record['id']
-                plot_record = self.connection.get_plot_guaranteed(hostservice_id, performance_data.pop('label'), performance_data.pop('uom'))
-                self.connection.insert_datapoint(plot_record['id'], observation['timestamp'], performance_data.pop('value'))
-                self.connection.insert_performance_data(plot_record['id'], observation['timestamp'], **performance_data)
+                    hostservice_id = hostservice_record['id']
+                plot = self._store.get_plot_guaranteed(
+                    hostservice_id, performance_data.pop('label'), performance_data.pop('uom'))
+                self._store.insert_datapoint(plot, observation['timestamp'],
+                                             performance_data.pop('value'))
+                self._store.take_performance_data(
+                    plot, observation['timestamp'], **performance_data)
         f.close()
         if self._perfdata_mode == 'BACKUP':
             shutil.move(filename, '%s.bak' % filename)
@@ -135,7 +140,7 @@ class IngraphDaemon(UnixDaemon):
         log.debug("Processed %s in %3fs" % (filename, time() - start))
 
     def run(self):
-        self.connection.setup_database_schema(self._aggregates)
+        self.connection.setup_store_schema(self._aggregates)
         log.info("Starting XML-RPC interface on %s:%d..." %
                  (self._xmlrpc_config['xmlrpc_address'], self._xmlrpc_config['xmlrpc_port']))
         try:

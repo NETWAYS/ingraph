@@ -39,6 +39,10 @@ datapoint_lock = Lock()
 performance_data_lock = Lock()
 
 
+class MySQL(Database):
+    pass
+
+
 class Datapoint(object):
 
     __slots__ = ('min', 'max', 'avg', 'count', 'dirty', 'phantom')
@@ -486,7 +490,7 @@ class MySQLAPI(object):
         if host_pattern:
             condition.append('`name` LIKE ?')
             params.append(host_pattern)
-        query = 'SELECT `name` AS `host_name`FROM `host`'
+        query = 'SELECT `name` AS `host_name` FROM `host`'
         countQuery = 'SELECT COUNT(`id`) FROM `host`'
         try:
             where = condition.popleft()
@@ -765,3 +769,11 @@ class MySQLAPI(object):
         self._insert_performance_data()
         log.info("Disposing connections...")
         pool.clear_managers()
+
+
+class MySQL(Database):
+
+    connection_class = MySQLConnection
+
+    def __init__(self, user, password, host, port, db):
+        pass

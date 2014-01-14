@@ -15,15 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from ingraph.db.mysql import MySQLAPI
+from ingraph.db.base import create_store
+
 from ingraph.cache import memoize, get_cache
-
-__all__ = ['connect']
-
-
-def connect(dsn):
-    return IngraphDatabase(dsn)
-
 
 class IngraphDatabase(object):
 

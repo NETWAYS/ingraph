@@ -256,7 +256,6 @@
             );
             this.bindStore(this.store, true);
         },
-
         // private
         buildItems: function (cfg) {
             var items = [
@@ -283,99 +282,103 @@
                     hidden: !this.showDataView
                 },
                 {
-                    ref: 'input',
-                    xtype: 'combo',
-                    emptyText: _('Choose data view'),
+                    xtype: 'container',
                     width: 130,
-                    store: {
-                        xtype: 'jsonstore',
-                        autoDestroy: true,
-                        root: 'frames',
-                        idProperty: 'name',
-                        fields: [
-                            'name',
-                            'start',
-                            {
-                                'name': 'end',
-                                defaultValue: 'now'
-                            },
-                            {
-                                'name': 'overview',
-                                defaultValue: false
-                            },
-                            {
-                                'name': 'enabled',
-                                defaultValue: true
-                            },
-                            'adv'
-                        ],
-                        data: {
-                            frames: [
+                    items: {
+                        width: 130,
+                        ref: '../input',
+                        xtype: 'combo',
+                        emptyText: _('Choose data view'),
+                        store: {
+                            xtype: 'jsonstore',
+                            autoDestroy: true,
+                            root: 'frames',
+                            idProperty: 'name',
+                            fields: [
+                                'name',
+                                'start',
                                 {
-                                    name: _('One Hour'),
-                                    start: '-1 hour',
-                                    enabled: false,
-                                    adv: _('hourly')
+                                    'name': 'end',
+                                    defaultValue: 'now'
                                 },
                                 {
-                                    name: _('Four Hours'),
-                                    start: '-4 hours',
-                                    overview: true,
-                                    adv: _('four-hourly')
+                                    'name': 'overview',
+                                    defaultValue: false
                                 },
                                 {
-                                    name: _('One Day'),
-                                    start: '-1 day',
-                                    adv: _('daily')
+                                    'name': 'enabled',
+                                    defaultValue: true
                                 },
-                                {
-                                    name: _('One Week'),
-                                    start: '-1 week',
-                                    adv: _('weekly')
-                                },
-                                {
-                                    name: _('One Month'),
-                                    start: '-1 month',
-                                    adv: _('monthly')
-                                },
-                                {
-                                    name: _('One Year'),
-                                    start: '-1 year',
-                                    adv: _('yearly')
+                                'adv'
+                            ],
+                            data: {
+                                frames: [
+                                    {
+                                        name: _('One Hour'),
+                                        start: '-1 hour',
+                                        enabled: false,
+                                        adv: _('hourly')
+                                    },
+                                    {
+                                        name: _('Four Hours'),
+                                        start: '-4 hours',
+                                        overview: true,
+                                        adv: _('four-hourly')
+                                    },
+                                    {
+                                        name: _('One Day'),
+                                        start: '-1 day',
+                                        adv: _('daily')
+                                    },
+                                    {
+                                        name: _('One Week'),
+                                        start: '-1 week',
+                                        adv: _('weekly')
+                                    },
+                                    {
+                                        name: _('One Month'),
+                                        start: '-1 month',
+                                        adv: _('monthly')
+                                    },
+                                    {
+                                        name: _('One Year'),
+                                        start: '-1 year',
+                                        adv: _('yearly')
+                                    }
+                                ] // Eof frames
+                            }, // Eof data
+                            listeners: {
+                                single: true,
+                                load: function (store) {
+                                    store.each(function (rec) {
+                                        rec.set('interval', strtotime(rec.get('end')) -
+                                                            strtotime(rec.get('start')));
+                                    });
                                 }
-                            ] // Eof frames
-                        }, // Eof data
+                            }
+                        }, // Eof store
+                        valueField: 'name',
+                        displayField: 'name',
+                        mode: 'local',
+                        triggerAction: 'all',
                         listeners: {
-                            single: true,
-                            load: function (store) {
-                                store.each(function (rec) {
-                                    rec.set('interval', strtotime(rec.get('end')) -
-                                                        strtotime(rec.get('start')));
+                            scope: this,
+                            select: this.onSelectDataView,
+                            render: function (combo) {
+                                Ext.QuickTips.register({
+                                    text: this.inputText,
+                                    target: combo.el
                                 });
+                                var recordIndex = combo.store.find('start', this.activeFrame);
+                                if (recordIndex !== -1) {
+                                    var record = combo.store.getAt(recordIndex);
+                                    combo.setValue(record.get('name'));
+                                    this.onSelectDataView(combo, record, false);
+                                }
                             }
-                        }
-                    }, // Eof store
-                    valueField: 'name',
-                    displayField: 'name',
-                    mode: 'local',
-                    triggerAction: 'all',
-                    listeners: {
-                        scope: this,
-                        select: this.onSelectDataView,
-                        render: function (combo) {
-                            Ext.QuickTips.register({
-                                text: this.inputText,
-                                target: combo.el
-                            });
-                            var recordIndex = combo.store.find('start', this.activeFrame);
-                            if (recordIndex !== -1) {
-                                var record = combo.store.getAt(recordIndex);
-                                combo.setValue(record.get('name'));
-                                this.onSelectDataView(combo, record, false);
-                            }
-                        }
-                    },
-                    hidden: !this.showDataView
+                        },
+                        hidden: !this.showDataView
+                    }
                 }, // Eof data view combo
                 {
                     xtype: 'tbseparator',
@@ -922,7 +925,7 @@
                 if (e > now) {
                     e = now; // Do not try to plot future values. ;-)
                 }
-                if ((e - s) < i) { 
+                if ((e - s) < i) {
                     s = e - i; // ALWAYS view full selected range.
                 }
                 this.store.load({

@@ -338,7 +338,7 @@ def main():
         'type': 'avg'
     }]
 
-    result_first = api.getPlotValues2(query, first_start, first_end, 300)
+    result_first = api.getPlotValues2(query, first_start, first_end)
 
     if len(result_first['charts']) == 0:
         print("No data returned for first time interval.")
@@ -347,7 +347,7 @@ def main():
     data_first = result_first['charts'][0]['data']
 
     if options.function != 'hw':
-        result_second = api.getPlotValues2(query, second_start, second_end, 300)
+        result_second = api.getPlotValues2(query, second_start, second_end)
 
         if len(result_second['charts']) == 0:
             print("No data returned for second time interval.")

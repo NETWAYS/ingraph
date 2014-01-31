@@ -225,9 +225,9 @@ def main():
     parser.add_option('-t', '--second-end', dest='second_end',
                       metavar='SECOND_END', help='end of the second interval ' +
                       '(relative to the current time, in hours)')
-    parser.add_option('-w', '--warning', dest='warning', default=20,
+    parser.add_option('-w', '--warning', dest='warning', default=10,
                       metavar='WARNING', help='warning threshold, in % [default: %default]')
-    parser.add_option('-c', '--critical', dest='critical', default=10,
+    parser.add_option('-c', '--critical', dest='critical', default=20,
                       metavar='CRITICAL', help='critical threshold, in % [default: %default]')
     parser.add_option('-E', '--season', dest='season', default=24,
                       metavar='SEASON', help='Season, in hours [for HW, default: %default]')

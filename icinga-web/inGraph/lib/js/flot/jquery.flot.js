@@ -770,7 +770,7 @@ Licensed under the MIT license.
             c.width = canvasWidth * pixelRatio;
             c.height = canvasHeight * pixelRatio;
             // Initial style of canvas is undefined with jsdom and node-canvas
-            c.style = c.style || {};
+            // c.style = c.style || {};
             c.style.width = canvasWidth + "px";
             c.style.height = canvasHeight + "px";
 

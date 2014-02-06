@@ -76,7 +76,9 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
         $parentService = isset($series['parentService']) ? $series['parentService'] : null;
         $key = $series['host'] . $parentService . $series['service'];
         if (!isset($this->plots[$key])) {
-            $this->plots[$key] = $this->getBackend()->fetchPlots($series['host'], $series['service'], $parentService);
+            $this->plots[$key] = $this->getBackend()->fetchPlots(
+                $series['host'], $series['service'], $parentService, null, 0, null // Force no limit
+            );
         }
         return $this->plots[$key];
     }

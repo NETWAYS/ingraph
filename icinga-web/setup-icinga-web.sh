@@ -175,7 +175,6 @@ do
                 echo "ERROR: expected either ingraph or graphite as backend" >&2
                 exit 1
             }
-            exit
             ;;
         --with-graphite-web-url*)
             GRAPHITE_URL=${ARG#--with-graphite-web-url}

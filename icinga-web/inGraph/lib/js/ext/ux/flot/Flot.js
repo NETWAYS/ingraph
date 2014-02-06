@@ -709,9 +709,11 @@
 
             if (hosts.length > 1) {
                 this.store.each(function (series) {
-                    series.set(
-                        'label',
-                        series.json.host + ': ' + series.get('label'));
+                    if (!series.isModified('label')) {
+                        series.set(
+                            'label',
+                            series.json.host + ': ' + series.get('label'));
+                    }
                 });
             }
 

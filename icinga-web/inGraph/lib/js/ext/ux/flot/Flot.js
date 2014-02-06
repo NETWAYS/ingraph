@@ -499,10 +499,8 @@
             this.store.suspendEvents();
 
             this.template.each(function (seriesTemplate) {
-                console.log("seriesTemplate: ", seriesTemplate);
                 var series = this.store.query('plot_id', seriesTemplate.get('plot_id')).first();
                 if (!series) {
-                    console.log(seriesTemplate.get('plot_id'), this.store.query('plot_id', seriesTemplate.get('plot_id')));
                     // TODO(el): Notify?
                     // Skip
                     return true;
@@ -525,7 +523,6 @@
             var hosts = [];
 
             this.store.each(function (series) {
-                console.log("series: ", series);
                 if (-1 === hosts.indexOf(series.json.host)) {
                     hosts.push(series.json.host);
                 }
@@ -961,7 +958,6 @@
                         max: max
                     });
                 }
-
                 this.$plot = $.plot($('#' + id), series, this.$flotStyle);
 
                 if (this.loadMask) {

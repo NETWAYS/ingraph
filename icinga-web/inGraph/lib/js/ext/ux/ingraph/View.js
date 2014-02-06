@@ -791,7 +791,9 @@
                         series: {
                             lines: {
                                 show: true
-                            }
+                            },
+                            hoverable: true,
+                            clickable: true
                         }
                     }
                 },

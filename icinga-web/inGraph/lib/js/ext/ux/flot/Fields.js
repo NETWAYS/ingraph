@@ -466,6 +466,14 @@
             {
                 name: 'shadowSize',
                 defaultValue: 3
+            },
+            {
+                name: 'clickable',
+                defaultValue: null
+            },
+            {
+                name: 'hoverable',
+                defaultValue: null
             }
         ]);
 
@@ -494,14 +502,6 @@
             {
                 name: 'yaxis',
                 defaultValue: null
-            },
-            {
-                name: 'clickable',
-                defaultValue: true
-            },
-            {
-                name: 'hoverable',
-                defaultValue: true
             },
             {
                 name: 'group',

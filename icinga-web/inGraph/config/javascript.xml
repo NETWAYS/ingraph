@@ -16,7 +16,7 @@
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.time.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.selection.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.stack.js</ae:parameter>
-            <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.spline.js</ae:parameter>    
+            <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.spline.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.fillbetween.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot/jquery.flot.highlight.js</ae:parameter>
             <ae:parameter>%core.module_dir%/inGraph/lib/js/flot-axislabels/jquery.flot.axislabels.js</ae:parameter>

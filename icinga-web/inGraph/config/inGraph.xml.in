@@ -2,7 +2,7 @@
 <settings xmlns="http://agavi.org/agavi/config/parts/module/1.0"
           xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0">
 
-    <setting name="xmlrpc">
+    <setting name="ingraph">
         <ae:parameter name="host">@XMLRPC_HOST@</ae:parameter>
         <ae:parameter name="port">@XMLRPC_PORT@</ae:parameter>
         <ae:parameter name="user">@XMLRPC_USER@</ae:parameter>

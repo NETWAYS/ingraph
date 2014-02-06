@@ -102,11 +102,6 @@ class Client
         return $response;
     }
 
-    private function escape($subject)
-    {
-        return str_replace(array('/', ' '), '_', $subject);
-    }
-
     /**
      * Query Graphite to look for metrics that match the given pattern
      *
@@ -120,7 +115,7 @@ class Client
             'metrics/find',
             array(
                 'format'    => 'completer',
-                'query'     => $this->escape($pattern)
+                'query'     => $pattern
             )
         );
         return array(

@@ -58,7 +58,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
     public function fetchHosts($pattern, $limit = null, $offset = 0)
     {
         $metrics = $this->findMetric(
-            str_replace('<host>', $pattern, $this->hostFormat),
+            str_replace('<host>', $this->escape($pattern), $this->hostFormat),
             $limit,
             $offset);
         $hosts = array();
@@ -78,7 +78,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
         $metrics = $this->findMetric(
             str_replace(
                 array('<host>', '<service>'),
-                array($hostPattern, $servicePattern),
+                array($this->escape($hostPattern), $this->escape($servicePattern)),
                 $this->serviceFormat
             ),
             $limit,
@@ -105,7 +105,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
         $metrics = $this->findMetric(
             str_replace(
                 array('<host>', '<service>', '<metric>'),
-                array($hostPattern, $servicePattern, $plotPattern),
+                array($this->escape($hostPattern), $this->escape($servicePattern), $this->escape($plotPattern)),
                 $this->metricFormat
             ),
             $limit,
@@ -167,7 +167,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                 'legendValue(substr(keepLastValue(%s)), "last", "avg", "min", "max")',
                 str_replace(
                     array('<host>', '<service>', '<metric>'),
-                    array($spec['host'], $spec['service'], $spec['plot']),
+                    array($this->escape($spec['host']), $this->escape($spec['service']), $this->escape($spec['plot'])),
                     $this->metricFormat
                 )
             );
@@ -200,5 +200,10 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
     public function deleteComment()
     {
 
+    }
+
+    private function escape($subject)
+    {
+        return str_replace(array('/', ' '), '_', $subject);
     }
 }

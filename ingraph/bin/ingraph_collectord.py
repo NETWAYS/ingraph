@@ -286,16 +286,7 @@ class Collectord(daemon.UnixDaemon):
     def send_to_carbon(self, message):
         while True:
             try:
-                # self.carbon_sock.sendall(message) will result in a
-                # broken pipe exception :(
-                bytes_sent_total = 0
-                message_length = len(message)
-                while bytes_sent_total < message_length:
-                    bytes_sent = self.carbon_sock.send(
-                        message[bytes_sent_total:])
-                    if bytes_sent == 0:
-                        raise RuntimeError
-                    bytes_sent_total += bytes_sent
+                self.carbon_sock.sendall(message)
             except Exception as e:
                 self.logger.critical("Can't send message to carbon: %s", e)
                 self.carbon_sock.close()

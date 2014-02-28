@@ -192,8 +192,8 @@ class PerfdataParser(object):
                 value, uom, base = self._parse_quantitative_value(values[0])
                 value = self._parse_decimal(value)
                 value *= base
-            except (ValueError,      # Value is a string
-                    AttributeError): # Value is None
+            except (ValueError,       # Value is a string
+                    AttributeError):  # Value is None
                 continue
             try:
                 warn_lower, warn_upper, warn_type = self._parse_threshold(
@@ -224,15 +224,15 @@ class PerfdataParser(object):
                 crit_lower, crit_upper, crit_type = (None,) * 3
             try:
                 min_ = self._parse_decimal(values[3]) * base
-            except (IndexError,  # Min is missing
-                    ValueError): # Min is None
+            except (IndexError,   # Min is missing
+                    ValueError):  # Min is None
                 if uom == 'percent':
                     min_ = float(0)
                 else:
                     min_ = None
             try:
                 max_ = self._parse_decimal(values[4]) * base
-            except IndexError:
+            except (IndexError, ValueError):
                 # Max is missing
                 if uom == 'percent':
                     max_ = float(100)

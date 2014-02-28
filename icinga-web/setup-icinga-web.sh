@@ -19,6 +19,7 @@ NULL_TOLERANCE=${NULL_TOLERANCE-2}
 TEMPLATE_SUFFIX=
 BACKEND=${BACKEND-ingraph}
 GRAPHITE_URL=${GRAPHITE_URL-http://127.0.0.1}
+STATIC_METRICS_DIR=/var/lib/ingraph/static
 
 FIND=${FIND-find}
 INSTALL=${INSTALL-install}
@@ -274,6 +275,7 @@ do
     $SED -i -e s,@TEMPLATE_SUFFIX@,$TEMPLATE_SUFFIX, $F
     $SED -i -e s,@BACKEND@,$BACKEND, $F
     $SED -i -e s,@GRAPHITE_URL@,$GRAPHITE_URL, $F
+    $SED -i -e s,@STATIC_METRICS_DIR@,$STATIC_METRICS_DIR, $F
 done
 
 # Install from the inGraph directory

@@ -22,6 +22,7 @@
     <setting name="graphite">
         <ae:parameter name="serverAddress">@GRAPHITE_URL@</ae:parameter>
         <ae:parameter name="namingScheme"><![CDATA[ingraph.<host>.<service>.<metric>]]></ae:parameter>
+        <ae:parameter name="staticMetricsPath">@STATIC_METRICS_DIR@</ae:parameter>
     </setting>
 
     <setting name="backend">@BACKEND@</setting>

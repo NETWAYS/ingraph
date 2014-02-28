@@ -14,7 +14,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
 
     private $metricsCache = array();
 
-    private $rpcClient;
+    private $staticMetricsPath;
 
     public function __construct(array $config = array())
     {
@@ -29,7 +29,6 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
             0,
             strpos($config['namingScheme'], '<service>')
         )  . '<service>';
-        $this->staticMetricsPath = $config['staticMetricsPath'];
         $this->metricFormat = substr(
             $config['namingScheme'],
             0,
@@ -42,17 +41,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                 $this->metricFormat
             )
         );
-        switch ($config['rpcProtocol'])
-        {
-            case 'json':
-                $this->rpcClient = new inGraph_JsonRpc_Client($config['rpcEndpoint']);
-                break;
-            case 'xml':
-                $this->rpcClient = new inGraph_XmlRpc_Client($config['rpcEndpoint']);
-                break;
-            default:
-                throw new Exception;
-        }
+        $this->staticMetricsPath = $config['staticMetricsPath'];
     }
 
     public function fetchHosts($pattern, $limit = null, $offset = 0)
@@ -148,8 +137,9 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                 }
                 if (!array_key_exists($spec['plot'], $this->metricsCache[$spec['host']][$spec['service']])) {
                     if (is_readable($jsonPath)) {
-                        $this->metricsCache[$spec['host']][$spec['service']][$spec['plot']] = $this->rpcClient->call(
-                            'get_static_metrics', array($spec['host'], $spec['service'], $spec['plot']));
+                        $this->metricsCache[$spec['host']][$spec['service']][$spec['plot']] = json_decode(
+                            file_get_contents($jsonPath), true
+                        );
                     } else {
                         continue;
                     }
@@ -159,9 +149,10 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                     $data[] = array($jsonMetric['timestamp'], $jsonMetric[$spec['type']]);
                 }
                 $charts[] = array(
-                        'label' => $spec['plot'] . ' ' . $spec['type'],
-                        'data'  => $data
-                    ) + $spec;
+                    'label' => $spec['plot'] . ' ' . $spec['type'],
+                    'data'  => $data
+                ) + $spec;
+                continue;
             }
             $target = sprintf(
                 'legendValue(substr(keepLastValue(%s)), "last", "avg", "min", "max")',

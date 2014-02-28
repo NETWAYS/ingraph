@@ -40,10 +40,10 @@ from ingraph.parser import PerfdataParser, InvalidPerfdata
 import json
 import fcntl
 import threading
-import pyjsonrpc
-import base64
+#import pyjsonrpc
+#import base64
 from base64 import urlsafe_b64encode as b64enc
-from jsonrpc_auth import AuthenticatedHTTPRequestHandler
+#from jsonrpc_auth import AuthenticatedHTTPRequestHandler
 
 
 CARBON_METRIC_TRANSLATION_TABLE = string.maketrans('. /', '___')
@@ -250,21 +250,21 @@ class Collectord(daemon.UnixDaemon):
             self.api = api
         else:
             config = utils.load_config('ingraph-carbon.conf')
-            config = utils.load_config('ingraph-collector-jsonrpc.conf', config)
-            if 'collector_jsonrpc_address' not in config or \
-                    'collector_jsonrpc_port' not in config or \
-                    'collector_jsonrpc_address' not in config or \
-                    'collector_jsonrpc_port' not in config:
-                print >> sys.stderr, "You have to configure "\
-"'collector_jsonrpc_address', 'collector_jsonrpc_port', "\
-"'collector_jsonrpc_user' and 'collector_jsonrpc_password' in "\
-"'ingraph-collector-jsonrpc.conf'!"
-                sys.exit(1)
-            else:
-                self.collector_jsonrpc_address = config['collector_jsonrpc_address']
-                self.collector_jsonrpc_port = config['collector_jsonrpc_port']
-                self.collector_jsonrpc_user = config['collector_jsonrpc_user']
-                self.collector_jsonrpc_password = config['collector_jsonrpc_password']
+#             config = utils.load_config('ingraph-collector-jsonrpc.conf', config)
+#             if 'collector_jsonrpc_address' not in config or \
+#                     'collector_jsonrpc_port' not in config or \
+#                     'collector_jsonrpc_address' not in config or \
+#                     'collector_jsonrpc_port' not in config:
+#                 print >> sys.stderr, "You have to configure "\
+# "'collector_jsonrpc_address', 'collector_jsonrpc_port', "\
+# "'collector_jsonrpc_user' and 'collector_jsonrpc_password' in "\
+# "'ingraph-collector-jsonrpc.conf'!"
+#                 sys.exit(1)
+#             else:
+#                 self.collector_jsonrpc_address = config['collector_jsonrpc_address']
+#                 self.collector_jsonrpc_port = config['collector_jsonrpc_port']
+#                 self.collector_jsonrpc_user = config['collector_jsonrpc_user']
+#                 self.collector_jsonrpc_password = config['collector_jsonrpc_password']
             self.carbon_address = config['carbon_address']
             self.carbon_port = config['carbon_port']
             self.naming_scheme = config['naming_scheme']
@@ -475,29 +475,29 @@ class Collectord(daemon.UnixDaemon):
         else:
             return None
 
-    class PyJsonRpcHttpRequestHandler(AuthenticatedHTTPRequestHandler):
-        methods = {}
-        required_username = None
-        required_password = None
+    # class PyJsonRpcHttpRequestHandler(AuthenticatedHTTPRequestHandler):
+    #     methods = {}
+    #     required_username = None
+    #     required_password = None
 
     def run(self):
         parser = PerfdataParser()
         last_flush = time.time()
         updates = []
-        if self.backend != 'xmlrpc':
-            class PyJsonRpcHttpRequestHandler(AuthenticatedHTTPRequestHandler):
-                methods = {
-                    'get_static_metrics': self.get_static_metrics
-                }
-                required_username = self.collector_jsonrpc_user
-                required_password = self.collector_jsonrpc_password
-            self.JSONRPCServer = pyjsonrpc.ThreadingHttpServer(
-                server_address = (self.collector_jsonrpc_address, self.collector_jsonrpc_port),
-                RequestHandlerClass = PyJsonRpcHttpRequestHandler
-            )
-            JSONRPCServerThread = threading.Thread(target=self.JSONRPCServer.serve_forever)
-            JSONRPCServerThread.daemon = True
-            JSONRPCServerThread.start()
+        # if self.backend != 'xmlrpc':
+        #     class PyJsonRpcHttpRequestHandler(AuthenticatedHTTPRequestHandler):
+        #         methods = {
+        #             'get_static_metrics': self.get_static_metrics
+        #         }
+        #         required_username = self.collector_jsonrpc_user
+        #         required_password = self.collector_jsonrpc_password
+        #     self.JSONRPCServer = pyjsonrpc.ThreadingHttpServer(
+        #         server_address = (self.collector_jsonrpc_address, self.collector_jsonrpc_port),
+        #         RequestHandlerClass = PyJsonRpcHttpRequestHandler
+        #     )
+        #     JSONRPCServerThread = threading.Thread(target=self.JSONRPCServer.serve_forever)
+        #     JSONRPCServerThread.daemon = True
+        #     JSONRPCServerThread.start()
         while True:
             lines = 0
             files = glob.glob(self.perfpattern)[:self.limit]
@@ -542,6 +542,8 @@ class Collectord(daemon.UnixDaemon):
                     et = time.time()
                     print "%d updates (approx. %d lines) took %f seconds" % \
                           (len(updates), lines, et - st)
+                else:
+                    self.logger.debug("no updates")
                 updates = []
                 last_flush = time.time()
                 lines = 0
@@ -556,11 +558,11 @@ class Collectord(daemon.UnixDaemon):
             self.logger.debug("Sleeping %d seconds..", self.sleeptime)
             time.sleep(self.sleeptime)
 
-    def cleanup(self):
-        try:
-            self.JSONRPCServer.shutdown()
-        except AttributeError:
-            pass
+    # def cleanup(self):
+    #     try:
+    #         self.JSONRPCServer.shutdown()
+    #     except AttributeError:
+    #         pass
 
 def main():
     DAEMON_FUNCTIONS = ['start', 'stop', 'restart', 'status']

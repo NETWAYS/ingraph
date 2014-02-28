@@ -36,7 +36,7 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
         foreach ($content['panels'] as &$panel) {
             if (!isset($panel['series']) || !is_array($panel['series'])) {
                 return $this->setError(
-                    'Invalid configuration for key "series", expteced array in '
+                    'Invalid configuration for key "series", expected array in '
                     . $view->getSplFileInfo()->getRealPath()
                 );
             }

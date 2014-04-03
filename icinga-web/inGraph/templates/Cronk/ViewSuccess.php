@@ -63,15 +63,15 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                 this.getParent().on('removed', function () {
                     Ext.state.Manager.getProvider().clear(view.stateId);
                 });
-
-                // Cronk state
-                //this.setStatefulObject(view);
             }
         });
 
         // Add view to this cronk
         this.add(view);
         this.doLayout();
+
+        // Cronk state
+        this.setStatefulObject(view);
 
         return view;
     };

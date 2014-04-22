@@ -4,7 +4,7 @@
 # Copyright (c) 2012 mopp@gmx.net
 #
 # Revised and modified for RHEL support by Michael Friedrich
-# Copyright (c) 2012-2013 Netways GMbH
+# Copyright (c) 2012-2013 Netways GmbH
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -14,10 +14,10 @@
 # case the license is the MIT License). An "Open Source License" is a
 # license that conforms to the Open Source Definition (Version 1.9)
 # published by the Open Source Initiative.
- 
+
 Name:		inGraph
 Summary:	NETWAYS inGraph Addon for Icinga/Nagios
-Version:	1.0.2
+Version:	2.0.0
 Release:	1%{?dist}%{?custom}
 Url:		https://www.netways.org/projects/ingraph/files
 License:	GPL-3.0
@@ -184,7 +184,7 @@ cd icinga-web/
 rm %{buildroot}%{icingawebdir}/app/config/icinga.xml
 cd ..
 
-# 
+#
 %if "%{_vendor}" == "suse"
 %{__mkdir_p} %{buildroot}%{_sbindir}
 %{__ln_s} ../../%{_sysconfdir}/init.d/ingraph  "%{buildroot}%{_sbindir}/rcingraph"
@@ -243,7 +243,10 @@ if [[ -x %{ingraphwebclearcache} ]]; then %{ingraphwebclearcache}; fi
 %postun icinga-web
 if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 
-%files 
+%clean
+%{__rm} -rf %{buildroot}
+
+%files
 %defattr(-,root,root)
 %if "%{_vendor}" == "suse"
 %{_sbindir}/rcingraph
@@ -314,6 +317,9 @@ if [[ -x %{clearcache} ]]; then %{clearcache}; fi
 
 * Thu Aug 15 2013 michael.friedrich@netways.de
 - change revision
+
+* Mon May 20 2013 michael.friedrich@netways.de
+- bump to 1.0.2
 
 * Wed Feb 13 2013 michael.friedrich@netways.de
 - templates and views are config noreplace

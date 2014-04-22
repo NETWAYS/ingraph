@@ -20,7 +20,8 @@ import re
 __all__ = ['PerfdataParser', 'InvalidPerfdata']
 
 
-class InvalidPerfdata(Exception): pass
+class InvalidPerfdata(Exception):
+    pass
 
 
 class PerfdataParser(object):
@@ -143,7 +144,8 @@ class PerfdataParser(object):
 
     def _parse_threshold(self, value_string):
         match = self.__class__.match_range(value_string)
-        if value_string and not match.group('start') and not match.group('end'):
+        if value_string and not match.group('start') and\
+                not match.group('end'):
             raise InvalidPerfdata(
                 "Invalid performance data: warn or crit are not in the range "
                 "format: `%s`. Please refer to "
@@ -167,9 +169,9 @@ class PerfdataParser(object):
                 # Most likely since the information is not needed.
                 continue
             perfdata_no_cruft[key] = value
-        if ('perfdata' not in perfdata_no_cruft or
-            'host' not in perfdata_no_cruft or
-            'state' not in perfdata_no_cruft):
+        if 'perfdata' not in perfdata_no_cruft or\
+                'host' not in perfdata_no_cruft or\
+                'state' not in perfdata_no_cruft:
             raise InvalidPerfdata(
                 "Invalid performance data: Line is missing `host`, `state`, "
                 "or `perfdata`.")
@@ -192,8 +194,8 @@ class PerfdataParser(object):
                 value, uom, base = self._parse_quantitative_value(values[0])
                 value = self._parse_decimal(value)
                 value *= base
-            except (ValueError,      # Value is a string
-                    AttributeError): # Value is None
+            except (ValueError,       # Value is a string
+                    AttributeError):  # Value is None
                 continue
             try:
                 warn_lower, warn_upper, warn_type = self._parse_threshold(
@@ -222,10 +224,12 @@ class PerfdataParser(object):
             except IndexError:
                 # Critical threshold missing
                 crit_lower, crit_upper, crit_type = (None,) * 3
+            except ValueError:
+                continue
             try:
                 min_ = self._parse_decimal(values[3]) * base
-            except (IndexError,  # Min is missing
-                    ValueError): # Min is None
+            except (IndexError,   # Min is missing
+                    ValueError):  # Min is None
                 if uom == 'percent':
                     min_ = float(0)
                 else:

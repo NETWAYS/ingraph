@@ -931,39 +931,24 @@ class DataPoint(object):
         start_timestamp = max(start_timestamp, dbload_min_timestamp)
 
         tfs = TimeFrame.getAll(conn)
-
+        tfs.sort(cmp=lambda x, y: cmp(x.interval, y.interval))
+        dtf = None
         if granularity == None:
+            # Find best interval
             now = time()
-
             for tf in tfs:
-                if tf.retention_period != None and now - tf.retention_period > start_timestamp:
-                    continue
-
-                if granularity == None or tf.interval < granularity:
-                    granularity = tf.interval
-
-            granularity = max(granularity, (end_timestamp - start_timestamp) / 125)
-
-        data_tf = None
-
-        for tf in sorted(tfs, cmp=lambda x,y: cmp(x.interval, y.interval), reverse=True):
-            if tf.interval < granularity and data_tf != None:
-                break
-
-            data_tf = tf
-
-        granularity = data_tf.interval
-
-        start_timestamp -= 1.5 * granularity
-        end_timestamp += 1.5 * granularity
-
-        if data_tf.retention_period != None:
-            start_timestamp = max(start_timestamp, data_tf.retention_period - 2 * granularity)
-
-        assert granularity > 0
+                if tf.retention_period is not None and\
+                        (now - tf.retention_period) <= start_timestamp:
+                    dtf = tf
+                    break
+            if dtf is None:
+                dtf = tfs[-1]
+        else:
+            # Align interval
+            pass
 
         # properly align interval with the timeframe
-        start_timestamp = start_timestamp - start_timestamp % granularity
+        start_timestamp = start_timestamp - start_timestamp % dtf.interval
 
         hostservices = set([plot.hostservice for plot in plots])
         comment_objs = Comment.getByHostServicesAndInterval(conn, hostservices, start_timestamp, end_timestamp)
@@ -1007,9 +992,13 @@ class DataPoint(object):
 
         plot_conds = tuple_(datapoint.c.plot_id).in_([(plot.id,) for plot in plots])
         sel = select(sql_types,
-                     and_(datapoint.c.timeframe_id==data_tf.id,
+                     and_(datapoint.c.timeframe_id == dtf.id,
                           plot_conds,
-                          between(datapoint.c.timestamp, literal(start_timestamp) - literal(start_timestamp) % data_tf.interval, end_timestamp))) \
+                          between(datapoint.c.timestamp,
+                                  start_timestamp,
+                                  end_timestamp
+                          )
+                     )) \
                 .order_by(datapoint.c.timestamp.asc())
         et = time()
         print "Building SQL query took %f seconds" % (et - st)
@@ -1048,7 +1037,7 @@ class DataPoint(object):
             plot_types = query[plot]
 
             if prev_row != None and \
-                    row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > (null_tolerance + 1) * granularity:
+                    row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp] > (null_tolerance + 1) * dtf.interval:
                 ts_null = prev_row[datapoint.c.timestamp] + (row[datapoint.c.timestamp] - prev_row[datapoint.c.timestamp]) / 2
 
                 for type in query[plot]:
@@ -1064,7 +1053,7 @@ class DataPoint(object):
 
         return { 'comments': comments, 'charts': charts, 'statusdata': statusdata,
                  'start_timestamp': start_timestamp, 'end_timestamp': end_timestamp,
-                 'granularity': granularity }
+                 'granularity': dtf.interval }
 
     getValuesByInterval = staticmethod(getValuesByInterval)
 

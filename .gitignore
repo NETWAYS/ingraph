@@ -1,10 +1,9 @@
-.*
-!.gitignore
-!.gitattributes
+.gitignore
+.gitattributes
 *.pyc
+.vagrant/
+.idea/
 build/
 dist/
-contrib/init.d/ingraph
-contrib/init.d/ingraph-collector
 ingraph.egg-info/
 MANIFEST

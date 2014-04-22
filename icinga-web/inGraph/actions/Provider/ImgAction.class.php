@@ -63,8 +63,13 @@ class inGraph_Provider_ImgAction extends inGraphBaseAction
             }
             $chartsseries[$series['plot_id']] = $series;
         }
-        $data = inGraph_Templates_Template::apply($chartsseries,
-                                                  $templateseries);
+        $data = array();
+        foreach ($templateseries as $key => $series) {
+            $plotId = $key . ' - ' . $series['type'];
+            if (array_key_exists($plotId, $chartsseries)) {
+                $data[] = array_merge($chartsseries[$plotId], $series);
+            }
+        }
         $options = array_merge($options, array(
             'width' => $rd->getParameter('width', 720),
             'height' => $rd->getParameter('height', 250)

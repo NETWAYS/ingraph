@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ * Copyright (C) 2013 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
  *
@@ -23,10 +23,10 @@ class inGraph_Provider_PlotsAction extends inGraphBaseAction
     {
         try {
             $plots = $this->getBackend()->fetchPlots(
-                $rd->getParameter('host', null),
-                $rd->getParameter('service', null),
-                $rd->getParameter('parentService', null),
-                $rd->getParameter('plot', null),
+                $rd->getParameter('host', '*'),
+                $rd->getParameter('service', '*'),
+                $rd->getParameter('parentService', '*'),
+                $rd->getParameter('plot', '*'),
                 $rd->getParameter('offset', null),
                 $rd->getParameter('limit', null)
             );

@@ -22,7 +22,7 @@ import ingraph
 
 config_files = []
 for config_file in ('ingraph-aggregates.conf', 'ingraph-database.conf',
-                    'ingraph-xmlrpc.conf'):
+                    'ingraph-xmlrpc.conf', 'ingraph-carbon.conf'):
     if not isfile('@CONFIG_DIR@/%s' % config_file):
         config_files.append('examples/config/%s' % config_file)
 

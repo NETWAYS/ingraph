@@ -2,14 +2,6 @@
 
 class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonModel
 {
-    protected $client = null;
-
-    public function initialize(AgaviContext $ctx, array $params = array())
-    {
-        parent::initialize($ctx, $params);
-        $this->backend = new inGraph_Daemon_Client($params);
-    }
-
     public function fetchHosts($hostPattern = '%', $offset = 0, $limit = 20)
     {
         $hosts = $this->backend->fetchHosts($hostPattern, $limit, $offset);
@@ -84,7 +76,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     public function deleteComment($id) {
         return $this->backend->deleteComment($id);
     }
-    
+
     public function fetchIntervals()
     {
         return  $this->backend->fetchIntervals();

@@ -15,6 +15,8 @@ XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
 INGRAPH_USER=${INGRAPH_USER-ingraph}
 INGRAPH_COLLECTOR_GROUP=${INGRAPH_COLLECTOR_GROUP-icinga}
 LOG_DIR=${LOG_DIR-/var/log/ingraph}
+BACKEND=${BACKEND-ingraph}
+STATIC_METRICS_DIR=/var/lib/ingraph/static
 
 PYTHON_OPTS=${PYTHON_OPTS-install}
 
@@ -59,6 +61,8 @@ usage () {
     echo "                          [$XMLRPC_PASSWORD]"
     echo "--with-log-dir            directory for the log files"
     echo "                          [$LOG_DIR]"
+    echo "--with-backend            which backend to use, may be one of ingraph or carbon"
+    echo "                          [$BACKEND]"
     echo
     exit 1
 }
@@ -144,6 +148,14 @@ do
                 exit 1
             }
             ;;
+        --with-backend*)
+            BACKEND=${ARG#--with-backend}
+            BACKEND=${BACKEND#=}
+            [ "$BACKEND" != "ingraph" ] && [ "$BACKEND" != "carbon" ] && {
+                echo "ERROR: expected either ingraph or carbon as backend" >&2
+                exit 1
+            }
+            ;;
         --help | -h)
             usage
             ;;
@@ -189,6 +201,8 @@ do
     $SED -i -e s,@INGRAPH_COLLECTOR_GROUP@,$INGRAPH_COLLECTOR_GROUP, $F
     $SED -i -e s,@INGRAPH_USER@,$INGRAPH_USER, $F
     $SED -i -e s,@LOG_DIR@,$LOG_DIR, $F
+    $SED -i -e s,@BACKEND@,$BACKEND, $F
+    $SED -i -e s,@STATIC_METRICS_DIR@,$STATIC_METRICS_DIR, $F
 done
 
 # Install files from the ingraph directory
@@ -215,6 +229,10 @@ echo "(4/4) Creating log directory..."
 
 if [ ! -d "$LOG_DIR" ]; then
     $INSTALL -m 755 -o "$INGRAPH_USER" -d "$LOG_DIR"
+fi
+
+if [ ! -d "$STATIC_METRICS_DIR" ]; then
+    $INSTALL -m 755 -o "$INGRAPH_USER" -d "$STATIC_METRICS_DIR"
 fi
 
 echo "Done."

@@ -42,19 +42,12 @@
                     <route name=".delete" pattern="^/delete$"
                            action=".Delete" />
                 </route>
-                <route name=".templates" pattern="^/templates" stop="false"
-                       action="Templates">
-                    <route name=".create" pattern="^/create$"
-                           action=".Create" />
-                    <route name=".update" pattern="^/update$"
-                           action=".Update" />
-                </route>
                 <route name=".views" pattern="^/views" stop="false"
                        action="Views" output_type="json">
                     <route name=".create" pattern="^/create$"
-                           action=".Create" />
+                           action=".CreateOrUpdate" />
                     <route name=".update" pattern="^/update$"
-                           action=".Update" />
+                           action=".CreateOrUpdate" />
                 </route>
             </route>
         </routes>

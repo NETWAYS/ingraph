@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+ * Copyright (C) 2013 NETWAYS GmbH, http://netways.de
  *
  * This file is part of inGraph.
  *
@@ -17,17 +17,8 @@
  * inGraph. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
-class inGraph_BackendModel extends inGraphBaseModel implements
-    AgaviISingletonModel
+class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonModel
 {
-    protected $client = null;
-
-    public function initialize(AgaviContext $ctx, array $params=array())
-    {
-        parent::initialize($ctx, $params);
-        $this->backend = new inGraph_Daemon_Client($params);
-    }
-
     protected function icinga_fetchHosts($hostPattern)
     {
         $api = $this->getContext()->getModel('Store.LegacyLayer.IcingaApi',
@@ -53,7 +44,9 @@ class inGraph_BackendModel extends inGraphBaseModel implements
         $availableHosts = $this->backend->fetchHosts($hostPattern);
         $hosts = array();
         foreach ($availableHosts['hosts'] as $host) {
-            if (in_array($host['host'], $permittedHosts)) {
+            // TODO(el): Uncomment once Graphite as backend has been implemented
+            if (true) {
+//            if (in_array($host['host'], $permittedHosts)) {
                 $hosts[] = $host;
             }
         }
@@ -100,9 +93,11 @@ class inGraph_BackendModel extends inGraphBaseModel implements
                                                            $servicePattern);
         $services = array();
         foreach ($availableServices['services'] as $service) {
-            if ($service['parent_service'] !== null
-                && (in_array($service['parent_service'], $permittedServices)
-                    || in_array($service['service'], $permittedServices))
+            // TODO(el): Uncomment once Graphite as backend has been implemented
+            if (false
+//            if ($service['parent_service'] !== null
+//                && (in_array($service['parent_service'], $permittedServices)
+//                    || in_array($service['service'], $permittedServices))
             ) {
                 $services[] = array(
                     'name' => $service['parent_service'] . ' - '
@@ -110,7 +105,8 @@ class inGraph_BackendModel extends inGraphBaseModel implements
                     'service' => $service['service'],
                     'parentService' => $service['parent_service']
                 );
-            } elseif (true || in_array($service['service'], $permittedServices)) {
+            } else {
+//            } elseif (in_array($service['service'], $permittedServices)) {
                 $services[] = array(
                     'name' => $service['service'],
                     'service' => $service['service']

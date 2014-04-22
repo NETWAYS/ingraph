@@ -33,7 +33,7 @@
         /**
          * The wildcard to prefix and suffix the query with.
          */
-        wildcard: '%',
+        wildcard: '*',
         // private override
         initComponent: function () {
             Ext.ux.ingraph.AutoComboBox.superclass.initComponent.call(this);

@@ -236,7 +236,7 @@ class PerfdataParser(object):
                     min_ = None
             try:
                 max_ = self._parse_decimal(values[4]) * base
-            except IndexError:
+            except (IndexError, ValueError):
                 # Max is missing
                 if uom == 'percent':
                     max_ = float(100)

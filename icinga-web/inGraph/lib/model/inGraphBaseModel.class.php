@@ -19,4 +19,23 @@
 
 class inGraphBaseModel extends IcingaBaseModel
 {
+    protected $backend;
+
+    public function initialize(AgaviContext $ctx, array $parameters = array())
+    {
+        parent::initialize($ctx, $parameters);
+        $backendType = strtolower(AgaviConfig::get('modules.ingraph.backend'));
+        $backendConfig = AgaviConfig::get('modules.ingraph.' . $backendType);
+        switch ($backendType) {
+            case 'ingraph':
+                $backend = new inGraph_Backend_inGraph($backendConfig);
+                break;
+            case 'graphite':
+                $backend = new inGraph_Backend_Graphite($backendConfig);
+                break;
+            default:
+                throw new AgaviConfigurationException('Unknown inGraph backend ' . $backendType);
+        }
+        $this->backend = $backend;
+    }
 }

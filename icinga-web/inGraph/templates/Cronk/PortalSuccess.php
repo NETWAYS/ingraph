@@ -21,10 +21,6 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                 remove: "<?php echo $ro->gen(
                     'modules.ingraph.comments.delete'); ?>"
             },
-            templates: {
-                create: "<?php echo $ro->gen('modules.ingraph.templates.create'); ?>",
-                update: "<?php echo $ro->gen('modules.ingraph.templates.update'); ?>"
-            },
             views: {
                 create: "<?php echo $ro->gen('modules.ingraph.views.create'); ?>",
                 update: "<?php echo $ro->gen('modules.ingraph.views.update'); ?>"

@@ -88,8 +88,7 @@
         applyDefaults: function (cfg) {
             Ext.applyIf(cfg, {
                 root: 'series',
-                fields: Ext.ux.flot.Fields.seriesTemplateFields,
-                idProperty: 'plot_id'
+                fields: Ext.ux.flot.Fields.seriesTemplateFields
             });
             cfg.reader = new Ext.data.JsonReader(cfg);
         },

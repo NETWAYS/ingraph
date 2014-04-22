@@ -36,7 +36,6 @@
         /**
          * @cfg {Number} refreshBuffer
          * Milliseconds to delay plot refresh on store's update event.
-         * Defaults to <tt>200</tt>.
          */
         refreshBuffer: 200,
 
@@ -500,7 +499,7 @@
             this.store.suspendEvents();
 
             this.template.each(function (seriesTemplate) {
-                var series = this.store.getById(seriesTemplate.id);
+                var series = this.store.query('plot_id', seriesTemplate.get('plot_id')).first();
                 if (!series) {
                     // TODO(el): Notify?
                     // Skip
@@ -524,7 +523,6 @@
             var hosts = [];
 
             this.store.each(function (series) {
-
                 if (-1 === hosts.indexOf(series.json.host)) {
                     hosts.push(series.json.host);
                 }
@@ -677,7 +675,7 @@
                         series.set('yaxis', yaxis.id);
                     }
 
-                    var seriesTemplate = this.template.getById(series.id);
+                    var seriesTemplate = this.template.query('plot_id', series.get('plot_id')).first();
                     if (seriesTemplate) {
                         // Series template may not exist, i.e. removed via dialog
                         seriesTemplate.set('yaxis', series.get('yaxis'));
@@ -711,9 +709,11 @@
 
             if (hosts.length > 1) {
                 this.store.each(function (series) {
-                    series.set(
-                        'label',
-                        series.json.host + ': ' + series.get('label'));
+                    if (!series.isModified('label')) {
+                        series.set(
+                            'label',
+                            series.json.host + ': ' + series.get('label'));
+                    }
                 });
             }
 
@@ -945,7 +945,7 @@
                     this.store.resumeEvents();
                 } // Eof no series undefined
 
-                if (this.absolute) {
+                if (false && this.absolute) {
                     // Force full view of x-axis range even if there's no data
                     var min = this.store.getStartX(),
                         max = this.store.getEndX();
@@ -960,7 +960,6 @@
                         max: max
                     });
                 }
-
                 this.$plot = $.plot($('#' + id), series, this.$flotStyle);
 
                 if (this.loadMask) {

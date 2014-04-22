@@ -273,9 +273,7 @@
                 }
 
                 this.panels.each(function (panel) {
-                    var query = Ext.encode(
-                            inGraph.format.query(
-                                panel.get('series') || template.content.series)),
+                    var query = Ext.encode(template.query),
                         titleTemplate = new Ext.XTemplate(panel.get('title'));
 
                     var cfg = this.buildPanelCfg(
@@ -423,13 +421,6 @@
                 {
                     text: _('Template'),
                     menu: [
-//                        {
-//                            text: _('Save'),
-//                            iconCls: 'xflot-icon-save',
-//                            scope: this,
-//                            disabled: true,
-//                            handler: this.saveTemplateHandler
-//                        },
                         {
                             text: _('Save As View'),
                             iconCls: 'xflot-icon-save-new',
@@ -626,14 +617,6 @@
             });
         },
 
-        saveTemplateHandler: function () {
-            if (this.template.isDefault === true) {
-                url = Ext.ux.ingraph.Urls.templates.create;
-            } else {
-                this.saveTemplate(this.template.re, Ext.ux.ingraph.Urls.templates.update, this.template.name);
-            }
-        },
-
         /**
          * Get this component's state.
          * @method getState
@@ -808,7 +791,9 @@
                         series: {
                             lines: {
                                 show: true
-                            }
+                            },
+                            hoverable: true,
+                            clickable: true
                         }
                     }
                 },

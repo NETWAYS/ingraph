@@ -16,7 +16,6 @@
             "points": {
                 "show": false
             },
-            "re": "\/^size$\/",
             "host": "localhost",
             "service": "HTTP",
             "type": "avg",

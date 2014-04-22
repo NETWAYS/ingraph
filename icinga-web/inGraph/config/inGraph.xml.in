@@ -2,7 +2,7 @@
 <settings xmlns="http://agavi.org/agavi/config/parts/module/1.0"
           xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0">
 
-    <setting name="xmlrpc">
+    <setting name="ingraph">
         <ae:parameter name="host">@XMLRPC_HOST@</ae:parameter>
         <ae:parameter name="port">@XMLRPC_PORT@</ae:parameter>
         <ae:parameter name="user">@XMLRPC_USER@</ae:parameter>
@@ -19,19 +19,25 @@
         <ae:parameter name="nullTolerance">@NULL_TOLERANCE@</ae:parameter>
     </setting>
 
-    <setting name="templates">
+    <setting name="graphite">
+        <ae:parameter name="serverAddress">@GRAPHITE_URL@</ae:parameter>
+        <ae:parameter name="namingScheme"><![CDATA[ingraph.<host>.<service>.<metric>]]></ae:parameter>
+        <ae:parameter name="staticMetricsPath">@STATIC_METRICS_DIR@</ae:parameter>
+    </setting>
 
+    <setting name="backend">@BACKEND@</setting>
+
+    <setting name="templates">
         <!-- Absoulte directory to inGraph json templates -->
-        <ae:parameter name="dir">%core.module_dir%/inGraph/config/templates</ae:parameter>
+        <ae:parameter name="path">%core.module_dir%/inGraph/config/templates</ae:parameter>
 
         <!-- Relative filename for the default template -->
         <ae:parameter name="default">default.json</ae:parameter>
     </setting>
 
     <setting name="views">
-
         <!-- Absoulte directory to inGraph json views -->
-        <ae:parameter name="dir">%core.module_dir%/inGraph/config/views</ae:parameter>
+        <ae:parameter name="path">%core.module_dir%/inGraph/config/views</ae:parameter>
 
         <!-- Relative filename for the default view -->
         <ae:parameter name="default">default.json</ae:parameter>

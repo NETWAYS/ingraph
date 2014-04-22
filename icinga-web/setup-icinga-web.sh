@@ -17,6 +17,9 @@ XMLRPC_USER=${XMLRPC_USER-ingraph}
 XMLRPC_PASSWORD=${XMLRPC_PASSWORD-changeme}
 NULL_TOLERANCE=${NULL_TOLERANCE-2}
 TEMPLATE_SUFFIX=
+BACKEND=${BACKEND-ingraph}
+GRAPHITE_URL=${GRAPHITE_URL-http://127.0.0.1}
+STATIC_METRICS_DIR=/var/lib/ingraph/static
 
 FIND=${FIND-find}
 INSTALL=${INSTALL-install}
@@ -64,6 +67,10 @@ usage () {
     echo "                          [$XMLRPC_PASSWORD]"
     echo "--with-null-tolerance     null tolerance value"
     echo "                          [$NULL_TOLERANCE]"
+    echo "--with-backend            which backend to use, may be one of ingraph or graphite"
+    echo "                          [$BACKEND]"
+    echo "--with-graphite-web-url   URL to graphite-web when using carbon as backend"
+    echo "                          [$GRAPHITE_URL]"
     echo
     exit 1
 }
@@ -162,6 +169,22 @@ do
                 exit 1
             }
             ;;
+        --with-backend*)
+            BACKEND=${ARG#--with-backend}
+            BACKEND=${BACKEND#=}
+            [ "$BACKEND" != "ingraph" ] && [ "$BACKEND" != "graphite" ] && {
+                echo "ERROR: expected either ingraph or graphite as backend" >&2
+                exit 1
+            }
+            ;;
+        --with-graphite-web-url*)
+            GRAPHITE_URL=${ARG#--with-graphite-web-url}
+            GRAPHITE_URL=${GRAPHITE_URL#=}
+            [ -z "$GRAPHITE_URL" ] && {
+                echo "ERROR: graphite web URL must not be empty" >&2
+                exit 1
+            }
+            ;;
         --help | -h)
             usage
             ;;
@@ -250,6 +273,9 @@ do
     $SED -i -e s,@XMLRPC_PASSWORD@,$XMLRPC_PASSWORD, $F
     $SED -i -e s,@NULL_TOLERANCE@,$NULL_TOLERANCE, $F
     $SED -i -e s,@TEMPLATE_SUFFIX@,$TEMPLATE_SUFFIX, $F
+    $SED -i -e s,@BACKEND@,$BACKEND, $F
+    $SED -i -e s,@GRAPHITE_URL@,$GRAPHITE_URL, $F
+    $SED -i -e s,@STATIC_METRICS_DIR@,$STATIC_METRICS_DIR, $F
 done
 
 # Install from the inGraph directory

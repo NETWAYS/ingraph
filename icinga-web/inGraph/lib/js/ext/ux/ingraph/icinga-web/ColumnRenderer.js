@@ -69,7 +69,7 @@
                 var row = this.grid.getView().findRowIndex(el),
                     rec;
                 if (row !== false) {
-                    this.store.getAt(row);
+                    var rec = this.store.getAt(row);
                     Ext.ux.ingraph.icingaweb.Cronk.Popup({
                         title: new Ext.XTemplate(this.cfg.title).apply(rec.data),
                         host: rec.get(this.cfg.host),

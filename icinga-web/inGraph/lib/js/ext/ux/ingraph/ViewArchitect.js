@@ -580,6 +580,12 @@
                     labelAlign: 'top',
                     labelWidth: 100,
                     monitorValid: true,
+                    layout: 'vbox',
+                    layoutConfig: {
+                        align: 'stretch',
+                        pack: 'start'
+                    },
+                    bodyStyle: 'padding: 5px;',
                     defaults: {
                         xtype: 'fieldset',
                         collapsible: true

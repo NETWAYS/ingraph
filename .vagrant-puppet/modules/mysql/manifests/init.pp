@@ -1,6 +1,6 @@
 # Class: mysql
 #
-#   This class installs the mysql server and client software.
+#   This class installs the MySQL server and client software.
 #
 # Parameters:
 #
@@ -13,11 +13,8 @@
 #   include mysql
 #
 class mysql {
-  package {
-    'mysql':
-      ensure => installed;
-    'mysql-server':
-      ensure => installed;
+  package { [ 'mysql', 'mysql-server' ]:
+      ensure => installed
   }
 
   service { 'mysqld':

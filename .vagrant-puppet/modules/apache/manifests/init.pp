@@ -35,6 +35,6 @@ class apache {
     enable  => true,
     ensure  => running,
     alias   => 'apache',
-    require => [ Package['apache'], Exec['iptables-allow-http'] ]
+    require => [ Package['apache'] ]
   }
 }

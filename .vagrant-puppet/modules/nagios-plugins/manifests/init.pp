@@ -18,7 +18,6 @@ class nagios-plugins {
   require repoforge
 
   package { 'nagios-plugins':
-    ensure  => installed,
-    require => Class['repoforge']
+    ensure  => installed
   }
 }

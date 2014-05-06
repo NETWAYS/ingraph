@@ -14,9 +14,8 @@
 #   php::extension { ['php-mysql'], ['php-pgsql']: }
 #
 define php::extension(
-  $ensure=installed
+  $ensure = installed
 ) {
-
   include apache
   include php
 

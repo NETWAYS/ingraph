@@ -8,6 +8,8 @@
 #
 # Requires:
 #
+#   php
+#
 # Sample Usage:
 #
 #   php::extension { 'php-ldap': }
@@ -16,18 +18,10 @@
 define php::extension(
   $ensure = installed
 ) {
-  include apache
-  include php
-
-  if $::require {
-    $require_ = [ Package['apache'], Class['php'], $::require ]
-  } else {
-    $require_ = [ Package['apache'], Class['php'] ]
-  }
+  require php
 
   package { $name:
     ensure  => $ensure,
-    require => $require_,
     notify  => Service['apache']
   }
 }

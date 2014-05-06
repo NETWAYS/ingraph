@@ -10,7 +10,6 @@
 #
 #   icinga-packages
 #   mysql
-#   nagios-plugins
 #
 # Sample Usage:
 #
@@ -33,7 +32,8 @@ class icinga-mysql {
   service { 'ido2db':
     enable  => true,
     ensure  => running,
-    require => Package['icinga-idoutils-libdbi-mysql']
+    require => Package['icinga-idoutils-libdbi-mysql'],
+    notify  => Service['icinga']
   }
 
   exec { 'create-mysql-icinga-db':

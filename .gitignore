@@ -1,8 +1,5 @@
-.gitignore
-.gitattributes
-*.pyc
-.vagrant/
-.idea/
+.*
+!.git*
 build/
 dist/
 ingraph.egg-info/

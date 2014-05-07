@@ -56,20 +56,23 @@ class inGraph_Backend_inGraph extends inGraph_XmlRpc_Client implements inGraph_B
         return $values;
     }
 
-    public function createComment()
+    public function createComment($host, $service, $time, $author, $comment)
     {
+        // TODO: BROKEN?
         $args = func_get_args();
         return $this->call('addComment', $args);
     }
 
-    public function updateComment()
+    public function updateComment($id, $host, $service, $time, $author, $comment)
     {
+        // TODO: BROKEN?
         $args = func_get_args();
         return $this->call('updateComment', $args);
     }
 
-    public function deleteComment()
+    public function deleteComment($id)
     {
+        // TODO: BROKEN?
         $args = func_get_args();
         return $this->call('deleteComment', $args);
     }

@@ -123,6 +123,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
     public function fetchValues($query, $start = null, $end = null)
     {
         $charts = array();
+        $comments = array();
         foreach ($query as $spec) {
             if ($spec['type'] !== 'avg') {
                 $data = array();
@@ -169,28 +170,86 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                     'label'     => $metric['target'],
                     'data'      => array_map('array_reverse', $metric['datapoints'])
                 ) + $spec;
+                $firstDatapoint = reset($metric['datapoints']);
+                if ($firstDatapoint === false) {
+                    continue;
+                }
+                $lastDatapoint = end($metric['datapoints']);
+                $comments = array_merge(
+                    $comments,
+                    $this->fetchComments($spec['host'], $spec['service'], $firstDatapoint[1], $lastDatapoint[1])
+                );
             }
         }
         return array(
-            'comments'      => array(),
+            'comments'      => $comments,
             'statusdata'    => array(),
             'charts'        => $charts
         );
     }
 
-    public function createComment()
+    public function fetchComments($host, $service, $start = null, $end = null)
     {
-
+        $conn = AgaviContext::getInstance()->getDatabaseManager()->getDatabase('ingraph')->getConnection();
+        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $stmt = $conn->prepare(
+            'SELECT id, host, service, UNIX_TIMESTAMP(time) as timestamp, author, text FROM comment WHERE host = :host'
+            . ' AND service = :service AND time BETWEEN FROM_UNIXTIME(:start) AND FROM_UNIXTIME(:end)'
+        );
+        $stmt->execute(array(
+            ':host'     => $host,
+            ':service'  => $service,
+            ':start'    => $start,
+            ':end'      => $end
+        ));
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function updateComment()
+    public function createComment($host, $service, $time, $author, $text)
     {
-
+        $conn = AgaviContext::getInstance()->getDatabaseManager()->getDatabase('ingraph')->getConnection();
+        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $stmt = $conn->prepare(
+            'INSERT INTO comment (host, service, time, author, text) VALUES (:host, :service, FROM_UNIXTIME(:time),'
+            . ' :author, :text)'
+        );
+        $stmt->execute(array(
+            ':host'     => $host,
+            ':service'  => $service,
+            ':time'     => $time,
+            ':author'   => $author,
+            ':text'     => $text
+        ));
     }
 
-    public function deleteComment()
+    public function updateComment($id, $host, $service, $time, $author, $text)
     {
+        $conn = AgaviContext::getInstance()->getDatabaseManager()->getDatabase('ingraph')->getConnection();
+        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $stmt = $conn->prepare(
+            'UPDATE comment SET host = :host, service = :service, time = FROM_UNIXTIME(:time), author = :author,'
+            . ' :text = text) WHERE id = :id'
+        );
+        $stmt->execute(array(
+            ':id'       => $id,
+            ':host'     => $host,
+            ':service'  => $service,
+            ':time'     => $time,
+            ':author'   => $author,
+            ':text'     => $text
+        ));
+    }
 
+    public function deleteComment($id)
+    {
+        $conn = AgaviContext::getInstance()->getDatabaseManager()->getDatabase('ingraph')->getConnection();
+        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $stmt = $conn->prepare(
+            'DELETE FROM comment WHERE id = :id'
+        );
+        $stmt->execute(array(
+            ':id' => $id
+        ));
     }
 
     private function escape($subject)

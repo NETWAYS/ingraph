@@ -141,8 +141,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
     {
         $author = $this->getContext()->getUser()->getNsmUser()->user_name;
         // parent_service = null
-        return $this->backend->createComment($host, null, $service, $time,
-                                             $author, $comment);
+        return $this->backend->createComment($host, $service, $time, $author, $comment);
     }
 
     public function updateComment($id, $host, $service, $time, $comment)

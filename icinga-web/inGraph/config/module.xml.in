@@ -28,6 +28,9 @@
                     <ae:parameter>%core.module_dir%/inGraph/config/templateExtensions/inGraphServiceExtension@TEMPLATE_SUFFIX@.xml</ae:parameter>
                     <ae:parameter>%core.module_dir%/inGraph/config/templateExtensions/inGraphHostExtension@TEMPLATE_SUFFIX@.xml</ae:parameter>
                 </setting>
+                <setting name="agavi.include.databases">
+                    <ae:parameter>%core.module_dir%/inGraph/config/databases.xml</ae:parameter>
+                </setting>
             </settings>
             <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="inGraph.xml" />
         </module>

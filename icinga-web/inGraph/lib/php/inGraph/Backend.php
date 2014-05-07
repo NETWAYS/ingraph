@@ -91,7 +91,7 @@ interface inGraph_Backend
      *
      * @return  int
      */
-    public function createComment();
+    public function createComment($host, $service, $time, $author, $comment);
 
     /**
      * Update comment
@@ -105,12 +105,12 @@ interface inGraph_Backend
      *
      * @return  int
      */
-    public function updateComment();
+    public function updateComment($id, $host, $service, $time, $author, $text);
 
     /**
      * Delete comment
      *
      * @param int $id
      */
-    public function deleteComment();
+    public function deleteComment($id);
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ae:configurations xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0"
+                   xmlns="http://agavi.org/agavi/config/parts/databases/1.0">
+    <ae:configuration>
+        <databases>
+            <database xmlns="http://agavi.org/agavi/config/parts/databases/1.0" name="ingraph" class="AgaviPdoDatabase">
+                <ae:parameter name="dsn">mysql:host=localhost;dbname=ingraph</ae:parameter>
+                <ae:parameter name="username">ingraph</ae:parameter>
+                <ae:parameter name="password">ingraph</ae:parameter>
+            </database>
+        </databases>
+    </ae:configuration>
+</ae:configurations>

@@ -227,8 +227,8 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
         $conn = AgaviContext::getInstance()->getDatabaseManager()->getDatabase('ingraph')->getConnection();
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $stmt = $conn->prepare(
-            'UPDATE comment SET host = :host, service = :service, time = FROM_UNIXTIME(:time), author = :author,'
-            . ' :text = text) WHERE id = :id'
+            'UPDATE `comment` SET host = :host, service = :service, time = FROM_UNIXTIME(:time), author = :author,'
+            . ' text = :text WHERE id = :id'
         );
         $stmt->execute(array(
             ':id'       => $id,

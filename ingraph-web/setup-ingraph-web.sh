@@ -87,7 +87,7 @@ usage () {
     echo "                          [$NULL_TOLERANCE]"
     echo "--with-node-bin           Path to Node.js binary"
     echo "                          [$NODE_BIN]"
-    echo "--with-backend            which backend to use, may be one of ingraph or carbon"
+    echo "--with-backend            which backend to use, may be one of ingraph or graphite"
     echo "                          [$BACKEND]"
     echo "--with-graphite-web-url   URL to graphite-web when using carbon as backend"
     echo "                          [$GRAPHITE_URL]"
@@ -245,8 +245,8 @@ do
         --with-backend*)
             BACKEND=${ARG#--with-backend}
             BACKEND=${BACKEND#=}
-            [ -z "$BACKEND" ] && ( [ "$BACKEND" != "ingraph" ] && [ "$BACKEND" != "carbon" ] ) && {
-                echo "ERROR: expected either ingraph or carbon as backend" >&2
+            [ "$BACKEND" != "ingraph" ] && [ "$BACKEND" != "graphite" ] && {
+                echo "ERROR: expected either ingraph or graphite as backend" >&2
                 exit 1
             }
             ;;

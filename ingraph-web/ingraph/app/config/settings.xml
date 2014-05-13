@@ -41,10 +41,12 @@
             <setting name="available">true</setting>
             <setting name="debug">false</setting>
 
-            <setting name="use_database">false</setting>
+            <setting name="use_database">true</setting>
             <setting name="use_logging">false</setting>
             <setting name="use_security">false</setting>
             <setting name="use_translation">false</setting>
+
+            <setting name="default_context">web</setting>
         </settings>
 
         <exception_templates>

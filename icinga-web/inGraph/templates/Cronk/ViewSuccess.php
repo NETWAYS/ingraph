@@ -31,10 +31,10 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
 
     var host = "<?php echo $rd->getParameter('host'); ?>",
         service = "<?php echo $rd->getParameter('service'); ?>",
-        view = "<?php echo $rd->getParameter('view'); ?>";
-
-    var extState = Ext.state.Manager.getProvider().get(this.stateuid);
-    var cronkState = this.state;
+        view = "<?php echo $rd->getParameter('view'); ?>",
+        extState = Ext.state.Manager.getProvider().get(this.stateuid),
+        cronkState = this.state,
+        credentials = JSON.parse('<?php echo json_encode($t['credentials']); ?>');
 
     var addView = function (cfg) {
         cfg = cfg || {};

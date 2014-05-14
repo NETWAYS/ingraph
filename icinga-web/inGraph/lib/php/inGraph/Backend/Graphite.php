@@ -155,18 +155,28 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                 ) + $spec;
                 continue;
             }
-            $target = sprintf(
-                'legendValue(substr(keepLastValue(%s)), "last", "avg", "min", "max")',
-                str_replace(
-                    array('<host>', '<service>', '<metric>'),
-                    array($this->escape($spec['host']), $this->escape($spec['service']), $this->escape($spec['plot'])),
-                    $this->metricFormat
-                )
-            );
+            if (isset($spec['target'])) {
+                $plotId = null;
+                $target = $spec['target'];
+            } else {
+                $plotId = sprintf(
+                    '%s - %s - %s - %s', $spec['host'], $spec['service'], $spec['plot'], $spec['type']);
+                $target = sprintf(
+                    'legendValue(substr(keepLastValue(%s)), "last", "avg", "min", "max")',
+                    str_replace(
+                        array('<host>', '<service>', '<metric>'),
+                        array(
+                            $this->escape($spec['host']),
+                            $this->escape($spec['service']),
+                            $this->escape($spec['plot'])
+                        ),
+                        $this->metricFormat
+                    )
+                );
+            }
             foreach ($this->fetchMetric($target, $start, $end) as $metric) {
                 $charts[] = array(
-                    'plot_id'   => sprintf(
-                        '%s - %s - %s - %s', $spec['host'], $spec['service'], $spec['plot'], $spec['type']),
+                    'plot_id'   => $plotId,
                     'label'     => $metric['target'],
                     'data'      => array_map('array_reverse', $metric['datapoints'])
                 ) + $spec;
@@ -175,10 +185,12 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                     continue;
                 }
                 $lastDatapoint = end($metric['datapoints']);
-                $comments = array_merge(
-                    $comments,
-                    $this->fetchComments($spec['host'], $spec['service'], $firstDatapoint[1], $lastDatapoint[1])
-                );
+                if (!isset($spec['target'])) {
+                    $comments = array_merge(
+                        $comments,
+                        $this->fetchComments($spec['host'], $spec['service'], $firstDatapoint[1], $lastDatapoint[1])
+                    );
+                }
             }
         }
         return array(

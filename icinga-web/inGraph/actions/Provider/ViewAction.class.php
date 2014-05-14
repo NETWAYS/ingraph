@@ -41,6 +41,9 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
                 );
             }
             foreach ($panel['series'] as /* $i => */ &$series) {
+                if (isset($series['target'])) {
+                    continue;
+                }
                 try {
                     $plots = $this->getPlots($series);
                 } catch(inGraph_XmlRpc_Exception $e) {

@@ -877,7 +877,7 @@
                 getState: function () {
                     var templateData = {};
                     templateData[this.template.root] = this.template.toJson(
-                        ['host', 'service', 'parentService', 're', 'plot', 'type', 'plot_id']);
+                        ['host', 'service', 'parentService', 're', 'plot', 'type', 'plot_id', 'target']);
                     templateData.flot = this.template.getStyle();
 
                     return {

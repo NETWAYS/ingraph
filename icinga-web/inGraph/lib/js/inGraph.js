@@ -115,12 +115,15 @@
             query: function (series) {
                 var query = [];
                 $.each(series, function (i, item) {
-                    var qpart = {
-                        host: item.host,
-                        service: item.service,
-                        plot: item.plot,
-                        parent_service: item.parentService
-                    };
+                    var qpart = {};
+                    if (item.target !== undefined) {
+                        qpart.target = item.target;
+                    } else {
+                        qpart.host = item.host;
+                        qpart.service = item.service;
+                        qpart.plot = item.plot;
+                        qpart.parent_service = item.parentService;
+                    }
                     if (!$.isArray(item.type)) {
                         item.type = [item.type];
                     } else {

@@ -266,6 +266,6 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
 
     private function escape($subject)
     {
-        return str_replace(array('/', ' '), '_', $subject);
+        return str_replace(array('/', ' ', '.'), '_', $subject);
     }
 }

@@ -329,13 +329,15 @@
                         y: y
                     }),
                     el = this.el.createChild({
-                        tag: 'img',
-                        src: 'images/icons/balloon-ellipsis.png',
+                        tag: 'div',
+                        cls: 'icinga-icon-comment',
                         style: {
                             position: 'absolute',
                             left: o.left + 'px',
                             top: o.top + 'px',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            width: '16px',
+                            height: '16px'
                         }
                     });
                 Ext.ux.ingraph.comments.CommentMgr.register(comment.id, el);

@@ -94,7 +94,8 @@
                             panelConfig.baseParams.startx,
                             panelConfig.baseParams.endx,
                             panelConfig.legendConfig,
-                            panelConfig.baseParams.interval
+                            panelConfig.baseParams.interval,
+                            panelConfig.baseParams.nullTolerance
                         );
 
                         view.insert(index, cfg);
@@ -290,7 +291,8 @@
                         panel.get('start'),
                         panel.get('end'),
                         panel.get('legendconfig'),
-                        panel.get('interval')
+                        panel.get('interval'),
+                        template.content.nullTolerance
                     );
 
                     items.push(cfg);
@@ -333,7 +335,8 @@
                     panelConfig.baseParams.startx,
                     panelConfig.baseParams.endx,
                     panelConfig.legendConfig,
-                    panelConfig.baseParams.interval
+                    panelConfig.baseParams.interval,
+                    panelConfig.baseParams.nullTolerance
                 );
 
                 items.push(itemConfig);
@@ -688,7 +691,8 @@
                     panelConfig.baseParams.startx,
                     panelConfig.baseParams.endx,
                     panelConfig.legendConfig,
-                    panelConfig.baseParams.interval
+                    panelConfig.baseParams.interval,
+                    panelConfig.baseParams.nullTolerance
                 );
 
                 items.push(cfg);
@@ -779,7 +783,7 @@
 
         // private
         buildPanelCfg: function (title, templateContent, query, overviewConfig,
-                                 tbarConfig, startx, endx, legendConfig, interval) {
+                                 tbarConfig, startx, endx, legendConfig, interval, nullTolerance) {
             var cfg = {
                 title: Ext.util.Format.htmlEncode(title),
 
@@ -884,7 +888,8 @@
                         query: query,
                         startx: startx,
                         endx: endx,
-                        interval: Ext.isNumber(interval) ? interval : null
+                        interval: Ext.isNumber(interval) ? interval : null,
+                        nullTolerance: Ext.isNumber(nullTolerance) ? nullTolerance : null
                     }
                 },
 

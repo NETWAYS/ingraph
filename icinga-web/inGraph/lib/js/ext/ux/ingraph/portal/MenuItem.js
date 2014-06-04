@@ -115,7 +115,8 @@
                     Ext.apply(cfg, {
                         row: column.row,
                         flex: column.flex,
-                        rowHeight: column.rowHeight
+                        rowHeight: column.rowHeight,
+                        credentials: this.credentials
                     });
                     rowCt.insert(columnIndex, cfg);
                     rowCt.doLayout();

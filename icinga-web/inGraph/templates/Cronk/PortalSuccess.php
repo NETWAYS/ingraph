@@ -29,8 +29,9 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
         Ext.ux.ingraph.Urls.overwrite(urls);
     }
 
-    var extState = Ext.state.Manager.getProvider().get(this.stateuid);
-    var cronkState = this.state;
+    var extState = Ext.state.Manager.getProvider().get(this.stateuid),
+        cronkState = this.state,
+        credentials = JSON.parse('<?php echo json_encode($t['credentials']); ?>');
 
     var addPortal = function(items) {
         var portal = new Ext.ux.ingraph.portal.Portal({
@@ -38,7 +39,8 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
             stateful: true,
             stateId: this.stateuid,
             stateEvents: ['add'],
-            items: items || []
+            items: items || [],
+            credentials: credentials
         });
 
         this.add(portal);

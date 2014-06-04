@@ -73,8 +73,9 @@
                         items: []
                     });
                 }
+                item.credentials = this.credentials;
                 rows[rowIndex - 1].items.push(item);
-            });
+            }, this);
             return rows;
         },
         /**

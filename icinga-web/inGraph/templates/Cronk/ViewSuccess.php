@@ -41,7 +41,8 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
         Ext.apply(cfg, {
             stateful: true,
             stateEvents: [],
-            stateId: this.stateuid
+            stateId: this.stateuid,
+            credentials: credentials
         });
 
         var view = new Ext.ux.ingraph.View(cfg);

@@ -19,6 +19,8 @@
 
 class inGraph_Views_CreateOrUpdateAction extends inGraphBaseAction
 {
+    protected $credentials = array('icinga.user', 'ingraph.view.modify');
+
     public function executeWrite(AgaviRequestDataHolder $rd)
     {
         $config     = AgaviConfig::get('modules.ingraph.views');

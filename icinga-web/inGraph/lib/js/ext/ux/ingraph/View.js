@@ -23,17 +23,16 @@
     Ext.ns('Ext.ux.ingraph');
 
     /**
-     * @class Ext.ux.ingraph.View
-     * @extends Ext.Panel
-     * @namespace Ext.ux.ingraph
-     * @author Eric Lippmann <eric.lippmann@netways.de>
      * Container for <tt>{@link Ext.ux.flot.Panel}<tt>s. Based on
      * a passed configuration object this component decides which strategy to use
      * to add child items.
-     * @constructor
-     * @param {Object} cfg
-     * A config object.
+     *
+     * @class Ext.ux.ingraph.View
+     * @extends Ext.Panel
+     * @namespace Ext.ux.ingraph
      * @xtype xigview
+     * @constructor
+     * @param {Object} cfg A config object
      */
     Ext.ux.ingraph.View = Ext.extend(Ext.Panel, {
         autoScroll: true,
@@ -64,58 +63,7 @@
         defaults: {
             xtype: 'xflotpanel',
             bodyStyle: 'padding: 2px;',
-            height: 220,
-            tools: [
-                {
-                    id: 'gear',
-                    qtip: _('Change panel settings'),
-                    handler: function (e, toolEl, flotPanel) {
-                        var panelSettings = new Ext.ux.flot.PanelSettingsWindow({
-                            flotPanel: flotPanel
-                        });
-
-                        panelSettings.show();
-                    } // Eof handler
-                },
-                {
-                    id: 'plus',
-                    qtip: _('Clone this panel'),
-                    handler: function (e, toolEl, flotPanel) {
-                        var view = flotPanel.ownerCt,
-                            index = view.items.indexOfKey(flotPanel.id),
-                            panelConfig = flotPanel.getState();
-
-                        var cfg = view.buildPanelCfg(
-                            panelConfig.title,
-                            panelConfig.templateContent,
-                            panelConfig.baseParams.query,
-                            panelConfig.overviewConfig,
-                            panelConfig.tbarConfig,
-                            panelConfig.baseParams.startx,
-                            panelConfig.baseParams.endx,
-                            panelConfig.legendConfig,
-                            panelConfig.baseParams.interval
-                        );
-
-                        view.insert(index, cfg);
-                        view.doLayout();
-                    }
-                },
-                {
-                    id: 'close',
-                    qtip: _('Remove this panel'),
-                    handler: function (e, toolEl, flotPanel) {
-                        if (flotPanel.ownerCt.items.length === 1) {
-                            // Do not remove last panel
-                            AppKit.notifyMessage(
-                                _('Sorry'),
-                                _('Could not remove the last panel!'));
-                        } else {
-                            flotPanel.destroy();
-                        }
-                    }
-                }
-            ]
+            height: 220
         },
 
         // private
@@ -142,7 +90,6 @@
                  */
                 'exception'
             );
-            this.initEvents();
         },
 
         // private
@@ -158,8 +105,9 @@
             Ext.apply(this, Ext.apply(this.initialConfig, defaults));
         },
 
-        // private
+        // private override
         initEvents: function () {
+            Ext.ux.ingraph.View.superclass.initEvents.call(this);
             this.on({
                 scope: this,
                 sync: function (tbar, startx, endx) {
@@ -369,42 +317,48 @@
                 return;
             }
 
-            tbar.add([
-                {
-                    text: _('View'),
-                    menu: [
-                        {
-                            text: _('Save'),
-                            iconCls: 'xflot-icon-save',
-                            scope: this,
-                            handler: this.saveViewHandler
-                        },
-                        {
-                            text: _('Save As...'),
-                            iconCls: 'xflot-icon-save-new',
-                            scope: this,
-                            handler: this.saveAsViewHandler
-                        }
-                    ]
-                },
-                {
-                    xtype: 'tbspacer',
-                    width: 50
-                },
-                {
-                    xtype: 'tbtext',
-                    text: this.view.name
-                },
-                {
-                    xtype: 'tbfill'
-                },
-                {
-                    tooltip: this.printText,
-                    iconCls: 'xflot-icon-print',
-                    scope: this,
-                    handler: this.printHandler
-                }
-            ]);
+            if (this.credentials.indexOf('ingraph.view.modify') !== -1) {
+                tbar.add([
+                    {
+                        text: _('View'),
+                        menu: [
+                            {
+                                text: _('Save'),
+                                iconCls: 'xflot-icon-save',
+                                scope: this,
+                                handler: this.saveViewHandler
+                            },
+                            {
+                                text: _('Save As...'),
+                                iconCls: 'xflot-icon-save-new',
+                                scope: this,
+                                handler: this.saveAsViewHandler
+                            }
+                        ]
+                    },
+                    {
+                        xtype: 'tbspacer',
+                        width: 50
+                    }
+                ]);
+            }
+            tbar.add({
+                xtype: 'tbtext',
+                text: this.view.name
+            });
+            if (this.credentials.indexOf('ingraph.view.export') !== -1) {
+                tbar.add([
+                    {
+                        xtype: 'tbfill'
+                    },
+                    {
+                        tooltip: this.printText,
+                        iconCls: 'xflot-icon-print',
+                        scope: this,
+                        handler: this.printHandler
+                    }
+                ]);
+            }
 
             tbar.doLayout();
         },
@@ -899,6 +853,62 @@
                     };
                 }
             };
+
+            if (this.credentials.indexOf('ingraph.view.modify') !== -1)  {
+                cfg.tools = [
+                    {
+                        id: 'gear',
+                        qtip: _('Change panel settings'),
+                        handler: function (e, toolEl, flotPanel) {
+                            var panelSettings = new Ext.ux.flot.PanelSettingsWindow({
+                                flotPanel: flotPanel
+                            });
+
+                            panelSettings.show();
+                        } // Eof handler
+                    },
+                    {
+                        id: 'plus',
+                        qtip: _('Clone this panel'),
+                        handler: function (e, toolEl, flotPanel) {
+                            var view = flotPanel.ownerCt,
+                                index = view.items.indexOfKey(flotPanel.id),
+                                panelConfig = flotPanel.getState();
+
+                            var cfg = view.buildPanelCfg(
+                                panelConfig.title,
+                                panelConfig.templateContent,
+                                panelConfig.baseParams.query,
+                                panelConfig.overviewConfig,
+                                panelConfig.tbarConfig,
+                                panelConfig.baseParams.startx,
+                                panelConfig.baseParams.endx,
+                                panelConfig.legendConfig,
+                                panelConfig.baseParams.interval
+                            );
+
+                            view.insert(index, cfg);
+                            view.doLayout();
+                        }
+                    },
+                    {
+                        id: 'close',
+                        qtip: _('Remove this panel'),
+                        handler: function (e, toolEl, flotPanel) {
+                            if (flotPanel.ownerCt.items.length === 1) {
+                                // Do not remove last panel
+                                AppKit.notifyMessage(
+                                    _('Sorry'),
+                                    _('Could not remove the last panel!'));
+                            } else {
+                                flotPanel.destroy();
+                            }
+                        }
+                    }
+                ];
+            }
+
+            cfg.credentials = this.credentials;
 
             cfg = $.extend(true, {}, cfg, this.panelConfig);
 

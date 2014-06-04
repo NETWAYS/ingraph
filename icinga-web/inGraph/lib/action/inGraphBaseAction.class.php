@@ -45,7 +45,6 @@ class inGraphBaseAction extends IcingaBaseAction
 
     public function executeWrite(AgaviRequestDataHolder $rd)
     {
-        $this->context->getUser()->addCredential('ingraph.view.modify');
         $this->setAttribute('credentials', $this->context->getUser()->getCredentials());
         return $this->getDefaultViewName();
     }

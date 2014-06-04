@@ -368,17 +368,23 @@
                     iconCls: 'x-flot-settings-icon',
                     scope: this,
                     handler: this.settingsHandler
-                },
-                {
-                    xtype: 'tbseparator'
-                },
-                {
-                    ref: 'comments',
-                    tooltip: this.commentsText,
-                    iconCls: 'x-flot-comment-icon',
-                    scope: this,
-                    handler: this.commentsHandler
-                },
+                }
+            ];
+            if (this.credentials.indexOf('ingraph.comment') !== -1) {
+                items.contact([
+                    {
+                        xtype: 'tbseparator'
+                    },
+                    {
+                        ref: 'comments',
+                        tooltip: this.commentsText,
+                        iconCls: 'x-flot-comment-icon',
+                        scope: this,
+                        handler: this.commentsHandler
+                    }
+                ]);
+            }
+            items.concat([
                 {
                     xtype: 'tbseparator'
                 },
@@ -388,42 +394,46 @@
                     iconCls: 'x-flot-forecast-icon',
                     scope: this,
                     handler: this.predictionHandler
-                },
-                {
-                    xtype: 'tbfill'
-                },
-                {
-                    ref: 'download',
-                    tooltip: this.downloadText,
-                    iconCls: 'x-flot-document-export-icon',
-                    menu: {
-                        items: [
-                            {
-                                text: 'XML',
-                                iconCls: 'x-flot-document-xml-icon',
-                                handler: this.doDownload.createDelegate(this, ['xml'])
-                            },
-                            {
-                                text: 'CSV',
-                                iconCls: 'x-flot-document-csv-icon',
-                                handler: this.doDownload.createDelegate(this, ['csv'])
-                            },
-                            {
-                                text: 'PNG',
-                                iconCls: 'x-flot-export-image-icon',
-                                handler: this.doDownload.createDelegate(this, ['png'])
-                            }
-                        ]
-                    }
-                },
-                {
-                    ref: 'print',
-                    tooltip: this.printText,
-                    iconCls: 'x-flot-print-icon',
-                    scope: this,
-                    handler: this.printHandler
                 }
-            ];
+            ]);
+            if (this.credentials.indexOf('ingraph.panel.export') !== -1) {
+                items.concat([
+                    {
+                        xtype: 'tbfill'
+                    },
+                    {
+                        ref: 'download',
+                        tooltip: this.downloadText,
+                        iconCls: 'x-flot-document-export-icon',
+                        menu: {
+                            items: [
+                                {
+                                    text: 'XML',
+                                    iconCls: 'x-flot-document-xml-icon',
+                                    handler: this.doDownload.createDelegate(this, ['xml'])
+                                },
+                                {
+                                    text: 'CSV',
+                                    iconCls: 'x-flot-document-csv-icon',
+                                    handler: this.doDownload.createDelegate(this, ['csv'])
+                                },
+                                {
+                                    text: 'PNG',
+                                    iconCls: 'x-flot-export-image-icon',
+                                    handler: this.doDownload.createDelegate(this, ['png'])
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        ref: 'print',
+                        tooltip: this.printText,
+                        iconCls: 'x-flot-print-icon',
+                        scope: this,
+                        handler: this.printHandler
+                    }
+                ]);
+            }
             var userItems = this.items || this.buttons;
             if (Ext.isArray(userItems)) {
                 if (this.prependButtons) {

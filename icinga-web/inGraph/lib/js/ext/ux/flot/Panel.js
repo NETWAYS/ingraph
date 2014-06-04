@@ -224,7 +224,8 @@
                     {
                         xtype: 'xflottbar',
                         store: this.store,
-                        activeFrame: this.store.baseParams.startx
+                        activeFrame: this.store.baseParams.startx,
+                        credentials: this.credentials
                     }
                 );
             }

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gauge</title>
+    <script type="text/javascript" src="../../../icinga-web/inGraph/lib/js/jquery/jquery-1.8.3.min.js"></script>
+    <!--[if lte IE 8]>
+    <script language="javascript" type="text/javascript" src="../../../icinga-web/inGraph/lib/js/excanvas/excanvas.js"></script>
+    <![endif]-->
+    <script type="text/javascript" src="../../../icinga-web/inGraph/lib/js/flot/jquery.flot.js"></script>
+    <script type="text/javascript" src="../../../icinga-web/inGraph/lib/js/flot/jquery.flot.pie.js"></script>
+    <script type="text/javascript" src="../../../icinga-web/inGraph/lib/js/flot/jquery.flot.gauge.js"></script>
+</head>
+
+<body>
+
+<center>
+
+    <div style="padding-top: 15%">
+        <div id="placeholder" style="height:220px;width:440px"></div>
+    </div>
+
+</center>
+
+<script type="text/javascript">
+$(function () {
+
+    var placeholder = $("#placeholder");
+
+    var data = [[125]];
+
+    var options = {
+        show: true,
+        range: [0, 200],
+        background: '#FFFFFF',
+        needle: {
+            color: 'black',
+            lineWidth: 3
+        },
+        ranges: [
+            {
+                color: '#30aa4f',
+                range: [0, 50]
+            },
+            {
+                color: '#f4f900',
+                range: [50, 150]
+            },
+            {
+                color: '#ed0c20',
+                range: [150, 200]
+            }
+        ]
+    };
+
+    $.plot(placeholder, data, options);
+
+    var updatePlot = function(){
+        $.plot(placeholder, [[(Math.random() * 200)]], options);
+        setTimeout(updatePlot, 1000);
+    };
+    updatePlot();
+
+});
+</script>
+
+</body>
+</html>

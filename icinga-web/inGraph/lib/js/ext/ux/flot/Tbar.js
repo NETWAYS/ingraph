@@ -371,7 +371,7 @@
                 }
             ];
             if (this.credentials.indexOf('ingraph.comment') !== -1) {
-                items.contact([
+                items = items.contact([
                     {
                         xtype: 'tbseparator'
                     },
@@ -384,7 +384,7 @@
                     }
                 ]);
             }
-            items.concat([
+            items = items.concat([
                 {
                     xtype: 'tbseparator'
                 },
@@ -397,7 +397,7 @@
                 }
             ]);
             if (this.credentials.indexOf('ingraph.panel.export') !== -1) {
-                items.concat([
+                items = items.concat([
                     {
                         xtype: 'tbfill'
                     },

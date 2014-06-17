@@ -829,7 +829,9 @@
                 },
 
                 getState: function () {
-                    var templateData = {};
+                    var templateData = {
+                        description: this.initialConfig.description
+                    };
                     templateData[this.template.root] = this.template.toJson(
                         ['host', 'service', 'parentService', 're', 'plot', 'type', 'plot_id', 'target']);
                     templateData.flot = this.template.getStyle();
@@ -851,11 +853,33 @@
 
                         templateContent: templateData
                     };
-                }
+                },
+
+                description: templateContent.description
             };
 
+            cfg.tools = [];
+
+            if (cfg.description) {
+                cfg.tools = cfg.tools.concat([
+                    {
+                        id: 'help',
+                        qtip: _('View description of this chart'),
+                        handler: function (e, toolEl, flotPanel) {
+                            Ext.Msg.show({
+                                title: flotPanel.title,
+                                msg: flotPanel.description,
+                                buttons: Ext.Msg.OK,
+                                animEl: 'elId',
+                                icon: Ext.MessageBox.INFO
+                            });
+                        }
+                    }
+                ]);
+            }
+
             if (this.credentials.indexOf('ingraph.view.modify') !== -1)  {
-                cfg.tools = [
+                cfg.tools = cfg.tools.concat([
                     {
                         id: 'gear',
                         qtip: _('Change panel settings'),
@@ -905,7 +929,7 @@
                             }
                         }
                     }
-                ];
+                ]);
             }
 
             cfg.credentials = this.credentials;

@@ -396,7 +396,7 @@
                     handler: this.predictionHandler
                 }
             ]);
-            if (this.credentials.indexOf('ingraph.panel.export') !== -1) {
+            if (this.credentials.indexOf('ingraph.export') !== -1) {
                 items = items.concat([
                     {
                         xtype: 'tbfill'

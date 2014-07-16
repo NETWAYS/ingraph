@@ -464,6 +464,16 @@
                 }
             },
             {
+                name: 'gauge:show',
+                defaultValue: false,
+                convert: function (v, rec) {
+                    if (Ext.isObject(rec.gauge) && rec.gauge.show !== undefined) {
+                        return rec.gauge.show;
+                    }
+                    return v;
+                }
+            },
+            {
                 name: 'shadowSize',
                 defaultValue: 3
             },
@@ -534,6 +544,9 @@
             {
                 name: 'plot_id',
                 convert: function (v, rec) {
+                    if (v) {
+                        return v;
+                    }
                     if (rec.parent_service === undefined) {
                         rec.parent_service = null;
                     }

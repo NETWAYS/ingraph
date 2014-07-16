@@ -42,6 +42,7 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
             }
             foreach ($panel['series'] as /* $i => */ &$series) {
                 if (isset($series['target'])) {
+                    $series['plot_id'] = md5($series['target']);
                     continue;
                 }
                 try {

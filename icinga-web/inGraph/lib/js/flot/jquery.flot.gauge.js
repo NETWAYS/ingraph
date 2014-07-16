@@ -45,15 +45,19 @@
         var canvas = null;
         var processed = false;
         var ctx = null;
+        var options = null;
 
         plot.hooks.processOptions.push(function (plot, options) {
-            if (options.show) {
+            if (options.series.gauge.show) {
                 options.grid.show = false;
+                options.grid.clickable = false;
+                options.grid.hoverable = false;
             }
         });
 
         plot.hooks.processDatapoints.push(function (plot) {
-            var options = plot.getOptions();
+            options = plot.getOptions();
+            options = options.series.gauge;
             if (options.show) {
                 if (!processed) {
                     processed = true;
@@ -63,7 +67,9 @@
         });
 
         plot.hooks.draw.push(function (plot, newCtx) {
-            options = plot.getOptions();
+            // TODO(el): NEVER EVER USE GLOBAL VARIABLES!
+            var options = plot.getOptions();
+            options = options.series.gauge;
             if (options.show) {
                 draw(plot, newCtx);
             }
@@ -74,10 +80,8 @@
         }
 
         function drawRanges(radius) {
-
             var margin = options.range[1] - options.range[0];
-
-            for (var i in options.ranges) {
+            for (var i = 0; i < options.ranges.length; ++i) {
                 var x = options.ranges[i].range[0];
                 var y = options.ranges[i].range[1];
 
@@ -165,13 +169,15 @@
 
         function draw(plot, newCtx) {
 
+
+
             var canvasHeight = plot.getPlaceholder().height();
 
             ctx = newCtx;
 
             var data = plot.getData();
 
-            var value = data[0].data[0];
+            var value = data[0].data[0][1];
 
             var d1 = value - options.range[0];
             var d2 = options.range[1] - options.range[0];
@@ -231,27 +237,31 @@
     }
 
     var options = {
-        show: true,
-        range: [0, 100],
-        background: '#FFFFFF',
-        needle: {
-            color: 'black',
-            lineWidth: 3
-        },
-        ranges: [
-            {
-                color: '#30aa4f',
-                range: [0, 25]
-            },
-            {
-                color: '#f4f900',
-                range: [25, 75]
-            },
-            {
-                color: '#ed0c20',
-                range: [75, 100]
+        series: {
+            gauge: {
+                show: false,
+                range: [0, 100],
+                background: '#FFFFFF',
+                needle: {
+                    color: 'black',
+                    lineWidth: 3
+                },
+                ranges: [
+                    {
+                        color: '#30aa4f',
+                        range: [0, 50]
+                    },
+                    {
+                        color: '#f4f900',
+                        range: [50, 75]
+                    },
+                    {
+                        color: '#ed0c20',
+                        range: [75, 100]
+                    }
+                ]
             }
-        ]
+        }
     };
 
     $.plot.plugins.push({

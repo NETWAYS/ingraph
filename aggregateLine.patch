@@ -1,0 +1,73 @@
+diff --git a/usr/share/graphite/webapp/content/js/composer_widgets.js b/usr/share/graphite/webapp/content/js/composer_widgets.js
+index 8e9f343..7138c68 100644
+--- a/usr/share/graphite/webapp/content/js/composer_widgets.js
++++ b/usr/share/graphite/webapp/content/js/composer_widgets.js
+@@ -1133,7 +1133,14 @@ function createFunctionsMenu() {
+ //        {text: 'GroupByNode', handler: applyFuncToEachWithInput('group')}, // requires 2 parameters
+ //        {text: 'Add Threshold Line', handler: applyFuncToEachWithInput('threshold', 'Enter a threshold value')},
+         {text: 'Draw Stacked', handler: applyFuncToEach('stacked')},
+-        {text: 'Draw in Second Y Axis', handler: applyFuncToEach('secondYAxis')}
++        {text: 'Draw in Second Y Axis', handler: applyFuncToEach('secondYAxis')},
++        {text: 'Aggregate Line',
++         menu: [
++           {text: "Avg", handler: applyFuncToEach('aggregateLine', '"avg"')},
++           {text: "Max", handler: applyFuncToEach('aggregateLine', '"max"')},
++           {text: "Min", handler: applyFuncToEach('aggregateLine', '"min"')}
++         ]
++        }
+       ]
+     }
+   ];
+diff --git a/usr/lib/python2.6/site-packages/graphite/render/functions.py b//usr/lib/python2.6/site-packages/graphite/render/functions.py
+index 0335e8b..3d30be5 100644
+--- a/usr/lib/python2.6/site-packages/graphite/render/functions.py
++++ b/usr/lib/python2.6/site-packages/graphite/render/functions.py
+@@ -2274,6 +2274,40 @@ def constantLine(requestContext, value):
+   series = TimeSeries(str(value), start, end, step, [value, value])
+   return [series]
+
++def aggregateLine(requestContext, seriesList, func='avg'):
++  """
++  Draws a horizontal line based the function applied to the series.
++
++
++  Note: By default, the graphite renderer consolidates data points by
++  averaging data points over time. If you are using the 'min' or 'max'
++  function for aggregateLine, this can cause an unusual gap in the
++  line drawn by this function and the data itself. To fix this, you
++  should use the consolidateBy() function with the same function
++  argument you are using for aggregateLine. This will ensure that the
++  proper data points are retained and the graph should line up
++  correctly.
++
++  Example:
++
++  .. code-block:: none
++
++    &target=aggregateLineSeries(server.connections.total, 'avg')
++
++  """
++  t_funcs = { 'avg': safeAvg, 'min': safeMin, 'max': safeMax }
++
++  if func not in t_funcs:
++    raise ValueError("Invalid function %s" % func)
++
++  value = t_funcs[func]( seriesList[0] )
++  name = 'aggregateLine(%s,%d)' % (seriesList[0].pathExpression, value)
++
++  series = constantLine(requestContext, value)[0]
++  series.name = name
++
++  return [series]
++
+
+ def threshold(requestContext, value, label=None, color=None):
+   """
+@@ -3072,6 +3106,7 @@ SeriesFunctions = {
+   'threshold' : threshold,
+   'transformNull' : transformNull,
+   'identity': identity,
++  'aggregateLine' : aggregateLine,
+
+   # test functions
+   'time': timeFunction,

@@ -371,7 +371,7 @@
                 }
             ];
             if (this.credentials.indexOf('ingraph.comment') !== -1) {
-                items = items.contact([
+                items = items.concat([
                     {
                         xtype: 'tbseparator'
                     },

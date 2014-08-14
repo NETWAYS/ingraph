@@ -317,7 +317,7 @@
                 return;
             }
 
-            if (this.credentials.indexOf('ingraph.view.modify') !== -1) {
+            if (this.credentials && this.credentials.indexOf('ingraph.view.modify') !== -1) {
                 tbar.add([
                     {
                         text: _('View'),
@@ -346,7 +346,7 @@
                 xtype: 'tbtext',
                 text: this.view.name
             });
-            if (this.credentials.indexOf('ingraph.view.export') !== -1) {
+            if (this.credentials && this.credentials.indexOf('ingraph.view.export') !== -1) {
                 tbar.add([
                     {
                         xtype: 'tbfill'
@@ -878,7 +878,7 @@
                 ]);
             }
 
-            if (this.credentials.indexOf('ingraph.view.modify') !== -1)  {
+            if (this.credentials && this.credentials.indexOf('ingraph.view.modify') !== -1)  {
                 cfg.tools = cfg.tools.concat([
                     {
                         id: 'gear',

@@ -370,7 +370,7 @@
                     handler: this.settingsHandler
                 }
             ];
-            if (this.credentials.indexOf('ingraph.comment') !== -1) {
+            if (this.credentials && this.credentials.indexOf('ingraph.comment') !== -1) {
                 items = items.concat([
                     {
                         xtype: 'tbseparator'
@@ -396,7 +396,7 @@
                     handler: this.predictionHandler
                 }
             ]);
-            if (this.credentials.indexOf('ingraph.export') !== -1) {
+            if (this.credentials && this.credentials.indexOf('ingraph.export') !== -1) {
                 items = items.concat([
                     {
                         xtype: 'tbfill'

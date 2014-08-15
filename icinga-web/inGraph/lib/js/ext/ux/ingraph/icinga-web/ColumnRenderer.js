@@ -34,10 +34,16 @@
                     rec;
                 if (row !== false) {
                     rec = this.store.getAt(row);
+                    var host = rec.get(this.cfg.host);
+                    var service = rec.get(this.cfg.service);
+                    if (host)
+                        host = host.replace(/[^A-Za-z0-9]/g, '_');
+                    if (service)
+                        service = service.replace(/[^A-Za-z0-9]/g, '_');
                     Ext.ux.ingraph.icingaweb.Cronk.Window({
                         title: new Ext.XTemplate(this.cfg.title).apply(rec.data),
-                        host: rec.get(this.cfg.host),
-                        service: rec.get(this.cfg.service),
+                        host: host,
+                        service: service,
                         start: this.cfg.preview.start ?
                                 Math.ceil(strtotime(this.cfg.preview.start)) : '',
                         height: this.cfg.preview.height,
@@ -53,8 +59,8 @@
                 var args = this.getHandlerArgsTemplated();
                 Ext.ux.ingraph.icingaweb.Cronk.Window({
                     title: args.title,
-                    host: args.host,
-                    service: args.service,
+                    host: args.host ? args.host.replace(/[^A-Za-z0-9]/g, '_') : null,
+                    service: args.service ? args.service.replace(/[^A-Za-z0-9]/g, '_') : null,
                     start: args.preview.start ?
                             Math.ceil(strtotime(args.preview.start)) : '',
                     height: args.preview.height,
@@ -70,10 +76,16 @@
                     rec;
                 if (row !== false) {
                     var rec = this.store.getAt(row);
+                    var host = rec.get(this.cfg.host);
+                    var service = rec.get(this.cfg.service);
+                    if (host)
+                        host = host.replace(/[^A-Za-z0-9]/g, '_');
+                    if (service)
+                        service = service.replace(/[^A-Za-z0-9]/g, '_');
                     Ext.ux.ingraph.icingaweb.Cronk.Popup({
                         title: new Ext.XTemplate(this.cfg.title).apply(rec.data),
-                        host: rec.get(this.cfg.host),
-                        service: rec.get(this.cfg.service),
+                        host: host,
+                        service: service,
                         start: this.cfg.popup.start ?
                                 Math.ceil(strtotime(this.cfg.popup.start)) :  '',
                         height: this.cfg.popup.height,
@@ -88,10 +100,16 @@
              * Preview graph within a tooltip.
              */
             Popup2 = function (e, el, iconCls) {
+                var host = this.host;
+                var service = this.service;
+                if (host)
+                    host = host.replace(/[^A-Za-z0-9]/g, '_');
+                if (service)
+                    service = service.replace(/[^A-Za-z0-9]/g, '_');
                 Ext.ux.ingraph.icingaweb.Cronk.Popup({
                     title: this.title,
-                    host: this.host,
-                    service: this.service,
+                    host: host,
+                    service: service,
                     start: this.popup.start ?
                             Math.ceil(strtotime(this.popup.start)) : '',
                     height: this.popup.height,

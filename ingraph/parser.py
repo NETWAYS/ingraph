@@ -153,6 +153,10 @@ class PerfdataParser(object):
                 # Extraction function for this key not specified.
                 # Most likely since the information is not needed.
                 continue
+            except ValueError:
+                # PNP4Nagios' NEB module may screw performance data not writing TIMET correctly, e.g.
+                # TIMET::1411DATATYPE::SERVICEPERFDATA which issues "ValueError: invalid literal for float()"
+                continue
             perfdata_no_cruft[key] = value
         if ('perfdata' not in perfdata_no_cruft or
             'host' not in perfdata_no_cruft or

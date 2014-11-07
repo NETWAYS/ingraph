@@ -229,7 +229,10 @@ class Collectord(daemon.UnixDaemon):
                     try:
                         observation, perfdata = parser.parse(line)
                     except InvalidPerfdata, e:
-                        sys.stderr.write("%s %s:%i" % (e, input.filename(), input.filelineno()))
+                        sys.stderr.write("%s %s:%i\n  line: %s" % (e, input.filename(), input.filelineno(), line))
+                        continue
+                    except Exception, e:
+                        sys.stderr.write("Error while parsing perfdata: %s %s:%i\n  line: %s" % (e, input.filename(), input.filelineno(), line))
                         continue
                     for performance_data in perfdata:
                         parentservice = None

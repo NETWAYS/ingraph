@@ -1,5 +1,6 @@
-# inGraph (https://www.netways.org/projects/ingraph)
-# Copyright (C) 2011-2012 NETWAYS GmbH
+# Copyright (C) 2012 NETWAYS GmbH, http://netways.de
+#
+# This file is part of inGraph (https://www.netways.org/projects/ingraph).
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,16 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+import os.path
 import sys
 
-if sys.version_info[:2] < (2, 4):
-    sys.exit('inGraph requires Python version 2.4 or later')
-elif sys.version_info[:2] >= (3,):
-    sys.exit('inGraph is not yet compatible with Python 3')
+from ConfigParser import SafeConfigParser
 
-__name__ = 'ingraph'
-__version__ = '1.0.3'
-__author__ = 'NETWAYS GmbH'
-__contact__ = 'info@netways.de'
-__url__ = 'https://www.netways.org'
-__description__ = 'Data collection and graphing utility for monitoring systems'
+log = logging.getLogger(__name__)
+
+
+def file_config(filename):
+    filename = os.path.abspath(filename)
+    log.debug("Parsing configuration file %s.." % filename)
+    config = {}
+    execfile(filename, config)
+    config_no_cruft = dict((k, v) for k, v in config.iteritems() if k not in globals())
+    return config_no_cruft

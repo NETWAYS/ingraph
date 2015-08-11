@@ -225,9 +225,9 @@ def main():
     parser.add_option('-t', '--second-end', dest='second_end',
                       metavar='SECOND_END', help='end of the second interval ' +
                       '(relative to the current time, in hours)')
-    parser.add_option('-w', '--warning', dest='warning', default=20,
+    parser.add_option('-w', '--warning', dest='warning', default=10,
                       metavar='WARNING', help='warning threshold, in % [default: %default]')
-    parser.add_option('-c', '--critical', dest='critical', default=10,
+    parser.add_option('-c', '--critical', dest='critical', default=20,
                       metavar='CRITICAL', help='critical threshold, in % [default: %default]')
     parser.add_option('-E', '--season', dest='season', default=24,
                       metavar='SEASON', help='Season, in hours [for HW, default: %default]')
@@ -338,18 +338,18 @@ def main():
         'type': 'avg'
     }]
 
-    result_first = api.getPlotValues2(query, first_start, first_end, 300)
+    result_first = api.getPlotValues2(query, first_start, first_end)
 
-    if len(result_first['charts']) == 0:
+    if len(result_first['charts']) == 0 or len(result_first['charts'][0]['data']) == 0:
         print("No data returned for first time interval.")
         sys.exit(1)
 
     data_first = result_first['charts'][0]['data']
 
     if options.function != 'hw':
-        result_second = api.getPlotValues2(query, second_start, second_end, 300)
+        result_second = api.getPlotValues2(query, second_start, second_end)
 
-        if len(result_second['charts']) == 0:
+        if len(result_second['charts']) == 0 or len(result_second['charts'][0]['data']) == 0:
             print("No data returned for second time interval.")
             sys.exit(1)
 

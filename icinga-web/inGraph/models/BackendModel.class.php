@@ -36,9 +36,9 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
         $permittedHosts = $this->icinga_fetchHosts($hostPattern);
         $availableHosts = $this->backend->fetchHosts($hostPattern);
         $hosts = array_intersect($permittedHosts, $availableHosts['hosts']);
-        $total = count($hosts);
+        $total = count($availableHosts['hosts']);
         return array(
-            'results' => array_slice($hosts, $offset, $limit),
+            'results' => array_slice($availableHosts['hosts'], $offset, $limit),
             'total' => $total
         );
     }
@@ -84,7 +84,7 @@ class inGraph_BackendModel extends inGraphBaseModel implements AgaviISingletonMo
                     'service' => $service['service'],
                     'parentService' => $service['parent_service']
                 );
-            } elseif (in_array($service['service'], $permittedServices)) {
+            } elseif (true || in_array($service['service'], $permittedServices)) {
                 $services[] = array(
                     'name' => $service['service'],
                     'service' => $service['service']

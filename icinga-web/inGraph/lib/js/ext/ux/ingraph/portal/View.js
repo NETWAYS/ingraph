@@ -48,7 +48,7 @@
 
         panelConfig: {
             tbarConfig: {
-                enable: false
+                hidden: true
             },
             // Do not render any tools
             tools: []
@@ -57,6 +57,16 @@
         // private
         buildTools: function (cfg) {
             cfg.tools = [
+                {
+                    id: 'minus',
+                    scope: this,
+                    handler: function () {
+                        this.items.each(function (panel) {
+                            var tbar = panel.getTopToolbar();
+                            tbar.setVisible(tbar.hidden);
+                        }, this);
+                    }
+                },
                 {
                     id: 'close',
                     scope: this,

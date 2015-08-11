@@ -63,7 +63,59 @@
         defaults: {
             xtype: 'xflotpanel',
             bodyStyle: 'padding: 2px;',
-            height: 220
+            height: 220,
+            tools: [
+                {
+                    id: 'gear',
+                    qtip: _('Change panel settings'),
+                    handler: function (e, toolEl, flotPanel) {
+                        var panelSettings = new Ext.ux.flot.PanelSettingsWindow({
+                            flotPanel: flotPanel
+                        });
+
+                        panelSettings.show();
+                    } // Eof handler
+                },
+                {
+                    id: 'plus',
+                    qtip: _('Clone this panel'),
+                    handler: function (e, toolEl, flotPanel) {
+                        var view = flotPanel.ownerCt,
+                            index = view.items.indexOfKey(flotPanel.id),
+                            panelConfig = flotPanel.getState();
+
+                        var cfg = view.buildPanelCfg(
+                            panelConfig.title,
+                            panelConfig.templateContent,
+                            panelConfig.baseParams.query,
+                            panelConfig.overviewConfig,
+                            panelConfig.tbarConfig,
+                            panelConfig.baseParams.startx,
+                            panelConfig.baseParams.endx,
+                            panelConfig.legendConfig,
+                            panelConfig.baseParams.interval,
+                            panelConfig.baseParams.nullTolerance
+                        );
+
+                        view.insert(index, cfg);
+                        view.doLayout();
+                    }
+                },
+                {
+                    id: 'close',
+                    qtip: _('Remove this panel'),
+                    handler: function (e, toolEl, flotPanel) {
+                        if (flotPanel.ownerCt.items.length === 1) {
+                            // Do not remove last panel
+                            AppKit.notifyMessage(
+                                _('Sorry'),
+                                _('Could not remove the last panel!'));
+                        } else {
+                            flotPanel.destroy();
+                        }
+                    }
+                }
+            ]
         },
 
         // private
@@ -236,7 +288,8 @@
                         panel.get('start'),
                         panel.get('end'),
                         panel.get('legendconfig'),
-                        panel.get('interval')
+                        panel.get('interval'),
+                        template.content.nullTolerance
                     );
 
                     items.push(cfg);
@@ -279,7 +332,8 @@
                     panelConfig.baseParams.startx,
                     panelConfig.baseParams.endx,
                     panelConfig.legendConfig,
-                    panelConfig.baseParams.interval
+                    panelConfig.baseParams.interval,
+                    panelConfig.baseParams.nullTolerance
                 );
 
                 items.push(itemConfig);
@@ -625,7 +679,8 @@
                     panelConfig.baseParams.startx,
                     panelConfig.baseParams.endx,
                     panelConfig.legendConfig,
-                    panelConfig.baseParams.interval
+                    panelConfig.baseParams.interval,
+                    panelConfig.baseParams.nullTolerance
                 );
 
                 items.push(cfg);
@@ -716,7 +771,7 @@
 
         // private
         buildPanelCfg: function (title, templateContent, query, overviewConfig,
-                                 tbarConfig, startx, endx, legendConfig, interval) {
+                                 tbarConfig, startx, endx, legendConfig, interval, nullTolerance) {
             var cfg = {
                 title: Ext.util.Format.htmlEncode(title),
 
@@ -824,7 +879,8 @@
                         query: query,
                         startx: startx,
                         endx: endx,
-                        interval: Ext.isNumber(interval) ? interval : null
+                        interval: Ext.isNumber(interval) ? interval : null,
+                        nullTolerance: Ext.isNumber(nullTolerance) ? nullTolerance : null
                     }
                 },
 

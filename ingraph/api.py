@@ -260,8 +260,16 @@ class BackendRPCMethods(object):
 
         for spec in query:
             host = model.Host.getByName(conn, spec['host'])
-            service = model.Service.getByName(conn, spec['service'], spec['parent_service'])
-            hose = model.HostService.getByHostAndService(conn, host, service, None)
+            parent_hostservice = None
+            if spec['parent_service']:
+                parent_service = model.Service.getByName(conn, spec['parent_service'])
+                parent_hostservice = model.HostService.getByHostAndService(conn, host, parent_service, None)
+                try:
+                    parent_hostservice = parent_hostservice[0]
+                except IndexError:
+                    parent_hostservice = None
+            service = model.Service.getByName(conn, spec['service'], None)
+            hose = model.HostService.getByHostAndService(conn, host, service, parent_hostservice)
             try:
                 hose = hose[0]
             except IndexError:

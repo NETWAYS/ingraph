@@ -19,6 +19,10 @@
                 <argument>view</argument>
             </validator>
 
+            <validator name="parentService" class="string" required="false">
+                <argument>parentService</argument>
+            </validator>
+
         </validators>
 
     </ae:configuration>

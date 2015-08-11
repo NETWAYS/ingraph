@@ -99,6 +99,16 @@ class PerfdataParser(object):
         'NS': 10 ** (-9)
     }
 
+    range_suffix = {
+        'BBS': 1,
+        'KBS': 1 << 10,
+        'MBS': 1 << 20,
+        'GBS': 1 << 30,
+        'TBS': 1 << 40,
+        'PBS': 1 << 50,
+        'EBS': 1 << 60
+    }
+
     def _parse_decimal(self, value):
         last_comma = value.rfind(',')
         comma_count = value.count(',')
@@ -130,6 +140,9 @@ class PerfdataParser(object):
                 uom = 'counter'
             elif sfx in self.__class__.binary_suffix:
                 base = self.__class__.binary_suffix[sfx]
+                uom = 'byte'
+            elif sfx in self.__class__.range_suffix:
+                base = self.__class__.range_suffix[sfx]
                 uom = 'byte'
             elif sfx in self.__class__.decimal_suffix:
                 base = self.__class__.decimal_suffix[sfx]
@@ -167,6 +180,10 @@ class PerfdataParser(object):
             except KeyError:
                 # Extraction function for this key not specified.
                 # Most likely since the information is not needed.
+                continue
+            except ValueError:
+                # PNP4Nagios' NEB module may screw performance data not writing TIMET correctly, e.g.
+                # TIMET::1411DATATYPE::SERVICEPERFDATA which issues "ValueError: invalid literal for float()"
                 continue
             perfdata_no_cruft[key] = value
         if 'perfdata' not in perfdata_no_cruft or\

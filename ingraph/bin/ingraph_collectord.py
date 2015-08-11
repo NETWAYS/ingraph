@@ -508,7 +508,7 @@ class Collectord(daemon.UnixDaemon):
                 for line in input:
                     try:
                         observation, perfdata = parser.parse(line)
-                    except InvalidPerfdata, e:
+                    except Exception, e:
                         print >> sys.stderr, "%s %s:%i" %\
                             (e, input.filename(), input.filelineno())
                         continue

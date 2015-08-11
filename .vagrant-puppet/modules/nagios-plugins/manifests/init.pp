@@ -8,17 +8,16 @@
 #
 # Requires:
 #
-#   repoforge
+#   epel
 #
 # Sample Usage:
 #
 #   include nagios-plugins
 #
 class nagios-plugins {
-  require repoforge
+  require epel
 
-  package { 'nagios-plugins':
-    ensure  => installed,
-    require => Class['repoforge']
+  package { 'nagios-plugins-all':
+    ensure => installed
   }
 }

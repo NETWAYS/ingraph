@@ -6,6 +6,9 @@
 >
     <ae:configuration>
         <validators>
+            <validator name="query" class="string" required="false">
+                <argument>query</argument>
+            </validator>
             <validator name="offset" class="number" required="false">
                 <argument>offset</argument>
             </validator>

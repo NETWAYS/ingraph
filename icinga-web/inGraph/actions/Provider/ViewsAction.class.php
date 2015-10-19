@@ -28,6 +28,7 @@ class inGraph_Provider_ViewsAction extends inGraphBaseAction
             array(
                 'total' => $manager->getCount(),
                 'views' => $manager->getTemplateNames(
+                    $rd->getParameter('query', '*'),
                     $rd->getParameter('limit', 20),
                     $rd->getParameter('offset', 0)
                 )

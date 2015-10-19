@@ -27,14 +27,15 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
         $manager->collectTemplates();
         $view       = $manager->fetchTemplateByFileName($rd->getParameter('view'));
         $content    = $view->getContent();
-        if (!isset($content['panels']) || !is_array($content['panels'])) {
+        if (! isset($content['panels']) || ! is_array($content['panels'])) {
             return $this->setError(
                 'Invalid configuration for key "panels", expteced array in '
                 . $view->getSplFileInfo()->getRealPath()
             );
         }
+        $backend = $this->getBackend()->getBackend();
         foreach ($content['panels'] as &$panel) {
-            if (!isset($panel['series']) || !is_array($panel['series'])) {
+            if (! isset($panel['series']) || ! is_array($panel['series'])) {
                 return $this->setError(
                     'Invalid configuration for key "series", expected array in '
                     . $view->getSplFileInfo()->getRealPath()
@@ -52,13 +53,19 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
                 }
                 $valid = false;
                 foreach ($plots['plots'] as $plot) {
-                    if ($view->matches($series['re'], $plot['plot'])) {
+                    $re = $series['re'];
+                    if ($backend->getName() === 'graphite') {
+                        /** @var inGraph_Backend_Graphite $backend */
+                        $re = $backend->escape($re);
+                    }
+                    if ($view->matches($re, $plot['plot'])) {
+                        $plot['plot_id'] .= ' - ' . $series['type'];
                         $series += $plot;
                         $valid = true;
                         break;
                     }
                 }
-                if (!$valid) {
+                if (! $valid) {
                     $series = null;
                 }
 //                unset($panel['series'][$i]);
@@ -79,7 +86,7 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
     {
         $parentService = isset($series['parentService']) ? $series['parentService'] : null;
         $key = $series['host'] . $parentService . $series['service'];
-        if (!isset($this->plots[$key])) {
+        if (! isset($this->plots[$key])) {
             $this->plots[$key] = $this->getBackend()->fetchPlots(
                 $series['host'], $series['service'], $parentService, null, 0, null // Force no limit
             );

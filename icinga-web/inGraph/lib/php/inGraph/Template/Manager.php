@@ -135,14 +135,21 @@ class inGraph_Template_Manager
     /**
      * Get template names
      *
-     * @param int $limit
-     * @param int $offset
+     * @param   string  $query
+     * @param   int     $limit
+     * @param   int     $offset
      *
-     * @return string[]
+     * @return  string[]
      */
-    public function getTemplateNames($limit = null, $offset = 0)
+    public function getTemplateNames($query, $limit = null, $offset = 0)
     {
-        return array_slice(array_keys($this->templates), $offset, $limit);
+        $templateNames = array_keys($this->templates);
+        if ($query !== null && $query !== '*') {
+            $query = str_replace('*', '.*', $query);
+            $query = str_replace('/', '\/', $query);
+            $templateNames = preg_grep('/' . $query . '/', $templateNames);
+        }
+        return array_slice($templateNames, $offset, $limit);
     }
 
     /**

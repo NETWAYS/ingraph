@@ -105,6 +105,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
             // TODO(el): Prove whether metric is leaf? Because in case metrics have their aggregation suffixed,
             // e.g. {metric}.average they're not leaves.
             preg_match($this->pattern, $metric['path'], $matches);
+
             $plots[] = array(
                 'plot_id'           => sprintf(
                     '%s - %s - %s', $matches['host'], $matches['service'], $matches['metric']),
@@ -172,26 +173,37 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                     $spec['target']
                 );
             } else {
+                $host = $this->escape($spec['host']);
+                $service = $this->escape($spec['service']);
+                $plot = $this->escape($spec['plot']);
+                $plotId = sprintf(
+                    '%s - %s - %s - %s', $host, $service, $plot, $spec['type']);
                 if ($spec['type'] !== 'avg') {
-                    $metric = $this->fetchStaticMetric($spec['host'], $spec['service'], $spec['plot'], $spec['type']);
+                    $metric = $this->fetchStaticMetric($host, $service, $plot, $spec['type']);
                     if ($metric !== null) {
+                        if ($metric[0][0] < $start) {
+                            array_unshift($metric, array($start, $metric[0][1]));
+                        }
+                        $last = end($metric);
+                        if ($last[0] < $end) {
+                            $metric[] = array($end, $last[1]);
+                        }
                         $charts[] = array(
-                                'label' => $spec['plot'] . ' ' . $spec['type'],
+                                'plot_id'   => $plotId,
+                                'label' => $plot . ' ' . $spec['type'],
                                 'data'  => $metric
                             ) + $spec;
                     }
                     continue;
                 }
-                $plotId = sprintf(
-                    '%s - %s - %s - %s', $spec['host'], $spec['service'], $spec['plot'], $spec['type']);
                 $target = sprintf(
                     'legendValue(substr(keepLastValue(%s)), "last", "avg", "min", "max")',
                     str_replace(
                         array('<host>', '<service>', '<metric>'),
                         array(
-                            $this->escape($spec['host']),
-                            $this->escape($spec['service']),
-                            $this->escape($spec['plot'])
+                            $host,
+                            $service,
+                            $plot
                         ),
                         $this->metricFormat
                     )
@@ -287,8 +299,16 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
         ));
     }
 
-    private function escape($subject)
+    public function escape($subject)
     {
         return str_replace(array('/', ' ', '.'), '_', $subject);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getName()
+    {
+        return 'graphite';
     }
 }

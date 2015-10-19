@@ -19,6 +19,11 @@
 
 class inGraphBaseModel extends IcingaBaseModel
 {
+    /**
+     * The inGraph backend
+     *
+     * @var inGraph_Backend
+     */
     protected $backend;
 
     public function initialize(AgaviContext $ctx, array $parameters = array())
@@ -37,5 +42,10 @@ class inGraphBaseModel extends IcingaBaseModel
                 throw new AgaviConfigurationException('Unknown inGraph backend ' . $backendType);
         }
         $this->backend = $backend;
+    }
+
+    public function getBackend()
+    {
+        return $this->backend;
     }
 }

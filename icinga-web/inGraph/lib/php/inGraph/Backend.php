@@ -113,4 +113,11 @@ interface inGraph_Backend
      * @param int $id
      */
     public function deleteComment($id);
+
+    /**
+     * Get the name of the backend
+     *
+     * @return string
+     */
+    public function getName();
 }

@@ -100,4 +100,12 @@ class inGraph_Backend_inGraph extends inGraph_XmlRpc_Client implements inGraph_B
             'total' => count($tfs)
         );
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getName()
+    {
+        return 'ingraph';
+    }
 }

@@ -71,6 +71,11 @@ class inGraphBaseAction extends IcingaBaseAction
         return 'Error';
     }
 
+    /**
+     * Get the inGraph backend
+     *
+     * @return inGraph_BackendModel
+     */
     public function getBackend()
     {
         if (null === $this->backend) {

@@ -530,46 +530,46 @@
                 var convert = series.get('convert'),
                     converted = series.get('_converted');
 
-                if (!convert || converted) {
+                if (! convert || converted || ! convert.base) {
                     // Skip
                     return true;
                 }
 
-                try {
-                    var convertFn = Ext.decode(convert);
-                } catch (e) {
-                    // TODO(el): Notify
-                    AppKit.log(e);
-                    // Skip
-                    return true;
-                }
+                var plot = convert.base[0].replace('/', '_'),
+                    type = convert.base[1];
 
-                if (!Ext.isFunction(convertFn)) {
-                    // TODO(el): Notify
-                    // Skip
-                    return true;
-                }
-
-                var scope = {},
-                    snapshot = Ext.pluck(this.store.getRange(),
-                                         'data');
-
-                Ext.each(series.get('data'), function (xy, index) {
-                    var y;
-                    try {
-                        y = convertFn.call(scope, xy[1],
-                                           xy[0], snapshot, index);
-                    } catch (e) {
-                        // TODO(el): Notify
-                        AppKit.log(e);
-                        // Break
+                this.store.each(function (base) {
+                    if (base.json.plot === plot && base.json.type === type) {
+                        var data = [],
+                            t = series.get('data').slice(),
+                            cxy = t.shift();
+                        Ext.each(base.get('data'), function (xy, index) {
+                            while (t.length && xy[0] > cxy[0]) {
+                                cxy = t.shift();
+                            }
+                            data.push([xy[0], xy[1] * 100 / cxy[1]]);
+                        });
+                        series.set('data', data);
                         return false;
                     }
-                    if (y !== xy[1] &&
-                            (Ext.isNumber(y) || y === null)) {
-                        xy[1] = y;
-                    }
                 });
+
+                //Ext.each(series.get('data'), function (xy, index) {
+                //    var y;
+                //    try {
+                //        y = convertFn.call(scope, xy[1],
+                //                           xy[0], snapshot, index);
+                //    } catch (e) {
+                //        // TODO(el): Notify
+                //        AppKit.log(e);
+                //        // Break
+                //        return false;
+                //    }
+                //    if (y !== xy[1] &&
+                //            (Ext.isNumber(y) || y === null)) {
+                //        xy[1] = y;
+                //    }
+                //});
 
                 series.set('_converted', true);
             }, this);

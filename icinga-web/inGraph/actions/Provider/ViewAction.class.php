@@ -56,11 +56,16 @@ class inGraph_Provider_ViewAction extends inGraphBaseAction
                     $re = $series['re'];
                     if ($backend->getName() === 'graphite') {
                         /** @var inGraph_Backend_Graphite $backend */
-                        $re = $backend->escape($re);
+                        $re = '/' . $backend->escape(trim($re, '/')) . '/';
                     }
                     if ($view->matches($re, $plot['plot'])) {
-                        $plot['plot_id'] .= ' - ' . $series['type'];
-                        $series += $plot;
+                        if (is_array($series['type'])) {
+                            $type = $series['type'][0];
+                        } else {
+                            $type = $series['type'];
+                        }
+                        $plot['plot_id'] .= ' - ' . $type;
+                        $series = array_merge($series, $plot);
                         $valid = true;
                         break;
                     }

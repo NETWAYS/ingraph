@@ -1,6 +1,8 @@
 .*
 !.git*
+!.vagrant-puppet
 build/
 dist/
 ingraph.egg-info/
 MANIFEST
+*.pyc

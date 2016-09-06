@@ -208,8 +208,6 @@ class UnixDaemon(object):
             self.run()
         except KeyboardInterrupt:
             print >> sys.stderr, "Ctrl-C pressed -- terminating..."
-            sys.exit(0)
-        finally:
             return 0
 
     def stop(self, ignore_error=False):

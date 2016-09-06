@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://agavi.org/agavi/config/parts/module/1.0"
+          xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0">
+
+    <setting name="ingraph">
+        <ae:parameter name="host">127.0.0.1</ae:parameter>
+        <ae:parameter name="port">5000</ae:parameter>
+        <ae:parameter name="user">ingraph</ae:parameter>
+        <ae:parameter name="pass">changeme</ae:parameter>
+
+        <!-- Control CURLOPT_TIMEOUT, the maximum number of seconds to allow
+        cURL functions to execute -->
+        <ae:parameter name="timeout">30</ae:parameter>
+    </setting>
+
+    <setting name="daemon">
+        <!-- Control how many consecutive datapoints may be missing before
+        inserting null values (gaps) -->
+        <ae:parameter name="nullTolerance">2</ae:parameter>
+    </setting>
+
+    <setting name="graphite">
+        <ae:parameter name="serverAddress">http://<%= @web_ip %>:<%= @web_port %></ae:parameter>
+        <ae:parameter name="namingScheme"><![CDATA[ingraph.<host>.<service>.<metric>]]></ae:parameter>
+        <ae:parameter name="staticMetricsPath">/var/lib/ingraph/static</ae:parameter>
+    </setting>
+
+    <setting name="backend">graphite</setting>
+
+    <setting name="templates">
+        <!-- Absoulte directory to inGraph json templates -->
+        <ae:parameter name="path">%core.module_dir%/inGraph/config/templates</ae:parameter>
+
+        <!-- Relative filename for the default template -->
+        <ae:parameter name="default">default.json</ae:parameter>
+    </setting>
+
+    <setting name="views">
+        <!-- Absoulte directory to inGraph json views -->
+        <ae:parameter name="path">%core.module_dir%/inGraph/config/views</ae:parameter>
+
+        <!-- Relative filename for the default view -->
+        <ae:parameter name="default">default.json</ae:parameter>
+    </setting>
+
+    <setting name="nodejs">
+        <ae:parameter name="bin">@NODE_BIN@</ae:parameter>
+    </setting>
+</settings>

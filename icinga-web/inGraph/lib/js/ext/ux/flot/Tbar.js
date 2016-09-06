@@ -370,6 +370,7 @@
                     handler: this.settingsHandler
                 }
             ];
+            console.log(this.credentials);
             if (this.credentials && this.credentials.indexOf('ingraph.comment') !== -1) {
                 items = items.concat([
                     {

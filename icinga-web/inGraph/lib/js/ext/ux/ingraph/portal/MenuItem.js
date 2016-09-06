@@ -69,6 +69,7 @@
                                         });
                                     menu.on('plot', function (cb, cfg) {
                                         cfg.xtype = 'xigportalview';
+                                        cfg.credentials = this.credentials,
                                         this.replaceWith(cfg);
                                         menuWindow.destroy();
                                     }, this);

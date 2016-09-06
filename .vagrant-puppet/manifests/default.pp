@@ -17,3 +17,5 @@ include icinga-web-mysql
 realize( User[apache], User[vagrant] )
 
 include xdebug
+
+include graphite-mysql

@@ -90,6 +90,7 @@ Cronk.util.initEnvironment(<?php CronksRequestUtil::echoJsonString($rd); ?>, fun
                         rowHeight = rowHeightDef.hasOwnProperty(rowIndex) ? parseInt(rowHeightDef[rowIndex]) : 1;
 
                     items.push({
+                        credentials: credentials,
                         flex: flex,
                         row: rowIndex + 1,
                         rowHeight: rowHeight,

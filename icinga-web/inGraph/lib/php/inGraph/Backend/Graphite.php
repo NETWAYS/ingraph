@@ -10,7 +10,9 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
 
     private $metricFormat;
 
-    private $pattern;
+    private $hostPattern;
+
+    private $servicePattern;
 
     private $metricsCache = array();
 
@@ -34,11 +36,18 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
             0,
             strpos($config['namingScheme'], '<metric>')
         ) . '<metric>';
-        $this->pattern = sprintf('/%s(?:\.(?P<type>[[:word:]-]+))?/',
+        $this->hostPattern = sprintf('/%s(?:\.(?P<type>[[:word:]-]+))?/',
             str_replace(
                 array('<host>', '<service>', '<metric>'),
                 array('(?P<host>[[:word:]-]+)', '(?P<service>[[:word:]-]+)', '(?P<metric>[[:word:]-]+)'),
-                addcslashes($this->metricFormat, '.')
+                addcslashes($this->hostFormat . '.<metric>', '.')
+            )
+        );
+        $this->servicePattern = sprintf('/%s(?:\.(?P<type>[[:word:]-]+))?/',
+            str_replace(
+                array('<host>', '<service>', '<metric>'),
+                array('(?P<host>[[:word:]-]+)', '(?P<service>[[:word:]-]+)', '(?P<metric>[[:word:]-]+)'),
+                addcslashes($this->serviceFormat . '.<metric>', '.')
             )
         );
         $this->staticMetricsPath = $config['staticMetricsPath'];
@@ -52,7 +61,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
             $offset);
         $hosts = array();
         foreach ($metrics['metrics'] as $metric) {
-            if ((bool) $metric['is_leaf'] === false) {
+            if (! (bool) $metric['is_leaf']) {
                 $hosts[] = array('host' => $metric['name']);
             }
         }
@@ -75,7 +84,7 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
         );
         $services = array();
         foreach ($metrics['metrics'] as $metric) {
-            if ((bool) $metric['is_leaf'] === false) {
+            if (! (bool) $metric['is_leaf']) {
                 $services[] = array(
                     'service'           => $metric['name'],
                     'parent_service'    => null
@@ -89,29 +98,50 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
     }
 
     public function fetchPlots(
-        $hostPattern, $servicePattern, $parentServicePattern, $plotPattern = '*', $limit = null, $offset = 0
+        $hostPattern, $servicePattern, $parentServicePattern, $plotPattern, $limit = null, $offset = 0
     ) {
-        $metrics = $this->findMetric(
-            str_replace(
+        $plotPattern = $plotPattern !== null ? $plotPattern : '*';
+        if ($servicePattern !== null) {
+            $metricPattern = str_replace(
                 array('<host>', '<service>', '<metric>'),
                 array($this->escape($hostPattern), $this->escape($servicePattern), $this->escape($plotPattern)),
                 $this->metricFormat
-            ),
+            );
+            $pattern = $this->servicePattern;
+        } else {
+            $metricPattern =  str_replace(
+                array('<host>', '<metric>'),
+                array($this->escape($hostPattern), $this->escape($plotPattern)),
+                str_replace('.<service>', '', $this->metricFormat)
+            );
+            $pattern = $this->hostPattern;
+        }
+        $metrics = $this->findMetric(
+            $metricPattern,
             $limit,
             $offset
         );
         $plots = array();
         foreach ($metrics['metrics'] as $metric) {
-            // TODO(el): Prove whether metric is leaf? Because in case metrics have their aggregation suffixed,
-            // e.g. {metric}.average they're not leaves.
-            preg_match($this->pattern, $metric['path'], $matches);
+            if (! (bool) $metric['is_leaf']) {
+                continue;
+            }
+
+            preg_match($pattern, $metric['path'], $matches);
 
             $plots[] = array(
-                'plot_id'           => sprintf(
-                    '%s - %s - %s', $matches['host'], $matches['service'], $matches['metric']),
+                'plot_id'           => ($servicePattern !== null ?
+                    sprintf(
+                        '%s - %s - %s', $matches['host'], $matches['service'], $matches['metric']
+                    )
+                :
+                    sprintf(
+                        '%s - %s', $matches['host'], $matches['metric']
+                    )
+                ),
                 'plot'              => $matches['metric'],
                 'host'              => $matches['host'],
-                'service'           => $matches['service'],
+                'service'           => $servicePattern !== null ? $matches['service'] : null,
                 'parent_service'    => null
             );
         }
@@ -123,6 +153,14 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
 
     public function fetchStaticMetric($host, $service, $plot, $type)
     {
+        switch ($type) {
+            case 'min':
+                $type = 'lower_limit';
+                break;
+            case 'max':
+                $type = 'upper_limit';
+                break;
+        }
         $jsonPath = $this->staticMetricsPath . '/' . base64_encode($host)
             . ($service === '' ? '' : '/' . base64_encode($service))
             . '/' . base64_encode($plot) . '.json';
@@ -153,11 +191,14 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
         $charts = array();
         $comments = array();
         foreach ($query as $spec) {
+            if (! isset($spec['service'])) {
+                $spec['service'] = '';
+            }
             if (isset($spec['target'])) {
                 $plotId = md5($spec['target']);
                 $self = $this;
                 $target = preg_replace_callback(
-                    $this->pattern,
+                    $this->servicePattern,
                     function ($match) use ($self) {
                         if (array_key_exists('type', $match)) {
                             $metric = $self->fetchStaticMetric(
@@ -173,11 +214,13 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                     $spec['target']
                 );
             } else {
+                // TODO(el): Don't escape?
                 $host = $this->escape($spec['host']);
                 $service = $this->escape($spec['service']);
                 $plot = $this->escape($spec['plot']);
                 $plotId = sprintf(
                     '%s - %s - %s - %s', $host, $service, $plot, $spec['type']);
+                );
                 if ($spec['type'] !== 'avg') {
                     $metric = $this->fetchStaticMetric($host, $service, $plot, $spec['type']);
                     if ($metric !== null) {
@@ -190,15 +233,14 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                         }
                         $charts[] = array(
                                 'plot_id'   => $plotId,
-                                'label' => $plot . ' ' . $spec['type'],
-                                'data'  => $metric
+                                'label'     => $spec['plot'] . ' ' . $spec['type'],
+                                'data'      => $metric
                             ) + $spec;
                     }
                     continue;
                 }
-                $target = sprintf(
-                    'legendValue(substr(keepLastValue(%s)), "last", "avg", "min", "max")',
-                    str_replace(
+                if (! empty($spec['service'])) {
+                    $path = str_replace(
                         array('<host>', '<service>', '<metric>'),
                         array(
                             $host,
@@ -206,7 +248,17 @@ class inGraph_Backend_Graphite extends Graphite implements inGraph_Backend
                             $plot
                         ),
                         $this->metricFormat
-                    )
+                    );
+                } else {
+                    $path = str_replace(
+                        array('<host>', '<metric>'),
+                        array($this->escape($spec['host']), $this->escape($spec['plot'])),
+                        str_replace('.<service>', '', $this->metricFormat)
+                    );
+                }
+                $target = sprintf(
+                    'legendValue(substr(keepLastValue(%s)), "last", "avg", "min", "max")',
+                    $path
                 );
             }
             foreach ($this->fetchMetric($target, $start, $end) as $metric) {

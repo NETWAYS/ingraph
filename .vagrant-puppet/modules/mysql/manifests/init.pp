@@ -18,6 +18,7 @@ class mysql {
   }
 
   service { 'mysqld':
+    enable  => true,
     ensure  => running,
     require => Package['mysql-server']
   }

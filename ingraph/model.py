@@ -38,8 +38,23 @@ from cStringIO import StringIO
 
 dbload_min_timestamp = None
 dbload_max_timestamp = None
+
 MAX_DECIMAL = Decimal('9'*15 + '.' + '9'*5)
-TO_DECIMAL = lambda f: Decimal('%.5f' % (f,))
+def TO_DECIMAL(num):
+    neg = False
+
+    if num < 0:
+        neg = True
+        num = abs(num)
+
+    num = min(Decimal('%.5f' % (num ,)), MAX_DECIMAL)
+
+    if neg is True:
+        num = -abs(num)
+
+    return num
+
+
 
 '''
 Base class for all DB model classes.
@@ -564,7 +579,7 @@ class Plot(ModelBase):
             lower_limit = float(lower_limit)
             if value < lower_limit:
                 value = lower_limit
-            lower_limit = min(TO_DECIMAL(lower_limit), MAX_DECIMAL)
+            lower_limit = TO_DECIMAL(lower_limit)
 
         if upper_limit != None:
             upper_limit = float(upper_limit)
@@ -572,7 +587,7 @@ class Plot(ModelBase):
             # lets just ignore that non-sense...
             if value > upper_limit and lower_limit != upper_limit:
                 value = upper_limit
-            upper_limit = min(TO_DECIMAL(upper_limit), MAX_DECIMAL)
+            upper_limit = TO_DECIMAL(upper_limit)
 
         value_raw = value
 
@@ -588,7 +603,7 @@ class Plot(ModelBase):
         if value == None:
             return []
 
-        value = min(TO_DECIMAL(value), MAX_DECIMAL)
+        value = TO_DECIMAL(value)
 
         if min_ == None or min_ > value:
             min_ = value
@@ -596,13 +611,13 @@ class Plot(ModelBase):
             max_ = value
 
         if warn_lower != None:
-            warn_lower = min(TO_DECIMAL(warn_lower), MAX_DECIMAL)
+            warn_lower = TO_DECIMAL(warn_lower)
         if warn_upper != None:
-            warn_upper = min(TO_DECIMAL(warn_upper), MAX_DECIMAL)
+            warn_upper = TO_DECIMAL(warn_upper)
         if crit_lower != None:
-            crit_lower = min(TO_DECIMAL(crit_lower), MAX_DECIMAL)
+            crit_lower = TO_DECIMAL(crit_lower)
         if crit_upper != None:
-            crit_upper = min(TO_DECIMAL(crit_upper), MAX_DECIMAL)
+            crit_upper = TO_DECIMAL(crit_upper)
 
 
         now = time()
